@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('FECHAS', function (Blueprint $table) {
-            $table->integer('PERIODO');
+            $table->string('CODIGO_FECHA', 10)->primary();
             $table->dateTime('INICIO');
             $table->dateTime('FIN');
         });

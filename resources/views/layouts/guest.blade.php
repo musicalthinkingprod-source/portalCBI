@@ -16,7 +16,7 @@
             <!-- Panel izquierdo azul -->
             <div class="hidden lg:flex w-1/2 bg-blue-900 flex-col items-center justify-center px-12">
                 <a href="/">
-                    <x-application-logo class="w-24 h-24 fill-current text-white mb-6" />
+                    <img src="/images/logo.svg" alt="Logo" class="w-24 h-24 invert opacity-90 mb-6">
                 </a>
                 <h1 class="text-3xl font-bold text-white text-center leading-tight">Portal CBI</h1>
                 <p class="text-blue-300 text-sm mt-2 text-center">Colegio Bilingüe Integral</p>
@@ -28,7 +28,7 @@
                 <!-- Logo visible solo en móvil -->
                 <div class="mb-6 lg:hidden">
                     <a href="/">
-                        <x-application-logo class="w-16 h-16 fill-current text-blue-900" />
+                        <img src="/images/logo.svg" alt="Logo" class="w-16 h-16 opacity-80">
                     </a>
                 </div>
 

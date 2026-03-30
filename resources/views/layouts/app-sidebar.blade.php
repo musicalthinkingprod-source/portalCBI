@@ -21,9 +21,12 @@
 
         <!-- Logo / Título -->
         <div class="px-6 py-5 border-b border-blue-700 flex items-center justify-between">
-            <div>
-                <h1 class="text-lg font-bold leading-tight">Portal CBI</h1>
-                <p class="text-xs text-blue-300">Colegio Bilingüe Integral</p>
+            <div class="flex items-center gap-3">
+                <img src="/images/logo.svg" alt="Logo" class="w-9 h-9 invert opacity-90">
+                <div>
+                    <h1 class="text-lg font-bold leading-tight">Portal Cebeista</h1>
+                    <p class="text-xs text-blue-300">Colegio Bilingüe Integral</p>
+                </div>
             </div>
             <!-- Botón cerrar sidebar en móvil -->
             <button onclick="toggleSidebar()" class="lg:hidden text-blue-300 hover:text-white">
@@ -34,7 +37,32 @@
         <nav class="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
 
             @auth
-                @php $profile = auth()->user()->PROFILE; @endphp
+                @php
+                    $profile = auth()->user()->PROFILE;
+                    $puedeVerAlumnos = in_array($profile, ['SuperAd', 'Admin', 'Ori']) ||
+                                       str_starts_with($profile, 'Sec');
+                @endphp
+
+                {{-- Estudiantes: SuperAd, Admin, Ori, Sec* --}}
+                @if($puedeVerAlumnos)
+                <div>
+                    <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Estudiantes</p>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="{{ route('alumnos.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                🎒 Consultar estudiante
+                            </a>
+                        </li>
+                        @if(in_array($profile, ['SuperAd', 'Admin']))
+                        <li>
+                            <a href="{{ route('alumnos.create') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                ➕ Matricular estudiante
+                            </a>
+                        </li>
+                        @endif
+                    </ul>
+                </div>
+                @endif
 
                 {{-- Docentes: perfil DOC*** o SuperAd --}}
                 @if($profile === 'SuperAd' || str_starts_with($profile, 'DOC'))
@@ -42,50 +70,65 @@
                     <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Docentes</p>
                     <ul class="space-y-1">
                         <li>
-                            <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                            <a href="{{ route('notas.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                                 📋 Notas
                             </a>
                         </li>
-                    </ul>
-                </div>
-                @endif
-
-                {{-- Administrativos: solo SuperAd --}}
-                @if($profile === 'SuperAd')
-                <div>
-                    <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Administrativos</p>
-                    <ul class="space-y-1">
+                        @if($profile === 'SuperAd')
                         <li>
-                            <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                                💳 Pagos
+                            <a href="{{ route('notas.reporte') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📊 Informe de digitación
                             </a>
                         </li>
+                        @endif
                     </ul>
                 </div>
                 @endif
 
                 {{-- Administradores: solo SuperAd --}}
-                @if($profile === 'SuperAd')
+
+
+{{-- Control: SuperAd y Admin --}}
+                @if(in_array($profile, ['SuperAd', 'Admin']))
                 <div>
-                    <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Administradores</p>
+                    <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Control de Pagos</p>
                     <ul class="space-y-1">
                         <li>
-                            <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                                👤 Crear usuarios
+                            <a href="{{ route('control.estudiante') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                🔍 Consultar estudiante
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('pagos.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                💳 Pagos
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('facturacion.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                🧾 Facturación
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('cartera.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📊 Informe de cartera
                             </a>
                         </li>
                     </ul>
                 </div>
                 @endif
 
-                {{-- Padres: solo SuperAd --}}
-                @if($profile === 'SuperAd')
+                 @if($profile === 'SuperAd')
                 <div>
-                    <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Padres</p>
+                    <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Panel de Control</p>
                     <ul class="space-y-1">
                         <li>
-                            <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                                📄 Consultar boletines
+                            <a href="{{ route('admin.usuarios') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                👤 Usuarios
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.fechas') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📅 Fechas
                             </a>
                         </li>
                     </ul>
@@ -128,7 +171,7 @@
                 </button>
                 <h2 class="text-xl font-semibold text-gray-700">@yield('header', 'Dashboard')</h2>
             </div>
-            <span class="text-sm text-gray-500">{{ auth()->user()->name ?? '' }}</span>
+            <span class="text-sm text-gray-500">{{ auth()->user()->USER ?? '' }}</span>
         </header>
 
         <!-- Página -->
@@ -147,7 +190,9 @@
         sidebar.classList.toggle('-translate-x-full');
         overlay.classList.toggle('hidden');
     }
+
 </script>
 
+@stack('scripts')
 </body>
 </html>
