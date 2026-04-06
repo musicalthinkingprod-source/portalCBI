@@ -131,10 +131,49 @@
             @endif
         </div>
 
+        {{-- Transporte --}}
+        <div class="bg-white rounded-xl shadow p-5 mb-6">
+            <h3 class="font-bold text-blue-800 mb-4">Transporte</h3>
+            @if($transporte)
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Ruta</p>
+                        <p class="font-semibold text-gray-700">{{ $transporte->ruta ?: '—' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Clase de ruta</p>
+                        <p class="font-semibold text-gray-700">{{ $transporte->clase_ruta ?: '—' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Barrio</p>
+                        <p class="font-semibold text-gray-700">{{ $transporte->barrio ?: '—' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Dirección</p>
+                        <p class="font-semibold text-gray-700">{{ $transporte->direccion ?: '—' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Teléfono</p>
+                        <p class="font-semibold text-gray-700">{{ $transporte->telefono ?: '—' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Quien recibe</p>
+                        <p class="font-semibold text-gray-700">{{ $transporte->quien_recibe ?: '—' }}</p>
+                    </div>
+                </div>
+            @else
+                <p class="text-sm text-gray-400 italic">Sin información de transporte registrada.</p>
+            @endif
+        </div>
+
         {{-- Observaciones --}}
         <div class="bg-white rounded-xl shadow p-5">
-            <h3 class="font-bold text-blue-800 mb-3">Observaciones</h3>
-            <p class="text-sm text-gray-400 italic">Próximamente disponible.</p>
+            <h3 class="font-bold text-blue-800 mb-3">Observaciones contables</h3>
+            @if(!empty($observacion->observacion))
+                <p class="text-sm text-gray-700 whitespace-pre-line">{{ $observacion->observacion }}</p>
+            @else
+                <p class="text-sm text-gray-400 italic">Sin observaciones.</p>
+            @endif
         </div>
 
     @endif

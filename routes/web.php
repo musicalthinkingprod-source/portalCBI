@@ -20,6 +20,8 @@ use App\Http\Controllers\BoletinController;
 use App\Http\Controllers\PiarController;
 use App\Http\Controllers\ParametrosController;
 use App\Http\Controllers\WorldOfficeController;
+use App\Http\Controllers\RutasController;
+use App\Http\Controllers\LlamadasController;
 
 /*
 |--------------------------------------------------------------------------
@@ -142,6 +144,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/alumnos/{codigo}/imprimir', [AlumnoController::class, 'printView'])->name('alumnos.print');
     });
 
+    // ── Rutas de transporte: SuperAd, Admin y Sec* ────────────────────────────
+    Route::middleware('profile:SuperAd,Admin,Sec*')->group(function () {
+        Route::get('/rutas', [RutasController::class, 'index'])->name('rutas.index');
+    });
+
     // ── Seguimiento Académico: SuperAd, Admin, Sec* ──────────────────────────
     Route::middleware('profile:SuperAd,Admin,Sec*')->group(function () {
         Route::get('/derroteros', [DeroterosController::class, 'index'])->name('derroteros.index');
@@ -152,6 +159,13 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('profile:SuperAd,Sec*')->group(function () {
         Route::get('/asistencia/registro', [AsistenciaController::class, 'registro'])->name('asistencia.registro');
         Route::post('/asistencia/guardar', [AsistenciaController::class, 'guardar'])->name('asistencia.guardar');
+    });
+
+    // ── Llamadas por inasistencia: SuperAd, Admin y Sec* ─────────────────────
+    Route::middleware('profile:SuperAd,Admin,Sec*')->group(function () {
+        Route::get('/llamadas',         [LlamadasController::class, 'index'])  ->name('llamadas.index');
+        Route::post('/llamadas',        [LlamadasController::class, 'store'])  ->name('llamadas.store');
+        Route::get('/llamadas/reporte', [LlamadasController::class, 'reporte'])->name('llamadas.reporte');
     });
 
     // ── Asistencia reporte: todos los autenticados ────────────────────────────

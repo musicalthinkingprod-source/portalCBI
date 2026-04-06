@@ -14,6 +14,8 @@ class ControlEstudianteController extends Controller
         $pagos        = collect();
         $totalFactura = 0;
         $totalPagado  = 0;
+        $observacion  = null;
+        $transporte   = null;
 
         if ($request->filled('codigo')) {
             $codigo = $request->codigo;
@@ -25,9 +27,11 @@ class ControlEstudianteController extends Controller
                 $pagos        = DB::table('registro_pagos')->where('codigo_alumno', $codigo)->orderBy('fecha')->get();
                 $totalFactura = $facturacion->sum('valor');
                 $totalPagado  = $pagos->sum('valor');
+                $observacion  = DB::table('observaciones_contables')->where('codigo_alumno', $codigo)->first();
+                $transporte   = DB::table('listado_transporte')->where('codigo', $codigo)->first();
             }
         }
 
-        return view('control.estudiante', compact('estudiante', 'facturacion', 'pagos', 'totalFactura', 'totalPagado'));
+        return view('control.estudiante', compact('estudiante', 'facturacion', 'pagos', 'totalFactura', 'totalPagado', 'observacion', 'transporte'));
     }
 }

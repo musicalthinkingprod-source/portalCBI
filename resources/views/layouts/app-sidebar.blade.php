@@ -142,6 +142,18 @@
                                 📋 Reporte de asistencia
                             </a>
                         </li>
+                        @if(in_array($profile, ['SuperAd', 'Admin']) || str_starts_with($profile, 'Sec'))
+                        <li>
+                            <a href="{{ route('llamadas.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📞 Llamadas por inasistencia
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('llamadas.reporte') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📊 Reporte de llamadas
+                            </a>
+                        </li>
+                        @endif
                     </ul>
                 </div>
 
@@ -183,6 +195,20 @@
                         <li>
                             <a href="{{ route('world-office.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                                 📄 Plantilla World Office
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                @endif
+
+                {{-- Transporte: SuperAd, Admin y Sec* --}}
+                @if(in_array($profile, ['SuperAd', 'Admin']) || str_starts_with($profile, 'Sec'))
+                <div>
+                    <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Transporte</p>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="{{ route('rutas.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                🚌 Listado de rutas
                             </a>
                         </li>
                     </ul>
