@@ -5,7 +5,19 @@
       "Bash(grep -r \"ASIGNACION_PCM\\\\|CODIGOSMAT\\\\|NOTAS_2024\\\\|NOTAS_2025\\\\|NOTAS_2026\" C:laragonwwwportalcbiapp --include=*.php)",
       "Bash(grep:*)",
       "Bash(find /c/laragon/www/portalcbi/resources/views -name *.blade.php -type f)",
-      "Bash(find /c/laragon/www/portalcbi/app/Models -type f -name *.php)"
+      "Bash(find /c/laragon/www/portalcbi/app/Models -type f -name *.php)",
+      "Bash(composer install:*)",
+      "Bash(php -r \"echo 'PHP OK';\")",
+      "Bash(find C:laragonwwwportalcbi.claudeworktreeshungry-chaum -type f \\\\\\(-name *.php -path */migrations/* -o -name *.sql -o -path */seeders/* -name *.php \\\\\\))",
+      "Bash(python -c \"import pyodbc; print\\(''pyodbc OK''\\)\")",
+      "Bash(pip install:*)",
+      "Bash(python -c \":*)",
+      "Bash(gh pr:*)",
+      "Bash(for f:*)",
+      "Bash(do)",
+      "Bash(echo \"=== $f ===\")",
+      "Read(//c/laragon/www/portalcbi/database/migrations/**)",
+      "Bash(done)"
     ]
   }
 }
