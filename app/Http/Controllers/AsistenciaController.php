@@ -109,6 +109,7 @@ class AsistenciaController extends Controller
         $vista       = $request->input('vista', 'acumulado'); // acumulado | semana
         $cursoFiltro = $request->input('curso');
         $busqueda    = $request->input('busqueda');
+        $codigo      = $request->input('codigo');
         $cursos      = DB::table('ESTUDIANTES')
             ->where('ESTADO', 'MATRICULADO')
             ->distinct()->orderBy('CURSO')->pluck('CURSO');
@@ -139,11 +140,13 @@ class AsistenciaController extends Controller
                 ->groupBy('a.CODIGO', 'e.APELLIDO1', 'e.APELLIDO2', 'e.NOMBRE1', 'e.NOMBRE2', 'e.CURSO');
 
             if ($cursoFiltro) $q->where('e.CURSO', $cursoFiltro);
+            if ($codigo)      $q->where('a.CODIGO', $codigo);
             if ($busqueda) {
                 $q->where(function ($q2) use ($busqueda) {
                     $q2->where('e.APELLIDO1', 'like', "%$busqueda%")
                        ->orWhere('e.APELLIDO2', 'like', "%$busqueda%")
-                       ->orWhere('e.NOMBRE1',   'like', "%$busqueda%");
+                       ->orWhere('e.NOMBRE1',   'like', "%$busqueda%")
+                       ->orWhere('e.CODIGO',    'like', "%$busqueda%");
                 });
             }
 
@@ -182,10 +185,12 @@ class AsistenciaController extends Controller
                 ->select('a.*', 'e.APELLIDO1', 'e.APELLIDO2', 'e.NOMBRE1', 'e.NOMBRE2', 'e.CURSO');
 
             if ($cursoFiltro) $q->where('e.CURSO', $cursoFiltro);
+            if ($codigo)      $q->where('a.CODIGO', $codigo);
             if ($busqueda) {
                 $q->where(function ($q2) use ($busqueda) {
                     $q2->where('e.APELLIDO1', 'like', "%$busqueda%")
-                       ->orWhere('e.NOMBRE1',   'like', "%$busqueda%");
+                       ->orWhere('e.NOMBRE1',   'like', "%$busqueda%")
+                       ->orWhere('e.CODIGO',    'like', "%$busqueda%");
                 });
             }
 
@@ -205,10 +210,12 @@ class AsistenciaController extends Controller
                     ->where('CURSO', $cursoFiltro)
                     ->where('ESTADO', 'MATRICULADO')
                     ->orderBy('APELLIDO1')->orderBy('APELLIDO2');
+                if ($codigo) $estQ->where('CODIGO', $codigo);
                 if ($busqueda) {
                     $estQ->where(function ($q2) use ($busqueda) {
                         $q2->where('APELLIDO1', 'like', "%$busqueda%")
-                           ->orWhere('NOMBRE1',   'like', "%$busqueda%");
+                           ->orWhere('NOMBRE1',   'like', "%$busqueda%")
+                           ->orWhere('CODIGO',    'like', "%$busqueda%");
                     });
                 }
                 $estudiantesSemana = $estQ->get();
@@ -225,7 +232,7 @@ class AsistenciaController extends Controller
         }
 
         return view('asistencia.reporte', compact(
-            'vista', 'cursos', 'cursoFiltro', 'busqueda',
+            'vista', 'cursos', 'cursoFiltro', 'busqueda', 'codigo',
             'acumulado', 'fechaDesde', 'fechaHasta',
             'dias', 'mapaAsist', 'estudiantesSemana',
             'semanaLabel', 'semanaAnterior', 'semanaSiguiente',

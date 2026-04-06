@@ -42,7 +42,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Estudiante</label>
                     <div class="flex gap-2">
-                        <input type="text" name="busqueda" value="{{ $busqueda }}" placeholder="Apellido o nombre..."
+                        <input type="text" name="busqueda" value="{{ $busqueda }}" placeholder="Apellido, nombre o código..."
                             class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <button type="submit"
                             class="bg-blue-800 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
@@ -76,6 +76,7 @@
                         <th class="px-4 py-3 text-center w-24">Período</th>
                         <th class="px-4 py-3 text-center w-28">Descuentos</th>
                         <th class="px-4 py-3 text-center w-28">Nota</th>
+                        <th class="px-4 py-3 text-center w-20"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -94,6 +95,12 @@
                         <td class="px-4 py-2 text-center font-bold text-lg
                             {{ $r->nota < 6 ? 'text-red-600' : ($r->nota < 8 ? 'text-yellow-600' : 'text-green-700') }}">
                             {{ number_format($r->nota, 2) }}
+                        </td>
+                        <td class="px-4 py-2 text-center">
+                            <a href="{{ route('english-acq.informe', array_merge(request()->except('codigo','busqueda'), ['codigo' => $r->CODIGO_ALUM])) }}"
+                                class="inline-block bg-blue-100 hover:bg-blue-200 text-blue-800 text-xs font-semibold px-2 py-1 rounded transition">
+                                Ver
+                            </a>
                         </td>
                     </tr>
                     @endforeach

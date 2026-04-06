@@ -52,7 +52,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Estudiante</label>
                     <div class="flex gap-2">
-                        <input type="text" name="busqueda" value="{{ $busqueda }}" placeholder="Apellido o nombre..."
+                        <input type="text" name="busqueda" value="{{ $busqueda }}" placeholder="Apellido, nombre o código..."
                             class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <button type="submit"
                             class="bg-blue-800 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
@@ -96,6 +96,7 @@
                         <th class="px-3 py-3 text-center w-20 text-gray-500">Sin carnet</th>
                         <th class="px-3 py-3 text-center w-20 text-gray-500">Sin uniforme</th>
                         <th class="px-3 py-3 text-center w-24 text-gray-500">Mal. present.</th>
+                        <th class="px-3 py-3 text-center w-20"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -114,6 +115,12 @@
                         <td class="px-3 py-2 text-center {{ $r->falta_carnet > 0 ? 'text-red-500 font-semibold' : 'text-gray-400' }}">{{ $r->falta_carnet }}</td>
                         <td class="px-3 py-2 text-center {{ $r->falta_uniforme > 0 ? 'text-red-500 font-semibold' : 'text-gray-400' }}">{{ $r->falta_uniforme }}</td>
                         <td class="px-3 py-2 text-center {{ $r->falta_presentacion > 0 ? 'text-red-500 font-semibold' : 'text-gray-400' }}">{{ $r->falta_presentacion }}</td>
+                        <td class="px-3 py-2 text-center">
+                            <a href="{{ route('asistencia.reporte', array_merge(request()->except('codigo','busqueda'), ['codigo' => $r->CODIGO])) }}"
+                                class="inline-block bg-blue-100 hover:bg-blue-200 text-blue-800 text-xs font-semibold px-2 py-1 rounded transition">
+                                Ver
+                            </a>
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -164,6 +171,7 @@
                     <tr>
                         <th class="px-4 py-3 text-left uppercase tracking-wide">Estudiante</th>
                         <th class="px-2 py-3 text-center w-16 uppercase tracking-wide text-gray-400">Curso</th>
+                        <th class="px-2 py-3 text-center w-16"></th>
                         @foreach($dias as $dia)
                         <th class="px-2 py-3 text-center w-28">
                             <span class="font-semibold {{ $dia->isToday() ? 'text-blue-600' : '' }}">
@@ -210,6 +218,12 @@
                             @endif
                         </td>
                         @endforeach
+                        <td class="px-2 py-2 text-center">
+                            <a href="{{ route('asistencia.reporte', array_merge(request()->except('codigo','busqueda','semana'), ['codigo' => $est->CODIGO, 'vista' => 'acumulado'])) }}"
+                                class="inline-block bg-blue-100 hover:bg-blue-200 text-blue-800 text-xs font-semibold px-2 py-1 rounded transition">
+                                Ver
+                            </a>
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>

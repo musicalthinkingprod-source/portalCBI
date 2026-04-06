@@ -5,7 +5,10 @@
       "Bash(grep -r \"ASIGNACION_PCM\\\\|CODIGOSMAT\\\\|NOTAS_2024\\\\|NOTAS_2025\\\\|NOTAS_2026\" C:laragonwwwportalcbiapp --include=*.php)",
       "Bash(grep:*)",
       "Bash(find /c/laragon/www/portalcbi/resources/views -name *.blade.php -type f)",
-      "Bash(find /c/laragon/www/portalcbi/app/Models -type f -name *.php)"
+      "Bash(find /c/laragon/www/portalcbi/app/Models -type f -name *.php)",
+      "Bash(composer install:*)",
+      "Bash(php -r \"echo 'PHP OK';\")",
+      "Bash(composer require:*)"
     ]
   }
 }

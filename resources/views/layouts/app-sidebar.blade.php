@@ -64,6 +64,20 @@
                 </div>
                 @endif
 
+                {{-- PIAR: SuperAd y Ori --}}
+                @if(in_array($profile, ['SuperAd', 'Ori']))
+                <div>
+                    <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">PIAR</p>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="{{ route('piar.buscar') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📝 Crear PIAR
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                @endif
+
                 {{-- Docentes: perfil DOC*** o SuperAd --}}
                 @if($profile === 'SuperAd' || str_starts_with($profile, 'DOC'))
                 <div>
@@ -152,8 +166,23 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('facturacion.auto') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                ⚡ Facturación automática
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('cartera.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                                 📊 Informe de cartera
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('parametros.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                ⚙️ Parametros facturacion
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('world-office.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📄 Plantilla World Office
                             </a>
                         </li>
                     </ul>

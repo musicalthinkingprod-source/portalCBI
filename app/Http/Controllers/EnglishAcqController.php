@@ -117,6 +117,7 @@ class EnglishAcqController extends Controller
         $periodo     = $request->input('periodo');
         $cursoFiltro = $request->input('curso');
         $busqueda    = $request->input('busqueda');
+        $codigo      = $request->input('codigo');
 
         // Resumen por estudiante y período
         $resumenQuery = DB::table($this->tabla . ' as n')
@@ -132,11 +133,13 @@ class EnglishAcqController extends Controller
 
         if ($periodo)     $resumenQuery->where('n.PERIODO', $periodo);
         if ($cursoFiltro) $resumenQuery->where('e.CURSO', $cursoFiltro);
+        if ($codigo)      $resumenQuery->where('n.CODIGO_ALUM', $codigo);
         if ($busqueda) {
             $resumenQuery->where(function ($q) use ($busqueda) {
-                $q->where('e.APELLIDO1', 'like', "%$busqueda%")
+                $q->where('e.APELLIDO1',   'like', "%$busqueda%")
                   ->orWhere('e.APELLIDO2', 'like', "%$busqueda%")
-                  ->orWhere('e.NOMBRE1',   'like', "%$busqueda%");
+                  ->orWhere('e.NOMBRE1',   'like', "%$busqueda%")
+                  ->orWhere('e.CODIGO',    'like', "%$busqueda%");
             });
         }
 
@@ -155,11 +158,13 @@ class EnglishAcqController extends Controller
 
         if ($periodo)     $detalleQuery->where('n.PERIODO', $periodo);
         if ($cursoFiltro) $detalleQuery->where('e.CURSO', $cursoFiltro);
+        if ($codigo)      $detalleQuery->where('n.CODIGO_ALUM', $codigo);
         if ($busqueda) {
             $detalleQuery->where(function ($q) use ($busqueda) {
-                $q->where('e.APELLIDO1', 'like', "%$busqueda%")
+                $q->where('e.APELLIDO1',   'like', "%$busqueda%")
                   ->orWhere('e.APELLIDO2', 'like', "%$busqueda%")
-                  ->orWhere('e.NOMBRE1',   'like', "%$busqueda%");
+                  ->orWhere('e.NOMBRE1',   'like', "%$busqueda%")
+                  ->orWhere('e.CODIGO',    'like', "%$busqueda%");
             });
         }
 
@@ -170,7 +175,7 @@ class EnglishAcqController extends Controller
             ->distinct()->orderBy('CURSO')->pluck('CURSO');
 
         return view('english-acq.informe', compact(
-            'resumen', 'detalle', 'anio', 'periodo', 'cursoFiltro', 'busqueda', 'cursos'
+            'resumen', 'detalle', 'anio', 'periodo', 'cursoFiltro', 'busqueda', 'codigo', 'cursos'
         ));
     }
 }

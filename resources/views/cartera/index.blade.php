@@ -57,8 +57,12 @@
 
         {{-- Top deudores --}}
         <div class="bg-white rounded-xl shadow overflow-hidden">
-            <div class="px-5 py-4 border-b border-gray-100">
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h3 class="font-bold text-blue-800">Top 10 mayores saldos pendientes</h3>
+                <a href="{{ route('cartera.deudores') }}"
+                    class="text-xs font-semibold text-blue-700 hover:text-blue-900 hover:underline">
+                    Ver lista completa →
+                </a>
             </div>
             @if($topDeudores->isEmpty())
                 <p class="text-sm text-gray-400 px-5 py-4">Sin deudores registrados.</p>

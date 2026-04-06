@@ -17,6 +17,9 @@ use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\SalvavidasController;
 use App\Http\Controllers\DeroterosController;
 use App\Http\Controllers\BoletinController;
+use App\Http\Controllers\PiarController;
+use App\Http\Controllers\ParametrosController;
+use App\Http\Controllers\WorldOfficeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -78,15 +81,56 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/pagos/crear', [PagosController::class, 'create'])->name('pagos.create');
         Route::post('/pagos', [PagosController::class, 'store'])->name('pagos.store');
         Route::get('/cartera', [CarteraController::class, 'index'])->name('cartera.index');
+        Route::get('/cartera/deudores', [CarteraController::class, 'deudores'])->name('cartera.deudores');
         Route::get('/facturacion', [FacturacionController::class, 'index'])->name('facturacion.index');
         Route::get('/facturacion/crear', [FacturacionController::class, 'create'])->name('facturacion.create');
         Route::post('/facturacion', [FacturacionController::class, 'store'])->name('facturacion.store');
+        Route::get('/facturacion/auto', [FacturacionController::class, 'autoIndex'])->name('facturacion.auto');
+        Route::post('/facturacion/auto/preview', [FacturacionController::class, 'autoPreview'])->name('facturacion.auto.preview');
+        Route::post('/facturacion/auto/generar', [FacturacionController::class, 'autoGenerar'])->name('facturacion.auto.generar');
+        Route::delete('/facturacion/auto/lote/{lote}', [FacturacionController::class, 'autoEliminarLote'])->name('facturacion.auto.lote.destroy');
+        // ── Plantilla World Office ────────────────────────────────────────────
+        Route::get('/world-office', [WorldOfficeController::class, 'index'])->name('world-office.index');
+        Route::post('/world-office/plantilla', [WorldOfficeController::class, 'guardarPlantilla'])->name('world-office.plantilla.store');
+        Route::post('/world-office/exportar', [WorldOfficeController::class, 'exportarCSV'])->name('world-office.exportar');
         Route::get('/importacion/registro-pagos', [ImportacionController::class, 'show'])->name('importacion.registro_pagos.show');
         Route::post('/importacion/registro-pagos', [ImportacionController::class, 'importarRegistroPagos'])->name('importacion.registro_pagos');
+        Route::delete('/importacion/registro-pagos/lote/{lote}', [ImportacionController::class, 'eliminarLotePagos'])->name('importacion.registro_pagos.lote.destroy');
         Route::get('/importacion/facturacion', [ImportacionController::class, 'showFacturacion'])->name('importacion.facturacion.show');
         Route::post('/importacion/facturacion', [ImportacionController::class, 'importarFacturacion'])->name('importacion.facturacion');
+        Route::delete('/importacion/facturacion/lote/{lote}', [ImportacionController::class, 'eliminarLoteFacturacion'])->name('importacion.facturacion.lote.destroy');
         Route::get('/alumnos/crear', [AlumnoController::class, 'create'])->name('alumnos.create');
         Route::post('/alumnos', [AlumnoController::class, 'store'])->name('alumnos.store');
+
+        // ── Parámetros de Facturación ─────────────────────────────────────────
+        Route::get('/parametros', [ParametrosController::class, 'index'])->name('parametros.index');
+
+        Route::post('/parametros/centro-costos', [ParametrosController::class, 'storeCentroCostos'])->name('parametros.centro_costos.store');
+        Route::delete('/parametros/centro-costos/{codigo}', [ParametrosController::class, 'destroyCentroCostos'])->name('parametros.centro_costos.destroy');
+
+        Route::post('/parametros/conceptos', [ParametrosController::class, 'storeConcepto'])->name('parametros.conceptos.store');
+        Route::delete('/parametros/conceptos/{codigo}', [ParametrosController::class, 'destroyConcepto'])->name('parametros.conceptos.destroy');
+
+        Route::post('/parametros/costo-pension', [ParametrosController::class, 'storeCostoPension'])->name('parametros.costo_pension.store');
+        Route::delete('/parametros/costo-pension/{codigo}', [ParametrosController::class, 'destroyCostoPension'])->name('parametros.costo_pension.destroy');
+
+        Route::post('/parametros/costo-transporte', [ParametrosController::class, 'storeCostoTransporte'])->name('parametros.costo_transporte.store');
+        Route::delete('/parametros/costo-transporte/{codigo}', [ParametrosController::class, 'destroyCostoTransporte'])->name('parametros.costo_transporte.destroy');
+
+        Route::post('/parametros/pension', [ParametrosController::class, 'storePension'])->name('parametros.pension.store');
+        Route::delete('/parametros/pension/{id}', [ParametrosController::class, 'destroyPension'])->name('parametros.pension.destroy');
+
+        Route::post('/parametros/transporte', [ParametrosController::class, 'storeTransporte'])->name('parametros.transporte.store');
+        Route::delete('/parametros/transporte/{id}', [ParametrosController::class, 'destroyTransporte'])->name('parametros.transporte.destroy');
+
+        Route::post('/parametros/nivelacion', [ParametrosController::class, 'storeNivelacion'])->name('parametros.nivelacion.store');
+        Route::delete('/parametros/nivelacion/{id}', [ParametrosController::class, 'destroyNivelacion'])->name('parametros.nivelacion.destroy');
+
+        Route::post('/parametros/listado-transporte', [ParametrosController::class, 'storeListadoTransporte'])->name('parametros.listado_transporte.store');
+        Route::delete('/parametros/listado-transporte/{id}', [ParametrosController::class, 'destroyListadoTransporte'])->name('parametros.listado_transporte.destroy');
+
+        Route::post('/parametros/observaciones', [ParametrosController::class, 'storeObservacion'])->name('parametros.observaciones.store');
+        Route::delete('/parametros/observaciones/{id}', [ParametrosController::class, 'destroyObservacion'])->name('parametros.observaciones.destroy');
     });
 
     // ── Estudiantes: SuperAd, Admin, Ori, Sec* ───────────────────────────────
@@ -124,6 +168,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/salvavidas/guardar', [SalvavidasController::class, 'guardar'])->name('salvavidas.guardar');
         Route::get('/derroteros/resolver', [DeroterosController::class, 'docente'])->name('derroteros.docente');
         Route::post('/derroteros/resolver', [DeroterosController::class, 'resolver'])->name('derroteros.resolver');
+    });
+
+    // ── PIAR: SuperAd y Ori ──────────────────────────────────────────────────
+    Route::middleware('profile:SuperAd,Ori')->group(function () {
+        Route::get('/piar', [PiarController::class, 'buscar'])->name('piar.buscar');
+        Route::get('/piar/crear/{codigo}', [PiarController::class, 'crear'])->name('piar.crear');
+        Route::post('/piar/guardar/{codigo}', [PiarController::class, 'guardar'])->name('piar.guardar');
     });
 
     // ── Horarios y boletines: SuperAd, Admin, Sec*, DOC* ────────────────────
