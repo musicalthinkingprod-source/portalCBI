@@ -62,7 +62,7 @@
     <!-- Encabezado -->
     <div class="header">
         <div style="display:flex;align-items:center;gap:12px">
-            <img src="/images/logo.svg" alt="Logo" style="width:48px;height:48px;opacity:0.85">
+            <img src="{{ asset('images/escudoCBI.png') }}" alt="Logo" style="width:48px;height:auto;opacity:0.85">
             <div>
                 <h1>Colegio Bilingüe Integral</h1>
                 <p>Ficha de Matrícula del Estudiante</p>

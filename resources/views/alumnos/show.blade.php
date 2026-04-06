@@ -210,7 +210,11 @@
             @if(in_array(auth()->user()->PROFILE, ['SuperAd', 'Admin']))
             <a href="{{ route('alumnos.print', $estudiante->CODIGO) }}" target="_blank"
                 class="bg-green-700 hover:bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
-                🖨️ Imprimir / PDF
+                🖨️ Ficha / PDF
+            </a>
+            <a href="{{ route('boletines.ver', $estudiante->CODIGO) }}" target="_blank"
+                class="bg-blue-700 hover:bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
+                📋 Boletín
             </a>
             @endif
         @endauth

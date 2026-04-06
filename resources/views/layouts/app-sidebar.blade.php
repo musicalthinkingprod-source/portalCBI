@@ -22,7 +22,7 @@
         <!-- Logo / Título -->
         <div class="px-6 py-5 border-b border-blue-700 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <img src="/images/logo.svg" alt="Logo" class="w-9 h-9 invert opacity-90">
+                <img src="{{ asset('images/escudoCBI.png') }}" alt="Logo" class="h-9 w-auto opacity-90">
                 <div>
                     <h1 class="text-lg font-bold leading-tight">Portal Cebeista</h1>
                     <p class="text-xs text-blue-300">Colegio Bilingüe Integral</p>
@@ -74,10 +74,35 @@
                                 📋 Notas
                             </a>
                         </li>
+                        <li>
+                            <a href="{{ route('english-acq.docente') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                🇬🇧 English Acquisition
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('salvavidas.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                🏊 Salvavidas
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('derroteros.docente') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📌 Resolver derroteros
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('derroteros.horarios') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📅 Horarios recuperación
+                            </a>
+                        </li>
                         @if($profile === 'SuperAd')
                         <li>
                             <a href="{{ route('notas.reporte') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                                 📊 Informe de digitación
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('english-acq.informe') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📊 Informe English ACQ
                             </a>
                         </li>
                         @endif
@@ -87,6 +112,24 @@
 
                 {{-- Administradores: solo SuperAd --}}
 
+                {{-- Asistencia: registro solo Sec*, reporte para todos --}}
+                <div>
+                    <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Asistencia</p>
+                    <ul class="space-y-1">
+                        @if(str_starts_with($profile, 'Sec') || $profile === 'SuperAd')
+                        <li>
+                            <a href="{{ route('asistencia.registro') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                ✏️ Registrar asistencia
+                            </a>
+                        </li>
+                        @endif
+                        <li>
+                            <a href="{{ route('asistencia.reporte') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📋 Reporte de asistencia
+                            </a>
+                        </li>
+                    </ul>
+                </div>
 
 {{-- Control: SuperAd y Admin --}}
                 @if(in_array($profile, ['SuperAd', 'Admin']))
@@ -117,13 +160,61 @@
                 </div>
                 @endif
 
+                {{-- Seguimiento Académico: SuperAd, Admin y Sec* --}}
+                @if(in_array($profile, ['SuperAd', 'Admin']) || str_starts_with($profile, 'Sec'))
+                <div>
+                    <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Seguimiento Académico</p>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="{{ route('derroteros.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📊 Informe derroteros
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('salvavidas.reporte') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📊 Reporte salvavidas
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('derroteros.horarios') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📅 Horarios recuperación
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                @endif
+
+                {{-- Informes Académicos: SuperAd, Admin y DOC con dirección de grupo --}}
+                @if(in_array($profile, ['SuperAd', 'Admin']) || str_starts_with($profile, 'DOC'))
+                <div>
+                    <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Informes Académicos</p>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="{{ route('informes.boletin') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📋 Boletines
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                @endif
+
                  @if($profile === 'SuperAd')
                 <div>
                     <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Panel de Control</p>
                     <ul class="space-y-1">
                         <li>
                             <a href="{{ route('admin.usuarios') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                                👤 Usuarios
+                                👤 Gestión de usuarios
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.directores') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                🏫 Directores de grupo
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.asignaciones') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                🔄 Asignaciones
                             </a>
                         </li>
                         <li>

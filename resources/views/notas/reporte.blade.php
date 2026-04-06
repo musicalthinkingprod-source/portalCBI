@@ -5,12 +5,34 @@
 @section('slot')
 
     <div class="flex items-center justify-between mb-6">
-        <p class="text-sm text-gray-500">Año lectivo <strong>{{ $anio }}</strong> — Solo docentes activos</p>
+        <p class="text-sm text-gray-500">Año lectivo <strong>{{ $anio }}</strong></p>
         <a href="{{ route('notas.index') }}"
             class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold px-4 py-2 rounded-lg transition">
             ← Volver a notas
         </a>
     </div>
+
+    @php
+        $docentesInactivos = array_filter($docentes, fn($d) => ($d['estado'] ?? 'ACTIVO') !== 'ACTIVO');
+    @endphp
+    @if(!empty($docentesInactivos))
+    <div class="mb-6 p-4 bg-red-50 border border-red-300 rounded-xl flex items-start justify-between gap-4">
+        <div>
+            <p class="font-semibold text-red-700 text-sm">
+                ⚠️ {{ count($docentesInactivos) }} docente(s) INACTIVO(s) con asignaciones pendientes
+            </p>
+            <ul class="mt-1 text-xs text-red-600 list-disc list-inside space-y-0.5">
+                @foreach($docentesInactivos as $di)
+                <li>{{ $di['nombre'] }} ({{ $di['codigo'] }})</li>
+                @endforeach
+            </ul>
+        </div>
+        <a href="{{ route('admin.asignaciones') }}"
+            class="shrink-0 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+            Reasignar carga →
+        </a>
+    </div>
+    @endif
 
     @if(empty($docentes))
         <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-xl p-4 text-sm">
@@ -76,7 +98,7 @@
                     $idGrupo  = 'grp-' . $loop->index;
                 @endphp
 
-                @php $inactivo = ($doc['estado'] ?? 'ACTIVO') === 'INACTIVO'; @endphp
+                @php $inactivo = ($doc['estado'] ?? 'ACTIVO') !== 'ACTIVO'; @endphp
 
                 {{-- Fila resumen del docente (siempre visible) --}}
                 <tr class="{{ $inactivo ? 'bg-red-50 border-b-2 border-red-200' : 'bg-blue-50 border-b-2 border-blue-200' }} cursor-pointer select-none"
@@ -86,7 +108,7 @@
                         <span class="toggle-icon mr-1 {{ $inactivo ? 'text-red-400' : 'text-blue-400' }} text-xs">▶</span>
                         {{ $doc['nombre'] }}
                         @if($inactivo)
-                            <span class="ml-2 px-1.5 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-600">INACTIVO</span>
+                            <span class="ml-2 px-1.5 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-600">{{ strtoupper($doc['estado']) }}</span>
                         @endif
                     </td>
                     <td class="px-4 py-2 border-r {{ $inactivo ? 'border-red-200' : 'border-blue-200' }} text-gray-500 text-xs font-mono">

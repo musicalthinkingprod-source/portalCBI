@@ -10,6 +10,11 @@ class AdminController extends Controller
 {
     public function index(Request $request)
     {
+        return $this->usuarios($request);
+    }
+
+    public function usuarios(Request $request)
+    {
         $usuarios = DB::table('PRINUSERS')->orderBy('PROFILE')->orderBy('USER')->get();
 
         $docentes = DB::table('CODIGOS_DOC')
@@ -17,7 +22,50 @@ class AdminController extends Controller
             ->orderBy('NOMBRE_DOC')
             ->get();
 
-        // Docentes con asignaciones (para mover en bloque y en detalle)
+        $ultimoCod = DB::table('CODIGOS_DOC')
+            ->where('CODIGO_DOC', 'like', 'DOC%')
+            ->orderByRaw('CAST(SUBSTRING(CODIGO_DOC, 4) AS UNSIGNED) DESC')
+            ->value('CODIGO_DOC');
+        $siguienteCodDoc = 'DOC001';
+        if ($ultimoCod) {
+            $num = (int) substr($ultimoCod, 3);
+            $siguienteCodDoc = 'DOC' . str_pad($num + 1, 3, '0', STR_PAD_LEFT);
+        }
+
+        return view('admin.usuarios', compact('usuarios', 'docentes', 'siguienteCodDoc'));
+    }
+
+    public function directores(Request $request)
+    {
+        $cursos = DB::table('ASIGNACION_PCM')
+            ->distinct()
+            ->pluck('CURSO')
+            ->sort(function ($a, $b) {
+                $orden = fn($c) => match(true) {
+                    $c === 'J'  => [-2, ''],
+                    $c === 'T'  => [-1, ''],
+                    default     => [(int) $c, ltrim($c, '0123456789')],
+                };
+                [$na, $la] = $orden($a);
+                [$nb, $lb] = $orden($b);
+                return $na !== $nb ? $na - $nb : strcmp($la, $lb);
+            })
+            ->values();
+
+        $directores = DB::table('CODIGOS_DOC')
+            ->whereNotNull('DIR_GRUPO')
+            ->pluck('CODIGO_DOC', 'DIR_GRUPO');
+
+        $docentes = DB::table('CODIGOS_DOC')
+            ->where('ESTADO', 'ACTIVO')
+            ->orderBy('NOMBRE_DOC')
+            ->get();
+
+        return view('admin.directores', compact('cursos', 'directores', 'docentes'));
+    }
+
+    public function asignaciones(Request $request)
+    {
         $docentesConAsig = DB::table('ASIGNACION_PCM as a')
             ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_DOC', '=', 'd.CODIGO_DOC')
             ->select('a.CODIGO_DOC', DB::raw('COALESCE(d.NOMBRE_DOC, a.CODIGO_DOC) as NOMBRE_DOC'),
@@ -31,18 +79,6 @@ class AdminController extends Controller
             ->orderBy('NOMBRE_DOC')
             ->get();
 
-        // Siguiente código DOC disponible
-        $ultimoCod = DB::table('CODIGOS_DOC')
-            ->where('CODIGO_DOC', 'like', 'DOC%')
-            ->orderByRaw('CAST(SUBSTRING(CODIGO_DOC, 4) AS UNSIGNED) DESC')
-            ->value('CODIGO_DOC');
-        $siguienteCodDoc = 'DOC001';
-        if ($ultimoCod) {
-            $num = (int) substr($ultimoCod, 3);
-            $siguienteCodDoc = 'DOC' . str_pad($num + 1, 3, '0', STR_PAD_LEFT);
-        }
-
-        // Asignaciones individuales del docente seleccionado
         $verAsigDoc     = $request->input('ver_asig');
         $asigIndividual = collect();
         if ($verAsigDoc) {
@@ -55,9 +91,8 @@ class AdminController extends Controller
                 ->get();
         }
 
-        return view('admin.usuarios', compact(
-            'usuarios', 'docentes', 'docentesConAsig', 'docentesActivos',
-            'asigIndividual', 'verAsigDoc', 'siguienteCodDoc'
+        return view('admin.asignaciones', compact(
+            'docentesConAsig', 'docentesActivos', 'asigIndividual', 'verAsigDoc'
         ));
     }
 
@@ -97,6 +132,34 @@ class AdminController extends Controller
         return back()->with('success_usuario', "Usuario «{$user}» eliminado.");
     }
 
+    public function storeDocente(Request $request)
+    {
+        $request->validate([
+            'CODIGO_DOC' => 'required|max:10',
+            'NOMBRE_DOC' => 'required|max:150',
+            'TIPO'       => 'required|in:DOCENTE,ADMINISTRATIVO',
+        ]);
+
+        $codigo = strtoupper(trim($request->CODIGO_DOC));
+
+        if (DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $codigo)->exists()) {
+            return back()->withErrors(['docente_store' => "Ya existe un docente con el código «{$codigo}»."]);
+        }
+
+        $ultimo = DB::table('CODIGOS_DOC')->max('ID_DOCENTE') ?? 0;
+
+        DB::table('CODIGOS_DOC')->insert([
+            'ID_DOCENTE'  => $ultimo + 1,
+            'CODIGO_DOC'  => $codigo,
+            'NOMBRE_DOC'  => trim($request->NOMBRE_DOC),
+            'TIPO'        => $request->TIPO,
+            'ESTADO'      => 'ACTIVO',
+            'FECHA_CREACION' => now(),
+        ]);
+
+        return back()->with('success_docente', "Docente «{$request->NOMBRE_DOC}» creado con código {$codigo}.");
+    }
+
     public function toggleDocente($codigo)
     {
         $docente = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $codigo)->first();
@@ -134,8 +197,25 @@ class AdminController extends Controller
             ->update(['CODIGO_DOC' => $destino]);
 
         return redirect()
-            ->route('admin.usuarios', ['ver_asig' => $origen])
+            ->route('admin.asignaciones', ['ver_asig' => $origen])
             ->with('success_mover_una', "Asignación movida correctamente a «{$destino}».");
+    }
+
+    public function asignarDirGrupo(Request $request)
+    {
+        $curso   = trim($request->input('curso'));
+        $docente = trim($request->input('docente'));
+
+        // Quitar cualquier director previo de ese curso
+        DB::table('CODIGOS_DOC')->where('DIR_GRUPO', $curso)->update(['DIR_GRUPO' => null]);
+
+        // Asignar si se eligió un docente
+        if ($docente) {
+            DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $docente)->update(['DIR_GRUPO' => $curso]);
+            return back()->with('success_dir_grupo', "Director del curso {$curso} asignado correctamente.");
+        }
+
+        return back()->with('success_dir_grupo', "Director del curso {$curso} removido.");
     }
 
     public function moverAsignaciones(Request $request)

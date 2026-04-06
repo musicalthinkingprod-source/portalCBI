@@ -93,10 +93,14 @@
                             <tr>
                                 <th class="px-4 py-3 text-left w-16">Código</th>
                                 <th class="px-4 py-3 text-left">Estudiante</th>
-                                <th class="px-4 py-3 text-center w-24">Período 1</th>
-                                <th class="px-4 py-3 text-center w-24">Período 2</th>
-                                <th class="px-4 py-3 text-center w-24">Período 3</th>
-                                <th class="px-4 py-3 text-center w-24">Período 4</th>
+                                @foreach([1,2,3,4] as $ph)
+                                <th class="px-4 py-3 text-center w-24">
+                                    Período {{ $ph }}
+                                    @if(!in_array($ph, $periodosAbiertos))
+                                        <span class="block text-red-300 text-xs font-normal normal-case tracking-normal">🔒 cerrado</span>
+                                    @endif
+                                </th>
+                                @endforeach
                                 <th class="px-4 py-3 text-center w-20">Promedio</th>
                             </tr>
                         </thead>
@@ -116,16 +120,23 @@
                                     {{ $est->APELLIDO1 }} {{ $est->APELLIDO2 }} {{ $est->NOMBRE1 }} {{ $est->NOMBRE2 }}
                                 </td>
                                 @foreach([1,2,3,4] as $p)
-                                @php $nVal = $notasMap[$est->CODIGO][$p] ?? ''; @endphp
-                                <td class="px-2 py-2 text-center">
+                                @php
+                                    $nVal    = $notasMap[$est->CODIGO][$p] ?? '';
+                                    $abierto = in_array($p, $periodosAbiertos);
+                                @endphp
+                                <td class="px-2 py-2 text-center {{ !$abierto ? 'bg-gray-50' : '' }}">
                                     <input type="number"
                                         name="notas[{{ $est->CODIGO }}][{{ $p }}]"
                                         value="{{ $nVal }}"
                                         min="0" max="10" step="0.1"
                                         placeholder="—"
-                                        class="w-16 text-center border border-gray-300 rounded-lg px-1 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400
-                                            {{ $nVal !== '' && $nVal < 6 ? 'text-red-600 font-semibold' : ($nVal !== '' ? 'text-green-700 font-semibold' : '') }}
-                                            nota-input">
+                                        {{ !$abierto ? 'disabled' : '' }}
+                                        class="w-16 text-center border rounded-lg px-1 py-1 text-sm
+                                            {{ !$abierto
+                                                ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                : 'border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400' }}
+                                            {{ $nVal !== '' && $nVal < 6 ? 'text-red-600 font-semibold' : ($nVal !== '' && $abierto ? 'text-green-700 font-semibold' : '') }}
+                                            {{ $abierto ? 'nota-input' : '' }}">
                                 </td>
                                 @endforeach
                                 <td class="px-4 py-2 text-center font-semibold prom-cell

@@ -21,7 +21,7 @@
 
         <div class="px-6 py-5 border-b border-blue-700 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <img src="/images/logo.svg" alt="Logo" class="w-9 h-9 invert opacity-90">
+                <img src="{{ asset('images/escudoCBI.png') }}" alt="Logo" class="h-9 w-auto opacity-90">
                 <div>
                     <h1 class="text-lg font-bold leading-tight">Portal Cebeista</h1>
                     <p class="text-xs text-blue-300">Área de Padres</p>
@@ -59,7 +59,7 @@
                     ->where('CODIGO_FECHA', 'like', 'B%')
                     ->where('INICIO', '<=', $now)->where('FIN', '>=', $now)->exists();
                 $abiertoNotas = \Illuminate\Support\Facades\DB::table('FECHAS')
-                    ->where('CODIGO_FECHA', 'like', 'F%')
+                    ->where('CODIGO_FECHA', 'like', 'N%')
                     ->where('INICIO', '<=', $now)->where('FIN', '>=', $now)->exists();
             @endphp
 
@@ -69,58 +69,58 @@
 
             {{-- Consultar notas (requiere F abierto y sin deuda) --}}
             @if($bloqueado)
-                <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-950 text-blue-400 text-sm cursor-not-allowed opacity-60"
-                     title="No disponible por saldo pendiente">
-                    🔒 Consultar notas
+                <div class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
+                    <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Consultar notas</div>
+                    <p class="text-xs text-blue-500 mt-0.5 leading-tight">No disponible por saldo pendiente de <strong class="text-blue-400">$ {{ number_format($saldoP, 0, ',', '.') }}</strong>.</p>
                 </div>
             @elseif(!$abiertoNotas)
-                <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-950 text-blue-400 text-sm cursor-not-allowed opacity-60"
-                     title="Las notas aún no están disponibles">
-                    🔒 Consultar notas
+                <div class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
+                    <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Consultar notas</div>
+                    <p class="text-xs text-blue-500 mt-0.5 leading-tight">La institución aún no ha publicado las notas finales.</p>
                 </div>
             @else
-                <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                <a href="{{ route('padres.notas') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                     📋 Consultar notas
                 </a>
             @endif
 
             {{-- Salvavidas --}}
             @if(!$abiertoSalvavidas)
-                <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-950 text-blue-400 text-sm cursor-not-allowed opacity-60"
-                     title="No disponible en este momento">
-                    🔒 Salvavidas
+                <div class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
+                    <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Salvavidas</div>
+                    <p class="text-xs text-blue-500 mt-0.5 leading-tight">La institución aún no ha habilitado la consulta de salvavidas.</p>
                 </div>
             @else
-                <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                <a href="{{ route('padres.salvavidas') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                     🏊 Salvavidas
                 </a>
             @endif
 
             {{-- Derroteros --}}
             @if(!$abiertoDerrotero)
-                <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-950 text-blue-400 text-sm cursor-not-allowed opacity-60"
-                     title="No disponible en este momento">
-                    🔒 Derroteros
+                <div class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
+                    <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Derroteros</div>
+                    <p class="text-xs text-blue-500 mt-0.5 leading-tight">La institución aún no ha habilitado la consulta de derroteros.</p>
                 </div>
             @else
-                <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                    🗺️ Derroteros
+                <a href="{{ route('padres.derroteros') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                    📌 Derroteros
                 </a>
             @endif
 
             {{-- Boletines (requiere B abierto y sin deuda) --}}
             @if($bloqueado)
-                <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-950 text-blue-400 text-sm cursor-not-allowed opacity-60"
-                     title="No disponible por saldo pendiente">
-                    🔒 Boletines
+                <div class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
+                    <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Boletines</div>
+                    <p class="text-xs text-blue-500 mt-0.5 leading-tight">No disponible por saldo pendiente de <strong class="text-blue-400">$ {{ number_format($saldoP, 0, ',', '.') }}</strong>.</p>
                 </div>
             @elseif(!$abiertoBoletin)
-                <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-950 text-blue-400 text-sm cursor-not-allowed opacity-60"
-                     title="Los boletines aún no están disponibles">
-                    🔒 Boletines
+                <div class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
+                    <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Boletines</div>
+                    <p class="text-xs text-blue-500 mt-0.5 leading-tight">La institución aún no ha publicado los boletines.</p>
                 </div>
             @else
-                <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                <a href="{{ route('padres.boletines') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                     📝 Boletines
                 </a>
             @endif
@@ -132,6 +132,14 @@
                     Algunas opciones están bloqueadas.
                 </div>
             @endif
+
+            <a href="{{ route('padres.english_acq') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                🇬🇧 English Acquisition
+            </a>
+
+            <a href="{{ route('padres.asistencia') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                📅 Asistencia
+            </a>
 
             <a href="{{ route('padres.estado_cuenta') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                 📊 Estado de cuenta

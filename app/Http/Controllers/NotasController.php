@@ -161,9 +161,22 @@ class NotasController extends Controller
             ? ($materias->firstWhere('CODIGO_MAT', $matSelec)->NOMBRE_MAT ?? '')
             : '';
 
+        // Períodos abiertos según FECHAS (SuperAd y Admin siempre pueden editar)
+        $periodosAbiertos = [];
+        if ($esSuperior) {
+            $periodosAbiertos = [1, 2, 3, 4];
+        } else {
+            foreach ([1, 2, 3, 4] as $p) {
+                if (FechasController::estaActivo('N' . $p)) {
+                    $periodosAbiertos[] = $p;
+                }
+            }
+        }
+
         return view('notas.index', compact(
             'materias', 'cursosDisponibles', 'matSelec', 'cursoSelec',
-            'estudiantes', 'notasMap', 'mapaMateriasCursos', 'materiaNombre'
+            'estudiantes', 'notasMap', 'mapaMateriasCursos', 'materiaNombre',
+            'periodosAbiertos'
         ));
     }
 
@@ -180,7 +193,7 @@ class NotasController extends Controller
                 if ($nota === '' || $nota === null) continue;
 
                 // Verificar que el período esté abierto (SuperAd y Admin pueden siempre)
-                if (!$esSuperior && !FechasController::estaActivo('P' . $periodo)) {
+                if (!$esSuperior && !FechasController::estaActivo('N' . $periodo)) {
                     return back()->withErrors([
                         'fechas' => "El período {$periodo} no está abierto para ingreso de notas."
                     ]);
@@ -199,7 +212,7 @@ class NotasController extends Controller
                         ->where('CODIGO_ALUM', $codAlum)
                         ->where('CODIGO_MAT', $materia)
                         ->where('PERIODO', $periodo)
-                        ->update(['NOTA' => $nota, 'CODIGO_DOC' => $docente]);
+                        ->update(['NOTA' => $nota, 'TIPODENOTA' => 'N', 'CODIGO_DOC' => $docente]);
                 } else {
                     DB::table($tabla)->insert([
                         'CODIGO_ALUM' => $codAlum,

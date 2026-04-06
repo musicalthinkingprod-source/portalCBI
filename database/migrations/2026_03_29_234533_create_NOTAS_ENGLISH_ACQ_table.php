@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('NOTAS_ENGLISH_ACQ', function (Blueprint $table) {
+            $table->id();
             $table->integer('CODIGO_ALUM');
-            $table->integer('CODIGO_DOC');
+            $table->string('CODIGO_DOC');
+            $table->smallInteger('ANIO');
+            $table->tinyInteger('PERIODO')->unsigned();
+            $table->timestamp('FECHA')->useCurrent();
         });
     }
 
