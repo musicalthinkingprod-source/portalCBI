@@ -5,6 +5,16 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS=0;
 
+TRUNCATE TABLE `observaciones_contables`;
+TRUNCATE TABLE `listado_transporte`;
+TRUNCATE TABLE `nivelacion`;
+TRUNCATE TABLE `transporte`;
+TRUNCATE TABLE `pension`;
+TRUNCATE TABLE `costo_transporte`;
+TRUNCATE TABLE `costo_pension`;
+TRUNCATE TABLE `conceptos`;
+TRUNCATE TABLE `centro_costos`;
+
 -- centro_costos (7 filas)
 INSERT INTO `centro_costos` (`codigo_centro_costos`, `nombre_centro_costos`) VALUES
   ('21', 'Matrícula'),
