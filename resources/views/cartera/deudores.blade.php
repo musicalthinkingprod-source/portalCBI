@@ -29,6 +29,7 @@
                         <th class="px-4 py-3 text-right">Pagado</th>
                         <th class="px-4 py-3 text-right">Saldo</th>
                         <th class="px-4 py-3 text-left">Acudiente / Contacto</th>
+                        <th class="px-4 py-3"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -71,6 +72,12 @@
                                     @endforeach
                                 </div>
                             @endif
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                            <a href="{{ route('cartera.estudiante', $d->codigo_alumno) }}"
+                                class="inline-block bg-gray-700 hover:bg-gray-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                                Ver / Seguimiento
+                            </a>
                         </td>
                     </tr>
                     @endforeach

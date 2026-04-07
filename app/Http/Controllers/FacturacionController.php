@@ -7,13 +7,39 @@ use Illuminate\Support\Facades\DB;
 
 class FacturacionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $facturas = DB::table('facturacion')
-            ->orderBy('fecha', 'desc')
-            ->paginate(40);
+        $sortable  = ['codigo_alumno', 'fecha', 'concepto', 'mes', 'valor'];
+        $sortCol   = in_array($request->sort, $sortable) ? $request->sort : 'fecha';
+        $sortDir   = $request->direction === 'asc' ? 'asc' : 'desc';
 
-        return view('facturacion.index', compact('facturas'));
+        $query = DB::table('facturacion')->orderBy($sortCol, $sortDir);
+
+        if ($request->filled('codigo_alumno')) {
+            $query->where('codigo_alumno', $request->codigo_alumno);
+        }
+        if ($request->filled('fecha')) {
+            $query->where('fecha', $request->fecha);
+        }
+        if ($request->filled('concepto')) {
+            $query->where('concepto', 'like', '%' . $request->concepto . '%');
+        }
+        if ($request->filled('mes')) {
+            $query->where('mes', 'like', '%' . $request->mes . '%');
+        }
+        if ($request->filled('orden')) {
+            $query->where('orden', $request->orden);
+        }
+        if ($request->filled('codigo_concepto')) {
+            $query->where('codigo_concepto', 'like', '%' . $request->codigo_concepto . '%');
+        }
+        if ($request->filled('centro_costos')) {
+            $query->where('centro_costos', 'like', '%' . $request->centro_costos . '%');
+        }
+
+        $facturas = $query->paginate(40)->withQueryString();
+
+        return view('facturacion.index', compact('facturas', 'sortCol', 'sortDir'));
     }
 
     public function create()

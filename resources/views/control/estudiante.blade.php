@@ -46,6 +46,13 @@
         </div>
 
         {{-- Resumen financiero --}}
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide">Resumen financiero</h3>
+            <a href="{{ route('cartera.estudiante', $estudiante->CODIGO) }}"
+                class="bg-gray-700 hover:bg-gray-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                Ver seguimiento de cartera →
+            </a>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 text-center">
                 <p class="text-xs text-blue-400 uppercase tracking-wide mb-1">Total Facturado</p>

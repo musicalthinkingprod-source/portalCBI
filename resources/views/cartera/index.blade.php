@@ -74,6 +74,7 @@
                         <th class="px-4 py-3 text-right">Facturado</th>
                         <th class="px-4 py-3 text-right">Pagado</th>
                         <th class="px-4 py-3 text-right">Saldo</th>
+                        <th class="px-4 py-3"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -91,6 +92,10 @@
                         <td class="px-4 py-3 text-right text-xs">$ {{ number_format($d->total_facturado, 0, ',', '.') }}</td>
                         <td class="px-4 py-3 text-right text-xs text-green-700">$ {{ number_format($d->total_pagado, 0, ',', '.') }}</td>
                         <td class="px-4 py-3 text-right font-bold text-red-700">$ {{ number_format($d->saldo, 0, ',', '.') }}</td>
+                        <td class="px-4 py-3 text-right">
+                            <a href="{{ route('cartera.estudiante', $d->codigo_alumno) }}"
+                                class="text-xs text-blue-700 hover:underline font-semibold">Ver →</a>
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>

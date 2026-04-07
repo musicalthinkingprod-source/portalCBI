@@ -86,6 +86,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/pagos', [PagosController::class, 'store'])->name('pagos.store');
         Route::get('/cartera', [CarteraController::class, 'index'])->name('cartera.index');
         Route::get('/cartera/deudores', [CarteraController::class, 'deudores'])->name('cartera.deudores');
+        Route::get('/cartera/estudiante/{codigo}', [CarteraController::class, 'estudiante'])->name('cartera.estudiante');
+        Route::post('/cartera/estudiante/{codigo}/seguimiento', [CarteraController::class, 'storeSeguimiento'])->name('cartera.seguimiento.store');
+        Route::delete('/cartera/seguimiento/{id}', [CarteraController::class, 'destroySeguimiento'])->name('cartera.seguimiento.destroy');
         Route::get('/facturacion', [FacturacionController::class, 'index'])->name('facturacion.index');
         Route::get('/facturacion/crear', [FacturacionController::class, 'create'])->name('facturacion.create');
         Route::post('/facturacion', [FacturacionController::class, 'store'])->name('facturacion.store');

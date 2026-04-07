@@ -7,13 +7,33 @@ use Illuminate\Support\Facades\DB;
 
 class PagosController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $pagos = DB::table('registro_pagos')
-            ->orderBy('fecha', 'desc')
-            ->paginate(40);
+        $sortable  = ['codigo_alumno', 'fecha', 'concepto', 'mes', 'valor'];
+        $sortCol   = in_array($request->sort, $sortable) ? $request->sort : 'fecha';
+        $sortDir   = $request->direction === 'asc' ? 'asc' : 'desc';
 
-        return view('pagos.index', compact('pagos'));
+        $query = DB::table('registro_pagos')->orderBy($sortCol, $sortDir);
+
+        if ($request->filled('codigo_alumno')) {
+            $query->where('codigo_alumno', $request->codigo_alumno);
+        }
+        if ($request->filled('fecha')) {
+            $query->where('fecha', $request->fecha);
+        }
+        if ($request->filled('concepto')) {
+            $query->where('concepto', 'like', '%' . $request->concepto . '%');
+        }
+        if ($request->filled('mes')) {
+            $query->where('mes', 'like', '%' . $request->mes . '%');
+        }
+        if ($request->filled('orden')) {
+            $query->where('orden', 'like', '%' . $request->orden . '%');
+        }
+
+        $pagos = $query->paginate(40)->withQueryString();
+
+        return view('pagos.index', compact('pagos', 'sortCol', 'sortDir'));
     }
 
     public function create()

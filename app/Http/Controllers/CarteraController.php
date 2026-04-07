@@ -78,6 +78,73 @@ class CarteraController extends Controller
         ));
     }
 
+    public function estudiante(Request $request, $codigo)
+    {
+        // Datos del estudiante
+        $estudiante = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->first();
+        $infoPadres = DB::table('INFO_PADRES')->where('CODIGO', $codigo)->first();
+
+        // Resumen financiero
+        $totalFacturado = DB::table('facturacion')->where('codigo_alumno', $codigo)->sum('valor');
+        $totalPagado    = DB::table('registro_pagos')->where('codigo_alumno', $codigo)->sum('valor');
+        $saldo          = $totalFacturado - $totalPagado;
+
+        // Detalle de facturas
+        $facturas = DB::table('facturacion')
+            ->where('codigo_alumno', $codigo)
+            ->orderBy('fecha', 'desc')
+            ->get();
+
+        // Detalle de pagos
+        $pagos = DB::table('registro_pagos')
+            ->where('codigo_alumno', $codigo)
+            ->orderBy('fecha', 'desc')
+            ->get();
+
+        // Seguimientos
+        $seguimientos = DB::table('seguimiento_cartera')
+            ->where('codigo_alumno', $codigo)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('cartera.estudiante', compact(
+            'estudiante', 'infoPadres', 'codigo',
+            'totalFacturado', 'totalPagado', 'saldo',
+            'facturas', 'pagos', 'seguimientos'
+        ));
+    }
+
+    public function storeSeguimiento(Request $request, $codigo)
+    {
+        $request->validate([
+            'tipo' => 'required|string|max:30',
+            'nota' => 'required|string|max:2000',
+        ]);
+
+        DB::table('seguimiento_cartera')->insert([
+            'codigo_alumno' => $codigo,
+            'tipo'          => $request->tipo,
+            'nota'          => $request->nota,
+            'usuario'       => auth()->user()->name ?? null,
+            'created_at'    => now(),
+            'updated_at'    => now(),
+        ]);
+
+        return redirect()->route('cartera.estudiante', $codigo)
+            ->with('success', 'Registro guardado.');
+    }
+
+    public function destroySeguimiento(Request $request, $id)
+    {
+        $seg = DB::table('seguimiento_cartera')->where('id', $id)->first();
+        if ($seg) {
+            DB::table('seguimiento_cartera')->where('id', $id)->delete();
+            return redirect()->route('cartera.estudiante', $seg->codigo_alumno)
+                ->with('success', 'Registro eliminado.');
+        }
+        return back();
+    }
+
     public function deudores(Request $request)
     {
         $facturaSub = DB::table('facturacion')
