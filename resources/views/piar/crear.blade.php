@@ -86,6 +86,11 @@
         ✅ {{ session('piar_saved') }}
     </div>
 @endif
+@if(session('piar_error'))
+    <div class="mb-4 p-3 bg-red-100 text-red-900 rounded-xl text-sm no-print font-mono break-all">
+        ❌ ERROR: {{ session('piar_error') }}
+    </div>
+@endif
 
 <form id="form-piar" method="POST" action="{{ route('piar.guardar', $estudiante->CODIGO) }}">
 @csrf

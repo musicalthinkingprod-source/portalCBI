@@ -135,6 +135,7 @@ class PiarController extends Controller
     {
         $bool = fn($v) => $v === 'si' ? 1 : 0;
 
+        try {
         DB::table('PIAR_DIAG')->updateOrInsert(
             ['CODIGO_ALUM' => $codigo],
             [
@@ -235,6 +236,10 @@ class PiarController extends Controller
                 'INST_SEDE'        => $request->INST_SEDE,
             ]
         );
+
+        } catch (\Exception $e) {
+            return back()->with('piar_error', $e->getMessage());
+        }
 
         return back()->with('piar_saved', 'PIAR guardado correctamente.');
     }
