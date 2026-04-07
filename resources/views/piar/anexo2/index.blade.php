@@ -45,12 +45,12 @@
         @endif
     </div>
 
-    <table class="min-w-full text-sm">
+    <table class="w-full text-sm table-fixed">
         <thead class="bg-gray-50 text-gray-400 uppercase text-xs">
             <tr>
-                <th class="px-4 py-2 text-left">Módulo / Materia</th>
-                <th class="px-4 py-2 text-center whitespace-nowrap">Caracterización</th>
-                <th class="px-4 py-2 text-center whitespace-nowrap">Ajustes por período</th>
+                <th class="px-4 py-2 text-left w-1/2">Módulo / Materia</th>
+                <th class="px-4 py-2 text-center w-1/4">Caracterización</th>
+                <th class="px-4 py-2 text-center w-1/4">Ajustes por período</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">

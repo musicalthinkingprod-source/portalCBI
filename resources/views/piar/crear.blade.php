@@ -67,6 +67,17 @@
             class="bg-blue-800 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition inline-block">
             🖨️ Imprimir Anexo 1
         </a>
+        @if($piar)
+        <form method="POST" action="{{ route('piar.eliminar', $estudiante->CODIGO) }}"
+              onsubmit="return confirm('¿Seguro que deseas eliminar el PIAR de este estudiante? Esta acción no se puede deshacer.')">
+            @csrf
+            @method('DELETE')
+            <button type="submit"
+                class="bg-red-700 hover:bg-red-600 text-white text-sm font-semibold px-5 py-2 rounded-lg transition">
+                🗑️ Eliminar PIAR
+            </button>
+        </form>
+        @endif
     </div>
 </div>
 
@@ -98,7 +109,7 @@
         </div>
         <div>
             <label class="piar-label">Grado</label>
-            <input type="text" value="{{ $grado }}{{ $curso ? ' – ' . $curso : '' }}" class="piar-input" readonly>
+            <input type="text" value="{{ $curso }}" class="piar-input" readonly>
         </div>
         <div>
             <label class="piar-label">Dx PIAR</label>
@@ -123,56 +134,63 @@
 {{-- ══ SECCIÓN 1 – INFORMACIÓN GENERAL ══ --}}
 <div class="bg-white rounded-xl shadow p-6 print-card">
     <h2 class="piar-section-title">1. Información General del Estudiante</h2>
-    <p class="text-xs text-gray-400 mb-4">Información para la matrícula – Anexo 1 PIAR</p>
+    <p class="text-xs text-gray-400 mb-4">Todos los campos se prellenan desde la ficha del estudiante. Puede modificar cualquier dato si el acudiente lo solicita.</p>
 
+    {{-- Nombres y apellidos --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
         <div>
             <label class="piar-label">Nombres</label>
-            <input type="text" value="{{ $nombreCompleto }}" class="piar-input" readonly>
+            <input type="text" name="ALU_NOMBRES" value="{{ $v('ALU_NOMBRES', $nombreCompleto) }}" class="piar-input">
         </div>
         <div>
             <label class="piar-label">Apellidos</label>
-            <input type="text" value="{{ $apellidos }}" class="piar-input" readonly>
+            <input type="text" name="ALU_APELLIDOS" value="{{ $v('ALU_APELLIDOS', $apellidos) }}" class="piar-input">
         </div>
         <div>
             <label class="piar-label">Curso – Sede – Jornada</label>
-            <input type="text" value="{{ $curso }}{{ $sede ? ' – ' . $sede : '' }} – Jornada única. Colegio Bilingüe Integral." class="piar-input" readonly>
+            <input type="text" name="ALU_CURSO_INFO"
+                value="{{ $v('ALU_CURSO_INFO', $curso . ($sede ? ' – Sede ' . $sede : '') . ' – Jornada única. Colegio Bilingüe Integral.') }}"
+                class="piar-input">
         </div>
         <div>
             <label class="piar-label">Lugar de nacimiento</label>
-            <input type="text" value="{{ $lugarNac }}" class="piar-input" readonly>
+            <input type="text" name="ALU_LUG_NAC" value="{{ $v('ALU_LUG_NAC', $lugarNac) }}" class="piar-input">
         </div>
         <div>
             <label class="piar-label">Edad</label>
-            <input type="text" value="{{ $edad }}" class="piar-input" readonly>
+            <input type="text" name="ALU_EDAD" value="{{ $v('ALU_EDAD', $edad) }}" class="piar-input">
         </div>
         <div>
             <label class="piar-label">Fecha de nacimiento</label>
-            <input type="text" value="{{ $fechaNac }}" class="piar-input" readonly>
+            <input type="text" name="ALU_FECH_NAC" value="{{ $v('ALU_FECH_NAC', $fechaNac) }}" class="piar-input">
         </div>
     </div>
 
     {{-- Tipo de documento --}}
     <div class="mt-4 pt-4 border-t border-gray-100">
         <label class="piar-label mb-2 block">Tipo de identificación</label>
+        @php $tipoDocGuardado = $v('ALU_TIPO_DOC', $tipoDoc); @endphp
         <div class="flex flex-wrap gap-6 items-center mb-3">
             <label class="flex items-center gap-2 text-sm">
-                <input type="radio" name="tipo_doc" value="TI" {{ $tipoDoc === 'TI' ? 'checked' : '' }}> TI
+                <input type="radio" name="ALU_TIPO_DOC" value="TI" {{ $tipoDocGuardado === 'TI' ? 'checked' : '' }}> TI
             </label>
             <label class="flex items-center gap-2 text-sm">
-                <input type="radio" name="tipo_doc" value="CC" {{ $tipoDoc === 'CC' ? 'checked' : '' }}> CC
+                <input type="radio" name="ALU_TIPO_DOC" value="CC" {{ $tipoDocGuardado === 'CC' ? 'checked' : '' }}> CC
             </label>
             <label class="flex items-center gap-2 text-sm">
-                <input type="radio" name="tipo_doc" value="RC" {{ $tipoDoc === 'RC' ? 'checked' : '' }}> RC
+                <input type="radio" name="ALU_TIPO_DOC" value="RC" {{ $tipoDocGuardado === 'RC' ? 'checked' : '' }}> RC
             </label>
             <label class="flex items-center gap-2 text-sm">
-                <input type="radio" name="tipo_doc" value="Otro"> Otro:
-                <input type="text" name="tipo_doc_otro" class="piar-input-inline">
+                <input type="radio" name="ALU_TIPO_DOC" value="Otro"
+                    {{ !in_array($tipoDocGuardado, ['TI','CC','RC']) ? 'checked' : '' }}> Otro:
+                <input type="text" name="ALU_TIPO_DOC_OTRO"
+                    value="{{ $v('ALU_TIPO_DOC_OTRO', !in_array($tipoDoc, ['TI','CC','RC']) ? $tipoDoc : '') }}"
+                    class="piar-input-inline">
             </label>
         </div>
         <div>
             <label class="piar-label">No. de identificación</label>
-            <input type="text" value="{{ $numId }}" class="piar-input" readonly>
+            <input type="text" name="ALU_NUM_ID" value="{{ $v('ALU_NUM_ID', $numId) }}" class="piar-input">
         </div>
     </div>
 
@@ -180,7 +198,7 @@
     <div class="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
         <div>
             <label class="piar-label">Departamento donde vive</label>
-            <input type="text" value="Cundinamarca" class="piar-input" readonly>
+            <input type="text" name="ALU_DEPTO" value="{{ $v('ALU_DEPTO', 'Cundinamarca') }}" class="piar-input">
         </div>
         <div>
             <label class="piar-label">Municipio</label>
@@ -188,11 +206,15 @@
         </div>
         <div>
             <label class="piar-label">Dirección de vivienda</label>
-            <input type="text" value="{{ $direccion }}" class="piar-input" readonly>
+            <input type="text" name="ALU_DIRECCION" value="{{ $v('ALU_DIRECCION', $direccion) }}" class="piar-input">
         </div>
         <div>
             <label class="piar-label">Barrio / Vereda</label>
-            <input type="text" value="{{ $barrio }}" class="piar-input" readonly>
+            <input type="text" name="ALU_BARRIO" value="{{ $v('ALU_BARRIO', $barrio) }}" class="piar-input">
+        </div>
+        <div>
+            <label class="piar-label">Estrato</label>
+            <input type="text" name="ALU_ESTRATO" value="{{ $v('ALU_ESTRATO', $estudiante->ESTRATO ?? '') }}" class="piar-input" placeholder="Ej: 2">
         </div>
         <div>
             <label class="piar-label">Teléfono</label>
@@ -201,6 +223,30 @@
         <div>
             <label class="piar-label">Correo electrónico</label>
             <input type="text" name="EMAIL" value="{{ $v('EMAIL', $correoPadres) }}" class="piar-input">
+        </div>
+    </div>
+
+    {{-- Datos de salud del estudiante --}}
+    <div class="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+        <div>
+            <label class="piar-label">Tipo de sangre (RH)</label>
+            <input type="text" name="ALU_RH" value="{{ $v('ALU_RH', $estudiante->RH ?? '') }}" class="piar-input" placeholder="Ej: O+">
+        </div>
+        <div>
+            <label class="piar-label">¿Usa gafas?</label>
+            <div class="flex gap-4 mt-1">
+                @php $gafasGuardado = $p ? (bool)$p->ALU_GAFAS : (bool)($estudiante->GAFAS ?? false); @endphp
+                <label class="text-sm flex items-center gap-1">
+                    <input type="radio" name="ALU_GAFAS" value="si" {{ $gafasGuardado ? 'checked' : '' }}> Sí
+                </label>
+                <label class="text-sm flex items-center gap-1">
+                    <input type="radio" name="ALU_GAFAS" value="no" {{ !$gafasGuardado ? 'checked' : '' }}> No
+                </label>
+            </div>
+        </div>
+        <div class="sm:col-span-2">
+            <label class="piar-label">Alergias / condiciones conocidas</label>
+            <input type="text" name="ALU_ALERG" value="{{ $v('ALU_ALERG', $estudiante->ALERG ?? '') }}" class="piar-input" placeholder="Ej: Alergia al polvo, asma…">
         </div>
     </div>
 
@@ -349,7 +395,7 @@
                     {{ $vb('TERAP') !== true ? 'checked' : '' }}> No
             </label>
         </div>
-        @foreach([['TERAP_WHICH1','TERAP_FREC1'],['TERAP_WHICH2','TERAP_FREC2'],['TERAP_WHICH3','TERAP_FREC3']] as $i => $par)
+        @foreach([['TERAP_WHICH1','TERAP_FREC1'],['TERAP_WHICH2','TERAP_FREC2'],['TERAP_WHICH3','TERAP_FREC3'],['TERAP_WHICH4','TERAP_FREC4'],['TERAP_WHICH5','TERAP_FREC5']] as $i => $par)
         <div class="grid grid-cols-2 gap-4 mb-3">
             <div>
                 <label class="piar-label">¿Cuál terapia? ({{ $i + 1 }})</label>
@@ -427,11 +473,11 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
         <div>
             <label class="piar-label">Nombre de la madre</label>
-            <input type="text" value="{{ $nombreMadre }}" class="piar-input" readonly>
+            <input type="text" name="PAD_MADRE" value="{{ $v('PAD_MADRE', $nombreMadre) }}" class="piar-input">
         </div>
         <div>
             <label class="piar-label">Nombre del padre</label>
-            <input type="text" value="{{ $nombrePadre }}" class="piar-input" readonly>
+            <input type="text" name="PAD_PADRE" value="{{ $v('PAD_PADRE', $nombrePadre) }}" class="piar-input">
         </div>
         <div>
             <label class="piar-label">Ocupación de la madre</label>
@@ -529,17 +575,27 @@
 
     <div class="space-y-4">
         <div>
-            <label class="piar-label">¿Ha estado vinculado en otra institución educativa o modalidad de educación inicial?</label>
+            <label class="piar-label">¿Ha estado vinculado en otra institución educativa, fundación o modalidad de educación inicial?</label>
             <div class="flex gap-4 mt-1 flex-wrap items-center">
                 <label class="text-sm flex items-center gap-1">
                     <input type="radio" name="INSTITUPREV" value="si"
-                        {{ $vb('INSTITUPREV') === true ? 'checked' : '' }}> Sí – ¿Cuál?
+                        {{ $vb('INSTITUPREV') === true ? 'checked' : '' }}
+                        onchange="document.getElementById('instituprev-cual').classList.remove('hidden');document.getElementById('instituprev-porque').classList.add('hidden')"> Sí – ¿Cuál?
                     <input type="text" name="INTITUPREV_WHICH" value="{{ $v('INTITUPREV_WHICH') }}" class="piar-input-inline ml-1">
                 </label>
                 <label class="text-sm flex items-center gap-1">
                     <input type="radio" name="INSTITUPREV" value="no"
-                        {{ $vb('INSTITUPREV') !== true ? 'checked' : '' }}> No
+                        {{ $vb('INSTITUPREV') !== true ? 'checked' : '' }}
+                        onchange="document.getElementById('instituprev-porque').classList.remove('hidden');document.getElementById('instituprev-cual').classList.add('hidden')"> No
                 </label>
+            </div>
+            <div id="instituprev-cual" class="{{ $vb('INSTITUPREV') === true ? '' : 'hidden' }} mt-2">
+                {{-- el campo ¿Cuál? ya está inline, este div es solo un placeholder por si se necesita ampliar --}}
+            </div>
+            <div id="instituprev-porque" class="{{ $vb('INSTITUPREV') !== true ? '' : 'hidden' }} mt-2">
+                <label class="piar-label">¿Por qué?</label>
+                <input type="text" name="INSTITUPREV_PORQUE" value="{{ $v('INSTITUPREV_PORQUE') }}"
+                    placeholder="Ej: Nunca ha asistido a otra institución" class="piar-input">
             </div>
         </div>
 
@@ -553,12 +609,19 @@
                 <div class="flex gap-4 mt-1">
                     <label class="text-sm flex items-center gap-1">
                         <input type="radio" name="APRUEBA" value="si"
-                            {{ ($vb('APRUEBA') !== false) ? 'checked' : '' }}> Sí
+                            {{ ($vb('APRUEBA') !== false) ? 'checked' : '' }}
+                            onchange="document.getElementById('aprueba-porque').classList.add('hidden')"> Sí
                     </label>
                     <label class="text-sm flex items-center gap-1">
                         <input type="radio" name="APRUEBA" value="no"
-                            {{ $vb('APRUEBA') === false ? 'checked' : '' }}> No
+                            {{ $vb('APRUEBA') === false ? 'checked' : '' }}
+                            onchange="document.getElementById('aprueba-porque').classList.remove('hidden')"> No
                     </label>
+                </div>
+                <div id="aprueba-porque" class="{{ $vb('APRUEBA') === false ? '' : 'hidden' }} mt-2">
+                    <label class="piar-label">¿Por qué no aprobó?</label>
+                    <input type="text" name="APRUEBA_PORQUE" value="{{ $v('APRUEBA_PORQUE') }}"
+                        placeholder="Ej: Repitió por bajo rendimiento académico" class="piar-input">
                 </div>
             </div>
             <div class="sm:col-span-2">
@@ -605,11 +668,11 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
                 <div>
                     <label class="piar-label">Nombre de la institución</label>
-                    <input type="text" value="Colegio Bilingüe Integral CBI." class="piar-input" readonly>
+                    <input type="text" name="INST_NOMBRE" value="{{ $v('INST_NOMBRE', 'Colegio Bilingüe Integral CBI.') }}" class="piar-input">
                 </div>
                 <div>
                     <label class="piar-label">Sede</label>
-                    <input type="text" value="{{ $sede ?: 'Sede A' }}" class="piar-input" readonly>
+                    <input type="text" name="INST_SEDE" value="{{ $v('INST_SEDE', $sede ?: 'Sede A') }}" class="piar-input">
                 </div>
                 <div>
                     <label class="piar-label">Medio de transporte del estudiante</label>
@@ -646,6 +709,61 @@
 
 </div>{{-- fin space-y-6 --}}
 </form>
+
+{{-- ── Panel: Estudiantes registrados en PIAR ─────────────────────────── --}}
+<div class="mt-8 no-print">
+    <div class="bg-white rounded-2xl shadow-md border border-blue-100 overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3 bg-blue-800 text-white">
+            <h2 class="text-sm font-bold uppercase tracking-wide">Estudiantes registrados en PIAR</h2>
+            <span class="bg-white text-blue-800 text-xs font-bold px-3 py-1 rounded-full">
+                Total: {{ $totalEnPiar }}
+            </span>
+        </div>
+
+        @if($estudiantesEnPiar->isEmpty())
+            <p class="text-sm text-gray-500 px-5 py-4">Aún no hay estudiantes con PIAR registrado.</p>
+        @else
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-blue-50 text-blue-900 text-xs uppercase">
+                        <tr>
+                            <th class="px-4 py-2 text-left font-semibold">#</th>
+                            <th class="px-4 py-2 text-left font-semibold">Estudiante</th>
+                            <th class="px-4 py-2 text-left font-semibold">Curso</th>
+                            <th class="px-4 py-2 text-left font-semibold">Diagnóstico</th>
+                            <th class="px-4 py-2 text-center font-semibold">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @foreach($estudiantesEnPiar as $i => $est)
+                        <tr class="{{ $est->CODIGO == $estudiante->CODIGO ? 'bg-yellow-50 font-semibold' : 'hover:bg-gray-50' }}">
+                            <td class="px-4 py-2 text-gray-500">{{ $i + 1 }}</td>
+                            <td class="px-4 py-2">
+                                {{ $est->APELLIDO1 }} {{ $est->APELLIDO2 }}, {{ $est->NOMBRE1 }} {{ $est->NOMBRE2 }}
+                                @if($est->CODIGO == $estudiante->CODIGO)
+                                    <span class="ml-1 text-xs text-yellow-700 font-normal">(actual)</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-2 text-center">
+                                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded">
+                                    {{ $est->CURSO }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2 text-gray-700 max-w-xs truncate" title="{{ $est->DIAGNOSTICO }}">
+                                {{ $est->DIAGNOSTICO ?: '—' }}
+                            </td>
+                            <td class="px-4 py-2 text-center">
+                                <a href="{{ route('piar.crear', $est->CODIGO) }}"
+                                   class="text-blue-700 hover:underline text-xs">Ver PIAR</a>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+</div>
 
 @endsection
 

@@ -28,7 +28,17 @@ class PiarController extends Controller
                 ->withQueryString();
         }
 
-        return view('piar.buscar', compact('estudiantes', 'buscar', 'hayBusqueda'));
+        $estudiantesEnPiar = DB::table('PIAR_DIAG as pd')
+            ->join('ESTUDIANTES as e', 'e.CODIGO', '=', 'pd.CODIGO_ALUM')
+            ->where('e.ESTADO', 'MATRICULADO')
+            ->select('e.CODIGO', 'e.NOMBRE1', 'e.NOMBRE2', 'e.APELLIDO1', 'e.APELLIDO2',
+                     'e.GRADO', 'e.CURSO', 'pd.DIAGNOSTICO')
+            ->orderBy('e.GRADO')->orderBy('e.CURSO')->orderBy('e.APELLIDO1')
+            ->get();
+
+        $totalEnPiar = $estudiantesEnPiar->count();
+
+        return view('piar.buscar', compact('estudiantes', 'buscar', 'hayBusqueda', 'estudiantesEnPiar', 'totalEnPiar'));
     }
 
     public function crear(string $codigo)
@@ -39,7 +49,17 @@ class PiarController extends Controller
         $padres = DB::table('INFO_PADRES')->where('CODIGO', $codigo)->first();
         $piar   = DB::table('PIAR_DIAG')->where('CODIGO_ALUM', $codigo)->first();
 
-        return view('piar.crear', compact('estudiante', 'padres', 'piar'));
+        $estudiantesEnPiar = DB::table('PIAR_DIAG as pd')
+            ->join('ESTUDIANTES as e', 'e.CODIGO', '=', 'pd.CODIGO_ALUM')
+            ->where('e.ESTADO', 'MATRICULADO')
+            ->select('e.CODIGO', 'e.NOMBRE1', 'e.NOMBRE2', 'e.APELLIDO1', 'e.APELLIDO2',
+                     'e.GRADO', 'e.CURSO', 'pd.DIAGNOSTICO')
+            ->orderBy('e.GRADO')->orderBy('e.CURSO')->orderBy('e.APELLIDO1')
+            ->get();
+
+        $totalEnPiar = $estudiantesEnPiar->count();
+
+        return view('piar.crear', compact('estudiante', 'padres', 'piar', 'estudiantesEnPiar', 'totalEnPiar'));
     }
 
     public function imprimir(string $codigo)
@@ -103,6 +123,14 @@ class PiarController extends Controller
         ));
     }
 
+    public function eliminar(string $codigo)
+    {
+        DB::table('PIAR_DIAG')->where('CODIGO_ALUM', $codigo)->delete();
+
+        return redirect()->route('piar.buscar')
+            ->with('piar_deleted', 'El PIAR del estudiante fue eliminado correctamente.');
+    }
+
     public function guardar(Request $request, string $codigo)
     {
         $bool = fn($v) => $v === 'si' ? 1 : 0;
@@ -114,6 +142,23 @@ class PiarController extends Controller
                 'DIAGNOSTICO'      => $request->DIAGNOSTICO,
                 'LUGAR_DIL'        => $request->LUGAR_DIL,
                 'PERSONA_DIL'      => $request->PERSONA_DIL,
+                // Datos personales editables del estudiante
+                'ALU_NOMBRES'      => $request->ALU_NOMBRES,
+                'ALU_APELLIDOS'    => $request->ALU_APELLIDOS,
+                'ALU_TIPO_DOC'     => $request->ALU_TIPO_DOC,
+                'ALU_TIPO_DOC_OTRO'=> $request->ALU_TIPO_DOC_OTRO,
+                'ALU_NUM_ID'       => $request->ALU_NUM_ID,
+                'ALU_FECH_NAC'     => $request->ALU_FECH_NAC,
+                'ALU_EDAD'         => $request->ALU_EDAD,
+                'ALU_LUG_NAC'      => $request->ALU_LUG_NAC,
+                'ALU_CURSO_INFO'   => $request->ALU_CURSO_INFO,
+                'ALU_DEPTO'        => $request->ALU_DEPTO,
+                'ALU_DIRECCION'    => $request->ALU_DIRECCION,
+                'ALU_BARRIO'       => $request->ALU_BARRIO,
+                'ALU_ESTRATO'      => $request->ALU_ESTRATO,
+                'ALU_RH'           => $request->ALU_RH,
+                'ALU_ALERG'        => $request->ALU_ALERG,
+                'ALU_GAFAS'        => $request->ALU_GAFAS === 'si' ? 1 : 0,
                 // Sección 1
                 'MUNICIPIO'        => $request->MUNICIPIO,
                 'TELEFONO'         => preg_replace('/\D/', '', $request->TELEFONO ?? '') ?: null,
@@ -142,6 +187,10 @@ class PiarController extends Controller
                 'TERAP_FREC2'      => $request->TERAP_FREC2,
                 'TERAP_WHICH3'     => $request->TERAP_WHICH3,
                 'TERAP_FREC3'      => $request->TERAP_FREC3,
+                'TERAP_WHICH4'     => $request->TERAP_WHICH4,
+                'TERAP_FREC4'      => $request->TERAP_FREC4,
+                'TERAP_WHICH5'     => $request->TERAP_WHICH5,
+                'TERAP_FREC5'      => $request->TERAP_FREC5,
                 'ENFERPAR'         => $bool($request->ENFERPAR),
                 'ENFERPAR_WHICH'   => $request->ENFERPAR_WHICH,
                 'MEDIC'            => $bool($request->MEDIC),
@@ -149,6 +198,8 @@ class PiarController extends Controller
                 'MOVILID'          => $bool($request->MOVILID),
                 'MOVILID_WHICH'    => $request->MOVILID_WHICH,
                 // Sección 3
+                'PAD_MADRE'        => $request->PAD_MADRE,
+                'PAD_PADRE'        => $request->PAD_PADRE,
                 'OCUP_MADRE'       => $request->OCUP_MADRE,
                 'OCUP_PADRE'       => $request->OCUP_PADRE,
                 'EDUC_MADRE'       => $request->EDUC_MADRE,
@@ -167,10 +218,12 @@ class PiarController extends Controller
                 'HOG_SUB'          => $bool($request->HOG_SUB),
                 'HOG_SUB_WHICH'    => $request->HOG_SUB_WHICH,
                 // Sección 4
-                'INSTITUPREV'      => $bool($request->INSTITUPREV),
-                'INTITUPREV_WHICH' => $request->INTITUPREV_WHICH,
+                'INSTITUPREV'          => $bool($request->INSTITUPREV),
+                'INTITUPREV_WHICH'     => $request->INTITUPREV_WHICH,
+                'INSTITUPREV_PORQUE'   => $request->INSTITUPREV_PORQUE,
                 'ULTGRADO'         => $request->ULTGRADO,
                 'APRUEBA'          => $bool($request->APRUEBA),
+                'APRUEBA_PORQUE'   => $request->APRUEBA_PORQUE,
                 'OBSERV'           => $request->OBSERV,
                 'INFOPIAR'         => $bool($request->INFOPIAR),
                 'INFOPIAR_WHICH'   => $request->INFOPIAR_WHICH,
@@ -178,6 +231,8 @@ class PiarController extends Controller
                 'COMPLEM_WHICH'    => $request->COMPLEM_WHICH,
                 'TRANSPOR'         => $request->TRANSPOR,
                 'DISTANCIA'        => $request->DISTANCIA,
+                'INST_NOMBRE'      => $request->INST_NOMBRE,
+                'INST_SEDE'        => $request->INST_SEDE,
             ]
         );
 

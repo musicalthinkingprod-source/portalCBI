@@ -225,9 +225,9 @@ img {
 <td colspan="4"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>Cuál: </b></span><span style="font-size:12pt">{{ $v('DIAGMED_WHICH', $enferEst) }}</span></p></td>
 </tr>
 <tr>
-<td rowspan="3"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>¿El niño está asistiendo a terapias?</b></span></p></td>
-<td rowspan="3"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>Si</b></span></p><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt">{{ $si('TERAP') }}</span></p></td>
-<td rowspan="3"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>No</b></span></p><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt">{{ $no('TERAP') }}</span></p></td>
+<td rowspan="5"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>¿El niño está asistiendo a terapias?</b></span></p></td>
+<td rowspan="5"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>Si</b></span></p><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt">{{ $si('TERAP') }}</span></p></td>
+<td rowspan="5"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>No</b></span></p><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt">{{ $no('TERAP') }}</span></p></td>
 <td colspan="2"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>¿Cuál? </b></span><span style="font-size:12pt">{{ $v('TERAP_WHICH1') }}</span></p></td>
 <td colspan="2"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>Frecuencia. </b></span><span style="font-size:12pt">{{ $v('TERAP_FREC1') }}</span></p></td>
 </tr>
@@ -238,6 +238,14 @@ img {
 <tr>
 <td colspan="2"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>¿Cuál? </b></span><span style="font-size:12pt">{{ $v('TERAP_WHICH3') }}</span></p></td>
 <td colspan="2"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>Frecuencia. </b></span><span style="font-size:12pt">{{ $v('TERAP_FREC3') }}</span></p></td>
+</tr>
+<tr>
+<td colspan="2"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>¿Cuál? </b></span><span style="font-size:12pt">{{ $v('TERAP_WHICH4') }}</span></p></td>
+<td colspan="2"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt">{{ $v('TERAP_FREC4') }}</span></p></td>
+</tr>
+<tr>
+<td colspan="2"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>¿Cuál? </b></span><span style="font-size:12pt">{{ $v('TERAP_WHICH5') }}</span></p></td>
+<td colspan="2"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>Frecuencia. </b></span><span style="font-size:12pt">{{ $v('TERAP_FREC5') }}</span></p></td>
 </tr>
 <tr>
 <td colspan="3"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>¿Actualmente recibe tratamiento médico por alguna enfermedad en particular? SI__ {{ $si('ENFERPAR') }}_ NO {{ $no('ENFERPAR') }}</b></span></p></td>

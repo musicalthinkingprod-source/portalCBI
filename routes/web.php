@@ -214,6 +214,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/piar/informe', [PiarController::class, 'informe'])->name('piar.informe');
         Route::get('/piar/crear/{codigo}', [PiarController::class, 'crear'])->name('piar.crear');
         Route::post('/piar/guardar/{codigo}', [PiarController::class, 'guardar'])->name('piar.guardar');
+        Route::delete('/piar/eliminar/{codigo}', [PiarController::class, 'eliminar'])->name('piar.eliminar');
         Route::get('/piar/imprimir/{codigo}', [PiarController::class, 'imprimir'])->name('piar.imprimir');
     });
 
