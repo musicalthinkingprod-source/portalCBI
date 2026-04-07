@@ -63,10 +63,10 @@
             class="bg-green-700 hover:bg-green-600 text-white text-sm font-semibold px-5 py-2 rounded-lg transition">
             💾 Guardar PIAR
         </button>
-        <button onclick="window.print()"
-            class="bg-blue-800 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition">
-            🖨️ Imprimir / PDF
-        </button>
+        <a href="{{ route('piar.imprimir', $estudiante->CODIGO) }}" target="_blank"
+            class="bg-blue-800 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition inline-block">
+            🖨️ Imprimir Anexo 1
+        </a>
     </div>
 </div>
 

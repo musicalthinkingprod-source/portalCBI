@@ -18,6 +18,8 @@ use App\Http\Controllers\SalvavidasController;
 use App\Http\Controllers\DeroterosController;
 use App\Http\Controllers\BoletinController;
 use App\Http\Controllers\PiarController;
+use App\Http\Controllers\PiarMatController;
+use App\Http\Controllers\PiarCaractController;
 use App\Http\Controllers\ParametrosController;
 use App\Http\Controllers\WorldOfficeController;
 use App\Http\Controllers\RutasController;
@@ -171,6 +173,28 @@ Route::middleware(['auth'])->group(function () {
     // ── Asistencia reporte: todos los autenticados ────────────────────────────
     Route::get('/asistencia/reporte', [AsistenciaController::class, 'reporte'])->name('asistencia.reporte');
 
+    // ── PIAR Anexo 2 + Caracterizaciones ────────────────────────────────────
+    Route::middleware('profile:SuperAd,Ori,Admin,DOC*')->group(function () {
+        // Índice unificado (Anexo 2 + Caracterizaciones)
+        Route::get('/piar/anexo2',                              [PiarCaractController::class, 'index'])   ->name('piar.anexo2.index');
+
+        // Impresión completa Anexo 2 por estudiante (Ori/SuperAd) — debe ir ANTES de las rutas con {codigoMat}
+        Route::get('/piar/anexo2/{codigo}/imprimir-completo',   [PiarCaractController::class, 'imprimirAnexo2'])->name('piar.anexo2.imprimir.est');
+
+        // Anexo 2 – Ajustes por período
+        Route::get('/piar/anexo2/{codigo}/{codigoMat}',         [PiarMatController::class, 'form'])       ->name('piar.anexo2.form');
+        Route::post('/piar/anexo2/{codigo}/{codigoMat}',        [PiarMatController::class, 'guardar'])    ->name('piar.anexo2.guardar');
+        Route::get('/piar/anexo2/{codigo}/{codigoMat}/imprimir',[PiarMatController::class, 'imprimir'])   ->name('piar.anexo2.imprimir');
+
+        // Caracterización por materia
+        Route::get('/piar/caracterizacion/mat/{codigo}/{codigoMat}',  [PiarCaractController::class, 'formMat'])   ->name('piar.caract.mat.form');
+        Route::post('/piar/caracterizacion/mat/{codigo}/{codigoMat}', [PiarCaractController::class, 'guardarMat'])->name('piar.caract.mat.guardar');
+
+        // Caracterización por director de grupo
+        Route::get('/piar/caracterizacion/dir/{codigo}',  [PiarCaractController::class, 'formDir'])   ->name('piar.caract.dir.form');
+        Route::post('/piar/caracterizacion/dir/{codigo}', [PiarCaractController::class, 'guardarDir'])->name('piar.caract.dir.guardar');
+    });
+
     // ── Docentes: SuperAd, Admin, DOC* ───────────────────────────────────────
     Route::middleware('profile:SuperAd,Admin,DOC*')->group(function () {
         Route::get('/notas', [NotasController::class, 'index'])->name('notas.index');
@@ -187,8 +211,10 @@ Route::middleware(['auth'])->group(function () {
     // ── PIAR: SuperAd y Ori ──────────────────────────────────────────────────
     Route::middleware('profile:SuperAd,Ori')->group(function () {
         Route::get('/piar', [PiarController::class, 'buscar'])->name('piar.buscar');
+        Route::get('/piar/informe', [PiarController::class, 'informe'])->name('piar.informe');
         Route::get('/piar/crear/{codigo}', [PiarController::class, 'crear'])->name('piar.crear');
         Route::post('/piar/guardar/{codigo}', [PiarController::class, 'guardar'])->name('piar.guardar');
+        Route::get('/piar/imprimir/{codigo}', [PiarController::class, 'imprimir'])->name('piar.imprimir');
     });
 
     // ── Horarios y boletines: SuperAd, Admin, Sec*, DOC* ────────────────────

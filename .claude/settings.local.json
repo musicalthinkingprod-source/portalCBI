@@ -8,7 +8,10 @@
       "Bash(find /c/laragon/www/portalcbi/app/Models -type f -name *.php)",
       "Bash(composer install:*)",
       "Bash(php -r \"echo 'PHP OK';\")",
-      "Bash(composer require:*)"
+      "Bash(composer require:*)",
+      "Bash(python3 -c ':*)",
+      "Bash(awk NR>=55 && NR<=80:*)",
+      "Bash(php:*)"
     ]
   }
 }

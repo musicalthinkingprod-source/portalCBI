@@ -64,14 +64,26 @@
                 </div>
                 @endif
 
-                {{-- PIAR: SuperAd y Ori --}}
-                @if(in_array($profile, ['SuperAd', 'Ori']))
+                {{-- PIAR: SuperAd, Ori y DOC* --}}
+                @if(in_array($profile, ['SuperAd', 'Ori', 'Admin']) || str_starts_with($profile, 'DOC'))
                 <div>
                     <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">PIAR</p>
                     <ul class="space-y-1">
+                        @if(in_array($profile, ['SuperAd', 'Ori']))
                         <li>
                             <a href="{{ route('piar.buscar') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                                📝 Crear PIAR
+                                📋 Crear / Editar PIAR
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('piar.informe') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📊 Informe Anexo 2
+                            </a>
+                        </li>
+                        @endif
+                        <li>
+                            <a href="{{ route('piar.anexo2.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📝 PIAR Anexo 2
                             </a>
                         </li>
                     </ul>

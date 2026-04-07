@@ -42,6 +42,67 @@ class PiarController extends Controller
         return view('piar.crear', compact('estudiante', 'padres', 'piar'));
     }
 
+    public function imprimir(string $codigo)
+    {
+        $estudiante = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->first();
+        if (!$estudiante) abort(404);
+
+        $padres = DB::table('INFO_PADRES')->where('CODIGO', $codigo)->first();
+        $piar   = DB::table('PIAR_DIAG')->where('CODIGO_ALUM', $codigo)->first();
+
+        // Variables calculadas (igual que en crear)
+        $nombreCompleto = trim("{$estudiante->NOMBRE1} {$estudiante->NOMBRE2}");
+        $apellidos      = trim("{$estudiante->APELLIDO1} {$estudiante->APELLIDO2}");
+
+        $tipoDoc = 'TI';
+        $numId   = $estudiante->TAR_ID ?? '';
+        if (!$numId && ($estudiante->REG_CIVIL ?? '')) { $tipoDoc = 'RC'; $numId = $estudiante->REG_CIVIL; }
+
+        $fechaNac = '';
+        if ($estudiante->FECH_NACIMIENTO ?? null) {
+            try { $fechaNac = \Carbon\Carbon::parse($estudiante->FECH_NACIMIENTO)->translatedFormat('d \d\e F \d\e Y'); }
+            catch (\Exception $e) { $fechaNac = $estudiante->FECH_NACIMIENTO; }
+        }
+
+        $edad      = $estudiante->EDAD ?? '';
+        $grado     = $estudiante->GRADO ?? '';
+        $curso     = $estudiante->CURSO ?? '';
+        $sede      = $estudiante->SEDE  ? 'Sede ' . $estudiante->SEDE : '';
+        $lugarNac  = $estudiante->LUG_NACIMIENTO ?? '';
+        $direccion = $estudiante->DIRECCION ?? '';
+        $barrio    = $estudiante->BARRIO ?? '';
+        $epsEst    = $estudiante->EPS ?? '';
+        $enferEst  = $estudiante->ENFER ?? '';
+
+        $telPadres    = '';
+        $correoPadres = '';
+        $nombreMadre  = $padres->MADRE     ?? '';
+        $nombrePadre  = $padres->PADRE     ?? '';
+        $empMadre     = $padres->EMP_MADRE ?? '';
+        $empPadre     = $padres->EMP_PADRE ?? '';
+        $celMadre     = $padres->CEL_MADRE ?? '';
+        $emailMadre   = $padres->EMAIL_MADRE ?? '';
+        $celPadre     = $padres->CEL_PADRE  ?? '';
+        $nombreAcud   = $padres->ACUD       ?? $nombreMadre;
+        $celAcud      = $padres->CEL_ACUD   ?? '';
+        $emailAcud    = $padres->EMAIL_ACUD ?? $emailMadre;
+        if ($padres) {
+            $telPadres    = $padres->CEL_ACUD ?: ($padres->CEL_MADRE ?: ($padres->CEL_PADRE ?: ''));
+            $correoPadres = $padres->EMAIL_ACUD ?: ($padres->EMAIL_MADRE ?: ($padres->EMAIL_PADRE ?: ''));
+        }
+
+        return view('piar.imprimir_anexo1', compact(
+            'estudiante', 'piar',
+            'nombreCompleto', 'apellidos', 'tipoDoc', 'numId', 'fechaNac',
+            'edad', 'grado', 'curso', 'sede', 'lugarNac', 'direccion', 'barrio',
+            'epsEst', 'enferEst',
+            'telPadres', 'correoPadres',
+            'nombreMadre', 'nombrePadre', 'empMadre', 'empPadre',
+            'celMadre', 'emailMadre', 'celPadre',
+            'nombreAcud', 'celAcud', 'emailAcud'
+        ));
+    }
+
     public function guardar(Request $request, string $codigo)
     {
         $bool = fn($v) => $v === 'si' ? 1 : 0;
@@ -121,5 +182,53 @@ class PiarController extends Controller
         );
 
         return back()->with('piar_saved', 'PIAR guardado correctamente.');
+    }
+
+    public function informe()
+    {
+        // Todos los estudiantes matriculados con PIAR_DIAG registrado
+        $estudiantes = DB::table('ESTUDIANTES as e')
+            ->join('PIAR_DIAG as pd', 'pd.CODIGO_ALUM', '=', 'e.CODIGO')
+            ->where('e.ESTADO', 'MATRICULADO')
+            ->select('e.CODIGO', 'e.NOMBRE1', 'e.NOMBRE2', 'e.APELLIDO1', 'e.APELLIDO2',
+                     'e.GRADO', 'e.CURSO', 'pd.DIAGNOSTICO',
+                     DB::raw("CASE WHEN pd.LUGAR_DIL IS NOT NULL AND pd.LUGAR_DIL != '' THEN 1 ELSE 0 END as ANEXO1_OK"))
+            ->orderBy('e.GRADO')->orderBy('e.CURSO')->orderBy('e.APELLIDO1')
+            ->get();
+
+        // Materias asignadas por curso y su estado en PIAR_MAT
+        $codigoAlums = $estudiantes->pluck('CODIGO')->toArray();
+
+        // Todas las materias asignadas a los cursos de esos estudiantes
+        $asignaciones = DB::table('ASIGNACION_PCM as a')
+            ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'a.CODIGO_MAT')
+            ->join('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'a.CODIGO_DOC')
+            ->select('a.CURSO', 'a.CODIGO_MAT', 'a.CODIGO_DOC', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
+            ->get()
+            ->groupBy('CURSO');
+
+        // Registros PIAR_MAT existentes
+        $piarMats = DB::table('PIAR_MAT')
+            ->whereIn('CODIGO_ALUM', $codigoAlums)
+            ->get()
+            ->groupBy('CODIGO_ALUM')
+            ->map(fn($rows) => $rows->keyBy('CODIGO_MAT'));
+
+        // Caracterizaciones por materia
+        $caractMats = DB::table('PIAR_CARACT_MAT')
+            ->whereIn('CODIGO_ALUM', $codigoAlums)
+            ->get()
+            ->groupBy('CODIGO_ALUM')
+            ->map(fn($rows) => $rows->keyBy('CODIGO_MAT'));
+
+        // Caracterizaciones por director de grupo
+        $caractDirs = DB::table('PIAR_CARACT_DIR as pcd')
+            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'pcd.CODIGO_DOC')
+            ->whereIn('pcd.CODIGO_ALUM', $codigoAlums)
+            ->select('pcd.CODIGO_ALUM', 'pcd.CARACTERIZACION', 'd.NOMBRE_DOC')
+            ->get()
+            ->groupBy('CODIGO_ALUM');
+
+        return view('piar.informe', compact('estudiantes', 'asignaciones', 'piarMats', 'caractMats', 'caractDirs'));
     }
 }
