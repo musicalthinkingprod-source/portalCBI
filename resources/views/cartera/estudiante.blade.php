@@ -4,6 +4,8 @@
 
 @section('slot')
 
+@php $esReadOnly = auth()->user()->PROFILE === 'contab'; @endphp
+
     <div class="mb-5">
         <a href="{{ route('cartera.deudores') }}" class="text-blue-700 hover:underline text-sm">← Volver a lista de deudores</a>
     </div>
@@ -145,6 +147,7 @@
         </div>
 
         {{-- Formulario nuevo registro --}}
+        @if(!$esReadOnly)
         <div class="px-5 py-4 border-b border-gray-100 bg-gray-50">
             <form method="POST" action="{{ route('cartera.seguimiento.store', $codigo) }}" class="flex flex-col gap-3">
                 @csrf
@@ -178,6 +181,7 @@
                 </div>
             </form>
         </div>
+        @endif
 
         {{-- Lista de seguimientos --}}
         @if($seguimientos->isEmpty())
@@ -212,6 +216,7 @@
                             @if($s->usuario) · <span class="font-medium">{{ $s->usuario }}</span> @endif
                         </p>
                     </div>
+                    @if(!$esReadOnly)
                     <div class="flex gap-2 flex-shrink-0 mt-0.5">
                         <button type="button" onclick="editarSeguimiento({{ $s->id }})"
                             class="text-yellow-600 hover:text-yellow-800 text-xs transition font-medium">Editar</button>
@@ -222,9 +227,11 @@
                             <button type="submit" class="text-red-400 hover:text-red-600 text-xs transition">Eliminar</button>
                         </form>
                     </div>
+                    @endif
                 </div>
 
                 {{-- Formulario de edición (oculto por defecto) --}}
+                @if(!$esReadOnly)
                 <div id="edit-{{ $s->id }}" class="hidden mt-3">
                     <form method="POST" action="{{ route('cartera.seguimiento.update', $s->id) }}"
                         class="flex flex-wrap gap-3 items-start bg-gray-50 rounded-lg p-3 border border-gray-200">
@@ -258,6 +265,7 @@
                         </div>
                     </form>
                 </div>
+                @endif
             </div>
             @endforeach
         </div>

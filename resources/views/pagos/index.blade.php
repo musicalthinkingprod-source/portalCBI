@@ -17,7 +17,10 @@
     }
 @endphp
 
+    @php $esReadOnly = auth()->user()->PROFILE === 'contab'; @endphp
+
     {{-- Acciones --}}
+    @if(!$esReadOnly)
     <div class="flex flex-wrap gap-3 mb-6">
         <a href="{{ route('pagos.create') }}"
             class="bg-blue-800 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
@@ -28,6 +31,7 @@
             📂 Importar en lote
         </a>
     </div>
+    @endif
 
     @if(session('success'))
         <div class="mb-4 p-3 bg-green-100 text-green-800 rounded-xl text-sm">
@@ -127,19 +131,17 @@
                         <td class="px-4 py-3">{{ $pago->orden ?? '—' }}</td>
                         <td class="px-4 py-3 text-right font-medium text-green-700">$ {{ number_format($pago->valor, 0, ',', '.') }}</td>
                         <td class="px-4 py-3 text-center whitespace-nowrap">
+                            @if(!$esReadOnly)
                             <a href="{{ route('pagos.edit', $pago->id) }}"
                                 class="inline-block text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-semibold px-2 py-1 rounded transition mr-1">
                                 ✏️ Editar
                             </a>
-                            <form method="POST" action="{{ route('pagos.destroy', $pago->id) }}" class="inline"
-                                onsubmit="return confirm('¿Eliminar este pago?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                    class="text-xs bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-2 py-1 rounded transition">
-                                    🗑️ Eliminar
-                                </button>
-                            </form>
+                            <button type="button"
+                                onclick="eliminarPago({{ $pago->id }})"
+                                class="text-xs bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-2 py-1 rounded transition">
+                                🗑️ Eliminar
+                            </button>
+                            @endif
                         </td>
                     </tr>
                     @empty
@@ -160,3 +162,19 @@
     </div>
 
 @endsection
+
+<form id="form-delete-pago" method="POST" style="display:none">
+    @csrf
+    @method('DELETE')
+</form>
+
+@push('scripts')
+<script>
+    function eliminarPago(id) {
+        if (!confirm('¿Eliminar este pago?')) return;
+        const form = document.getElementById('form-delete-pago');
+        form.action = '{{ url("pagos") }}/' + id;
+        form.submit();
+    }
+</script>
+@endpush

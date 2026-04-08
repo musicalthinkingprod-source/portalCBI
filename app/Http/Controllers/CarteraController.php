@@ -212,15 +212,20 @@ class CarteraController extends Controller
 
     public function deudores(Request $request)
     {
+        $tab   = $request->input('tab', 'cartera'); // 'cartera' | 'anticipos'
+        $corte = $request->filled('corte') ? $request->input('corte') : null;
+
         $facturaSub = DB::table('facturacion')
             ->select('codigo_alumno', DB::raw('SUM(valor) as total_facturado'))
+            ->when($corte, fn($q) => $q->whereDate('fecha', '<=', $corte))
             ->groupBy('codigo_alumno');
 
         $pagoSub = DB::table('registro_pagos')
             ->select('codigo_alumno', DB::raw('SUM(valor) as total_pagado'))
+            ->when($corte, fn($q) => $q->whereDate('fecha', '<=', $corte))
             ->groupBy('codigo_alumno');
 
-        $deudores = DB::table(DB::raw("({$facturaSub->toSql()}) as f"))
+        $query = DB::table(DB::raw("({$facturaSub->toSql()}) as f"))
             ->mergeBindings($facturaSub)
             ->leftJoinSub($pagoSub, 'p', 'f.codigo_alumno', '=', 'p.codigo_alumno')
             ->leftJoin('ESTUDIANTES as e', 'e.CODIGO', '=', 'f.codigo_alumno')
@@ -234,12 +239,19 @@ class CarteraController extends Controller
                 'ip.MADRE', 'ip.PADRE', 'ip.ACUD',
                 'ip.CEL_MADRE', 'ip.CEL_PADRE', 'ip.CEL_ACUD',
                 'ip.TEL_MADRE', 'ip.TEL_PADRE', 'ip.TEL_ACUD'
-            )
-            ->whereRaw('f.total_facturado - COALESCE(p.total_pagado, 0) > 0')
-            ->orderByDesc('saldo')
-            ->paginate(25)
-            ->withQueryString();
+            );
 
-        return view('cartera.deudores', compact('deudores'));
+        if ($tab === 'anticipos') {
+            // Saldos a favor: pagaron más de lo facturado
+            $query->whereRaw('f.total_facturado - COALESCE(p.total_pagado, 0) < 0')
+                  ->orderBy('saldo'); // más negativo primero = mayor anticipo
+        } else {
+            $query->whereRaw('f.total_facturado - COALESCE(p.total_pagado, 0) > 0')
+                  ->orderByDesc('saldo');
+        }
+
+        $resultados = $query->paginate(25)->withQueryString();
+
+        return view('cartera.deudores', compact('resultados', 'tab', 'corte'));
     }
 }

@@ -84,72 +84,66 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/ciclos/{id}', [CiclosController::class, 'destroy'])->name('ciclos.destroy');
     });
 
-    // ── Control de Pagos: SuperAd y Admin ────────────────────────────────────
-    Route::middleware('profile:SuperAd,Admin')->group(function () {
+    // ── Control de Pagos: lectura (Admin + contab) ───────────────────────────
+    Route::middleware('profile:SuperAd,Admin,contab')->group(function () {
         Route::get('/control/estudiante', [ControlEstudianteController::class, 'index'])->name('control.estudiante');
         Route::get('/pagos', [PagosController::class, 'index'])->name('pagos.index');
+        Route::get('/cartera', [CarteraController::class, 'index'])->name('cartera.index');
+        Route::get('/cartera/deudores', [CarteraController::class, 'deudores'])->name('cartera.deudores');
+        Route::get('/cartera/estudiante/{codigo}', [CarteraController::class, 'estudiante'])->name('cartera.estudiante');
+        Route::get('/cartera/seguimiento/informe', [CarteraController::class, 'informeSeguimiento'])->name('cartera.seguimiento.informe');
+        Route::get('/facturacion', [FacturacionController::class, 'index'])->name('facturacion.index');
+        Route::get('/facturacion/auto', [FacturacionController::class, 'autoIndex'])->name('facturacion.auto');
+        Route::get('/world-office', [WorldOfficeController::class, 'index'])->name('world-office.index');
+        Route::get('/importacion/registro-pagos', [ImportacionController::class, 'show'])->name('importacion.registro_pagos.show');
+        Route::get('/importacion/facturacion', [ImportacionController::class, 'showFacturacion'])->name('importacion.facturacion.show');
+        Route::get('/parametros', [ParametrosController::class, 'index'])->name('parametros.index');
+    });
+
+    // ── Control de Pagos: escritura (solo Admin/SuperAd) ─────────────────────
+    Route::middleware('profile:SuperAd,Admin')->group(function () {
         Route::get('/pagos/crear', [PagosController::class, 'create'])->name('pagos.create');
         Route::post('/pagos', [PagosController::class, 'store'])->name('pagos.store');
         Route::get('/pagos/{id}/editar', [PagosController::class, 'edit'])->name('pagos.edit');
         Route::put('/pagos/{id}', [PagosController::class, 'update'])->name('pagos.update');
         Route::delete('/pagos/{id}', [PagosController::class, 'destroy'])->name('pagos.destroy');
-        Route::get('/cartera', [CarteraController::class, 'index'])->name('cartera.index');
-        Route::get('/cartera/deudores', [CarteraController::class, 'deudores'])->name('cartera.deudores');
-        Route::get('/cartera/estudiante/{codigo}', [CarteraController::class, 'estudiante'])->name('cartera.estudiante');
         Route::post('/cartera/estudiante/{codigo}/seguimiento', [CarteraController::class, 'storeSeguimiento'])->name('cartera.seguimiento.store');
         Route::delete('/cartera/seguimiento/{id}', [CarteraController::class, 'destroySeguimiento'])->name('cartera.seguimiento.destroy');
         Route::put('/cartera/seguimiento/{id}', [CarteraController::class, 'updateSeguimiento'])->name('cartera.seguimiento.update');
-        Route::get('/cartera/seguimiento/informe', [CarteraController::class, 'informeSeguimiento'])->name('cartera.seguimiento.informe');
-        Route::get('/facturacion', [FacturacionController::class, 'index'])->name('facturacion.index');
         Route::get('/facturacion/crear', [FacturacionController::class, 'create'])->name('facturacion.create');
         Route::post('/facturacion', [FacturacionController::class, 'store'])->name('facturacion.store');
         Route::get('/facturacion/{id}/editar', [FacturacionController::class, 'edit'])->name('facturacion.edit');
         Route::put('/facturacion/{id}', [FacturacionController::class, 'update'])->name('facturacion.update');
         Route::delete('/facturacion/{id}', [FacturacionController::class, 'destroy'])->name('facturacion.destroy');
-        Route::get('/facturacion/auto', [FacturacionController::class, 'autoIndex'])->name('facturacion.auto');
         Route::post('/facturacion/auto/preview', [FacturacionController::class, 'autoPreview'])->name('facturacion.auto.preview');
         Route::post('/facturacion/auto/generar', [FacturacionController::class, 'autoGenerar'])->name('facturacion.auto.generar');
         Route::delete('/facturacion/auto/lote/{lote}', [FacturacionController::class, 'autoEliminarLote'])->name('facturacion.auto.lote.destroy');
-        // ── Plantilla World Office ────────────────────────────────────────────
-        Route::get('/world-office', [WorldOfficeController::class, 'index'])->name('world-office.index');
         Route::post('/world-office/plantilla', [WorldOfficeController::class, 'guardarPlantilla'])->name('world-office.plantilla.store');
         Route::post('/world-office/exportar', [WorldOfficeController::class, 'exportarCSV'])->name('world-office.exportar');
-        Route::get('/importacion/registro-pagos', [ImportacionController::class, 'show'])->name('importacion.registro_pagos.show');
         Route::post('/importacion/registro-pagos', [ImportacionController::class, 'importarRegistroPagos'])->name('importacion.registro_pagos');
         Route::delete('/importacion/registro-pagos/lote/{lote}', [ImportacionController::class, 'eliminarLotePagos'])->name('importacion.registro_pagos.lote.destroy');
-        Route::get('/importacion/facturacion', [ImportacionController::class, 'showFacturacion'])->name('importacion.facturacion.show');
         Route::post('/importacion/facturacion', [ImportacionController::class, 'importarFacturacion'])->name('importacion.facturacion');
         Route::delete('/importacion/facturacion/lote/{lote}', [ImportacionController::class, 'eliminarLoteFacturacion'])->name('importacion.facturacion.lote.destroy');
         Route::get('/alumnos/crear', [AlumnoController::class, 'create'])->name('alumnos.create');
         Route::post('/alumnos', [AlumnoController::class, 'store'])->name('alumnos.store');
 
         // ── Parámetros de Facturación ─────────────────────────────────────────
-        Route::get('/parametros', [ParametrosController::class, 'index'])->name('parametros.index');
-
         Route::post('/parametros/centro-costos', [ParametrosController::class, 'storeCentroCostos'])->name('parametros.centro_costos.store');
         Route::delete('/parametros/centro-costos/{codigo}', [ParametrosController::class, 'destroyCentroCostos'])->name('parametros.centro_costos.destroy');
-
         Route::post('/parametros/conceptos', [ParametrosController::class, 'storeConcepto'])->name('parametros.conceptos.store');
         Route::delete('/parametros/conceptos/{codigo}', [ParametrosController::class, 'destroyConcepto'])->name('parametros.conceptos.destroy');
-
         Route::post('/parametros/costo-pension', [ParametrosController::class, 'storeCostoPension'])->name('parametros.costo_pension.store');
         Route::delete('/parametros/costo-pension/{codigo}', [ParametrosController::class, 'destroyCostoPension'])->name('parametros.costo_pension.destroy');
-
         Route::post('/parametros/costo-transporte', [ParametrosController::class, 'storeCostoTransporte'])->name('parametros.costo_transporte.store');
         Route::delete('/parametros/costo-transporte/{codigo}', [ParametrosController::class, 'destroyCostoTransporte'])->name('parametros.costo_transporte.destroy');
-
         Route::post('/parametros/pension', [ParametrosController::class, 'storePension'])->name('parametros.pension.store');
         Route::delete('/parametros/pension/{id}', [ParametrosController::class, 'destroyPension'])->name('parametros.pension.destroy');
-
         Route::post('/parametros/transporte', [ParametrosController::class, 'storeTransporte'])->name('parametros.transporte.store');
         Route::delete('/parametros/transporte/{id}', [ParametrosController::class, 'destroyTransporte'])->name('parametros.transporte.destroy');
-
         Route::post('/parametros/nivelacion', [ParametrosController::class, 'storeNivelacion'])->name('parametros.nivelacion.store');
         Route::delete('/parametros/nivelacion/{id}', [ParametrosController::class, 'destroyNivelacion'])->name('parametros.nivelacion.destroy');
-
         Route::post('/parametros/listado-transporte', [ParametrosController::class, 'storeListadoTransporte'])->name('parametros.listado_transporte.store');
         Route::delete('/parametros/listado-transporte/{id}', [ParametrosController::class, 'destroyListadoTransporte'])->name('parametros.listado_transporte.destroy');
-
         Route::post('/parametros/observaciones', [ParametrosController::class, 'storeObservacion'])->name('parametros.observaciones.store');
         Route::delete('/parametros/observaciones/{id}', [ParametrosController::class, 'destroyObservacion'])->name('parametros.observaciones.destroy');
     });

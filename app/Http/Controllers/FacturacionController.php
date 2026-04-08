@@ -114,7 +114,7 @@ class FacturacionController extends Controller
 
     public function destroy($id)
     {
-        DB::table('facturacion')->where('id', $id)->delete();
+        DB::table('facturacion')->where('id', $id)->limit(1)->delete();
         return redirect()->route('facturacion.index')->with('success', 'Registro eliminado correctamente.');
     }
 

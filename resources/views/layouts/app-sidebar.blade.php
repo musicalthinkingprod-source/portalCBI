@@ -179,8 +179,8 @@
                     </ul>
                 </div>
 
-{{-- Control: SuperAd y Admin --}}
-                @if(in_array($profile, ['SuperAd', 'Admin']))
+{{-- Control: SuperAd, Admin y contab --}}
+                @if(in_array($profile, ['SuperAd', 'Admin', 'contab']))
                 <div>
                     <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Control de Pagos</p>
                     <ul class="space-y-1">
@@ -199,14 +199,21 @@
                                 🧾 Facturación
                             </a>
                         </li>
+                        @if($profile !== 'contab')
                         <li>
                             <a href="{{ route('facturacion.auto') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                                 ⚡ Facturación automática
                             </a>
                         </li>
+                        @endif
                         <li>
                             <a href="{{ route('cartera.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                                 📊 Informe de cartera
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('cartera.deudores') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                🔴 Cartera / Anticipos
                             </a>
                         </li>
                         <li>
@@ -219,11 +226,13 @@
                                 ⚙️ Parametros facturacion
                             </a>
                         </li>
+                        @if($profile !== 'contab')
                         <li>
                             <a href="{{ route('world-office.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                                 📄 Plantilla World Office
                             </a>
                         </li>
+                        @endif
                     </ul>
                 </div>
                 @endif
