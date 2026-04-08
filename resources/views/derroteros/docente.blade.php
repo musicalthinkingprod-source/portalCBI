@@ -1,5 +1,5 @@
 @extends('layouts.app-sidebar')
-@section('header', 'Resolución de Derroteros')
+@section('header', 'Recuperaciones')
 @section('slot')
 
     @if(session('success'))
@@ -87,12 +87,14 @@
                             'RECUPERO'    => 'bg-green-100 text-green-700',
                             'NO_RECUPERO' => 'bg-red-100 text-red-700',
                             'INTERMEDIO'  => 'bg-blue-100 text-blue-700',
+                            'NO_ASISTIO'  => 'bg-orange-100 text-orange-700',
                             default       => 'bg-gray-100 text-gray-500',
                         };
                         $label = match($m->resolucion) {
                             'RECUPERO'    => 'Recuperó → 7.0',
                             'NO_RECUPERO' => 'No recuperó → ' . number_format($m->NOTA, 1),
                             'INTERMEDIO'  => 'Intermedia → ' . number_format($m->nota_recuperacion, 1),
+                            'NO_ASISTIO'  => 'No asistió → ' . number_format($m->NOTA, 1),
                             default       => '',
                         };
                     @endphp
@@ -120,6 +122,11 @@
                             onclick="return confirm('¿Confirmar que no recuperó? La nota quedará en {{ number_format($m->NOTA, 1) }}')"
                             class="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
                             ❌ No recuperó
+                        </button>
+                        <button type="submit" name="resolucion" value="NO_ASISTIO"
+                            onclick="return confirm('¿Confirmar que {{ $m->NOMBRE1 }} {{ $m->APELLIDO1 }} no asistió a la recuperación? La nota quedará en {{ number_format($m->NOTA, 1) }}')"
+                            class="bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                            🚫 No asistió
                         </button>
                     </div>
 

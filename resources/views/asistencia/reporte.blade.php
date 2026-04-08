@@ -23,6 +23,8 @@
             </div>
 
             <input type="hidden" name="vista" id="inp-vista" value="{{ $vista }}">
+            @if(request('sort'))<input type="hidden" name="sort" value="{{ request('sort') }}">@endif
+            @if(request('direction'))<input type="hidden" name="direction" value="{{ request('direction') }}">@endif
 
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
 
@@ -66,6 +68,20 @@
 
     {{-- ══ VISTA ACUMULADA ══ --}}
     @if($vista === 'acumulado')
+
+    @php
+        function sortUrlAcum(string $col, string $cur, string $dir): string {
+            $newDir = ($col === $cur && $dir === 'desc') ? 'asc' : 'desc';
+            return request()->fullUrlWithQuery(['sort' => $col, 'direction' => $newDir]);
+        }
+        function sortIconAcum(string $col, string $cur, string $dir): string {
+            if ($col !== $cur) return '<span class="text-gray-300 ml-0.5">↕</span>';
+            return $dir === 'asc'
+                ? '<span class="text-white ml-0.5">↑</span>'
+                : '<span class="text-white ml-0.5">↓</span>';
+        }
+    @endphp
+
     <div class="bg-white rounded-xl shadow overflow-hidden">
         <div class="px-5 py-3 bg-blue-800 text-white flex items-center justify-between">
             <div>
@@ -85,17 +101,61 @@
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
                     <tr>
-                        <th class="px-4 py-3 text-left">Estudiante</th>
-                        <th class="px-3 py-3 text-center w-16">Curso</th>
-                        <th class="px-3 py-3 text-center w-16">Días reg.</th>
-                        <th class="px-3 py-3 text-center w-16 text-green-600">Presente</th>
-                        <th class="px-3 py-3 text-center w-16 text-red-600">Ausente</th>
-                        <th class="px-3 py-3 text-center w-16 text-yellow-600">Excusa</th>
-                        <th class="px-3 py-3 text-center w-20 text-purple-600">Sal. Ant.</th>
-                        <th class="px-3 py-3 text-center w-16 text-orange-500">Retardo</th>
-                        <th class="px-3 py-3 text-center w-20 text-gray-500">Sin carnet</th>
-                        <th class="px-3 py-3 text-center w-20 text-gray-500">Sin uniforme</th>
-                        <th class="px-3 py-3 text-center w-24 text-gray-500">Mal. present.</th>
+                        <th class="px-4 py-3 text-left">
+                            <a href="{{ sortUrlAcum('nombre', $sortCol, $sortDir) }}" class="hover:text-blue-700 inline-flex items-center">
+                                Estudiante{!! sortIconAcum('nombre', $sortCol, $sortDir) !!}
+                            </a>
+                        </th>
+                        <th class="px-3 py-3 text-center w-16">
+                            <a href="{{ sortUrlAcum('curso', $sortCol, $sortDir) }}" class="hover:text-blue-700 inline-flex items-center justify-center">
+                                Curso{!! sortIconAcum('curso', $sortCol, $sortDir) !!}
+                            </a>
+                        </th>
+                        <th class="px-3 py-3 text-center w-16">
+                            <a href="{{ sortUrlAcum('total_dias', $sortCol, $sortDir) }}" class="hover:text-blue-700 inline-flex items-center justify-center">
+                                Días{!! sortIconAcum('total_dias', $sortCol, $sortDir) !!}
+                            </a>
+                        </th>
+                        <th class="px-3 py-3 text-center w-16 text-green-600">
+                            <a href="{{ sortUrlAcum('presentes', $sortCol, $sortDir) }}" class="hover:text-green-800 inline-flex items-center justify-center">
+                                Presente{!! sortIconAcum('presentes', $sortCol, $sortDir) !!}
+                            </a>
+                        </th>
+                        <th class="px-3 py-3 text-center w-16 text-red-600">
+                            <a href="{{ sortUrlAcum('ausentes', $sortCol, $sortDir) }}" class="hover:text-red-800 inline-flex items-center justify-center">
+                                Ausente{!! sortIconAcum('ausentes', $sortCol, $sortDir) !!}
+                            </a>
+                        </th>
+                        <th class="px-3 py-3 text-center w-16 text-yellow-600">
+                            <a href="{{ sortUrlAcum('excusas', $sortCol, $sortDir) }}" class="hover:text-yellow-800 inline-flex items-center justify-center">
+                                Excusa{!! sortIconAcum('excusas', $sortCol, $sortDir) !!}
+                            </a>
+                        </th>
+                        <th class="px-3 py-3 text-center w-20 text-purple-600">
+                            <a href="{{ sortUrlAcum('salidas_anticipadas', $sortCol, $sortDir) }}" class="hover:text-purple-800 inline-flex items-center justify-center">
+                                Sal. Ant.{!! sortIconAcum('salidas_anticipadas', $sortCol, $sortDir) !!}
+                            </a>
+                        </th>
+                        <th class="px-3 py-3 text-center w-16 text-orange-500">
+                            <a href="{{ sortUrlAcum('retardos', $sortCol, $sortDir) }}" class="hover:text-orange-700 inline-flex items-center justify-center">
+                                Retardo{!! sortIconAcum('retardos', $sortCol, $sortDir) !!}
+                            </a>
+                        </th>
+                        <th class="px-3 py-3 text-center w-20 text-gray-500">
+                            <a href="{{ sortUrlAcum('falta_carnet', $sortCol, $sortDir) }}" class="hover:text-gray-700 inline-flex items-center justify-center">
+                                Sin carnet{!! sortIconAcum('falta_carnet', $sortCol, $sortDir) !!}
+                            </a>
+                        </th>
+                        <th class="px-3 py-3 text-center w-20 text-gray-500">
+                            <a href="{{ sortUrlAcum('falta_uniforme', $sortCol, $sortDir) }}" class="hover:text-gray-700 inline-flex items-center justify-center">
+                                Sin uniforme{!! sortIconAcum('falta_uniforme', $sortCol, $sortDir) !!}
+                            </a>
+                        </th>
+                        <th class="px-3 py-3 text-center w-24 text-gray-500">
+                            <a href="{{ sortUrlAcum('falta_presentacion', $sortCol, $sortDir) }}" class="hover:text-gray-700 inline-flex items-center justify-center">
+                                Mal. present.{!! sortIconAcum('falta_presentacion', $sortCol, $sortDir) !!}
+                            </a>
+                        </th>
                         <th class="px-3 py-3 text-center w-20"></th>
                     </tr>
                 </thead>

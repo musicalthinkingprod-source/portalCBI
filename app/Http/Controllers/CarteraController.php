@@ -145,6 +145,71 @@ class CarteraController extends Controller
         return back();
     }
 
+    public function updateSeguimiento(Request $request, $id)
+    {
+        $request->validate([
+            'tipo' => 'required|string|max:30',
+            'nota' => 'required|string|max:2000',
+        ]);
+
+        $seg = DB::table('seguimiento_cartera')->where('id', $id)->first();
+        abort_if(!$seg, 404);
+
+        DB::table('seguimiento_cartera')->where('id', $id)->update([
+            'tipo'       => $request->tipo,
+            'nota'       => $request->nota,
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->route('cartera.estudiante', $seg->codigo_alumno)
+            ->with('success', 'Registro actualizado.');
+    }
+
+    public function informeSeguimiento(Request $request)
+    {
+        $query = DB::table('seguimiento_cartera as s')
+            ->leftJoin('ESTUDIANTES as e', 'e.CODIGO', '=', 's.codigo_alumno')
+            ->select(
+                's.id', 's.codigo_alumno', 's.tipo', 's.nota', 's.usuario',
+                's.created_at', 's.updated_at',
+                DB::raw("TRIM(CONCAT(COALESCE(e.APELLIDO1,''),' ',COALESCE(e.APELLIDO2,''),' ',COALESCE(e.NOMBRE1,''),' ',COALESCE(e.NOMBRE2,''))) as nombre"),
+                'e.CURSO as curso'
+            )
+            ->orderBy('s.created_at', 'desc');
+
+        if ($request->filled('codigo_alumno')) {
+            $query->where('s.codigo_alumno', $request->codigo_alumno);
+        }
+        if ($request->filled('tipo')) {
+            $query->where('s.tipo', $request->tipo);
+        }
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('s.created_at', '>=', $request->fecha_desde);
+        }
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('s.created_at', '<=', $request->fecha_hasta);
+        }
+        if ($request->filled('usuario')) {
+            $query->where('s.usuario', 'like', '%' . $request->usuario . '%');
+        }
+
+        $registros = $query->paginate(50)->withQueryString();
+
+        // Totales por tipo (sin filtros para mostrar contexto global)
+        $totalesPorTipo = DB::table('seguimiento_cartera')
+            ->select('tipo', DB::raw('COUNT(*) as total'))
+            ->groupBy('tipo')
+            ->orderByDesc('total')
+            ->get()
+            ->keyBy('tipo');
+
+        $totalGeneral = DB::table('seguimiento_cartera')->count();
+
+        return view('cartera.informe-seguimiento', compact(
+            'registros', 'totalesPorTipo', 'totalGeneral'
+        ));
+    }
+
     public function deudores(Request $request)
     {
         $facturaSub = DB::table('facturacion')

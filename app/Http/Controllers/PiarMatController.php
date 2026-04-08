@@ -26,7 +26,7 @@ class PiarMatController extends Controller
         // Estudiantes con PIAR + materias asignadas al docente
         $query = DB::table('ESTUDIANTES as e')
             ->join('PIAR_DIAG as pd', 'pd.CODIGO_ALUM', '=', 'e.CODIGO')
-            ->join('ASIGNACION_PCM as a', 'a.CURSO', '=', 'e.CURSO')
+            ->join(DB::raw('(SELECT DISTINCT CODIGO_DOC, CODIGO_MAT, CURSO FROM ASIGNACION_PCM) as a'), 'a.CURSO', '=', 'e.CURSO')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'a.CODIGO_MAT')
             ->leftJoin('PIAR_MAT as pm', function ($j) {
                 $j->on('pm.CODIGO_ALUM', '=', 'e.CODIGO')
@@ -39,7 +39,11 @@ class PiarMatController extends Controller
                 'pd.DIAGNOSTICO',
                 DB::raw('CASE WHEN pm.CODIGO_ALUM IS NOT NULL THEN 1 ELSE 0 END as DILIGENCIADO')
             )
-            ->where('e.ESTADO', 'MATRICULADO');
+            ->where('e.ESTADO', 'MATRICULADO')
+            ->groupBy(
+                'e.CODIGO', 'e.NOMBRE1', 'e.NOMBRE2', 'e.APELLIDO1', 'e.APELLIDO2',
+                'e.GRADO', 'e.CURSO', 'a.CODIGO_MAT', 'm.NOMBRE_MAT', 'pd.DIAGNOSTICO'
+            );
 
         if ($esDocente) {
             $query->where('a.CODIGO_DOC', $codigoDoc);

@@ -17,7 +17,7 @@
     <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden" onclick="toggleSidebar()"></div>
 
     <!-- Barra lateral -->
-    <aside id="sidebar" class="fixed lg:static z-30 w-64 h-full lg:h-screen bg-blue-900 text-white flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shrink-0">
+    <aside id="sidebar" class="fixed lg:static z-30 w-64 h-full lg:h-screen bg-blue-900 text-white flex flex-col transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out shrink-0 overflow-hidden">
 
         <!-- Logo / Título -->
         <div class="px-6 py-5 border-b border-blue-700 flex items-center justify-between">
@@ -28,8 +28,8 @@
                     <p class="text-xs text-blue-300">Colegio Bilingüe Integral</p>
                 </div>
             </div>
-            <!-- Botón cerrar sidebar en móvil -->
-            <button onclick="toggleSidebar()" class="lg:hidden text-blue-300 hover:text-white">
+            <!-- Botón cerrar sidebar -->
+            <button onclick="toggleSidebar()" class="text-blue-300 hover:text-white">
                 ✕
             </button>
         </div>
@@ -101,6 +101,16 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('notas.v2.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                🧪 Planilla ponderada
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('correcciones.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                🔧 Corrección de notas
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('english-acq.docente') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                                 🇬🇧 English Acquisition
                             </a>
@@ -112,7 +122,7 @@
                         </li>
                         <li>
                             <a href="{{ route('derroteros.docente') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                                📌 Resolver derroteros
+                                📌 Recuperaciones
                             </a>
                         </li>
                         <li>
@@ -200,6 +210,11 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('cartera.seguimiento.informe') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📋 Seguimiento cartera
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('parametros.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                                 ⚙️ Parametros facturacion
                             </a>
@@ -265,10 +280,15 @@
                 </div>
                 @endif
 
-                 @if($profile === 'SuperAd')
+                @if($profile === 'SuperAd')
                 <div>
                     <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Panel de Control</p>
                     <ul class="space-y-1">
+                        <li>
+                            <a href="{{ route('ciclos.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                🗂️ Control de digitación
+                            </a>
+                        </li>
                         <li>
                             <a href="{{ route('admin.usuarios') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                                 👤 Gestión de usuarios
@@ -321,8 +341,8 @@
         <!-- Topbar -->
         <header class="bg-white shadow px-6 py-4 flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <!-- Botón hamburguesa (solo móvil/tablet) -->
-                <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 hover:text-gray-900 focus:outline-none">
+                <!-- Botón hamburguesa -->
+                <button onclick="toggleSidebar()" class="text-gray-600 hover:text-gray-900 focus:outline-none">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
@@ -345,10 +365,32 @@
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebar-overlay');
-        sidebar.classList.toggle('-translate-x-full');
-        overlay.classList.toggle('hidden');
+        const isDesktop = window.innerWidth >= 1024;
+
+        if (isDesktop) {
+            const collapsed = sidebar.dataset.collapsed === 'true';
+            if (collapsed) {
+                sidebar.style.width = '16rem';
+                sidebar.dataset.collapsed = 'false';
+                localStorage.setItem('sidebarCollapsed', 'false');
+            } else {
+                sidebar.style.width = '0';
+                sidebar.dataset.collapsed = 'true';
+                localStorage.setItem('sidebarCollapsed', 'true');
+            }
+        } else {
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
     }
 
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebar = document.getElementById('sidebar');
+        if (window.innerWidth >= 1024 && localStorage.getItem('sidebarCollapsed') === 'true') {
+            sidebar.style.width = '0';
+            sidebar.dataset.collapsed = 'true';
+        }
+    });
 </script>
 
 @stack('scripts')

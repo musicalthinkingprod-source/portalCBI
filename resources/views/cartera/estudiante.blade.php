@@ -134,11 +134,11 @@
 
     </div>
 
-    {{-- Módulo de Seguimiento Contable --}}
+    {{-- Módulo de Seguimiento Cartera --}}
     <div class="bg-white rounded-xl shadow overflow-hidden">
         <div class="px-5 py-4 bg-gray-700 text-white flex items-center justify-between">
             <div>
-                <h3 class="font-bold text-sm uppercase tracking-wide">Seguimiento Contable</h3>
+                <h3 class="font-bold text-sm uppercase tracking-wide">Seguimiento Cartera</h3>
                 <p class="text-gray-300 text-xs mt-0.5">Acuerdos de pago, llamadas, gestiones y notas</p>
             </div>
             <span class="text-gray-300 text-xs">{{ $seguimientos->count() }} registro(s)</span>
@@ -158,6 +158,7 @@
                             <option value="WhatsApp">WhatsApp</option>
                             <option value="Email">Email</option>
                             <option value="Visita">Visita</option>
+                            <option value="Suspensión">Suspensión</option>
                             <option value="Nota" selected>Nota</option>
                         </select>
                     </div>
@@ -193,31 +194,87 @@
                     'WhatsApp' => 'bg-emerald-100 text-emerald-800',
                     'Email'    => 'bg-purple-100 text-purple-800',
                     'Visita'   => 'bg-orange-100 text-orange-800',
+                    'Suspensión' => 'bg-red-100 text-red-800',
                     'Nota'     => 'bg-gray-100 text-gray-700',
                 ];
                 $badge = $colores[$s->tipo] ?? 'bg-gray-100 text-gray-700';
             @endphp
-            <div class="px-5 py-4 hover:bg-gray-50 flex gap-4 items-start">
-                <div class="flex-shrink-0 pt-0.5">
-                    <span class="inline-block text-xs font-semibold px-2 py-1 rounded-full {{ $badge }}">{{ $s->tipo }}</span>
+            <div class="px-5 py-4 hover:bg-gray-50">
+                {{-- Vista normal --}}
+                <div class="flex gap-4 items-start" id="view-{{ $s->id }}">
+                    <div class="flex-shrink-0 pt-0.5">
+                        <span class="inline-block text-xs font-semibold px-2 py-1 rounded-full {{ $badge }}">{{ $s->tipo }}</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm text-gray-800 whitespace-pre-wrap">{{ $s->nota }}</p>
+                        <p class="text-xs text-gray-400 mt-1">
+                            {{ \Carbon\Carbon::parse($s->created_at)->format('d/m/Y H:i') }}
+                            @if($s->usuario) · <span class="font-medium">{{ $s->usuario }}</span> @endif
+                        </p>
+                    </div>
+                    <div class="flex gap-2 flex-shrink-0 mt-0.5">
+                        <button type="button" onclick="editarSeguimiento({{ $s->id }})"
+                            class="text-yellow-600 hover:text-yellow-800 text-xs transition font-medium">Editar</button>
+                        <form method="POST" action="{{ route('cartera.seguimiento.destroy', $s->id) }}"
+                            onsubmit="return confirm('¿Eliminar este registro?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-400 hover:text-red-600 text-xs transition">Eliminar</button>
+                        </form>
+                    </div>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm text-gray-800 whitespace-pre-wrap">{{ $s->nota }}</p>
-                    <p class="text-xs text-gray-400 mt-1">
-                        {{ \Carbon\Carbon::parse($s->created_at)->format('d/m/Y H:i') }}
-                        @if($s->usuario) · <span class="font-medium">{{ $s->usuario }}</span> @endif
-                    </p>
+
+                {{-- Formulario de edición (oculto por defecto) --}}
+                <div id="edit-{{ $s->id }}" class="hidden mt-3">
+                    <form method="POST" action="{{ route('cartera.seguimiento.update', $s->id) }}"
+                        class="flex flex-wrap gap-3 items-start bg-gray-50 rounded-lg p-3 border border-gray-200">
+                        @csrf
+                        @method('PUT')
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
+                            <select name="tipo"
+                                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                @foreach(['Llamada','Acuerdo','WhatsApp','Email','Visita','Suspensión','Nota'] as $tipo)
+                                    <option value="{{ $tipo }}" {{ $s->tipo === $tipo ? 'selected' : '' }}>
+                                        {{ $tipo === 'Acuerdo' ? 'Acuerdo de pago' : $tipo }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Descripción / Anotación</label>
+                            <textarea name="nota" rows="2" required
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none">{{ $s->nota }}</textarea>
+                        </div>
+                        <div class="flex gap-2 pt-5">
+                            <button type="submit"
+                                class="bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition whitespace-nowrap">
+                                Guardar
+                            </button>
+                            <button type="button" onclick="cancelarEdicion({{ $s->id }})"
+                                class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-600 text-sm font-semibold px-4 py-2 rounded-lg transition whitespace-nowrap">
+                                Cancelar
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <form method="POST" action="{{ route('cartera.seguimiento.destroy', $s->id) }}"
-                    onsubmit="return confirm('¿Eliminar este registro?')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="text-red-400 hover:text-red-600 text-xs transition mt-0.5">Eliminar</button>
-                </form>
             </div>
             @endforeach
         </div>
         @endif
     </div>
+
+@push('scripts')
+<script>
+    function editarSeguimiento(id) {
+        document.getElementById('view-' + id).classList.add('hidden');
+        document.getElementById('edit-' + id).classList.remove('hidden');
+    }
+    function cancelarEdicion(id) {
+        document.getElementById('edit-' + id).classList.add('hidden');
+        document.getElementById('view-' + id).classList.remove('hidden');
+    }
+</script>
+@endpush
 
 @endsection

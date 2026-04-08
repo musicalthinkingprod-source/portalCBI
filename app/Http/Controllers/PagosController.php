@@ -63,4 +63,40 @@ class PagosController extends Controller
 
         return redirect()->route('pagos.index')->with('success', 'Pago registrado correctamente.');
     }
+
+    public function edit($id)
+    {
+        $pago = DB::table('registro_pagos')->where('id', $id)->first();
+        abort_if(!$pago, 404);
+        return view('pagos.edit', compact('pago'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'codigo_alumno' => 'required|integer',
+            'fecha'         => 'required|date',
+            'valor'         => 'required|numeric',
+            'concepto'      => 'required|string|max:100',
+            'mes'           => 'required|string|max:20',
+            'orden'         => 'nullable|string|max:100',
+        ]);
+
+        DB::table('registro_pagos')->where('id', $id)->update([
+            'codigo_alumno' => $request->codigo_alumno,
+            'fecha'         => $request->fecha,
+            'valor'         => $request->valor,
+            'concepto'      => $request->concepto,
+            'mes'           => $request->mes,
+            'orden'         => $request->orden,
+        ]);
+
+        return redirect()->route('pagos.index')->with('success', 'Pago actualizado correctamente.');
+    }
+
+    public function destroy($id)
+    {
+        DB::table('registro_pagos')->where('id', $id)->delete();
+        return redirect()->route('pagos.index')->with('success', 'Pago eliminado correctamente.');
+    }
 }

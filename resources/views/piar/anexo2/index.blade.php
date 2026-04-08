@@ -76,8 +76,18 @@
             </tr>
             @endif
 
+            {{-- Mensaje si el director no dicta materias a este estudiante --}}
+            @if($esMiDir && $materias->whereNotNull('CODIGO_MAT')->isEmpty())
+            <tr>
+                <td colspan="3" class="px-4 py-3 text-xs text-gray-400 italic text-center">
+                    No dictas materias a este estudiante — solo aplica la caracterización de dirección de grupo.
+                </td>
+            </tr>
+            @endif
+
             {{-- Filas por materia --}}
             @foreach($materias as $mat)
+            @if(!$mat->CODIGO_MAT) @continue @endif
             <tr class="hover:bg-gray-50">
                 <td class="px-4 py-4 text-gray-800 font-medium">{{ $mat->NOMBRE_MAT }}</td>
                 <td class="px-4 py-4 text-center">

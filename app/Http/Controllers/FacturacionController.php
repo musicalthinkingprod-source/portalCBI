@@ -76,6 +76,48 @@ class FacturacionController extends Controller
         return redirect()->route('facturacion.index')->with('success', 'Factura registrada correctamente.');
     }
 
+    public function edit($id)
+    {
+        $factura = DB::table('facturacion')->where('id', $id)->first();
+        abort_if(!$factura, 404);
+        return view('facturacion.edit', compact('factura'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'codigo_alumno'  => 'required|integer',
+            'concepto'       => 'required|string|max:100',
+            'valor'          => 'required|numeric',
+            'mes'            => 'required|string|max:20',
+            'orden'          => 'nullable|integer',
+            'codigo_concepto'=> 'nullable|string|max:20',
+            'concepto_otro'  => 'nullable|string|max:100',
+            'centro_costos'  => 'nullable|string|max:50',
+            'fecha'          => 'required|date',
+        ]);
+
+        DB::table('facturacion')->where('id', $id)->update([
+            'codigo_alumno'  => $request->codigo_alumno,
+            'concepto'       => $request->concepto,
+            'valor'          => $request->valor,
+            'mes'            => $request->mes,
+            'orden'          => $request->orden,
+            'codigo_concepto'=> $request->codigo_concepto,
+            'concepto_otro'  => $request->concepto === 'OTRO' ? $request->concepto_otro : null,
+            'centro_costos'  => $request->centro_costos,
+            'fecha'          => $request->fecha,
+        ]);
+
+        return redirect()->route('facturacion.index')->with('success', 'Factura actualizada correctamente.');
+    }
+
+    public function destroy($id)
+    {
+        DB::table('facturacion')->where('id', $id)->delete();
+        return redirect()->route('facturacion.index')->with('success', 'Registro eliminado correctamente.');
+    }
+
     // ── Facturación Automática ──────────────────────────────────────────────────
 
     public function autoIndex()

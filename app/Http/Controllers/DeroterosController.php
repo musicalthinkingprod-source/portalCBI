@@ -230,7 +230,7 @@ class DeroterosController extends Controller
         $codigoMat    = (int) $request->input('CODIGO_MAT');
         $periodo      = (int) $request->input('periodo');
         $anio         = (int) date('Y');
-        $resolucion   = $request->input('resolucion'); // RECUPERO | NO_RECUPERO | INTERMEDIO
+        $resolucion   = $request->input('resolucion'); // RECUPERO | NO_RECUPERO | INTERMEDIO | NO_ASISTIO
         $notaIngresada = $request->input('nota_recuperacion');
 
         // Obtener nota original
@@ -244,6 +244,7 @@ class DeroterosController extends Controller
         $notaFinal = match($resolucion) {
             'RECUPERO'    => 7.0,
             'NO_RECUPERO' => $notaOriginal,
+            'NO_ASISTIO'  => $notaOriginal,
             'INTERMEDIO'  => (float) $notaIngresada,
             default       => $notaOriginal,
         };
@@ -285,7 +286,7 @@ class DeroterosController extends Controller
         }
 
         // Actualizar nota en NOTAS si aplica
-        $tipoNota = $resolucion === 'NO_RECUPERO' ? 'N' : 'R';
+        $tipoNota = in_array($resolucion, ['NO_RECUPERO', 'NO_ASISTIO']) ? 'N' : 'R';
 
         DB::table($this->tablaNotas($anio))
             ->where('CODIGO_ALUM', $codigoAlum)

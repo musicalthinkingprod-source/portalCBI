@@ -114,6 +114,25 @@ class AsistenciaController extends Controller
             ->where('ESTADO', 'MATRICULADO')
             ->distinct()->orderBy('CURSO')->pluck('CURSO');
 
+        // ── Ordenamiento vista acumulada ─────────────────────────────────
+        $sortableAcumulado = [
+            'nombre'             => 'e.APELLIDO1',
+            'curso'              => 'e.CURSO',
+            'total_dias'         => 'total_dias',
+            'presentes'          => 'presentes',
+            'ausentes'           => 'ausentes',
+            'excusas'            => 'excusas',
+            'salidas_anticipadas'=> 'salidas_anticipadas',
+            'retardos'           => 'retardos',
+            'falta_carnet'       => 'falta_carnet',
+            'falta_uniforme'     => 'falta_uniforme',
+            'falta_presentacion' => 'falta_presentacion',
+        ];
+        $sortCol = in_array($request->input('sort'), array_keys($sortableAcumulado))
+            ? $request->input('sort')
+            : 'nombre';
+        $sortDir = $request->input('direction') === 'asc' ? 'asc' : 'desc';
+
         // ── Vista acumulada ──────────────────────────────────────────────
         $acumulado  = collect();
         $fechaDesde = $request->input('desde', today()->startOfMonth()->format('Y-m-d'));
@@ -150,7 +169,13 @@ class AsistenciaController extends Controller
                 });
             }
 
-            $acumulado = $q->orderBy('e.APELLIDO1')->orderBy('e.APELLIDO2')->get();
+            // Aplicar ordenamiento
+            $dbCol = $sortableAcumulado[$sortCol];
+            if (in_array($sortCol, ['nombre'])) {
+                $acumulado = $q->orderBy('e.APELLIDO1', $sortDir)->orderBy('e.APELLIDO2', $sortDir)->get();
+            } else {
+                $acumulado = $q->orderBy(DB::raw($dbCol), $sortDir)->get();
+            }
         }
 
         // ── Vista semanal ────────────────────────────────────────────────
@@ -236,7 +261,7 @@ class AsistenciaController extends Controller
             'acumulado', 'fechaDesde', 'fechaHasta',
             'dias', 'mapaAsist', 'estudiantesSemana',
             'semanaLabel', 'semanaAnterior', 'semanaSiguiente',
-            'semanaInicio'
+            'semanaInicio', 'sortCol', 'sortDir'
         ));
     }
 }

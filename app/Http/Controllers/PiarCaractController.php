@@ -32,9 +32,9 @@ class PiarCaractController extends Controller
         $esDirector = (bool) $dirInfo;
 
         // Filas: un registro por (estudiante × materia) con estados de caract. y ajustes
-        $filas = DB::table('ESTUDIANTES as e')
+        $filasRaw = DB::table('ESTUDIANTES as e')
             ->join('PIAR_DIAG as pd', 'pd.CODIGO_ALUM', '=', 'e.CODIGO')
-            ->join('ASIGNACION_PCM as a', 'a.CURSO', '=', 'e.CURSO')
+            ->join(DB::raw('(SELECT DISTINCT CODIGO_DOC, CODIGO_MAT, CURSO FROM ASIGNACION_PCM) as a'), 'a.CURSO', '=', 'e.CURSO')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'a.CODIGO_MAT')
             ->leftJoin('PIAR_CARACT_MAT as pc', function ($j) {
                 $j->on('pc.CODIGO_ALUM', '=', 'e.CODIGO')
@@ -53,13 +53,50 @@ class PiarCaractController extends Controller
             )
             ->where('e.ESTADO', 'MATRICULADO')
             ->when($esDocente, fn($q) => $q->where('a.CODIGO_DOC', $codigoDoc))
+            ->groupBy(
+                'e.CODIGO', 'e.NOMBRE1', 'e.NOMBRE2', 'e.APELLIDO1', 'e.APELLIDO2',
+                'e.GRADO', 'e.CURSO', 'pd.DIAGNOSTICO',
+                'a.CODIGO_MAT', 'm.NOMBRE_MAT'
+            )
             ->orderBy('e.APELLIDO1')->orderBy('e.NOMBRE1')->orderBy('m.NOMBRE_MAT')
-            ->get()
-            ->groupBy('CODIGO');
+            ->get();
+
+        $filas = $filasRaw->groupBy('CODIGO');
+
+        // Si es director de grupo, agregar los estudiantes de su curso que tienen PIAR
+        // pero a quienes no les dicta ninguna materia (no aparecen en la query anterior)
+        if ($esDirector) {
+            $codigosYaVisibles = $filas->keys()->all();
+
+            $soloDirector = DB::table('ESTUDIANTES as e')
+                ->join('PIAR_DIAG as pd', 'pd.CODIGO_ALUM', '=', 'e.CODIGO')
+                ->select(
+                    'e.CODIGO', 'e.NOMBRE1', 'e.NOMBRE2', 'e.APELLIDO1', 'e.APELLIDO2',
+                    'e.GRADO', 'e.CURSO', 'pd.DIAGNOSTICO',
+                    DB::raw('NULL as CODIGO_MAT'),
+                    DB::raw('NULL as NOMBRE_MAT'),
+                    DB::raw('0 as CARACT_MAT_OK'),
+                    DB::raw('0 as AJUSTES_OK')
+                )
+                ->where('e.ESTADO', 'MATRICULADO')
+                ->where('e.CURSO', $dirInfo->DIR_GRUPO)
+                ->when(!empty($codigosYaVisibles), fn($q) => $q->whereNotIn('e.CODIGO', $codigosYaVisibles))
+                ->orderBy('e.APELLIDO1')->orderBy('e.NOMBRE1')
+                ->get();
+
+            foreach ($soloDirector as $est) {
+                // Agregar al inicio de $filas (ordenando por apellido después)
+                $filas->put($est->CODIGO, collect([$est]));
+            }
+
+            // Reordenar: primero los que tienen materias, luego los solo-director, todos por apellido
+            $filas = $filas->sortBy(fn($rows) => $rows->first()->APELLIDO1 . $rows->first()->NOMBRE1);
+        }
 
         // Caracterizaciones de director ya guardadas (códigos de alumnos)
+        // Para docentes/directores: solo las propias. Para SuperAd/Ori: cualquier director.
         $caractDirGuardadas = DB::table('PIAR_CARACT_DIR')
-            ->where('CODIGO_DOC', $codigoDoc)
+            ->when($esDocente, fn($q) => $q->where('CODIGO_DOC', $codigoDoc))
             ->pluck('CODIGO_ALUM')
             ->flip()
             ->toArray();
@@ -196,10 +233,10 @@ class PiarCaractController extends Controller
             ->orderBy('m.NOMBRE_MAT')
             ->get();
 
-        // Ajustes por materia (docente via ASIGNACION_PCM + curso del estudiante)
+        // Ajustes por materia (un docente por materia para evitar duplicados)
         $ajustes = DB::table('PIAR_MAT as pm')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'pm.CODIGO_MAT')
-            ->join('ASIGNACION_PCM as a', function ($j) use ($estudiante) {
+            ->join(DB::raw('(SELECT CODIGO_MAT, CURSO, MIN(CODIGO_DOC) AS CODIGO_DOC FROM ASIGNACION_PCM GROUP BY CODIGO_MAT, CURSO) as a'), function ($j) use ($estudiante) {
                 $j->on('a.CODIGO_MAT', '=', 'pm.CODIGO_MAT')
                   ->where('a.CURSO', '=', $estudiante->CURSO);
             })

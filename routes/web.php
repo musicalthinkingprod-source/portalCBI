@@ -10,6 +10,9 @@ use App\Http\Controllers\CarteraController;
 use App\Http\Controllers\PadresController;
 use App\Http\Controllers\AlumnoController;
 use App\Http\Controllers\NotasController;
+use App\Http\Controllers\NotasV2Controller;
+use App\Http\Controllers\CiclosController;
+use App\Http\Controllers\SolicitudCorreccionController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\FechasController;
 use App\Http\Controllers\EnglishAcqController;
@@ -76,6 +79,9 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/admin/fechas/{codigo}', [FechasController::class, 'destroy'])->name('admin.fechas.destroy');
         Route::get('/notas/reporte', [NotasController::class, 'reporte'])->name('notas.reporte');
         Route::get('/english-acq/informe', [EnglishAcqController::class, 'informe'])->name('english-acq.informe');
+        Route::get('/ciclos', [CiclosController::class, 'index'])->name('ciclos.index');
+        Route::post('/ciclos', [CiclosController::class, 'store'])->name('ciclos.store');
+        Route::delete('/ciclos/{id}', [CiclosController::class, 'destroy'])->name('ciclos.destroy');
     });
 
     // ── Control de Pagos: SuperAd y Admin ────────────────────────────────────
@@ -84,14 +90,22 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/pagos', [PagosController::class, 'index'])->name('pagos.index');
         Route::get('/pagos/crear', [PagosController::class, 'create'])->name('pagos.create');
         Route::post('/pagos', [PagosController::class, 'store'])->name('pagos.store');
+        Route::get('/pagos/{id}/editar', [PagosController::class, 'edit'])->name('pagos.edit');
+        Route::put('/pagos/{id}', [PagosController::class, 'update'])->name('pagos.update');
+        Route::delete('/pagos/{id}', [PagosController::class, 'destroy'])->name('pagos.destroy');
         Route::get('/cartera', [CarteraController::class, 'index'])->name('cartera.index');
         Route::get('/cartera/deudores', [CarteraController::class, 'deudores'])->name('cartera.deudores');
         Route::get('/cartera/estudiante/{codigo}', [CarteraController::class, 'estudiante'])->name('cartera.estudiante');
         Route::post('/cartera/estudiante/{codigo}/seguimiento', [CarteraController::class, 'storeSeguimiento'])->name('cartera.seguimiento.store');
         Route::delete('/cartera/seguimiento/{id}', [CarteraController::class, 'destroySeguimiento'])->name('cartera.seguimiento.destroy');
+        Route::put('/cartera/seguimiento/{id}', [CarteraController::class, 'updateSeguimiento'])->name('cartera.seguimiento.update');
+        Route::get('/cartera/seguimiento/informe', [CarteraController::class, 'informeSeguimiento'])->name('cartera.seguimiento.informe');
         Route::get('/facturacion', [FacturacionController::class, 'index'])->name('facturacion.index');
         Route::get('/facturacion/crear', [FacturacionController::class, 'create'])->name('facturacion.create');
         Route::post('/facturacion', [FacturacionController::class, 'store'])->name('facturacion.store');
+        Route::get('/facturacion/{id}/editar', [FacturacionController::class, 'edit'])->name('facturacion.edit');
+        Route::put('/facturacion/{id}', [FacturacionController::class, 'update'])->name('facturacion.update');
+        Route::delete('/facturacion/{id}', [FacturacionController::class, 'destroy'])->name('facturacion.destroy');
         Route::get('/facturacion/auto', [FacturacionController::class, 'autoIndex'])->name('facturacion.auto');
         Route::post('/facturacion/auto/preview', [FacturacionController::class, 'autoPreview'])->name('facturacion.auto.preview');
         Route::post('/facturacion/auto/generar', [FacturacionController::class, 'autoGenerar'])->name('facturacion.auto.generar');
@@ -202,6 +216,16 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('profile:SuperAd,Admin,DOC*')->group(function () {
         Route::get('/notas', [NotasController::class, 'index'])->name('notas.index');
         Route::post('/notas/guardar', [NotasController::class, 'guardar'])->name('notas.guardar');
+        Route::get('/correcciones', [SolicitudCorreccionController::class, 'index'])->name('correcciones.index');
+        Route::get('/correcciones/nueva', [SolicitudCorreccionController::class, 'create'])->name('correcciones.create');
+        Route::post('/correcciones', [SolicitudCorreccionController::class, 'store'])->name('correcciones.store');
+        Route::post('/correcciones/{id}/aprobar', [SolicitudCorreccionController::class, 'aprobar'])->name('correcciones.aprobar');
+        Route::post('/correcciones/{id}/rechazar', [SolicitudCorreccionController::class, 'rechazar'])->name('correcciones.rechazar');
+        Route::get('/notas-v2', [NotasV2Controller::class, 'index'])->name('notas.v2.index');
+        Route::post('/notas-v2/columna', [NotasV2Controller::class, 'agregarColumna'])->name('notas.v2.columna.store');
+        Route::delete('/notas-v2/columna/{id}', [NotasV2Controller::class, 'eliminarColumna'])->name('notas.v2.columna.destroy');
+        Route::patch('/notas-v2/columna/{id}/peso', [NotasV2Controller::class, 'actualizarPeso'])->name('notas.v2.columna.peso');
+        Route::post('/notas-v2/guardar', [NotasV2Controller::class, 'guardar'])->name('notas.v2.guardar');
         Route::get('/english-acq', [EnglishAcqController::class, 'docente'])->name('english-acq.docente');
         Route::post('/english-acq/registrar', [EnglishAcqController::class, 'registrar'])->name('english-acq.registrar');
         Route::delete('/english-acq/{id}', [EnglishAcqController::class, 'eliminar'])->name('english-acq.eliminar');

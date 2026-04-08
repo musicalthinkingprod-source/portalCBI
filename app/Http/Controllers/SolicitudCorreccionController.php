@@ -1,0 +1,229 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class SolicitudCorreccionController extends Controller
+{
+    private function tablaNotas(int $anio): string
+    {
+        return 'NOTAS_' . $anio;
+    }
+
+    /** Lista de solicitudes — docentes ven las suyas; admins ven todas */
+    public function index(Request $request)
+    {
+        $profile    = auth()->user()->PROFILE;
+        $esSuperior = in_array($profile, ['SuperAd', 'Admin']);
+
+        $q = DB::table('solicitudes_correccion as s')
+            ->leftJoin('CODIGOSMAT as m',   'm.CODIGO_MAT', '=', 's.codigo_mat')
+            ->leftJoin('ESTUDIANTES as e',   'e.CODIGO',     '=', 's.codigo_alum')
+            ->leftJoin('CODIGOS_DOC as d',   'd.CODIGO_DOC', '=', 's.codigo_doc')
+            ->select(
+                's.*',
+                'm.NOMBRE_MAT',
+                DB::raw("TRIM(CONCAT(COALESCE(e.APELLIDO1,''),' ',COALESCE(e.APELLIDO2,''),' ',COALESCE(e.NOMBRE1,''))) as nombre_alumno"),
+                'd.NOMBRE_DOC'
+            )
+            ->orderByRaw("FIELD(s.estado,'PENDIENTE','APROBADA','RECHAZADA')")
+            ->orderByDesc('s.created_at');
+
+        if (!$esSuperior) {
+            $q->where('s.codigo_doc', $profile);
+        }
+
+        // Filtro de estado
+        if ($request->filled('estado')) {
+            $q->where('s.estado', $request->estado);
+        }
+
+        $solicitudes  = $q->paginate(30)->withQueryString();
+        $pendientes   = DB::table('solicitudes_correccion')->where('estado', 'PENDIENTE')->count();
+
+        return view('correcciones.index', compact('solicitudes', 'esSuperior', 'pendientes'));
+    }
+
+    /** Formulario para el docente */
+    public function create(Request $request)
+    {
+        $profile    = auth()->user()->PROFILE;
+        $esSuperior = in_array($profile, ['SuperAd', 'Admin']);
+        $anio       = (int) date('Y');
+
+        // Asignaciones del docente para saber qué materias/cursos puede ver
+        $queryAsig = DB::table('ASIGNACION_PCM as a')
+            ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
+            ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT');
+
+        if (!$esSuperior) {
+            $queryAsig->where('a.CODIGO_DOC', $profile);
+        }
+
+        $asignaciones = $queryAsig->orderBy('m.NOMBRE_MAT')->orderBy('a.CURSO')->get();
+        $materias     = $asignaciones->unique('CODIGO_MAT')->values();
+
+        $mapaMateriasCursos = [];
+        foreach ($asignaciones as $a) {
+            $mapaMateriasCursos[$a->CODIGO_MAT][] = $a->CURSO;
+        }
+        foreach ($mapaMateriasCursos as &$cs) {
+            $cs = array_values(array_unique($cs));
+        }
+
+        // Si ya vienen parámetros pre-seleccionados, cargar nota actual
+        $matSelec   = $request->input('materia');
+        $cursoSelec = $request->input('curso');
+        $periodo    = (int) $request->input('periodo', 1);
+        $codAlum    = $request->input('codigo_alum');
+
+        $notaActual = null;
+        $alumno     = null;
+
+        if ($matSelec && $codAlum && $periodo) {
+            try {
+                $notaActual = DB::table($this->tablaNotas($anio))
+                    ->where('CODIGO_ALUM', $codAlum)
+                    ->where('CODIGO_MAT', $matSelec)
+                    ->where('PERIODO', $periodo)
+                    ->value('NOTA');
+            } catch (\Exception $e) {}
+
+            $alumno = DB::table('ESTUDIANTES')->where('CODIGO', $codAlum)->first();
+        }
+
+        $estudiantes = collect();
+        if ($matSelec && $cursoSelec) {
+            $estudiantes = DB::table('ESTUDIANTES')
+                ->where('CURSO', $cursoSelec)
+                ->where('ESTADO', 'MATRICULADO')
+                ->orderBy('APELLIDO1')->orderBy('NOMBRE1')
+                ->get();
+        }
+
+        return view('correcciones.create', compact(
+            'materias', 'mapaMateriasCursos', 'matSelec', 'cursoSelec', 'periodo',
+            'codAlum', 'notaActual', 'alumno', 'estudiantes', 'anio'
+        ));
+    }
+
+    /** Guardar la solicitud */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'codigo_mat'    => 'required|integer',
+            'codigo_alum'   => 'required|integer',
+            'periodo'       => 'required|integer|between:1,4',
+            'nota_actual'   => 'required|numeric|min:0|max:10',
+            'nota_propuesta'=> 'required|numeric|min:0|max:10|different:nota_actual',
+            'motivo'        => 'required|string|min:10|max:1000',
+        ]);
+
+        $profile = auth()->user()->PROFILE;
+        $anio    = (int) date('Y');
+
+        // Verificar que la nota actual coincida con lo que hay en BD
+        try {
+            $notaReal = DB::table($this->tablaNotas($anio))
+                ->where('CODIGO_ALUM', $request->codigo_alum)
+                ->where('CODIGO_MAT',  $request->codigo_mat)
+                ->where('PERIODO',     $request->periodo)
+                ->value('NOTA');
+        } catch (\Exception $e) {
+            $notaReal = null;
+        }
+
+        if ($notaReal === null) {
+            return back()->withErrors(['nota_actual' => 'No se encontró una nota registrada para este estudiante en ese período.'])->withInput();
+        }
+
+        if ((float) $notaReal !== (float) $request->nota_actual) {
+            return back()->withErrors(['nota_actual' => "La nota actual en el sistema es {$notaReal}, no {$request->nota_actual}."])->withInput();
+        }
+
+        // Verificar que no haya una solicitud PENDIENTE igual
+        $yaPendiente = DB::table('solicitudes_correccion')
+            ->where('codigo_doc',  $profile)
+            ->where('codigo_alum', $request->codigo_alum)
+            ->where('codigo_mat',  $request->codigo_mat)
+            ->where('periodo',     $request->periodo)
+            ->where('anio',        $anio)
+            ->where('estado',      'PENDIENTE')
+            ->exists();
+
+        if ($yaPendiente) {
+            return back()->withErrors(['motivo' => 'Ya tienes una solicitud pendiente para esta nota.'])->withInput();
+        }
+
+        DB::table('solicitudes_correccion')->insert([
+            'codigo_doc'     => $profile,
+            'codigo_alum'    => $request->codigo_alum,
+            'codigo_mat'     => $request->codigo_mat,
+            'periodo'        => $request->periodo,
+            'anio'           => $anio,
+            'nota_actual'    => $request->nota_actual,
+            'nota_propuesta' => $request->nota_propuesta,
+            'motivo'         => trim($request->motivo),
+            'estado'         => 'PENDIENTE',
+            'created_at'     => now(),
+            'updated_at'     => now(),
+        ]);
+
+        return redirect()->route('correcciones.index')
+            ->with('success', 'Solicitud enviada. Será revisada por un administrador.');
+    }
+
+    /** Admin aprueba → aplica la corrección en NOTAS */
+    public function aprobar(Request $request, $id)
+    {
+        $request->validate([
+            'observacion' => 'nullable|string|max:500',
+        ]);
+
+        $sol = DB::table('solicitudes_correccion')->where('id', $id)->first();
+        abort_if(!$sol || $sol->estado !== 'PENDIENTE', 404);
+
+        $revisor = auth()->user()->PROFILE;
+        $tabla   = $this->tablaNotas($sol->anio);
+
+        // Aplicar la corrección en la tabla de notas
+        DB::table($tabla)
+            ->where('CODIGO_ALUM', $sol->codigo_alum)
+            ->where('CODIGO_MAT',  $sol->codigo_mat)
+            ->where('PERIODO',     $sol->periodo)
+            ->update(['NOTA' => $sol->nota_propuesta, 'TIPODENOTA' => 'N']);
+
+        DB::table('solicitudes_correccion')->where('id', $id)->update([
+            'estado'       => 'APROBADA',
+            'revisado_por' => $revisor,
+            'observacion'  => $request->observacion,
+            'revisado_at'  => now(),
+            'updated_at'   => now(),
+        ]);
+
+        return back()->with('success', "Solicitud aprobada. Nota actualizada a {$sol->nota_propuesta}.");
+    }
+
+    /** Admin rechaza */
+    public function rechazar(Request $request, $id)
+    {
+        $request->validate([
+            'observacion' => 'required|string|min:5|max:500',
+        ]);
+
+        $sol = DB::table('solicitudes_correccion')->where('id', $id)->first();
+        abort_if(!$sol || $sol->estado !== 'PENDIENTE', 404);
+
+        DB::table('solicitudes_correccion')->where('id', $id)->update([
+            'estado'       => 'RECHAZADA',
+            'revisado_por' => auth()->user()->PROFILE,
+            'observacion'  => $request->observacion,
+            'revisado_at'  => now(),
+            'updated_at'   => now(),
+        ]);
+
+        return back()->with('success', 'Solicitud rechazada.');
+    }
+}

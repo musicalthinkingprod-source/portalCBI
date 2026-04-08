@@ -85,6 +85,7 @@
                                 Valor{!! sortIcon('valor', $sortCol, $sortDir) !!}
                             </a>
                         </th>
+                        <th class="px-4 py-3 text-center">Acciones</th>
                     </tr>
                     <tr class="bg-white border-b border-gray-200">
                         <td class="px-2 py-1">
@@ -127,6 +128,7 @@
                                 Filtrar
                             </button>
                         </td>
+                        <td></td>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -140,10 +142,25 @@
                         <td class="px-4 py-3">{{ $f->codigo_concepto ?? '—' }}</td>
                         <td class="px-4 py-3">{{ $f->centro_costos ?? '—' }}</td>
                         <td class="px-4 py-3 text-right font-medium text-blue-800">$ {{ number_format($f->valor, 0, ',', '.') }}</td>
+                        <td class="px-4 py-3 text-center whitespace-nowrap">
+                            <a href="{{ route('facturacion.edit', $f->id) }}"
+                                class="inline-block text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-semibold px-2 py-1 rounded transition mr-1">
+                                ✏️ Editar
+                            </a>
+                            <form method="POST" action="{{ route('facturacion.destroy', $f->id) }}" class="inline"
+                                onsubmit="return confirm('¿Eliminar este registro?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                    class="text-xs bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-2 py-1 rounded transition">
+                                    🗑️ Eliminar
+                                </button>
+                            </form>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros de facturación.</td>
+                        <td colspan="9" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros de facturación.</td>
                     </tr>
                     @endforelse
                 </tbody>
