@@ -130,13 +130,11 @@
                                 📅 Horarios recuperación
                             </a>
                         </li>
-                        @if($profile === 'SuperAd')
                         <li>
                             <a href="{{ route('vigilancias.docente') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                                 🗺️ Vigilancias
                             </a>
                         </li>
-                        @endif
                         @if($profile === 'SuperAd')
                         <li>
                             <a href="{{ route('notas.reporte') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
