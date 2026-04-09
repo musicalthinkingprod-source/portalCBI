@@ -14,10 +14,10 @@
 <div class="flex h-screen overflow-hidden">
 
     <!-- Overlay para cerrar sidebar en móvil -->
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden" onclick="toggleSidebar()"></div>
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-[1999] hidden lg:hidden" onclick="toggleSidebar()"></div>
 
     <!-- Barra lateral -->
-    <aside id="sidebar" class="fixed lg:static z-30 w-64 h-full lg:h-screen bg-blue-900 text-white flex flex-col transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out shrink-0 overflow-hidden">
+    <aside id="sidebar" class="fixed lg:static z-[2000] w-64 h-full lg:h-screen bg-blue-900 text-white flex flex-col transform -translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out shrink-0 overflow-hidden">
 
         <!-- Logo / Título -->
         <div class="px-6 py-5 border-b border-blue-700 flex items-center justify-between">

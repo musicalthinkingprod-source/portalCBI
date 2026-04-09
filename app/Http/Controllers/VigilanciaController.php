@@ -92,8 +92,25 @@ class VigilanciaController extends Controller
     {
         $anio = (int) ($request->input('anio', date('Y')));
 
+        $conAsignacion = DB::table('vigilancias')
+            ->where('ANIO', $anio)
+            ->distinct()
+            ->pluck('CODIGO_DOC');
+
         $docentes = DB::table('CODIGOS_DOC')
+            ->whereIn('CODIGO_DOC', $conAsignacion)
+            ->orderBy('ESTADO')
+            ->orderBy('NOMBRE_DOC')
+            ->get();
+
+        $conAsignacionCodigos = DB::table('vigilancias')
+            ->where('ANIO', $anio)
+            ->distinct()
+            ->pluck('CODIGO_DOC');
+
+        $docentesDestino = DB::table('CODIGOS_DOC')
             ->where('ESTADO', 'ACTIVO')
+            ->whereNotIn('CODIGO_DOC', $conAsignacionCodigos)
             ->orderBy('NOMBRE_DOC')
             ->get();
 
@@ -107,12 +124,188 @@ class VigilanciaController extends Controller
             $matriz[$f->CODIGO_DOC][$f->DIA_CICLO][$f->DESCANSO] = $f->POSICION;
         }
 
-        $calendario = DB::table('calendario_vigilancias')
-            ->where('anio', $anio)
-            ->orderBy('fecha')
+        // Parsear KML para el mapa admin
+        $puntosA = $this->parsearKml('Posiciones Sede A.kml', 'A');
+        $puntosB = $this->parsearKml('Posiciones Sede B.kml', 'B');
+        $puntosMapa = array_merge($puntosA, $puntosB);
+
+        // Mapa posicion → nombre docente (para mostrar en el mapa)
+        $nombresDoc = DB::table('CODIGOS_DOC')->pluck('NOMBRE_DOC', 'CODIGO_DOC');
+        $posicionDocente = [];
+        foreach ($filas as $f) {
+            if (!$f->POSICION) continue;
+            $posicionDocente[strtoupper($f->POSICION)] = [
+                'docente'  => $nombresDoc[$f->CODIGO_DOC] ?? $f->CODIGO_DOC,
+                'descanso' => $f->DESCANSO,
+                'dia'      => $f->DIA_CICLO,
+            ];
+        }
+
+        // Datos para reasignaciones
+        $docentesConAsig = DB::table('vigilancias as v')
+            ->leftJoin('CODIGOS_DOC as d', 'v.CODIGO_DOC', '=', 'd.CODIGO_DOC')
+            ->where('v.ANIO', $anio)
+            ->select(
+                'v.CODIGO_DOC',
+                DB::raw('COALESCE(d.NOMBRE_DOC, v.CODIGO_DOC) as NOMBRE_DOC'),
+                DB::raw('COUNT(*) as total_slots')
+            )
+            ->groupBy('v.CODIGO_DOC', 'd.NOMBRE_DOC')
+            ->orderBy('d.NOMBRE_DOC')
             ->get();
 
-        return view('vigilancias.admin', compact('docentes', 'matriz', 'calendario', 'anio'));
+        $verDoc   = $request->input('ver_asig');
+        $slotsDoc = collect();
+        if ($verDoc) {
+            $slotsDoc = DB::table('vigilancias')
+                ->where('CODIGO_DOC', $verDoc)
+                ->where('ANIO', $anio)
+                ->orderBy('DIA_CICLO')->orderBy('DESCANSO')
+                ->get();
+        }
+
+        return view('vigilancias.admin', compact(
+            'docentes', 'docentesDestino', 'matriz', 'anio',
+            'docentesConAsig', 'verDoc', 'slotsDoc',
+            'puntosMapa', 'posicionDocente'
+        ));
+    }
+
+    // Vista de reasignaciones (estilo asignaciones de materias)
+    public function reasignaciones(Request $request)
+    {
+        $anio = (int) ($request->input('anio', date('Y')));
+
+        $docentesConAsig = DB::table('vigilancias as v')
+            ->leftJoin('CODIGOS_DOC as d', 'v.CODIGO_DOC', '=', 'd.CODIGO_DOC')
+            ->where('v.ANIO', $anio)
+            ->select(
+                'v.CODIGO_DOC',
+                DB::raw('COALESCE(d.NOMBRE_DOC, v.CODIGO_DOC) as NOMBRE_DOC'),
+                DB::raw('COUNT(*) as total_slots')
+            )
+            ->groupBy('v.CODIGO_DOC', 'd.NOMBRE_DOC')
+            ->orderBy('d.NOMBRE_DOC')
+            ->get();
+
+        $docentesActivos = DB::table('CODIGOS_DOC')
+            ->where('ESTADO', 'ACTIVO')
+            ->orderBy('NOMBRE_DOC')
+            ->get();
+
+        $verDoc    = $request->input('ver_asig');
+        $slotsDoc  = collect();
+
+        if ($verDoc) {
+            $slotsDoc = DB::table('vigilancias')
+                ->where('CODIGO_DOC', $verDoc)
+                ->where('ANIO', $anio)
+                ->orderBy('DIA_CICLO')
+                ->orderBy('DESCANSO')
+                ->get();
+        }
+
+        return view('vigilancias.reasignaciones', compact(
+            'docentesConAsig', 'docentesActivos', 'verDoc', 'slotsDoc', 'anio'
+        ));
+    }
+
+    // Reasigna un slot individual a otro docente (hace intercambio si hay conflicto)
+    public function reasignarUna(Request $request)
+    {
+        $origen   = $request->input('origen');
+        $destino  = $request->input('destino');
+        $dia      = (int) $request->input('DIA_CICLO');
+        $descanso = (int) $request->input('DESCANSO');
+        $anio     = (int) $request->input('anio', date('Y'));
+
+        if (!$origen || !$destino || !$dia || !$descanso) {
+            return back()->withErrors(['reasig_una' => 'Faltan datos para reasignar.']);
+        }
+        if ($origen === $destino) {
+            return back()->withErrors(['reasig_una' => 'El docente destino debe ser diferente al origen.']);
+        }
+
+        // Buscar slot origen
+        $slotOrigen = DB::table('vigilancias')
+            ->where('CODIGO_DOC', $origen)
+            ->where('DIA_CICLO', $dia)
+            ->where('DESCANSO', $descanso)
+            ->where('ANIO', $anio)
+            ->first();
+
+        if (!$slotOrigen) {
+            return back()->withErrors(['reasig_una' => 'No se encontró el slot a reasignar.']);
+        }
+
+        // Buscar si el destino ya tiene algo en ese slot → intercambiar
+        $slotDestino = DB::table('vigilancias')
+            ->where('CODIGO_DOC', $destino)
+            ->where('DIA_CICLO', $dia)
+            ->where('DESCANSO', $descanso)
+            ->where('ANIO', $anio)
+            ->first();
+
+        if ($slotDestino) {
+            // Intercambio: darle al destino la posición del origen y viceversa
+            DB::table('vigilancias')->where('id', $slotOrigen->id)
+                ->update(['CODIGO_DOC' => $destino, 'updated_at' => now()]);
+            DB::table('vigilancias')->where('id', $slotDestino->id)
+                ->update(['CODIGO_DOC' => $origen, 'updated_at' => now()]);
+            $msg = "Posiciones intercambiadas entre «{$origen}» y «{$destino}» en Día {$dia} / Descanso {$descanso}.";
+        } else {
+            // Solo mover
+            DB::table('vigilancias')->where('id', $slotOrigen->id)
+                ->update(['CODIGO_DOC' => $destino, 'updated_at' => now()]);
+            $msg = "Slot Día {$dia} / Descanso {$descanso} movido de «{$origen}» a «{$destino}».";
+        }
+
+        return redirect()
+            ->route('vigilancias.admin', ['ver_asig' => $origen, 'anio' => $anio])
+            ->with('success_reasig_una', $msg);
+    }
+
+    // Mueve / intercambia TODOS los slots entre dos docentes
+    public function reasignarBloque(Request $request)
+    {
+        $request->validate([
+            'origen'  => 'required',
+            'destino' => 'required|different:origen',
+        ], [
+            'destino.different' => 'El docente destino debe ser diferente al origen.',
+        ]);
+
+        $origen  = $request->origen;
+        $destino = $request->destino;
+        $anio    = (int) $request->input('anio', date('Y'));
+
+        $totalOrigen = DB::table('vigilancias')
+            ->where('CODIGO_DOC', $origen)->where('ANIO', $anio)->count();
+
+        if ($totalOrigen === 0) {
+            return back()->withErrors(['reasig_bloque' => 'El docente origen no tiene vigilancias asignadas.']);
+        }
+
+        $tieneDestino = DB::table('vigilancias')
+            ->where('CODIGO_DOC', $destino)->where('ANIO', $anio)->exists();
+
+        if ($tieneDestino) {
+            // Intercambio completo usando un código temporal para evitar conflicto de unique
+            $tmp = '_TMP_' . uniqid();
+            DB::table('vigilancias')->where('CODIGO_DOC', $origen)->where('ANIO', $anio)
+                ->update(['CODIGO_DOC' => $tmp]);
+            DB::table('vigilancias')->where('CODIGO_DOC', $destino)->where('ANIO', $anio)
+                ->update(['CODIGO_DOC' => $origen]);
+            DB::table('vigilancias')->where('CODIGO_DOC', $tmp)->where('ANIO', $anio)
+                ->update(['CODIGO_DOC' => $destino]);
+            $msg = "Vigilancias intercambiadas entre «{$origen}» y «{$destino}».";
+        } else {
+            DB::table('vigilancias')->where('CODIGO_DOC', $origen)->where('ANIO', $anio)
+                ->update(['CODIGO_DOC' => $destino]);
+            $msg = "{$totalOrigen} slot(s) movidos de «{$origen}» a «{$destino}».";
+        }
+
+        return back()->with('success_reasig_bloque', $msg);
     }
 
     // Guarda toda la tabla de asignaciones (admin)

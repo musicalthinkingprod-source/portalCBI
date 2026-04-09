@@ -260,6 +260,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/vigilancias/asignaciones', [VigilanciaController::class, 'guardarAsignaciones'])->name('vigilancias.asignaciones.guardar');
         Route::post('/vigilancias/calendario', [VigilanciaController::class, 'guardarCalendario'])->name('vigilancias.calendario.guardar');
         Route::delete('/vigilancias/calendario/{id}', [VigilanciaController::class, 'eliminarCalendario'])->name('vigilancias.calendario.eliminar');
+        Route::get('/vigilancias/reasignaciones', [VigilanciaController::class, 'reasignaciones'])->name('vigilancias.reasignaciones');
+        Route::post('/vigilancias/reasignar/una', [VigilanciaController::class, 'reasignarUna'])->name('vigilancias.reasignar.una');
+        Route::post('/vigilancias/reasignar/bloque', [VigilanciaController::class, 'reasignarBloque'])->name('vigilancias.reasignar.bloque');
     });
 });
 

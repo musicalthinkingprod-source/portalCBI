@@ -4,10 +4,34 @@
 
 @section('slot')
 
-{{-- Datos para el mapa --}}
+{{-- Lógica de tiempo --}}
 @php
-    $pos1 = $posHoy[1] ?? null;
-    $pos2 = $posHoy[2] ?? null;
+    $pos1   = $posHoy[1] ?? null;
+    $pos2   = $posHoy[2] ?? null;
+    $horaActual = now()->format('H:i');
+
+    if ($horaActual < '08:50') {
+        $mostrar    = 1;
+        $labelCard  = 'Vigilancia · Descanso 1';
+        $posActiva  = $pos1;
+        $distId     = 'dist-d1';
+        $colorBorde = 'border-blue-500 bg-blue-50';
+        $colorTexto = 'text-blue-700';
+        $posHoyFiltrado = $pos1 ? [1 => $pos1] : [];
+    } elseif ($horaActual < '12:15') {
+        $mostrar    = 2;
+        $labelCard  = 'Próxima vigilancia · Descanso 2';
+        $posActiva  = $pos2;
+        $distId     = 'dist-d2';
+        $colorBorde = 'border-orange-500 bg-orange-50';
+        $colorTexto = 'text-orange-600';
+        $posHoyFiltrado = $pos2 ? [2 => $pos2] : [];
+    } else {
+        $mostrar    = null;
+        $posActiva  = null;
+        $distId     = null;
+        $posHoyFiltrado = [];
+    }
 @endphp
 
 <div class="flex flex-col gap-4" style="height: calc(100vh - 112px);">
@@ -20,39 +44,30 @@
         <div class="w-full rounded-xl bg-yellow-50 border border-yellow-200 px-4 py-3 text-sm text-yellow-700">
             No hay día de ciclo registrado para hoy. Consulta con la coordinación.
         </div>
+        @elseif($mostrar === null)
+        <div class="w-full rounded-xl bg-gray-50 border border-gray-200 px-4 py-3 text-sm text-gray-500">
+            ✅ Las vigilancias de hoy han finalizado.
+        </div>
         @else
         <div class="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-xl px-4 py-2 text-sm font-semibold text-blue-800">
-            📅 Hoy es el <span class="ml-1 bg-blue-700 text-white rounded-full px-2 py-0.5 text-xs">Día {{ $diaHoy }}</span>
+            📅 Día <span class="ml-1 bg-blue-700 text-white rounded-full px-2 py-0.5 text-xs">{{ $diaHoy }}</span>
+        </div>
+
+        {{-- Card única según la hora --}}
+        <div id="card-d{{ $mostrar }}"
+            class="flex-1 min-w-[160px] rounded-xl border-2 px-4 py-3 flex flex-col items-center text-center transition-all {{ $posActiva ? $colorBorde : 'border-gray-200 bg-gray-50' }}">
+            <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">{{ $labelCard }}</span>
+            @if($posActiva)
+                <span class="text-3xl font-black {{ $colorTexto }}">{{ $posActiva }}</span>
+                <span id="{{ $distId }}" class="mt-1 text-xs font-medium text-gray-400">— GPS no activo</span>
+            @else
+                <span class="text-sm text-gray-400 italic">Sin asignación</span>
+            @endif
         </div>
         @endif
 
-        {{-- Descanso 1 --}}
-        <div id="card-d1"
-            class="flex-1 min-w-[140px] rounded-xl border-2 px-4 py-3 flex flex-col items-center text-center transition-all
-            {{ $pos1 ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-gray-50' }}">
-            <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Descanso 1</span>
-            @if($pos1)
-                <span class="text-2xl font-black text-blue-700">{{ $pos1 }}</span>
-                <span id="dist-d1" class="mt-1 text-xs font-medium text-gray-400">— GPS no activo</span>
-            @else
-                <span class="text-sm text-gray-400 italic">Sin asignación</span>
-            @endif
-        </div>
-
-        {{-- Descanso 2 --}}
-        <div id="card-d2"
-            class="flex-1 min-w-[140px] rounded-xl border-2 px-4 py-3 flex flex-col items-center text-center transition-all
-            {{ $pos2 ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-gray-50' }}">
-            <span class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Descanso 2</span>
-            @if($pos2)
-                <span class="text-2xl font-black text-orange-600">{{ $pos2 }}</span>
-                <span id="dist-d2" class="mt-1 text-xs font-medium text-gray-400">— GPS no activo</span>
-            @else
-                <span class="text-sm text-gray-400 italic">Sin asignación</span>
-            @endif
-        </div>
-
-        {{-- Botón GPS --}}
+        {{-- Botón GPS (solo si hay vigilancia activa) --}}
+        @if($mostrar !== null && $diaHoy)
         <button id="btn-gps"
             class="shrink-0 flex items-center gap-2 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold text-sm px-4 py-3 rounded-xl transition shadow">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -61,6 +76,7 @@
             </svg>
             Ubicarme
         </button>
+        @endif
     </div>
 
     {{-- ── MAPA ── --}}
@@ -200,7 +216,7 @@
 document.addEventListener('DOMContentLoaded', function () {
 
     const puntos  = @json($puntosMapa);
-    const posHoy  = @json($posHoy);   // {1: "20A", 2: "15B"} o vacío
+    const posHoy  = @json($posHoyFiltrado);   // solo el descanso vigente según la hora
     const diaHoy  = @json($diaHoy);   // número o null
 
     // ─── Inicializar mapa ───────────────────────────────────────────────────
@@ -281,9 +297,11 @@ document.addEventListener('DOMContentLoaded', function () {
     let markerYo = null;
     let watchId  = null;
 
-    const btnGps = document.getElementById('btn-gps');
-    const distD1 = document.getElementById('dist-d1');
-    const distD2 = document.getElementById('dist-d2');
+    const btnGps  = document.getElementById('btn-gps');
+    const distEl  = document.getElementById('{{ $distId }}');
+    // compatibilidad con variables dist-d1/dist-d2 usadas abajo
+    const distD1  = {{ $mostrar == 1 ? 'distEl' : 'null' }};
+    const distD2  = {{ $mostrar == 2 ? 'distEl' : 'null' }};
 
     btnGps.addEventListener('click', () => {
         if (!navigator.geolocation) {
