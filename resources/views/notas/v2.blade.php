@@ -17,6 +17,17 @@
     foreach ($columnas as $col) {
         $columnasPorCat[$col->categoria][] = $col;
     }
+
+    // Detectar modo por categoría: 'decimal' si algún peso < 1, 'entero' si algún peso > 1, null si indefinido
+    $modoPorCat = [];
+    $pesosPorCat = []; // para JS
+    foreach (['P','C','A'] as $cat) {
+        $ps = collect($columnasPorCat[$cat])->map(fn($c) => $c->peso)->filter()->map(fn($p) => (float)$p);
+        $pesosPorCat[$cat] = $ps->values()->toArray();
+        if ($ps->contains(fn($p) => $p < 1))       $modoPorCat[$cat] = 'decimal';
+        elseif ($ps->contains(fn($p) => $p > 1))   $modoPorCat[$cat] = 'entero';
+        else                                         $modoPorCat[$cat] = null;
+    }
 @endphp
 
     {{-- Selector --}}
@@ -70,6 +81,9 @@
     @if(session('success'))
         <div class="mb-4 p-3 bg-green-100 text-green-800 rounded-xl text-sm">✅ {{ session('success') }}</div>
     @endif
+    @if(session('error'))
+        <div class="mb-4 p-3 bg-red-100 text-red-800 rounded-xl text-sm">⚠️ {{ session('error') }}</div>
+    @endif
     @if(session('error_entrega'))
         <div class="mb-4 p-3 bg-red-100 text-red-800 rounded-xl text-sm">⚠️ {{ session('error_entrega') }}</div>
     @endif
@@ -77,13 +91,21 @@
     @if($matSelec && $cursoSelec)
 
     {{-- Leyenda de pesos --}}
-    <div class="flex flex-wrap gap-3 mb-4">
+    <div class="flex flex-wrap gap-3 mb-2">
         @foreach($categorias as $cat => $cfg)
         <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full {{ $cfg['badge'] }}">
             {{ $cfg['label'] }} · {{ $cfg['peso'] }}
         </span>
         @endforeach
         <span class="text-xs text-gray-400 self-center ml-1">Nota final = P×0.70 + C×0.20 + A×0.10</span>
+    </div>
+
+    {{-- Tip: uso de porcentajes --}}
+    <div class="mb-4 text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 leading-relaxed">
+        💡 <strong>Dos formas de ponderar — escoge una sola por categoría:</strong><br>
+        <span class="ml-4">① <strong>Por número de notas</strong>: ingresa enteros (1, 2, 3…). Una nota con peso 2 vale el doble que una con peso 1.</span><br>
+        <span class="ml-4">② <strong>Por porcentaje</strong>: ingresa decimales entre 0 y 1 (p. ej. <strong>0.500</strong> para 50 %, <strong>0.300</strong> para 30 %, <strong>0.200</strong> para 20 %). La suma debe ser exactamente <strong>1</strong>.</span><br>
+        <span class="ml-4 text-orange-600 font-semibold">⚠ No se pueden mezclar los dos modos dentro de la misma categoría.</span>
     </div>
 
     {{-- Formularios para agregar columnas --}}
@@ -93,7 +115,7 @@
             <p class="text-xs font-bold text-gray-600 uppercase tracking-wide mb-3">
                 + Nueva actividad · <span class="{{ $cfg['badge'] }} px-1.5 py-0.5 rounded text-xs">{{ $cfg['label'] }} ({{ $cfg['peso'] }})</span>
             </p>
-            <form method="POST" action="{{ route('notas.v2.columna.store') }}">
+            <form method="POST" action="{{ route('notas.v2.columna.store') }}" class="form-agregar-col">
                 @csrf
                 <input type="hidden" name="codigo_mat" value="{{ $matSelec }}">
                 <input type="hidden" name="curso"      value="{{ $cursoSelec }}">
@@ -110,7 +132,7 @@
                         <label class="block text-xs text-gray-500 mb-1" title="Peso relativo. Dejar vacío = igual peso que las demás">
                             Peso <span class="text-gray-400">(?)</span>
                         </label>
-                        <input type="number" name="peso" min="0.1" max="999" step="0.1"
+                        <input type="number" name="peso" min="0.1" max="5" step="0.001"
                             placeholder="1"
                             title="Peso relativo para ponderación. Ej: 2 = doble peso. Vacío = igual."
                             class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 {{ $cfg['ring'] }}">
@@ -161,11 +183,22 @@
                                 Estudiante
                             </th>
                             @foreach($categorias as $cat => $cfg)
-                                @php $cols = $columnasPorCat[$cat]; @endphp
+                                @php
+                                    $cols = $columnasPorCat[$cat];
+                                    $sumaPesos = collect($cols)->sum(fn($c) => (float)($c->peso ?? 1));
+                                    $sumaPesosStr = number_format($sumaPesos, 3, '.', '');
+                                    // Si todos los pesos son 1 (valor por defecto) la suma es irrelevante
+                                    $todosDefault = collect($cols)->every(fn($c) => $c->peso === null);
+                                @endphp
                                 @if($cols->count() > 0)
                                 <th colspan="{{ $cols->count() + 1 }}"
                                     class="px-3 py-2 text-center text-white text-xs font-bold uppercase tracking-wide {{ $cfg['bg'] }} border-r border-white/30">
                                     {{ $cfg['label'] }} · {{ $cfg['peso'] }}
+                                    @if(!$todosDefault)
+                                        <span class="ml-1 font-normal opacity-80">
+                                            (Σ pesos = {{ $sumaPesosStr }}{{ abs($sumaPesos - 1) < 0.001 ? ' ✓' : '' }})
+                                        </span>
+                                    @endif
                                 </th>
                                 @endif
                             @endforeach
@@ -189,9 +222,10 @@
                                             <input type="number"
                                                 value="{{ $col->peso ?? '' }}"
                                                 placeholder="1"
-                                                min="0.1" max="999" step="0.1"
+                                                min="0.1" max="5" step="0.001"
                                                 class="peso-col-input w-14 text-center border border-gray-300 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 {{ $cfg['ring'] }}"
                                                 data-col-id="{{ $col->id }}"
+                                                data-cat="{{ $cat }}"
                                                 data-peso="{{ $col->peso ?? 1 }}"
                                                 title="Peso de esta actividad (dejar vacío = igual que las demás)">
                                         </div>
@@ -227,7 +261,7 @@
                                     <input type="number"
                                         name="notas[{{ $col->id }}][{{ $est->CODIGO }}]"
                                         value="{{ $val }}"
-                                        min="0" max="10" step="0.1"
+                                        min="0" max="10" step="0.001"
                                         placeholder="—"
                                         data-cat="{{ $cat }}"
                                         data-peso="{{ $col->peso ?? 1 }}"
@@ -240,12 +274,17 @@
                                 <td class="px-2 py-1 text-center border-r border-gray-200">
                                     <span class="prom-cat font-semibold text-xs" data-cat="{{ $cat }}">
                                         @php
-                                            $valsConPeso = collect($cols)
-                                                ->map(fn($c) => ['nota' => $notasMap[$c->id][$est->CODIGO] ?? null, 'peso' => (float)($c->peso ?? 1)])
-                                                ->filter(fn($v) => $v['nota'] !== null);
-                                            if ($valsConPeso->isNotEmpty()) {
-                                                $sumP = $valsConPeso->sum('peso');
-                                                echo number_format($valsConPeso->sum(fn($v) => $v['nota'] * $v['peso']) / $sumP, 1);
+                                            $todosCols = collect($cols)->map(fn($c) => ['nota' => $notasMap[$c->id][$est->CODIGO] ?? null, 'peso' => (float)($c->peso ?? 1)]);
+                                            $conNota   = $todosCols->filter(fn($v) => $v['nota'] !== null);
+                                            if ($conNota->isNotEmpty()) {
+                                                if ($modoPorCat[$cat] === 'decimal') {
+                                                    // Σ(nota × porcentaje) directo
+                                                    echo number_format($conNota->sum(fn($v) => $v['nota'] * $v['peso']), 1);
+                                                } else {
+                                                    // Promedio ponderado: Σ(nota×peso) / Σ(todos los pesos)
+                                                    $sumTotalPeso = $todosCols->sum('peso');
+                                                    echo number_format($conNota->sum(fn($v) => $v['nota'] * $v['peso']) / $sumTotalPeso, 1);
+                                                }
                                             } else {
                                                 echo '—';
                                             }
@@ -264,18 +303,20 @@
                                     foreach ($categorias as $cat => $cfg) {
                                         $colsCat = $columnasPorCat[$cat];
                                         if ($colsCat->count() === 0) continue;
-                                        $valsConPeso = collect($colsCat)
-                                            ->map(fn($c) => ['nota' => $notasMap[$c->id][$est->CODIGO] ?? null, 'peso' => (float)($c->peso ?? 1)])
-                                            ->filter(fn($v) => $v['nota'] !== null);
-                                        if ($valsConPeso->isNotEmpty()) {
-                                            $sumP = $valsConPeso->sum('peso');
-                                            $promCat = $valsConPeso->sum(fn($v) => $v['nota'] * $v['peso']) / $sumP;
-                                            $pesoCat = ['P' => 0.70, 'C' => 0.20, 'A' => 0.10][$cat];
+                                        $todosCat = collect($colsCat)->map(fn($c) => ['nota' => $notasMap[$c->id][$est->CODIGO] ?? null, 'peso' => (float)($c->peso ?? 1)]);
+                                        $conNotaCat = $todosCat->filter(fn($v) => $v['nota'] !== null);
+                                        if ($conNotaCat->isNotEmpty()) {
+                                            if ($modoPorCat[$cat] === 'decimal') {
+                                                $promCat = $conNotaCat->sum(fn($v) => $v['nota'] * $v['peso']);
+                                            } else {
+                                                $sumTotalPesoCat = $todosCat->sum('peso');
+                                                $promCat = $conNotaCat->sum(fn($v) => $v['nota'] * $v['peso']) / $sumTotalPesoCat;
+                                            }
+                                            $pesoCat  = ['P' => 0.70, 'C' => 0.20, 'A' => 0.10][$cat];
                                             $sumaTotal += $promCat * $pesoCat;
-                                            $pesoTotal += $pesoCat;
                                         }
                                     }
-                                    if ($pesoTotal > 0) $notaFinal = round($sumaTotal / $pesoTotal, 1);
+                                    if ($sumaTotal > 0) $notaFinal = round($sumaTotal, 1);
                                 @endphp
                                 <span class="nota-final font-bold text-sm
                                     {{ $notaFinal !== null && $notaFinal < 6 ? 'text-red-600' : ($notaFinal !== null ? 'text-green-700' : 'text-gray-300') }}">
@@ -352,15 +393,33 @@
             document.getElementById('peso-input-hidden').value = input.value;
             form.submit();
         }
-        input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); guardarPeso(); } });
-        input.addEventListener('blur', function () {
-            const nuevoPeso = parseFloat(this.value) || 1;
-            const pesoActual = parseFloat(this.dataset.peso) || 1;
-            // Solo guardar si cambió
-            if (Math.abs(nuevoPeso - pesoActual) > 0.001 || (this.value === '' && pesoActual !== 1)) {
-                guardarPeso();
+        function intentarGuardar() {
+            if (input.value === '') { guardarPeso(); return; }
+            const nuevoPeso  = parseFloat(input.value);
+            const pesoActual = parseFloat(input.dataset.peso) || 1;
+            if (isNaN(nuevoPeso)) return;
+            const cat   = input.dataset.cat;
+            // Para edición: excluir el peso actual de la lista de existentes
+            const sinEste = (pesosPorCat[cat] || []).filter(p => Math.abs(p - pesoActual) > 0.0001);
+            const modo    = detectarModo(sinEste);
+            let error = null;
+            if (modo === 'decimal') {
+                if (nuevoPeso >= 1) {
+                    error = 'Esta categoría usa porcentajes decimales (0–1). El valor debe ser menor a 1.';
+                } else {
+                    const suma = sinEste.reduce((a,b) => a+b, 0) + nuevoPeso;
+                    if (suma > 1.0001) error = `Los demás porcentajes suman ${sinEste.reduce((a,b)=>a+b,0).toFixed(3)}. Este valor lo haría superar 1.`;
+                }
+            } else if (modo === 'entero') {
+                if (!Number.isInteger(nuevoPeso) || nuevoPeso < 1) {
+                    error = 'Esta categoría usa pesos por número de notas (enteros ≥ 1). No se permiten decimales.';
+                }
             }
-        });
+            if (error) { alert(error); input.value = pesoActual; return; }
+            if (Math.abs(nuevoPeso - pesoActual) > 0.0001) guardarPeso();
+        }
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); intentarGuardar(); } });
+        input.addEventListener('blur', function () { intentarGuardar(); });
     });
 
     // ── Selector materia/curso ────────────────────────────────────────────────
@@ -382,15 +441,29 @@
     if (selMateria) selMateria.addEventListener('change', () => { actualizarCursos(); selCurso.value = ''; });
 
     // ── Recalcular promedios ponderados en tiempo real ───────────────────────
-    const PESOS_CAT = { P: 0.70, C: 0.20, A: 0.10 };
+    const PESOS_CAT   = { P: 0.70, C: 0.20, A: 0.10 };
+    const pesosPorCat = @json($pesosPorCat ?? []);  // pesos explícitos por categoría
 
-    function weightedAvg(inputs) {
-        const items = inputs
-            .map(i => ({ v: parseFloat(i.value), p: parseFloat(i.dataset.peso) || 1 }))
-            .filter(i => !isNaN(i.v) && i.value !== '');
-        if (items.length === 0) return null;
-        const sumPesos = items.reduce((a, b) => a + b.p, 0);
-        return items.reduce((a, b) => a + b.v * b.p, 0) / sumPesos;
+    function detectarModo(pesos) {
+        // 'decimal' si algún peso < 1; 'entero' si algún peso > 1; null si indefinido
+        if (pesos.some(p => p < 1)) return 'decimal';
+        if (pesos.some(p => p > 1)) return 'entero';
+        return null;
+    }
+
+    function calcPromCat(inputs) {
+        const all    = inputs.map(i => ({ v: parseFloat(i.value), p: parseFloat(i.dataset.peso) || 1, filled: i.value !== '' }));
+        const filled = all.filter(i => i.filled && !isNaN(i.v));
+        if (filled.length === 0) return null;
+        const modo = detectarModo(all.map(i => i.p));
+        if (modo === 'decimal') {
+            // Σ(nota × porcentaje) — suma directa
+            return filled.reduce((a, b) => a + b.v * b.p, 0);
+        } else {
+            // Promedio ponderado: Σ(nota×peso) / Σ(TODOS los pesos)
+            const totalPeso = all.reduce((a, b) => a + b.p, 0);
+            return filled.reduce((a, b) => a + b.v * b.p, 0) / totalPeso;
+        }
     }
 
     function recalcularFila(row) {
@@ -399,7 +472,7 @@
         ['P','C','A'].forEach(cat => {
             const inputs = [...row.querySelectorAll(`.nota-input[data-cat="${cat}"]`)];
             if (inputs.length === 0) return;
-            const prom = weightedAvg(inputs);
+            const prom = calcPromCat(inputs);
             catProms[cat] = prom;
 
             const promCell = row.querySelector(`.prom-cat[data-cat="${cat}"]`);
@@ -410,19 +483,19 @@
             }
         });
 
-        // Nota final ponderada por categorías
-        let suma = 0, pesoTotal = 0;
+        // Nota final: suma directa sin normalizar (P×0.70 + C×0.20 + A×0.10)
+        let suma = 0, tieneDatos = false;
         Object.entries(catProms).forEach(([cat, prom]) => {
             if (prom !== null) {
                 suma      += prom * PESOS_CAT[cat];
-                pesoTotal += PESOS_CAT[cat];
+                tieneDatos = true;
             }
         });
 
         const finalCell = row.querySelector('.nota-final');
         if (finalCell) {
-            if (pesoTotal > 0) {
-                const final = Math.round((suma / pesoTotal) * 10) / 10;
+            if (tieneDatos) {
+                const final = Math.round(suma * 10) / 10;
                 finalCell.textContent = final.toFixed(1);
                 finalCell.className = 'nota-final font-bold text-sm ' +
                     (final < 6 ? 'text-red-600' : 'text-green-700');
@@ -438,6 +511,67 @@
         if (!confirm('¿Entregar las notas definitivas a NOTAS_2026?\n\nSe verificará que todos los estudiantes tengan nota en cada actividad.\nLas notas existentes serán sobreescritas.')) return;
         document.getElementById('form-entregar').submit();
     }
+
+    // ── Validar modo al agregar/editar peso ─────────────────────────────────
+    function validarPeso(cat, nuevoPeso, colIdExcluir) {
+        // Regla base: si el valor es mayor a 1 debe ser entero
+        if (nuevoPeso > 1 && !Number.isInteger(nuevoPeso)) {
+            return 'Si el peso es mayor a 1 debe ser un número entero (sin decimales).';
+        }
+
+        const existentes = (pesosPorCat[cat] || []);
+        const modo = detectarModo(existentes);
+
+        if (modo === 'decimal') {
+            if (nuevoPeso >= 1) {
+                return 'Esta categoría ya usa porcentajes decimales (0–1). El valor debe ser menor a 1.';
+            }
+            const suma = existentes.reduce((a, b) => a + b, 0) + nuevoPeso;
+            if (suma > 1.0001) {
+                return `Los porcentajes de esta categoría ya suman ${existentes.reduce((a,b)=>a+b,0).toFixed(3)}. Agregar ${nuevoPeso.toFixed(3)} excedería 1.`;
+            }
+        } else if (modo === 'entero') {
+            if (!Number.isInteger(nuevoPeso) || nuevoPeso < 1) {
+                return 'Esta categoría usa pesos por número de notas (enteros ≥ 1). No se permiten decimales.';
+            }
+        }
+        return null; // ok
+    }
+
+    // Validar al enviar formulario de nueva actividad
+    document.querySelectorAll('.form-agregar-col').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const pesoInput = this.querySelector('input[name="peso"]');
+            const cat       = this.querySelector('input[name="categoria"]').value;
+            if (!pesoInput || pesoInput.value === '') return;
+            const nuevoPeso = parseFloat(pesoInput.value);
+            if (isNaN(nuevoPeso)) return;
+            const error = validarPeso(cat, nuevoPeso, null);
+            if (error) {
+                e.preventDefault();
+                alert(error);
+            }
+        });
+    });
+
+    // Validar al editar peso en encabezado de columna
+    document.querySelectorAll('.peso-col-input').forEach(input => {
+        input._originalValidate = function() {
+            const val = this.value;
+            if (val === '') return true; // vacío = peso por defecto, ok
+            const nuevoPeso = parseFloat(val);
+            if (isNaN(nuevoPeso)) return true;
+            const cat   = this.dataset.cat;
+            const colId = this.dataset.colId;
+            const error = validarPeso(cat, nuevoPeso, colId);
+            if (error) {
+                alert(error);
+                this.value = this.dataset.peso; // revertir al valor anterior
+                return false;
+            }
+            return true;
+        };
+    });
 
     // Colorear input y recalcular al cambiar
     document.querySelectorAll('.nota-input').forEach(input => {

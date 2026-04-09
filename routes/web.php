@@ -93,6 +93,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/cartera/deudores', [CarteraController::class, 'deudores'])->name('cartera.deudores');
         Route::get('/cartera/estudiante/{codigo}', [CarteraController::class, 'estudiante'])->name('cartera.estudiante');
         Route::get('/cartera/seguimiento/informe', [CarteraController::class, 'informeSeguimiento'])->name('cartera.seguimiento.informe');
+        Route::get('/cartera/por-cc', [CarteraController::class, 'carteraPorCC'])->name('cartera.por_cc');
         Route::get('/facturacion', [FacturacionController::class, 'index'])->name('facturacion.index');
         Route::get('/facturacion/auto', [FacturacionController::class, 'autoIndex'])->name('facturacion.auto');
         Route::get('/world-office', [WorldOfficeController::class, 'index'])->name('world-office.index');

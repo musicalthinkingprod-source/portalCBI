@@ -254,4 +254,60 @@ class CarteraController extends Controller
 
         return view('cartera.deudores', compact('resultados', 'tab', 'corte'));
     }
+
+    public function carteraPorCC()
+    {
+        // Todos los vínculos CC → estudiante
+        $vinculos = DB::table('titular_facturacion')->get();
+
+        $codigos = $vinculos->pluck('codigo_alum')->unique();
+
+        $estudiantes = DB::table('ESTUDIANTES')
+            ->whereIn('CODIGO', $codigos)
+            ->get()
+            ->keyBy('CODIGO');
+
+        $facturasPor = DB::table('facturacion')
+            ->whereIn('codigo_alumno', $codigos)
+            ->select('codigo_alumno', DB::raw('SUM(valor) as total'))
+            ->groupBy('codigo_alumno')
+            ->pluck('total', 'codigo_alumno');
+
+        $pagosPor = DB::table('registro_pagos')
+            ->whereIn('codigo_alumno', $codigos)
+            ->select('codigo_alumno', DB::raw('SUM(valor) as total'))
+            ->groupBy('codigo_alumno')
+            ->pluck('total', 'codigo_alumno');
+
+        // Agrupar por CC
+        $porCC = $vinculos->groupBy('cc_facturación')->map(function ($filaCC) use ($estudiantes, $facturasPor, $pagosPor) {
+            $detalle = $filaCC->map(function ($v) use ($estudiantes, $facturasPor, $pagosPor) {
+                $facturado = (float) ($facturasPor[$v->codigo_alum] ?? 0);
+                $pagado    = (float) ($pagosPor[$v->codigo_alum]    ?? 0);
+                return (object) [
+                    'codigo'     => $v->codigo_alum,
+                    'estudiante' => $estudiantes[$v->codigo_alum] ?? null,
+                    'facturado'  => $facturado,
+                    'pagado'     => $pagado,
+                    'saldo'      => $facturado - $pagado,
+                ];
+            });
+
+            return (object) [
+                'cc'             => $filaCC->first()->{'cc_facturación'},
+                'detalle'        => $detalle,
+                'totalFacturado' => $detalle->sum('facturado'),
+                'totalPagado'    => $detalle->sum('pagado'),
+                'totalSaldo'     => $detalle->sum('saldo'),
+            ];
+        })->sortByDesc(fn($g) => $g->totalSaldo)->values();
+
+        $granTotalFacturado = $porCC->sum('totalFacturado');
+        $granTotalPagado    = $porCC->sum('totalPagado');
+        $granTotalSaldo     = $porCC->sum('totalSaldo');
+
+        return view('cartera.por_cc', compact(
+            'porCC', 'granTotalFacturado', 'granTotalPagado', 'granTotalSaldo'
+        ));
+    }
 }

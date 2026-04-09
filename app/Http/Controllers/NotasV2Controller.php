@@ -95,7 +95,7 @@ class NotasV2Controller extends Controller
             'periodo'         => 'required|integer|between:1,4',
             'categoria'       => 'required|in:P,C,A',
             'nombre_actividad'=> 'required|string|max:100',
-            'peso'            => 'nullable|numeric|min:0.1|max:999',
+            'peso'            => 'nullable|numeric|min:0.001|max:5',
         ]);
 
         $profile = auth()->user()->PROFILE;
@@ -108,6 +108,46 @@ class NotasV2Controller extends Controller
             ->where('anio', $anio)
             ->where('categoria', $request->categoria)
             ->max('orden') ?? 0;
+
+        // Validar consistencia de modo si se especifica peso
+        if ($request->filled('peso')) {
+            $newPeso     = (float) $request->peso;
+
+            if ($newPeso > 1 && floor($newPeso) != $newPeso) {
+                return back()->withInput()
+                    ->with('error', 'Si el peso es mayor a 1 debe ser un número entero (sin decimales).');
+            }
+            $existentes  = DB::table('planilla_columnas')
+                ->where('codigo_mat', $request->codigo_mat)
+                ->where('curso', $request->curso)
+                ->where('periodo', $request->periodo)
+                ->where('anio', $anio)
+                ->where('categoria', $request->categoria)
+                ->whereNotNull('peso')
+                ->pluck('peso')
+                ->map(fn($p) => (float)$p);
+
+            if ($existentes->isNotEmpty()) {
+                $tieneDecimal = $existentes->contains(fn($p) => $p < 1);
+                $tieneEntero  = $existentes->contains(fn($p) => $p > 1);
+
+                if ($tieneDecimal && $newPeso >= 1) {
+                    return back()->withInput()
+                        ->with('error', 'Esta categoría usa porcentajes decimales (0–1). El peso debe ser menor a 1.');
+                }
+                if ($tieneDecimal) {
+                    $suma = $existentes->sum() + $newPeso;
+                    if ($suma > 1.0001) {
+                        return back()->withInput()
+                            ->with('error', "Los porcentajes de esta categoría ya suman {$existentes->sum()} y agregar {$newPeso} superaría 1.");
+                    }
+                }
+                if ($tieneEntero && (floor($newPeso) != $newPeso || $newPeso < 1)) {
+                    return back()->withInput()
+                        ->with('error', 'Esta categoría usa pesos por número de notas (enteros ≥ 1). No se permiten decimales.');
+                }
+            }
+        }
 
         DB::table('planilla_columnas')->insert([
             'codigo_doc'      => $profile,
@@ -128,7 +168,42 @@ class NotasV2Controller extends Controller
 
     public function actualizarPeso(Request $request, $id)
     {
-        $request->validate(['peso' => 'nullable|numeric|min:0.1|max:999']);
+        $request->validate(['peso' => 'nullable|numeric|min:0.001|max:5']);
+
+        if ($request->filled('peso')) {
+            $col        = DB::table('planilla_columnas')->where('id', $id)->first();
+            $newPeso    = (float) $request->peso;
+
+            if ($newPeso > 1 && floor($newPeso) != $newPeso) {
+                return back()->with('error', 'Si el peso es mayor a 1 debe ser un número entero (sin decimales).');
+            }
+            $existentes = DB::table('planilla_columnas')
+                ->where('codigo_mat', $col->codigo_mat)
+                ->where('curso', $col->curso)
+                ->where('periodo', $col->periodo)
+                ->where('anio', $col->anio)
+                ->where('categoria', $col->categoria)
+                ->where('id', '!=', $id)
+                ->whereNotNull('peso')
+                ->pluck('peso')
+                ->map(fn($p) => (float)$p);
+
+            $tieneDecimal = $existentes->contains(fn($p) => $p < 1);
+            $tieneEntero  = $existentes->contains(fn($p) => $p > 1);
+
+            if ($tieneDecimal && $newPeso >= 1) {
+                return back()->with('error', 'Esta categoría usa porcentajes decimales. El peso debe ser menor a 1.');
+            }
+            if ($tieneDecimal) {
+                $suma = $existentes->sum() + $newPeso;
+                if ($suma > 1.0001) {
+                    return back()->with('error', "Los porcentajes de las demás actividades suman {$existentes->sum()} y este valor lo superaría.");
+                }
+            }
+            if ($tieneEntero && (floor($newPeso) != $newPeso || $newPeso < 1)) {
+                return back()->with('error', 'Esta categoría usa pesos por número de notas (enteros ≥ 1). No se permiten decimales.');
+            }
+        }
 
         DB::table('planilla_columnas')
             ->where('id', $id)

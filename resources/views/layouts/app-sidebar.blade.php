@@ -229,6 +229,11 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('cartera.por_cc') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                🪪 Cartera por CC
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('parametros.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                                 ⚙️ Parametros facturacion
                             </a>
