@@ -322,6 +322,20 @@
                 </div>
                 @endif
 
+                {{-- Control de vigilancias: ConvCor28 --}}
+                @if($profile === 'ConvCor28')
+                <div>
+                    <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Vigilancias</p>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="{{ route('vigilancias.control') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                🔍 Control de vigilancias
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                @endif
+
                 @if($profile === 'SuperAd')
                 <div>
                     <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Panel de Control</p>
@@ -354,6 +368,11 @@
                         <li>
                             <a href="{{ route('vigilancias.admin') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                                 🗺️ Gestión de vigilancias
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('vigilancias.control') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                🔍 Control de vigilancias
                             </a>
                         </li>
                     </ul>

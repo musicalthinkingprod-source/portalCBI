@@ -171,6 +171,41 @@ class VigilanciaController extends Controller
         ));
     }
 
+    // Vista de control de vigilancias (supervisores con GPS)
+    public function control()
+    {
+        $anio   = (int) date('Y');
+        $hoy    = now()->toDateString();
+        $diaHoy = DB::table('calendario_vigilancias')
+            ->where('fecha', $hoy)
+            ->value('dia_ciclo');
+
+        // Todas las asignaciones de hoy: posicion → {docente, descanso}
+        $nombresDoc = DB::table('CODIGOS_DOC')->pluck('NOMBRE_DOC', 'CODIGO_DOC');
+        $posicionDocente = [];
+
+        if ($diaHoy) {
+            $filas = DB::table('vigilancias')
+                ->where('ANIO', $anio)
+                ->where('DIA_CICLO', $diaHoy)
+                ->get();
+
+            foreach ($filas as $f) {
+                if (!$f->POSICION) continue;
+                $posicionDocente[strtoupper($f->POSICION)] = [
+                    'docente'  => $nombresDoc[$f->CODIGO_DOC] ?? $f->CODIGO_DOC,
+                    'descanso' => $f->DESCANSO,
+                ];
+            }
+        }
+
+        $puntosA    = $this->parsearKml('Posiciones Sede A.kml', 'A');
+        $puntosB    = $this->parsearKml('Posiciones Sede B.kml', 'B');
+        $puntosMapa = array_merge($puntosA, $puntosB);
+
+        return view('vigilancias.control', compact('puntosMapa', 'posicionDocente', 'diaHoy', 'anio'));
+    }
+
     // Vista de reasignaciones (estilo asignaciones de materias)
     public function reasignaciones(Request $request)
     {

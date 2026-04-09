@@ -264,6 +264,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/vigilancias/reasignar/una', [VigilanciaController::class, 'reasignarUna'])->name('vigilancias.reasignar.una');
         Route::post('/vigilancias/reasignar/bloque', [VigilanciaController::class, 'reasignarBloque'])->name('vigilancias.reasignar.bloque');
     });
+
+    // ── Control de vigilancias: SuperAd y ConvCor28 ──────────────────────
+    Route::middleware('profile:SuperAd,ConvCor28')->group(function () {
+        Route::get('/vigilancias/control', [VigilanciaController::class, 'control'])->name('vigilancias.control');
+    });
 });
 
 Route::post('/padres/salir', function () {
