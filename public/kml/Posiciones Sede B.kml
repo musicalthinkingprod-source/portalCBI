@@ -1,0 +1,654 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document id="1A8dyN4qgYFm7DU-ecRn9zl7J8nHfgkSu">
+	<name>Vigilancias Parque Grande</name>
+	<description>Plano donde se especifica la posición de cada profesor para la vigilancia</description>
+	<gx:CascadingStyle kml:id="__managed_style_27849918A83EA7D32004">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.1.0.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/document/icon?color=1976d2&amp;id=2000&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>3</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_17F48EE01D3EA7D32004">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.1.0.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://earth.google.com/earth/document/icon?color=1976d2&amp;id=2000&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>2</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_0287CD04283EA7D32004">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_17F48EE01D3EA7D32004</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_27849918A83EA7D32004</styleUrl>
+		</Pair>
+	</StyleMap>
+	<gx:CascadingStyle kml:id="__managed_style_261B6F71CB3EA7D3200C">
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/document/icon?color=d32f2f&amp;id=2156&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>3</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_1EC242ECE83EA7D3200C">
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://earth.google.com/earth/document/icon?color=d32f2f&amp;id=2156&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>2</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_0D0DDA5D1A3EA7D3200C">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_1EC242ECE83EA7D3200C</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_261B6F71CB3EA7D3200C</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Placemark id="03219115142735D2B4FA">
+		<name>CBI SEDE B</name>
+		<LookAt>
+			<longitude>-74.1044290514987</longitude>
+			<latitude>4.595554989640234</latitude>
+			<altitude>2565.119278597309</altitude>
+			<heading>38.67468058589194</heading>
+			<tilt>0</tilt>
+			<gx:fovy>30</gx:fovy>
+			<range>314.7338366661643</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0D0DDA5D1A3EA7D3200C</styleUrl>
+		<Point>
+			<coordinates>-74.10479238842063,4.596231989229937,2566.894199724005</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="075DA3DCF527356B1182">
+		<name>1</name>
+		<description><![CDATA[<div>Al lado del caño debajo del arbol<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10438183084636</longitude>
+			<latitude>4.595387785510229</latitude>
+			<altitude>2564.904072196498</altitude>
+			<heading>38.4955318208069</heading>
+			<tilt>0.2456640158926671</tilt>
+			<gx:fovy>30.00000000002665</gx:fovy>
+			<range>149.5008583071649</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10440472059372,4.595347066935678,2567.907890778002</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0A97D1174927356CAAFF">
+		<name>2</name>
+		<description><![CDATA[<div>Al lado de la pista de skate<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.1046365178295</longitude>
+			<latitude>4.595574908629639</latitude>
+			<altitude>2565.155121613097</altitude>
+			<heading>38.13752159172807</heading>
+			<tilt>0</tilt>
+			<gx:fovy>30.00000003797257</gx:fovy>
+			<range>101.1240166610696</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10468948280605,4.595595454274035,2567.927807132742</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="08EBA72CB527356D5E03">
+		<name>3</name>
+		<description><![CDATA[<div>Al lado del caño<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10482216203914</longitude>
+			<latitude>4.595573532442835</latitude>
+			<altitude>2563.654827093185</altitude>
+			<heading>39.14217765503658</heading>
+			<tilt>0.1304511384800866</tilt>
+			<gx:fovy>34.99982304877698</gx:fovy>
+			<range>73.58913871526056</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10483984171952,4.595582565828594,2566.995586209249</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="090DC94A3D273573D7E7">
+		<name>4</name>
+		<description><![CDATA[<div>Al lado del gimnasio público<br></div><div><br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10498301368831</longitude>
+			<latitude>4.595721398450852</latitude>
+			<altitude>2564.880441007104</altitude>
+			<heading>39.14214235491093</heading>
+			<tilt>0.1304497082060304</tilt>
+			<gx:fovy>34.99982304484032</gx:fovy>
+			<range>67.59934591831554</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10508906979135,4.595724971421418,2567.463171844728</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="05A0CB79E6273574DA69">
+		<name>5</name>
+		<description><![CDATA[<div>Al frente de la pista de skate sobre el camino<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10424562125156</longitude>
+			<latitude>4.595377546230519</latitude>
+			<altitude>2565.246740551297</altitude>
+			<heading>39.03199417420113</heading>
+			<tilt>0.1289617318419541</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>75.0945411768771</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10425088196286,4.595364163673501,2567.99681979875</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0F5768A53727358180D6">
+		<name>6</name>
+		<description><![CDATA[<div>en el camino casi en la esquina de la cancha<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10479890826424</longitude>
+			<latitude>4.595703508455172</latitude>
+			<altitude>2564.98680446624</altitude>
+			<heading>38.49554500244862</heading>
+			<tilt>0.2454863344581452</tilt>
+			<gx:fovy>30.00089070684722</gx:fovy>
+			<range>79.7251473977667</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10480182386179,4.595760021420244,2567.68589614661</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="03F661D83D27358AD8F1">
+		<name>7</name>
+		<description><![CDATA[<div>en la ultima esquina del parque&nbsp;<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10384180169396</longitude>
+			<latitude>4.59528396489728</latitude>
+			<altitude>2564.82702865236</altitude>
+			<heading>41.93761527778016</heading>
+			<tilt>0</tilt>
+			<gx:fovy>30.00000009622286</gx:fovy>
+			<range>93.5491715823082</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10386178784088,4.595196697045458,2567.652244576939</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0C9ED36E0A27358C7FB5">
+		<name>8</name>
+		<description><![CDATA[<div>entre los puntos 7 y 9<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10398395590148</longitude>
+			<latitude>4.595306990142205</latitude>
+			<altitude>2565.051319694598</altitude>
+			<heading>38.88798292070806</heading>
+			<tilt>0</tilt>
+			<gx:fovy>30.00000009622286</gx:fovy>
+			<range>84.93900631774522</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10399589380492,4.595254497342037,2567.826272131611</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0D67853F6427358EE372">
+		<name>9</name>
+		<description><![CDATA[<div>Entre la cancha de Tennis y el parque de niños<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.1040676765559</longitude>
+			<latitude>4.595361756736362</latitude>
+			<altitude>2565.246732499118</altitude>
+			<heading>33.9216942451156</heading>
+			<tilt>0</tilt>
+			<gx:fovy>34.99977452637408</gx:fovy>
+			<range>63.49163792778201</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10411313394046,4.595339660055002,2568.038116803184</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="017BEF7B9427358978F4">
+		<name>10</name>
+		<description><![CDATA[<div>Al lado de la octava como en el fin de la curva<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10380730058772</longitude>
+			<latitude>4.595337009357169</latitude>
+			<altitude>2564.78314026942</altitude>
+			<heading>38.6897780922435</heading>
+			<tilt>0</tilt>
+			<gx:fovy>30.00000009622286</gx:fovy>
+			<range>96.59447636218829</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.1037930187438,4.595321160324662,2567.652245292136</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="02C4B5529227358FB7C6">
+		<name>11</name>
+		<description><![CDATA[<div>En el parque de niños<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10393980343009</longitude>
+			<latitude>4.59536272534377</latitude>
+			<altitude>2565.202066662198</altitude>
+			<heading>33.92170471744753</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>60.54279252203742</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10390574118991,4.595405679787842,2567.9987274717</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0D856BC1D5273591CEE0">
+		<name>12</name>
+		<description><![CDATA[<div>Entre posiciones 9 y 12 en la esquina de la cancha de tennis<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10398297622295</longitude>
+			<latitude>4.595505714380878</latitude>
+			<altitude>2565.250485585368</altitude>
+			<heading>39.74896468595644</heading>
+			<tilt>0.3704542073507304</tilt>
+			<gx:fovy>30.00000000000007</gx:fovy>
+			<range>73.1249377552831</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10398717768498,4.595522730028273,2568.17892514932</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="00CCE1758427358792F5">
+		<name>13</name>
+		<description><![CDATA[<div>Hacia la octava<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10377927186627</longitude>
+			<latitude>4.595462588521745</latitude>
+			<altitude>2564.612474517632</altitude>
+			<heading>36.92284070338345</heading>
+			<tilt>0.3036005850473594</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>64.06002219688162</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10377049012857,4.595465453292548,2567.350488275288</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="09C9FC0080273582F284">
+		<name>14</name>
+		<description><![CDATA[<div>Hacía el lado de la 8va entre posciciones 15 y 13<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10382691058976</longitude>
+			<latitude>4.595563758218011</latitude>
+			<altitude>2564.539562807804</altitude>
+			<heading>35.85036295288244</heading>
+			<tilt>0</tilt>
+			<gx:fovy>30.00000009622298</gx:fovy>
+			<range>80.9354584587345</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10381515633121,4.595583393709989,2567.396317792208</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="02CC6F7C15273582983A">
+		<name>15</name>
+		<description><![CDATA[<div>Hacia la octava<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.1039046318227</longitude>
+			<latitude>4.595582164790005</latitude>
+			<altitude>2564.978972056014</altitude>
+			<heading>38.49561963365211</heading>
+			<tilt>0.245485883620317</tilt>
+			<gx:fovy>30.00089070684722</gx:fovy>
+			<range>68.07201829085898</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10389081195244,4.595635909156039,2567.709599584945</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0152AAB66327359A9971">
+		<name>16</name>
+		<description><![CDATA[<div>En la cancha de tennis<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10416879935639</longitude>
+			<latitude>4.595503617565914</latitude>
+			<altitude>2565.241313687013</altitude>
+			<heading>38.49552415045215</heading>
+			<tilt>0.2463942387426553</tilt>
+			<gx:fovy>30.0000317891835</gx:fovy>
+			<range>70.20140228803939</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10412297530596,4.595534129012471,2568.116356880618</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0E77A48E602735968F6C">
+		<name>17</name>
+		<description><![CDATA[<div>En la cancha sintentica pequeña<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10436160935627</longitude>
+			<latitude>4.595573938357909</latitude>
+			<altitude>2564.994223036638</altitude>
+			<heading>37.60038181231545</heading>
+			<tilt>0.2744608712277653</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>68.0923160734983</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10434432854427,4.59556072123549,2567.652232070204</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0630733FE5273597118F">
+		<name>18</name>
+		<description><![CDATA[<div>En la cancha grande al costado oriental<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10447581744749</longitude>
+			<latitude>4.59570077931422</latitude>
+			<altitude>2564.783149835272</altitude>
+			<heading>37.60036400520377</heading>
+			<tilt>0.2744737092155677</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>85.61797670779015</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10446752692339,4.595749850123198,2567.652226810322</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="09E386F0CE2735990526">
+		<name>19</name>
+		<description><![CDATA[<div>En la cancha grande en el costado occidental<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10464843497091</longitude>
+			<latitude>4.595759690682864</latitude>
+			<altitude>2564.783122546704</altitude>
+			<heading>39.03271639893622</heading>
+			<tilt>0.2744733593182631</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>77.07375171340573</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10467603942796,4.595742135699116,2567.662414970138</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0F6AA4F9FD27359EC0D3">
+		<name>20</name>
+		<description><![CDATA[<div>Cancha multiple esquina sur al lado de la cancha sintentica<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10486782129772</longitude>
+			<latitude>4.595822523924166</latitude>
+			<altitude>2564.816897735563</altitude>
+			<heading>40.64419603259859</heading>
+			<tilt>0</tilt>
+			<gx:fovy>30.00000000049199</gx:fovy>
+			<range>48.81156649408695</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10487586004641,4.595826044908919,2567.700806608016</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="01769ABD432735A11D68">
+		<name>21</name>
+		<description><![CDATA[<div>En el arco sur de la cancha multiple<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10490377176811</longitude>
+			<latitude>4.595885827227984</latitude>
+			<altitude>2564.643756876742</altitude>
+			<heading>41.01074802732266</heading>
+			<tilt>0.2417087391672094</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>42.42574385128137</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10491269603597,4.595854824244193,2567.582221874873</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="06E769F2812735A36F0F">
+		<name>22</name>
+		<description><![CDATA[<div>Esquina sur de la cancha multiple contraria a la cancha sintentica grande<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10493886561046</longitude>
+			<latitude>4.595888372459394</latitude>
+			<altitude>2564.63459192714</altitude>
+			<heading>41.01074520708064</heading>
+			<tilt>0.2417087393752957</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>42.4349019002284</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10495457373658,4.595891810330305,2567.479920559694</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0AC5EBB6FF2735A4F56E">
+		<name>23</name>
+		<description><![CDATA[<div>linea central de la cancha multiple al lado de la sintetica grande<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10480058973835</longitude>
+			<latitude>4.595911879853735</latitude>
+			<altitude>2564.664578744173</altitude>
+			<heading>41.01072137259857</heading>
+			<tilt>0.2416458957089163</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>42.40715831379475</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10480210161444,4.595909751801033,2567.536335829095</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="004C480DF42735A9F730">
+		<name>24</name>
+		<description><![CDATA[<div>En el centro de la cancha multiple<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10484294238852</longitude>
+			<latitude>4.59594335366171</latitude>
+			<altitude>2564.461943126887</altitude>
+			<heading>38.98165538214651</heading>
+			<tilt>0.1830763914778642</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>45.59079569825371</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10484360429287,4.595947104196259,2567.291925026876</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="03449122682735AA933F">
+		<name>25</name>
+		<description><![CDATA[<div>Linea central cancha multiple, lado contrario de la sintetica grande<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10489917819554</longitude>
+			<latitude>4.595978336713085</latitude>
+			<altitude>2564.416105775774</altitude>
+			<heading>41.01071078364779</heading>
+			<tilt>0.2415537901798627</tilt>
+			<gx:fovy>34.99975853773171</gx:fovy>
+			<range>42.65457049536053</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10488937287843,4.595982255353717,2567.260090358251</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="087E5F78332735AB3346">
+		<name>26</name>
+		<description><![CDATA[<div>Linea norte de la cancha multiple al lado de sintetica grande<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10474671170152</longitude>
+			<latitude>4.595989100388085</latitude>
+			<altitude>2564.78311131864</altitude>
+			<heading>41.01072299913302</heading>
+			<tilt>0.2415537762713837</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>42.28756769549818</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.1047352658871,4.595993632990093,2567.652233341979</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0AC096E6AA2735ABC9EE">
+		<name>27</name>
+		<description><![CDATA[<div>Linea norte de la cancha multiple lado contrario de la sintetica grande</div>]]></description>
+		<LookAt>
+			<longitude>-74.10481356484597</longitude>
+			<latitude>4.596051281121989</latitude>
+			<altitude>2564.420955109849</altitude>
+			<heading>41.01071764411615</heading>
+			<tilt>0.2415537900093639</tilt>
+			<gx:fovy>34.99975853773171</gx:fovy>
+			<range>42.64972347989442</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10481880366525,4.596064754691492,2567.303108578921</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="01B61018282735ACEE66">
+		<name>28</name>
+		<description><![CDATA[<div>Sobre la calle que entra al parque<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10497643650601</longitude>
+			<latitude>4.595964332561589</latitude>
+			<altitude>2564.552938851636</altitude>
+			<heading>41.01069905034974</heading>
+			<tilt>0.2415544631105944</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>60.77725711716086</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.10498897354371,4.596010714306615,2567.309670264224</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="029BF302BC27359606C9">
+		<name>29</name>
+		<description><![CDATA[<div>En el camino entre la cancha de tennis y la sintentica pequeña<br></div>]]></description>
+		<LookAt>
+			<longitude>-74.10425035094201</longitude>
+			<latitude>4.59552962115652</latitude>
+			<altitude>2565.153730013565</altitude>
+			<heading>37.6009381949277</heading>
+			<tilt>0.2742680101011741</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>80.57501781669089</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0287CD04283EA7D32004</styleUrl>
+		<Point>
+			<coordinates>-74.1042199040325,4.595554956629988,2567.927540861504</coordinates>
+		</Point>
+	</Placemark>
+</Document>
+</kml>

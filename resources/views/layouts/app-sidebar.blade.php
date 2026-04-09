@@ -132,6 +132,13 @@
                         </li>
                         @if($profile === 'SuperAd')
                         <li>
+                            <a href="{{ route('vigilancias.docente') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                🗺️ Vigilancias
+                            </a>
+                        </li>
+                        @endif
+                        @if($profile === 'SuperAd')
+                        <li>
                             <a href="{{ route('notas.reporte') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                                 📊 Informe de digitación
                             </a>
@@ -249,6 +256,20 @@
                 </div>
                 @endif
 
+                {{-- Nómina: SuperAd --}}
+                @if($profile === 'SuperAd')
+                <div>
+                    <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Nómina</p>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="{{ route('nomina.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                👥 Gestión de personal
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                @endif
+
                 {{-- Transporte: SuperAd, Admin y Sec* --}}
                 @if(in_array($profile, ['SuperAd', 'Admin']) || str_starts_with($profile, 'Sec'))
                 <div>
@@ -328,6 +349,11 @@
                         <li>
                             <a href="{{ route('admin.fechas') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                                 📅 Fechas
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('vigilancias.admin') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                🗺️ Gestión de vigilancias
                             </a>
                         </li>
                     </ul>

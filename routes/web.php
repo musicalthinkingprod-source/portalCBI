@@ -27,6 +27,8 @@ use App\Http\Controllers\ParametrosController;
 use App\Http\Controllers\WorldOfficeController;
 use App\Http\Controllers\RutasController;
 use App\Http\Controllers\LlamadasController;
+use App\Http\Controllers\VigilanciaController;
+use App\Http\Controllers\NominaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -83,6 +85,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/ciclos', [CiclosController::class, 'store'])->name('ciclos.store');
         Route::delete('/ciclos/{id}', [CiclosController::class, 'destroy'])->name('ciclos.destroy');
         Route::get('/ciclos/informe', [CiclosController::class, 'informe'])->name('ciclos.informe');
+        Route::get('/nomina', [NominaController::class, 'index'])->name('nomina.index');
     });
 
     // ── Control de Pagos: lectura (Admin + Contab) ───────────────────────────
@@ -230,6 +233,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/salvavidas/guardar', [SalvavidasController::class, 'guardar'])->name('salvavidas.guardar');
         Route::get('/derroteros/resolver', [DeroterosController::class, 'docente'])->name('derroteros.docente');
         Route::post('/derroteros/resolver', [DeroterosController::class, 'resolver'])->name('derroteros.resolver');
+        Route::get('/vigilancias', [VigilanciaController::class, 'docente'])->name('vigilancias.docente');
     });
 
     // ── PIAR: SuperAd y Ori ──────────────────────────────────────────────────
@@ -248,6 +252,14 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/derroteros/horarios', [DeroterosController::class, 'guardarHorario'])->name('derroteros.horario.guardar');
         Route::get('/informes/boletin', [BoletinController::class, 'buscar'])->name('informes.boletin');
         Route::get('/boletines/{codigo}', [BoletinController::class, 'ver'])->name('boletines.ver');
+    });
+
+    // ── Vigilancias (admin): solo SuperAd ───────────────────────────────────
+    Route::middleware('profile:SuperAd')->group(function () {
+        Route::get('/vigilancias/admin', [VigilanciaController::class, 'admin'])->name('vigilancias.admin');
+        Route::post('/vigilancias/asignaciones', [VigilanciaController::class, 'guardarAsignaciones'])->name('vigilancias.asignaciones.guardar');
+        Route::post('/vigilancias/calendario', [VigilanciaController::class, 'guardarCalendario'])->name('vigilancias.calendario.guardar');
+        Route::delete('/vigilancias/calendario/{id}', [VigilanciaController::class, 'eliminarCalendario'])->name('vigilancias.calendario.eliminar');
     });
 });
 
