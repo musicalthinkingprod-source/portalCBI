@@ -78,6 +78,57 @@ class CiclosController extends Controller
         return redirect()->back()->with('success', 'Ciclo creado correctamente.');
     }
 
+    public function informe(Request $request)
+    {
+        $anio    = (int) $request->input('anio', date('Y'));
+        $periodo = (int) $request->input('periodo', 1);
+
+        $ciclos = DB::table('ciclos_academicos')
+            ->where('anio', $anio)
+            ->orderBy('numero')
+            ->get();
+
+        $asignaciones = DB::table('ASIGNACION_PCM as a')
+            ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
+            ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_DOC', '=', 'd.CODIGO_DOC')
+            ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO',
+                     'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
+            ->orderBy('d.NOMBRE_DOC')->orderBy('m.NOMBRE_MAT')->orderBy('a.CURSO')
+            ->get();
+
+        // Para cada ciclo: cuántas notas registró cada combinación doc+mat+curso
+        $conteos = []; // [ciclo_id][doc|mat|curso] = int
+
+        foreach ($ciclos as $ciclo) {
+            $filas = DB::table('planilla_notas as pn')
+                ->join('planilla_columnas as pc', 'pc.id', '=', 'pn.columna_id')
+                ->where('pc.anio', $anio)
+                ->where('pc.periodo', $periodo)
+                ->whereBetween('pn.updated_at', [
+                    $ciclo->fecha_inicio . ' 00:00:00',
+                    $ciclo->fecha_fin    . ' 23:59:59',
+                ])
+                ->whereNotNull('pn.nota')
+                ->select(
+                    'pc.codigo_doc',
+                    'pc.codigo_mat',
+                    'pc.curso',
+                    DB::raw('COUNT(*) as total')
+                )
+                ->groupBy('pc.codigo_doc', 'pc.codigo_mat', 'pc.curso')
+                ->get();
+
+            foreach ($filas as $f) {
+                $key = $f->codigo_doc . '|' . $f->codigo_mat . '|' . $f->curso;
+                $conteos[$ciclo->id][$key] = (int) $f->total;
+            }
+        }
+
+        return view('ciclos.informe', compact(
+            'ciclos', 'asignaciones', 'conteos', 'anio', 'periodo'
+        ));
+    }
+
     public function destroy($id)
     {
         DB::table('ciclos_academicos')->where('id', $id)->delete();

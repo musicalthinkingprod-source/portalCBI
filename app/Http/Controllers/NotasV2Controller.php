@@ -146,6 +146,112 @@ class NotasV2Controller extends Controller
         return redirect()->back()->with('success', 'Columna eliminada.');
     }
 
+    public function entregar(Request $request)
+    {
+        $request->validate([
+            'codigo_mat' => 'required|integer',
+            'curso'      => 'required|string',
+            'periodo'    => 'required|integer|between:1,4',
+        ]);
+
+        $profile   = auth()->user()->PROFILE;
+        $codigoMat = (int) $request->codigo_mat;
+        $curso     = $request->curso;
+        $periodo   = (int) $request->periodo;
+        $anio      = (int) date('Y');
+
+        $columnas = DB::table('planilla_columnas')
+            ->where('codigo_mat', $codigoMat)
+            ->where('curso', $curso)
+            ->where('periodo', $periodo)
+            ->where('anio', $anio)
+            ->get();
+
+        if ($columnas->isEmpty()) {
+            return back()->with('error_entrega', 'No hay actividades registradas en esta planilla.');
+        }
+
+        $estudiantes = DB::table('ESTUDIANTES')
+            ->where('CURSO', $curso)
+            ->where('ESTADO', 'MATRICULADO')
+            ->pluck('CODIGO');
+
+        $columnaIds = $columnas->pluck('id');
+
+        $notasMap = DB::table('planilla_notas')
+            ->whereIn('columna_id', $columnaIds)
+            ->whereNotNull('nota')
+            ->get()
+            ->groupBy('columna_id')
+            ->map(fn($rows) => $rows->pluck('nota', 'codigo_alumno'));
+
+        // Validar que no haya celdas vacías
+        $faltantes = [];
+        foreach ($columnas as $col) {
+            foreach ($estudiantes as $codAlum) {
+                $nota = $notasMap[$col->id][$codAlum] ?? null;
+                if ($nota === null) {
+                    $faltantes[] = "Actividad «{$col->nombre_actividad}» — alumno {$codAlum}";
+                }
+            }
+        }
+
+        if (!empty($faltantes)) {
+            $detalle = implode('; ', array_slice($faltantes, 0, 10));
+            $extra   = count($faltantes) > 10 ? ' (y ' . (count($faltantes) - 10) . ' más)' : '';
+            return back()->with('error_entrega', 'Hay notas sin registrar. Completa la planilla antes de entregar. ' . $detalle . $extra);
+        }
+
+        // Calcular nota final ponderada por estudiante
+        $columnasPorCat = $columnas->groupBy('categoria');
+
+        DB::transaction(function () use ($estudiantes, $columnasPorCat, $notasMap, $codigoMat, $periodo, $profile) {
+            foreach ($estudiantes as $codAlum) {
+                $sumaTotal = 0;
+                $pesoTotal = 0;
+
+                foreach (self::PESOS as $cat => $pesoCat) {
+                    $cols = $columnasPorCat[$cat] ?? collect();
+                    if ($cols->isEmpty()) continue;
+
+                    $sumPeso = 0;
+                    $sumVal  = 0;
+                    foreach ($cols as $col) {
+                        $nota = $notasMap[$col->id][$codAlum] ?? null;
+                        if ($nota === null) continue;
+                        $peso     = (float) ($col->peso ?? 1);
+                        $sumPeso += $peso;
+                        $sumVal  += (float) $nota * $peso;
+                    }
+                    if ($sumPeso === 0) continue;
+
+                    $promCat    = $sumVal / $sumPeso;
+                    $sumaTotal += $promCat * $pesoCat;
+                    $pesoTotal += $pesoCat;
+                }
+
+                if ($pesoTotal === 0) continue;
+
+                $notaFinal = round($sumaTotal / $pesoTotal, 1);
+
+                DB::table('NOTAS_2026')->updateOrInsert(
+                    [
+                        'CODIGO_ALUM' => $codAlum,
+                        'PERIODO'     => $periodo,
+                        'CODIGO_MAT'  => $codigoMat,
+                        'TIPODENOTA'  => 'N',
+                    ],
+                    [
+                        'NOTA'       => $notaFinal,
+                        'CODIGO_DOC' => $profile,
+                    ]
+                );
+            }
+        });
+
+        return back()->with('success', "Notas entregadas correctamente a NOTAS_2026 ({$estudiantes->count()} estudiantes).");
+    }
+
     public function guardar(Request $request)
     {
         $notas = $request->input('notas', []); // [columna_id][codigo_alumno] => nota

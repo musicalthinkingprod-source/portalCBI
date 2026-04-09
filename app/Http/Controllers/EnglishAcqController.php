@@ -12,7 +12,7 @@ class EnglishAcqController extends Controller
     public function docente(Request $request)
     {
         $profile    = auth()->user()->PROFILE;
-        $esSuperior = in_array($profile, ['SuperAd', 'Admin']);
+        $esSuperior = in_array($profile, ['SuperAd', 'Admin']) || str_starts_with($profile, 'DOC');
 
         $query = DB::table('ASIGNACION_PCM as a')
             ->select('a.CURSO')

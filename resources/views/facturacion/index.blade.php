@@ -18,7 +18,7 @@
     }
 @endphp
 
-    @php $esReadOnly = auth()->user()->PROFILE === 'contab'; @endphp
+    @php $esReadOnly = auth()->user()->PROFILE === 'Contab'; @endphp
 
     {{-- Acciones --}}
     @if(!$esReadOnly)

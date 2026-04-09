@@ -82,10 +82,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/ciclos', [CiclosController::class, 'index'])->name('ciclos.index');
         Route::post('/ciclos', [CiclosController::class, 'store'])->name('ciclos.store');
         Route::delete('/ciclos/{id}', [CiclosController::class, 'destroy'])->name('ciclos.destroy');
+        Route::get('/ciclos/informe', [CiclosController::class, 'informe'])->name('ciclos.informe');
     });
 
-    // ── Control de Pagos: lectura (Admin + contab) ───────────────────────────
-    Route::middleware('profile:SuperAd,Admin,contab')->group(function () {
+    // ── Control de Pagos: lectura (Admin + Contab) ───────────────────────────
+    Route::middleware('profile:SuperAd,Admin,Contab')->group(function () {
         Route::get('/control/estudiante', [ControlEstudianteController::class, 'index'])->name('control.estudiante');
         Route::get('/pagos', [PagosController::class, 'index'])->name('pagos.index');
         Route::get('/cartera', [CarteraController::class, 'index'])->name('cartera.index');
@@ -220,6 +221,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/notas-v2/columna/{id}', [NotasV2Controller::class, 'eliminarColumna'])->name('notas.v2.columna.destroy');
         Route::patch('/notas-v2/columna/{id}/peso', [NotasV2Controller::class, 'actualizarPeso'])->name('notas.v2.columna.peso');
         Route::post('/notas-v2/guardar', [NotasV2Controller::class, 'guardar'])->name('notas.v2.guardar');
+        Route::post('/notas-v2/entregar', [NotasV2Controller::class, 'entregar'])->name('notas.v2.entregar');
         Route::get('/english-acq', [EnglishAcqController::class, 'docente'])->name('english-acq.docente');
         Route::post('/english-acq/registrar', [EnglishAcqController::class, 'registrar'])->name('english-acq.registrar');
         Route::delete('/english-acq/{id}', [EnglishAcqController::class, 'eliminar'])->name('english-acq.eliminar');

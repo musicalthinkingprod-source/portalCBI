@@ -70,6 +70,9 @@
     @if(session('success'))
         <div class="mb-4 p-3 bg-green-100 text-green-800 rounded-xl text-sm">✅ {{ session('success') }}</div>
     @endif
+    @if(session('error_entrega'))
+        <div class="mb-4 p-3 bg-red-100 text-red-800 rounded-xl text-sm">⚠️ {{ session('error_entrega') }}</div>
+    @endif
 
     @if($matSelec && $cursoSelec)
 
@@ -285,13 +288,24 @@
                 </table>
             </div>
 
-            <div class="px-5 py-3 border-t border-gray-100 flex justify-end">
+            <div class="px-5 py-3 border-t border-gray-100 flex items-center justify-between gap-3">
                 <button type="submit"
                     class="bg-blue-800 hover:bg-blue-700 text-white font-semibold text-sm px-6 py-2 rounded-lg transition">
                     💾 Guardar planilla
                 </button>
+                <button type="button" onclick="confirmarEntrega()"
+                    class="bg-emerald-700 hover:bg-emerald-600 text-white font-semibold text-sm px-6 py-2 rounded-lg transition">
+                    📤 Entregar notas
+                </button>
             </div>
         </div>
+    </form>
+
+    <form id="form-entregar" method="POST" action="{{ route('notas.v2.entregar') }}" style="display:none">
+        @csrf
+        <input type="hidden" name="codigo_mat" value="{{ $matSelec }}">
+        <input type="hidden" name="curso"      value="{{ $cursoSelec }}">
+        <input type="hidden" name="periodo"    value="{{ $periodo }}">
     </form>
 
     @endif {{-- columnas.isEmpty --}}
@@ -417,6 +431,12 @@
                 finalCell.className = 'nota-final font-bold text-sm text-gray-300';
             }
         }
+    }
+
+    // ── Entregar notas ───────────────────────────────────────────────────────
+    function confirmarEntrega() {
+        if (!confirm('¿Entregar las notas definitivas a NOTAS_2026?\n\nSe verificará que todos los estudiantes tengan nota en cada actividad.\nLas notas existentes serán sobreescritas.')) return;
+        document.getElementById('form-entregar').submit();
     }
 
     // Colorear input y recalcular al cambiar

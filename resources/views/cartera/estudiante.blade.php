@@ -4,7 +4,7 @@
 
 @section('slot')
 
-@php $esReadOnly = auth()->user()->PROFILE === 'contab'; @endphp
+@php $esReadOnly = auth()->user()->PROFILE === 'Contab'; @endphp
 
     <div class="mb-5">
         <a href="{{ route('cartera.deudores') }}" class="text-blue-700 hover:underline text-sm">← Volver a lista de deudores</a>

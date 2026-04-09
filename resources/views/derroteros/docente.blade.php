@@ -73,9 +73,9 @@
                             <span>Nota: <strong class="text-red-600 text-sm">{{ number_format($m->NOTA, 1) }}</strong></span>
                             <span>Fallas previas: {{ $m->previas_periodos }}</span>
                             @if($m->elegible)
-                                <span class="text-green-600 font-semibold">✅ Elegible · Nota intermedia sugerida: {{ $m->nota_intermedia }}</span>
+                                <span class="text-green-600 font-semibold">✅ Puede recuperar</span>
                             @else
-                                <span class="text-red-500 font-semibold">❌ {{ $m->razon_no_elegible }}</span>
+                                <span class="text-red-500 font-semibold">❌ No puede recuperar · {{ $m->razon_no_elegible }}</span>
                             @endif
                         </div>
                     </div>

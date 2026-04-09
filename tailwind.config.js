@@ -17,5 +17,14 @@ export default {
         },
     },
 
+    safelist: [
+        // Clases dinámicas de la planilla ponderada (notas/v2)
+        'bg-blue-700', 'bg-purple-700', 'bg-green-700',
+        'bg-blue-100', 'text-blue-800',
+        'bg-purple-100', 'text-purple-800',
+        'bg-green-100', 'text-green-800',
+        'focus:ring-blue-400', 'focus:ring-purple-400', 'focus:ring-green-400',
+    ],
+
     plugins: [forms],
 };

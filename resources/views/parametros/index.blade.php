@@ -6,6 +6,7 @@
 
 @php
 function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','ó','ú','ü','Ü','ñ','Ñ'],['A','E','I','O','U','a','e','i','o','u','u','U','n','N'],$s); }
+$esReadOnly = auth()->user()->PROFILE === 'Contab';
 @endphp
 
 @if(session('ok'))
@@ -46,8 +47,9 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
 
     {{-- ══ 1. Centro de Costos ══════════════════════════════════════════════════ --}}
     <div x-show="tab==='centro_costos'" x-cloak>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="{{ $esReadOnly ? 'grid grid-cols-1' : 'grid grid-cols-1 lg:grid-cols-3' }} gap-6">
 
+            @if(!$esReadOnly)
             <div class="bg-white rounded-xl shadow p-5">
                 <h3 id="cc-titulo" class="font-semibold text-gray-700 mb-4">Nuevo</h3>
                 <form method="POST" action="{{ route('parametros.centro_costos.store') }}" class="space-y-3">
@@ -68,14 +70,15 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                     </div>
                 </form>
             </div>
+            @endif
 
-            <div class="lg:col-span-2 bg-white rounded-xl shadow overflow-hidden">
+            <div class="{{ $esReadOnly ? '' : 'lg:col-span-2' }} bg-white rounded-xl shadow overflow-hidden">
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50 border-b">
                         <tr>
                             <th class="px-4 py-3 text-left text-xs text-gray-500 uppercase">Codigo</th>
                             <th class="px-4 py-3 text-left text-xs text-gray-500 uppercase">Nombre</th>
-                            <th class="px-4 py-3"></th>
+                            @if(!$esReadOnly)<th class="px-4 py-3"></th>@endif
                         </tr>
                     </thead>
                     <tbody class="divide-y">
@@ -83,6 +86,7 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-3 font-mono font-semibold text-blue-700">{{ $row->codigo_centro_costos }}</td>
                             <td class="px-4 py-3">{{ $row->nombre_centro_costos }}</td>
+                            @if(!$esReadOnly)
                             <td class="px-4 py-3 text-right flex items-center justify-end gap-3">
                                 <button type="button"
                                     onclick="editarCC('{{ $row->codigo_centro_costos }}','{{ addslashes($row->nombre_centro_costos) }}')"
@@ -93,9 +97,10 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                                     <button class="text-red-500 hover:text-red-700 text-xs">Eliminar</button>
                                 </form>
                             </td>
+                            @endif
                         </tr>
                         @empty
-                        <tr><td colspan="3" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros</td></tr>
+                        <tr><td colspan="{{ $esReadOnly ? 2 : 3 }}" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -106,8 +111,9 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
 
     {{-- ══ 2. Conceptos ════════════════════════════════════════════════════════ --}}
     <div x-show="tab==='conceptos'" x-cloak>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="{{ $esReadOnly ? 'grid grid-cols-1' : 'grid grid-cols-1 lg:grid-cols-3' }} gap-6">
 
+            @if(!$esReadOnly)
             <div class="bg-white rounded-xl shadow p-5">
                 <h3 id="con-titulo" class="font-semibold text-gray-700 mb-4">Nuevo</h3>
                 <form method="POST" action="{{ route('parametros.conceptos.store') }}" class="space-y-3">
@@ -137,15 +143,16 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                     </div>
                 </form>
             </div>
+            @endif
 
-            <div class="lg:col-span-2 bg-white rounded-xl shadow overflow-hidden">
+            <div class="{{ $esReadOnly ? '' : 'lg:col-span-2' }} bg-white rounded-xl shadow overflow-hidden">
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50 border-b">
                         <tr>
                             <th class="px-4 py-3 text-left text-xs text-gray-500 uppercase">Codigo</th>
                             <th class="px-4 py-3 text-left text-xs text-gray-500 uppercase">Concepto</th>
                             <th class="px-4 py-3 text-left text-xs text-gray-500 uppercase">Centro costos</th>
-                            <th class="px-4 py-3"></th>
+                            @if(!$esReadOnly)<th class="px-4 py-3"></th>@endif
                         </tr>
                     </thead>
                     <tbody class="divide-y">
@@ -154,6 +161,7 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                             <td class="px-4 py-3 font-mono font-semibold text-blue-700">{{ $row->codigo_concepto }}</td>
                             <td class="px-4 py-3">{{ sinT($row->concepto) }}</td>
                             <td class="px-4 py-3 text-gray-500">{{ $row->centro_costos }}</td>
+                            @if(!$esReadOnly)
                             <td class="px-4 py-3 text-right flex items-center justify-end gap-3">
                                 <button type="button"
                                     onclick="editarCon('{{ $row->codigo_concepto }}','{{ addslashes(sinT($row->concepto)) }}','{{ $row->centro_costos }}')"
@@ -164,9 +172,10 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                                     <button class="text-red-500 hover:text-red-700 text-xs">Eliminar</button>
                                 </form>
                             </td>
+                            @endif
                         </tr>
                         @empty
-                        <tr><td colspan="4" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros</td></tr>
+                        <tr><td colspan="{{ $esReadOnly ? 3 : 4 }}" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -177,8 +186,9 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
 
     {{-- ══ 3. Costo Pension ════════════════════════════════════════════════════ --}}
     <div x-show="tab==='costo_pension'" x-cloak>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="{{ $esReadOnly ? 'grid grid-cols-1' : 'grid grid-cols-1 lg:grid-cols-3' }} gap-6">
 
+            @if(!$esReadOnly)
             <div class="bg-white rounded-xl shadow p-5">
                 <h3 id="cp-titulo" class="font-semibold text-gray-700 mb-4">Nueva tarifa</h3>
                 <form method="POST" action="{{ route('parametros.costo_pension.store') }}" class="space-y-3">
@@ -199,14 +209,15 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                     </div>
                 </form>
             </div>
+            @endif
 
-            <div class="lg:col-span-2 bg-white rounded-xl shadow overflow-hidden">
+            <div class="{{ $esReadOnly ? '' : 'lg:col-span-2' }} bg-white rounded-xl shadow overflow-hidden">
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50 border-b">
                         <tr>
                             <th class="px-4 py-3 text-left text-xs text-gray-500 uppercase">Codigo</th>
                             <th class="px-4 py-3 text-right text-xs text-gray-500 uppercase">Valor</th>
-                            <th class="px-4 py-3"></th>
+                            @if(!$esReadOnly)<th class="px-4 py-3"></th>@endif
                         </tr>
                     </thead>
                     <tbody class="divide-y">
@@ -214,6 +225,7 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-3 font-mono font-semibold text-blue-700">{{ $row->codigo_valor_pension }}</td>
                             <td class="px-4 py-3 text-right font-medium">$ {{ number_format($row->valor, 0, ',', '.') }}</td>
+                            @if(!$esReadOnly)
                             <td class="px-4 py-3 text-right flex items-center justify-end gap-3">
                                 <button type="button"
                                     onclick="editarCP('{{ $row->codigo_valor_pension }}','{{ $row->valor }}')"
@@ -224,9 +236,10 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                                     <button class="text-red-500 hover:text-red-700 text-xs">Eliminar</button>
                                 </form>
                             </td>
+                            @endif
                         </tr>
                         @empty
-                        <tr><td colspan="3" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros</td></tr>
+                        <tr><td colspan="{{ $esReadOnly ? 2 : 3 }}" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -237,8 +250,9 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
 
     {{-- ══ 4. Costo Transporte ═════════════════════════════════════════════════ --}}
     <div x-show="tab==='costo_transporte'" x-cloak>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="{{ $esReadOnly ? 'grid grid-cols-1' : 'grid grid-cols-1 lg:grid-cols-3' }} gap-6">
 
+            @if(!$esReadOnly)
             <div class="bg-white rounded-xl shadow p-5">
                 <h3 id="ct-titulo" class="font-semibold text-gray-700 mb-4">Nueva tarifa</h3>
                 <form method="POST" action="{{ route('parametros.costo_transporte.store') }}" class="space-y-3">
@@ -259,14 +273,15 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                     </div>
                 </form>
             </div>
+            @endif
 
-            <div class="lg:col-span-2 bg-white rounded-xl shadow overflow-hidden">
+            <div class="{{ $esReadOnly ? '' : 'lg:col-span-2' }} bg-white rounded-xl shadow overflow-hidden">
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50 border-b">
                         <tr>
                             <th class="px-4 py-3 text-left text-xs text-gray-500 uppercase">Codigo</th>
                             <th class="px-4 py-3 text-right text-xs text-gray-500 uppercase">Costo</th>
-                            <th class="px-4 py-3"></th>
+                            @if(!$esReadOnly)<th class="px-4 py-3"></th>@endif
                         </tr>
                     </thead>
                     <tbody class="divide-y">
@@ -274,6 +289,7 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-3 font-mono font-semibold text-blue-700">{{ $row->codigo_transporte }}</td>
                             <td class="px-4 py-3 text-right font-medium">$ {{ number_format($row->costo, 0, ',', '.') }}</td>
+                            @if(!$esReadOnly)
                             <td class="px-4 py-3 text-right flex items-center justify-end gap-3">
                                 <button type="button"
                                     onclick="editarCT('{{ $row->codigo_transporte }}','{{ $row->costo }}')"
@@ -284,9 +300,10 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                                     <button class="text-red-500 hover:text-red-700 text-xs">Eliminar</button>
                                 </form>
                             </td>
+                            @endif
                         </tr>
                         @empty
-                        <tr><td colspan="3" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros</td></tr>
+                        <tr><td colspan="{{ $esReadOnly ? 2 : 3 }}" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -297,8 +314,9 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
 
     {{-- ══ 5. Pension x Alumno ═════════════════════════════════════════════════ --}}
     <div x-show="tab==='pension'" x-cloak>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="{{ $esReadOnly ? 'grid grid-cols-1' : 'grid grid-cols-1 lg:grid-cols-3' }} gap-6">
 
+            @if(!$esReadOnly)
             <div class="bg-white rounded-xl shadow p-5">
                 <h3 id="pen-titulo" class="font-semibold text-gray-700 mb-4">Asignar / Actualizar</h3>
                 <form method="POST" action="{{ route('parametros.pension.store') }}" class="space-y-3">
@@ -346,8 +364,9 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                     </div>
                 </form>
             </div>
+            @endif
 
-            <div class="lg:col-span-2 bg-white rounded-xl shadow overflow-auto">
+            <div class="{{ $esReadOnly ? '' : 'lg:col-span-2' }} bg-white rounded-xl shadow overflow-auto">
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50 border-b">
                         <tr>
@@ -356,7 +375,7 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                             <th class="px-3 py-3 text-left text-xs text-gray-500 uppercase">Tarifa</th>
                             <th class="px-3 py-3 text-left text-xs text-gray-500 uppercase">Concepto</th>
                             <th class="px-3 py-3 text-left text-xs text-gray-500 uppercase">Año</th>
-                            <th class="px-3 py-3"></th>
+                            @if(!$esReadOnly)<th class="px-3 py-3"></th>@endif
                         </tr>
                     </thead>
                     <tbody class="divide-y">
@@ -367,6 +386,7 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                             <td class="px-3 py-2 font-mono">{{ $row->codigo_valor_pension }}</td>
                             <td class="px-3 py-2 text-gray-500">{{ $row->codigo_concepto }}</td>
                             <td class="px-3 py-2">{{ $row->anio }}</td>
+                            @if(!$esReadOnly)
                             <td class="px-3 py-2 text-right flex items-center justify-end gap-3">
                                 <button type="button"
                                     onclick="editarPen('{{ $row->codigo_alumno }}','{{ $row->codigo_valor_pension }}','{{ $row->codigo_concepto }}','{{ $row->centro_costos }}','{{ $row->anio }}')"
@@ -377,9 +397,10 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                                     <button class="text-red-500 hover:text-red-700 text-xs">Eliminar</button>
                                 </form>
                             </td>
+                            @endif
                         </tr>
                         @empty
-                        <tr><td colspan="6" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros</td></tr>
+                        <tr><td colspan="{{ $esReadOnly ? 5 : 6 }}" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -390,8 +411,9 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
 
     {{-- ══ 6. Transporte x Alumno ══════════════════════════════════════════════ --}}
     <div x-show="tab==='transporte'" x-cloak>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="{{ $esReadOnly ? 'grid grid-cols-1' : 'grid grid-cols-1 lg:grid-cols-3' }} gap-6">
 
+            @if(!$esReadOnly)
             <div class="bg-white rounded-xl shadow p-5">
                 <h3 id="tra-titulo" class="font-semibold text-gray-700 mb-4">Asignar / Actualizar</h3>
                 <form method="POST" action="{{ route('parametros.transporte.store') }}" class="space-y-3">
@@ -439,8 +461,9 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                     </div>
                 </form>
             </div>
+            @endif
 
-            <div class="lg:col-span-2 bg-white rounded-xl shadow overflow-auto">
+            <div class="{{ $esReadOnly ? '' : 'lg:col-span-2' }} bg-white rounded-xl shadow overflow-auto">
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50 border-b">
                         <tr>
@@ -449,7 +472,7 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                             <th class="px-3 py-3 text-left text-xs text-gray-500 uppercase">Ruta</th>
                             <th class="px-3 py-3 text-left text-xs text-gray-500 uppercase">Concepto</th>
                             <th class="px-3 py-3 text-left text-xs text-gray-500 uppercase">Año</th>
-                            <th class="px-3 py-3"></th>
+                            @if(!$esReadOnly)<th class="px-3 py-3"></th>@endif
                         </tr>
                     </thead>
                     <tbody class="divide-y">
@@ -460,6 +483,7 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                             <td class="px-3 py-2 font-mono">{{ $row->codigo_transporte }}</td>
                             <td class="px-3 py-2 text-gray-500">{{ $row->codigo_concepto }}</td>
                             <td class="px-3 py-2">{{ $row->anio }}</td>
+                            @if(!$esReadOnly)
                             <td class="px-3 py-2 text-right flex items-center justify-end gap-3">
                                 <button type="button"
                                     onclick="editarTra('{{ $row->codigo_alumno }}','{{ $row->codigo_transporte }}','{{ $row->codigo_concepto }}','{{ $row->centro_costos }}','{{ $row->anio }}')"
@@ -470,9 +494,10 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                                     <button class="text-red-500 hover:text-red-700 text-xs">Eliminar</button>
                                 </form>
                             </td>
+                            @endif
                         </tr>
                         @empty
-                        <tr><td colspan="6" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros</td></tr>
+                        <tr><td colspan="{{ $esReadOnly ? 5 : 6 }}" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -483,8 +508,9 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
 
     {{-- ══ 7. Nivelacion x Alumno ══════════════════════════════════════════════ --}}
     <div x-show="tab==='nivelacion'" x-cloak>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="{{ $esReadOnly ? 'grid grid-cols-1' : 'grid grid-cols-1 lg:grid-cols-3' }} gap-6">
 
+            @if(!$esReadOnly)
             <div class="bg-white rounded-xl shadow p-5">
                 <h3 id="niv-titulo" class="font-semibold text-gray-700 mb-4">Asignar / Actualizar</h3>
                 <form method="POST" action="{{ route('parametros.nivelacion.store') }}" class="space-y-3">
@@ -528,8 +554,9 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                     </div>
                 </form>
             </div>
+            @endif
 
-            <div class="lg:col-span-2 bg-white rounded-xl shadow overflow-auto">
+            <div class="{{ $esReadOnly ? '' : 'lg:col-span-2' }} bg-white rounded-xl shadow overflow-auto">
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50 border-b">
                         <tr>
@@ -538,7 +565,7 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                             <th class="px-3 py-3 text-left text-xs text-gray-500 uppercase">Valor</th>
                             <th class="px-3 py-3 text-left text-xs text-gray-500 uppercase">Concepto</th>
                             <th class="px-3 py-3 text-left text-xs text-gray-500 uppercase">Año</th>
-                            <th class="px-3 py-3"></th>
+                            @if(!$esReadOnly)<th class="px-3 py-3"></th>@endif
                         </tr>
                     </thead>
                     <tbody class="divide-y">
@@ -549,6 +576,7 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                             <td class="px-3 py-2 font-mono">{{ $row->codigo_valor }}</td>
                             <td class="px-3 py-2 text-gray-500">{{ $row->codigo_concepto }}</td>
                             <td class="px-3 py-2">{{ $row->anio }}</td>
+                            @if(!$esReadOnly)
                             <td class="px-3 py-2 text-right flex items-center justify-end gap-3">
                                 <button type="button"
                                     onclick="editarNiv('{{ $row->codigo_alumno }}','{{ $row->codigo_valor }}','{{ $row->codigo_concepto }}','{{ $row->centro_costos }}','{{ $row->anio }}')"
@@ -559,9 +587,10 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                                     <button class="text-red-500 hover:text-red-700 text-xs">Eliminar</button>
                                 </form>
                             </td>
+                            @endif
                         </tr>
                         @empty
-                        <tr><td colspan="6" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros</td></tr>
+                        <tr><td colspan="{{ $esReadOnly ? 5 : 6 }}" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -572,8 +601,9 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
 
     {{-- ══ 8. Listado Transporte ═══════════════════════════════════════════════ --}}
     <div x-show="tab==='listado_transporte'" x-cloak>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="{{ $esReadOnly ? 'grid grid-cols-1' : 'grid grid-cols-1 lg:grid-cols-3' }} gap-6">
 
+            @if(!$esReadOnly)
             <div class="bg-white rounded-xl shadow p-5">
                 <h3 id="lt-titulo" class="font-semibold text-gray-700 mb-4">Agregar / Actualizar</h3>
                 <form method="POST" action="{{ route('parametros.listado_transporte.store') }}" class="space-y-3">
@@ -619,8 +649,9 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                     </div>
                 </form>
             </div>
+            @endif
 
-            <div class="lg:col-span-2 bg-white rounded-xl shadow overflow-auto">
+            <div class="{{ $esReadOnly ? '' : 'lg:col-span-2' }} bg-white rounded-xl shadow overflow-auto">
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50 border-b">
                         <tr>
@@ -629,7 +660,7 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                             <th class="px-3 py-3 text-left text-xs text-gray-500 uppercase">Barrio</th>
                             <th class="px-3 py-3 text-left text-xs text-gray-500 uppercase">Ruta</th>
                             <th class="px-3 py-3 text-left text-xs text-gray-500 uppercase">Direccion</th>
-                            <th class="px-3 py-3"></th>
+                            @if(!$esReadOnly)<th class="px-3 py-3"></th>@endif
                         </tr>
                     </thead>
                     <tbody class="divide-y">
@@ -640,6 +671,7 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                             <td class="px-3 py-2">{{ $row->barrio }}</td>
                             <td class="px-3 py-2">{{ $row->ruta }}</td>
                             <td class="px-3 py-2 text-gray-500 text-xs">{{ $row->direccion }}</td>
+                            @if(!$esReadOnly)
                             <td class="px-3 py-2 text-right flex items-center justify-end gap-3">
                                 <button type="button"
                                     onclick="editarLT('{{ $row->codigo }}','{{ addslashes($row->barrio) }}','{{ $row->telefono }}','{{ addslashes($row->quien_recibe) }}','{{ $row->clase_ruta }}','{{ $row->ruta }}','{{ addslashes($row->direccion) }}')"
@@ -650,9 +682,10 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                                     <button class="text-red-500 hover:text-red-700 text-xs">Eliminar</button>
                                 </form>
                             </td>
+                            @endif
                         </tr>
                         @empty
-                        <tr><td colspan="6" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros</td></tr>
+                        <tr><td colspan="{{ $esReadOnly ? 5 : 6 }}" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -663,8 +696,9 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
 
     {{-- ══ 9. Observaciones Contables ══════════════════════════════════════════ --}}
     <div x-show="tab==='observaciones'" x-cloak>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="{{ $esReadOnly ? 'grid grid-cols-1' : 'grid grid-cols-1 lg:grid-cols-3' }} gap-6">
 
+            @if(!$esReadOnly)
             <div class="bg-white rounded-xl shadow p-5">
                 <h3 id="obs-titulo" class="font-semibold text-gray-700 mb-4">Agregar / Actualizar</h3>
                 <form method="POST" action="{{ route('parametros.observaciones.store') }}" class="space-y-3">
@@ -686,15 +720,16 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                     </div>
                 </form>
             </div>
+            @endif
 
-            <div class="lg:col-span-2 bg-white rounded-xl shadow overflow-auto">
+            <div class="{{ $esReadOnly ? '' : 'lg:col-span-2' }} bg-white rounded-xl shadow overflow-auto">
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50 border-b">
                         <tr>
                             <th class="px-3 py-3 text-left text-xs text-gray-500 uppercase">Cod.</th>
                             <th class="px-3 py-3 text-left text-xs text-gray-500 uppercase">Alumno</th>
                             <th class="px-3 py-3 text-left text-xs text-gray-500 uppercase">Observacion</th>
-                            <th class="px-3 py-3"></th>
+                            @if(!$esReadOnly)<th class="px-3 py-3"></th>@endif
                         </tr>
                     </thead>
                     <tbody class="divide-y">
@@ -703,6 +738,7 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                             <td class="px-3 py-2 font-mono text-blue-700">{{ $row->codigo_alumno }}</td>
                             <td class="px-3 py-2">{{ $row->nombre_alumno ?: '—' }}</td>
                             <td class="px-3 py-2 text-gray-600 text-xs max-w-xs truncate">{{ $row->observacion }}</td>
+                            @if(!$esReadOnly)
                             <td class="px-3 py-2 text-right flex items-center justify-end gap-3">
                                 <button type="button"
                                     onclick="editarObs('{{ $row->codigo_alumno }}','{{ addslashes($row->observacion) }}')"
@@ -713,9 +749,10 @@ function sinT($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í','
                                     <button class="text-red-500 hover:text-red-700 text-xs">Eliminar</button>
                                 </form>
                             </td>
+                            @endif
                         </tr>
                         @empty
-                        <tr><td colspan="4" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros</td></tr>
+                        <tr><td colspan="{{ $esReadOnly ? 3 : 4 }}" class="px-4 py-6 text-center text-gray-400 text-sm">Sin registros</td></tr>
                         @endforelse
                     </tbody>
                 </table>

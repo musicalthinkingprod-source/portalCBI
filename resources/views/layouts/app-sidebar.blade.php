@@ -137,6 +137,11 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('ciclos.informe') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                                📋 Control de planilla
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('english-acq.informe') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                                 📊 Informe English ACQ
                             </a>
@@ -148,7 +153,8 @@
 
                 {{-- Administradores: solo SuperAd --}}
 
-                {{-- Asistencia: registro solo Sec*, reporte para todos --}}
+                {{-- Asistencia: oculto para Contab --}}
+                @if($profile !== 'Contab')
                 <div>
                     <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Asistencia</p>
                     <ul class="space-y-1">
@@ -178,9 +184,10 @@
                         @endif
                     </ul>
                 </div>
+                @endif
 
-{{-- Control: SuperAd, Admin y contab --}}
-                @if(in_array($profile, ['SuperAd', 'Admin', 'contab']))
+{{-- Control: SuperAd, Admin y Contab --}}
+                @if(in_array($profile, ['SuperAd', 'Admin', 'Contab']))
                 <div>
                     <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Control de Pagos</p>
                     <ul class="space-y-1">
@@ -199,7 +206,7 @@
                                 🧾 Facturación
                             </a>
                         </li>
-                        @if($profile !== 'contab')
+                        @if($profile !== 'Contab')
                         <li>
                             <a href="{{ route('facturacion.auto') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                                 ⚡ Facturación automática
@@ -226,7 +233,7 @@
                                 ⚙️ Parametros facturacion
                             </a>
                         </li>
-                        @if($profile !== 'contab')
+                        @if($profile !== 'Contab')
                         <li>
                             <a href="{{ route('world-office.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                                 📄 Plantilla World Office
@@ -295,7 +302,7 @@
                     <ul class="space-y-1">
                         <li>
                             <a href="{{ route('ciclos.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                                🗂️ Control de digitación
+                                🗂️ Control de ciclos
                             </a>
                         </li>
                         <li>
