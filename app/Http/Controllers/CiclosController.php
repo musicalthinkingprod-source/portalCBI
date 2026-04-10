@@ -17,10 +17,11 @@ class CiclosController extends Controller
             ->orderBy('numero')
             ->get();
 
-        // ── Asignaciones activas con docente ─────────────────────────────────
+        // ── Asignaciones calificables con docente ────────────────────────────
         $asignaciones = DB::table('ASIGNACION_PCM as a')
             ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
             ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_DOC', '=', 'd.CODIGO_DOC')
+            ->where('a.calificable', 1)
             ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO',
                      'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
             ->orderBy('d.NOMBRE_DOC')->orderBy('m.NOMBRE_MAT')->orderBy('a.CURSO')
@@ -91,6 +92,7 @@ class CiclosController extends Controller
         $asignaciones = DB::table('ASIGNACION_PCM as a')
             ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
             ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_DOC', '=', 'd.CODIGO_DOC')
+            ->where('a.calificable', 1)
             ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO',
                      'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
             ->orderBy('d.NOMBRE_DOC')->orderBy('m.NOMBRE_MAT')->orderBy('a.CURSO')

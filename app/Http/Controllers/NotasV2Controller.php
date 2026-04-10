@@ -17,6 +17,7 @@ class NotasV2Controller extends Controller
 
         $queryAsig = DB::table('ASIGNACION_PCM as a')
             ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
+            ->where('a.calificable', 1)
             ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT');
 
         if (!$esSuperior) {
@@ -64,11 +65,7 @@ class NotasV2Controller extends Controller
                 ->orderBy('id')
                 ->get();
 
-            $estudiantes = DB::table('ESTUDIANTES')
-                ->where('CURSO', $cursoSelec)
-                ->where('ESTADO', 'MATRICULADO')
-                ->orderBy('APELLIDO1')->orderBy('APELLIDO2')->orderBy('NOMBRE1')
-                ->get();
+            $estudiantes = $this->estudiantesPara((int) $matSelec, $cursoSelec);
 
             if ($columnas->isNotEmpty()) {
                 $notas = DB::table('planilla_notas')
@@ -246,10 +243,7 @@ class NotasV2Controller extends Controller
             return back()->with('error_entrega', 'No hay actividades registradas en esta planilla.');
         }
 
-        $estudiantes = DB::table('ESTUDIANTES')
-            ->where('CURSO', $curso)
-            ->where('ESTADO', 'MATRICULADO')
-            ->pluck('CODIGO');
+        $estudiantes = $this->estudiantesPara($codigoMat, $curso)->pluck('CODIGO');
 
         $columnaIds = $columnas->pluck('id');
 
@@ -333,28 +327,22 @@ class NotasV2Controller extends Controller
 
         foreach ($notas as $columnaId => $alumnos) {
             foreach ($alumnos as $codAlum => $nota) {
-                $nota = trim((string) $nota);
+                $nota    = trim((string) $nota);
                 $notaVal = $nota !== '' ? (float) str_replace(',', '.', $nota) : null;
 
-                $existe = DB::table('planilla_notas')
-                    ->where('columna_id', $columnaId)
-                    ->where('codigo_alumno', $codAlum)
-                    ->exists();
-
-                if ($existe) {
+                if ($notaVal === null) {
+                    // Celda vacía: si ya existía un registro lo borra, si no existía no hace nada
                     DB::table('planilla_notas')
                         ->where('columna_id', $columnaId)
                         ->where('codigo_alumno', $codAlum)
-                        ->update(['nota' => $notaVal, 'updated_at' => now()]);
-                } else {
-                    DB::table('planilla_notas')->insert([
-                        'columna_id'    => $columnaId,
-                        'codigo_alumno' => $codAlum,
-                        'nota'          => $notaVal,
-                        'created_at'    => now(),
-                        'updated_at'    => now(),
-                    ]);
+                        ->delete();
+                    continue;
                 }
+
+                DB::table('planilla_notas')->updateOrInsert(
+                    ['columna_id' => $columnaId, 'codigo_alumno' => $codAlum],
+                    ['nota' => $notaVal, 'updated_at' => now(), 'created_at' => now()]
+                );
             }
         }
 

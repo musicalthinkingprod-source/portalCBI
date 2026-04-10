@@ -11,7 +11,15 @@
       "Bash(composer require:*)",
       "Bash(python3 -c ':*)",
       "Bash(awk NR>=55 && NR<=80:*)",
-      "Bash(php:*)"
+      "Bash(php:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(xargs cat:*)",
+      "Bash(npm run:*)",
+      "Bash(git checkout:*)",
+      "Bash(find /c/laragon/www/portalcbi/resources/views -name \"*.blade.php\" -exec grep -l \"active\\\\|nav-link\\\\|tab-pane\" {} \\\\;)",
+      "Bash(explorer \"C:\\\\laragon\\\\www\\\\portalcbi\\\\storage\\\\app\")"
     ]
   }
 }

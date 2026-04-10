@@ -39,7 +39,7 @@ function sinTwo($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í'
                     class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Nombre completo de la empresa">
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs text-gray-500 mb-1 font-medium">Tipo</label>
                     <input name="tipo" maxlength="10" required
@@ -153,7 +153,7 @@ function sinTwo($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í'
                 <p class="text-xs text-gray-400 mt-1">Ctrl+clic para seleccionar varios.</p>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs text-gray-500 mb-1 font-medium">Fecha de facturacion</label>
                     <input type="date" name="fecha_facturacion" required value="{{ date('Y-m-d') }}"

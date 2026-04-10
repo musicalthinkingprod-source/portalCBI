@@ -21,11 +21,13 @@ return new class extends Migration
         });
 
         // Calendario: qué día del ciclo (1-6) corresponde a cada fecha
-        Schema::create('calendario_vigilancias', function (Blueprint $table) {
+        Schema::create('calendario_academico', function (Blueprint $table) {
             $table->id();
             $table->date('fecha');
             $table->tinyInteger('dia_ciclo');   // 1 al 6
             $table->smallInteger('anio');
+            $table->string('evento', 200)->nullable(); // evento especial del día
+            $table->enum('visibilidad', ['todos', 'interno', 'docentes', 'directivas', 'padres'])->default('interno');
             $table->timestamps();
             $table->unique('fecha');
         });
@@ -34,6 +36,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('vigilancias');
-        Schema::dropIfExists('calendario_vigilancias');
+        Schema::dropIfExists('calendario_academico');
     }
 };

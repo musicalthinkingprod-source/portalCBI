@@ -141,6 +141,10 @@
                 📅 Asistencia
             </a>
 
+            <a href="{{ route('padres.calendario') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                📆 Calendario académico
+            </a>
+
             <a href="{{ route('padres.estado_cuenta') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                 📊 Estado de cuenta
             </a>

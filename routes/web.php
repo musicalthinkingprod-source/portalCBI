@@ -29,6 +29,11 @@ use App\Http\Controllers\RutasController;
 use App\Http\Controllers\LlamadasController;
 use App\Http\Controllers\VigilanciaController;
 use App\Http\Controllers\NominaController;
+use App\Http\Controllers\ListadosEspecialesController;
+use App\Http\Controllers\CircularesController;
+use App\Http\Controllers\HorariosController;
+use App\Http\Controllers\CalendarioAcademicoController;
+use App\Http\Controllers\AsistenciaPersonalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,6 +65,7 @@ Route::middleware('padre.verificado')->group(function () {
     Route::get('/padres/asistencia', [AsistenciaController::class, 'padres'])->name('padres.asistencia');
     Route::get('/padres/salvavidas', [SalvavidasController::class, 'padres'])->name('padres.salvavidas');
     Route::get('/padres/derroteros', [DeroterosController::class, 'padres'])->name('padres.derroteros');
+    Route::get('/padres/calendario', [CalendarioAcademicoController::class, 'padres'])->name('padres.calendario');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -86,10 +92,29 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/ciclos/{id}', [CiclosController::class, 'destroy'])->name('ciclos.destroy');
         Route::get('/ciclos/informe', [CiclosController::class, 'informe'])->name('ciclos.informe');
         Route::get('/nomina', [NominaController::class, 'index'])->name('nomina.index');
+
+        // ── Circulares ────────────────────────────────────────────────────────
+        Route::get('/circulares', [CircularesController::class, 'index'])->name('circulares.index');
+        Route::get('/circulares/nueva', [CircularesController::class, 'create'])->name('circulares.create');
+        Route::post('/circulares', [CircularesController::class, 'store'])->name('circulares.store');
+        Route::get('/circulares/{circular}', [CircularesController::class, 'show'])->name('circulares.show');
+        Route::get('/circulares/{circular}/editar', [CircularesController::class, 'edit'])->name('circulares.edit');
+        Route::put('/circulares/{circular}', [CircularesController::class, 'update'])->name('circulares.update');
+        Route::delete('/circulares/{circular}', [CircularesController::class, 'destroy'])->name('circulares.destroy');
+        Route::get('/circulares/{circular}/pdf', [CircularesController::class, 'pdf'])->name('circulares.pdf');
+
+        // ── Listados Especiales ───────────────────────────────────────────────
+        Route::get('/listados-especiales', [ListadosEspecialesController::class, 'index'])->name('listados.index');
+        Route::post('/listados-especiales/grupo/crear', [ListadosEspecialesController::class, 'crearGrupo'])->name('listados.grupo.crear');
+        Route::post('/listados-especiales/grupo/eliminar', [ListadosEspecialesController::class, 'eliminarGrupo'])->name('listados.grupo.eliminar');
+        Route::post('/listados-especiales/docente', [ListadosEspecialesController::class, 'asignarDocente'])->name('listados.docente.asignar');
+        Route::post('/listados-especiales/proyecto/asignar', [ListadosEspecialesController::class, 'asignarProyecto'])->name('listados.proyecto.asignar');
+        Route::post('/listados-especiales/musica/asignar', [ListadosEspecialesController::class, 'asignarMusica'])->name('listados.musica.asignar');
+        Route::post('/listados-especiales/quitar', [ListadosEspecialesController::class, 'quitar'])->name('listados.quitar');
     });
 
-    // ── Control de Pagos: lectura (Admin + Contab) ───────────────────────────
-    Route::middleware('profile:SuperAd,Admin,Contab')->group(function () {
+    // ── Control de Pagos: lectura (Admin + Contab + SecC100) ────────────────
+    Route::middleware('profile:SuperAd,Admin,Contab,SecC100')->group(function () {
         Route::get('/control/estudiante', [ControlEstudianteController::class, 'index'])->name('control.estudiante');
         Route::get('/pagos', [PagosController::class, 'index'])->name('pagos.index');
         Route::get('/cartera', [CarteraController::class, 'index'])->name('cartera.index');
@@ -173,6 +198,22 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/salvavidas/reporte', [SalvavidasController::class, 'reporte'])->name('salvavidas.reporte');
     });
 
+    // ── Calendario académico: Admin y Secretaría (con edición) ───────────────
+    Route::middleware('profile:SuperAd,Admin,SecC100')->group(function () {
+        Route::get('/calendario', [CalendarioAcademicoController::class, 'index'])->name('calendario.index');
+    });
+
+    // ── Calendario: edición de eventos (solo SuperAd y Admin) ────────────────
+    Route::middleware('profile:SuperAd,Admin')->group(function () {
+        Route::put('/calendario/{fecha}/evento', [CalendarioAcademicoController::class, 'guardarEvento'])->name('calendario.evento.guardar');
+        Route::delete('/calendario/{fecha}/evento', [CalendarioAcademicoController::class, 'eliminarEvento'])->name('calendario.evento.eliminar');
+    });
+
+    // ── Calendario académico: Docentes (solo lectura) ─────────────────────────
+    Route::middleware('profile:DOC*')->group(function () {
+        Route::get('/calendario/docente', [CalendarioAcademicoController::class, 'docente'])->name('calendario.docente');
+    });
+
     // ── Asistencia registro: SuperAd y Sec* ──────────────────────────────────
     Route::middleware('profile:SuperAd,Sec*')->group(function () {
         Route::get('/asistencia/registro', [AsistenciaController::class, 'registro'])->name('asistencia.registro');
@@ -254,6 +295,22 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/boletines/{codigo}', [BoletinController::class, 'ver'])->name('boletines.ver');
     });
 
+    // ── Asistencia personal: SuperAd y SecA ven el estado; SecA registra ────
+    Route::middleware('profile:SuperAd,Admin,SecA')->group(function () {
+        Route::get('/asistencia-personal',          [AsistenciaPersonalController::class, 'index'])         ->name('asistencia-personal.index');
+        Route::get('/asistencia-personal/registro', [AsistenciaPersonalController::class, 'registro'])      ->name('asistencia-personal.registro');
+        Route::post('/asistencia-personal/registro',[AsistenciaPersonalController::class, 'guardarRegistro'])->name('asistencia-personal.guardar');
+    });
+
+    Route::middleware('profile:SuperAd')->group(function () {
+        Route::get('/asistencia-personal/permisos',         [AsistenciaPersonalController::class, 'permisos'])       ->name('asistencia-personal.permisos');
+        Route::post('/asistencia-personal/permisos',        [AsistenciaPersonalController::class, 'crearPermiso'])    ->name('asistencia-personal.permisos.crear');
+        Route::delete('/asistencia-personal/permisos/{id}', [AsistenciaPersonalController::class, 'eliminarPermiso']) ->name('asistencia-personal.permisos.eliminar');
+        Route::get('/asistencia-personal/reemplazos',        [AsistenciaPersonalController::class, 'reemplazos'])       ->name('asistencia-personal.reemplazos');
+        Route::post('/asistencia-personal/reemplazos',       [AsistenciaPersonalController::class, 'asignarReemplazo']) ->name('asistencia-personal.reemplazos.asignar');
+        Route::delete('/asistencia-personal/reemplazos/{id}',[AsistenciaPersonalController::class, 'quitarReemplazo'])  ->name('asistencia-personal.reemplazos.quitar');
+    });
+
     // ── Vigilancias (admin): solo SuperAd ───────────────────────────────────
     Route::middleware('profile:SuperAd')->group(function () {
         Route::get('/vigilancias/admin', [VigilanciaController::class, 'admin'])->name('vigilancias.admin');
@@ -269,6 +326,22 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('profile:SuperAd,ConvCor28')->group(function () {
         Route::get('/vigilancias/control', [VigilanciaController::class, 'control'])->name('vigilancias.control');
     });
+
+    // ── Horarios ─────────────────────────────────────────────────────────
+    Route::get('/horarios', [HorariosController::class, 'index'])->name('horarios.index');
+    Route::get('/horarios/curso', [HorariosController::class, 'porCurso'])->name('horarios.por_curso');
+    Route::get('/horarios/docente', [HorariosController::class, 'porDocente'])->name('horarios.por_docente');
+    Route::get('/horarios/disponibilidad', [HorariosController::class, 'disponibilidad'])->name('horarios.disponibilidad');
+
+    // ── Mi Horario: vista personal del docente ────────────────────────────
+    Route::middleware('profile:DOC*')->group(function () {
+        Route::get('/horarios/mi-horario', [HorariosController::class, 'miHorario'])->name('horarios.mi_horario');
+    });
+
+    // ── Notificaciones (cualquier usuario interno autenticado) ────────────
+    Route::get('/notificaciones/nuevas',       [\App\Http\Controllers\NotificacionesController::class, 'nuevas'])->name('notificaciones.nuevas');
+    Route::post('/notificaciones/{id}/leer',   [\App\Http\Controllers\NotificacionesController::class, 'leer'])  ->name('notificaciones.leer');
+    Route::post('/notificaciones/leer-todas',  [\App\Http\Controllers\NotificacionesController::class, 'leerTodas'])->name('notificaciones.leer_todas');
 });
 
 Route::post('/padres/salir', function () {

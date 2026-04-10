@@ -89,6 +89,7 @@
             <h3 class="font-bold text-sm uppercase tracking-wide">Resultados</h3>
             <span class="text-blue-300 text-xs">{{ $estudiantes->total() }} encontrados</span>
         </div>
+        <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
                 <tr>
@@ -116,6 +117,7 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
         @if($estudiantes->hasPages())
         <div class="px-5 py-4 border-t border-gray-100">
             {{ $estudiantes->links() }}

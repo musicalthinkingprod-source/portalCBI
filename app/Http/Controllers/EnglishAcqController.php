@@ -15,6 +15,7 @@ class EnglishAcqController extends Controller
         $esSuperior = in_array($profile, ['SuperAd', 'Admin']) || str_starts_with($profile, 'DOC');
 
         $query = DB::table('ASIGNACION_PCM as a')
+            ->where('a.calificable', 1)
             ->select('a.CURSO')
             ->distinct();
 

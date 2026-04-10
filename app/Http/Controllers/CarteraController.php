@@ -267,6 +267,12 @@ class CarteraController extends Controller
             ->get()
             ->keyBy('CODIGO');
 
+        // Info de padres para encontrar nombre y celular del titular por CC
+        $infoPadres = DB::table('INFO_PADRES')
+            ->whereIn('CODIGO', $codigos)
+            ->get()
+            ->keyBy('CODIGO');
+
         $facturasPor = DB::table('facturacion')
             ->whereIn('codigo_alumno', $codigos)
             ->select('codigo_alumno', DB::raw('SUM(valor) as total'))
@@ -280,7 +286,7 @@ class CarteraController extends Controller
             ->pluck('total', 'codigo_alumno');
 
         // Agrupar por CC
-        $porCC = $vinculos->groupBy('cc_facturación')->map(function ($filaCC) use ($estudiantes, $facturasPor, $pagosPor) {
+        $porCC = $vinculos->groupBy('cc_facturación')->map(function ($filaCC) use ($estudiantes, $facturasPor, $pagosPor, $infoPadres) {
             $detalle = $filaCC->map(function ($v) use ($estudiantes, $facturasPor, $pagosPor) {
                 $facturado = (float) ($facturasPor[$v->codigo_alum] ?? 0);
                 $pagado    = (float) ($pagosPor[$v->codigo_alum]    ?? 0);
@@ -293,8 +299,36 @@ class CarteraController extends Controller
                 ];
             });
 
+            // Buscar nombre y celular del titular buscando la CC en INFO_PADRES de cualquier estudiante del grupo
+            $cc              = (int) $filaCC->first()->{'cc_facturación'};
+            $nombreTitular   = null;
+            $celTitular      = null;
+
+            foreach ($filaCC as $v) {
+                $p = $infoPadres[$v->codigo_alum] ?? null;
+                if (!$p) continue;
+
+                if ((int) $p->CC_MADRE === $cc) {
+                    $nombreTitular = $p->MADRE;
+                    $celTitular    = $p->CEL_MADRE;
+                    break;
+                }
+                if ((int) $p->CC_PADRE === $cc) {
+                    $nombreTitular = $p->PADRE;
+                    $celTitular    = $p->CEL_PADRE;
+                    break;
+                }
+                if ((int) $p->CC_ACUD === $cc) {
+                    $nombreTitular = $p->ACUD;
+                    $celTitular    = $p->CEL_ACUD;
+                    break;
+                }
+            }
+
             return (object) [
-                'cc'             => $filaCC->first()->{'cc_facturación'},
+                'cc'             => $cc,
+                'nombreTitular'  => $nombreTitular,
+                'celTitular'     => $celTitular,
                 'detalle'        => $detalle,
                 'totalFacturado' => $detalle->sum('facturado'),
                 'totalPagado'    => $detalle->sum('pagado'),

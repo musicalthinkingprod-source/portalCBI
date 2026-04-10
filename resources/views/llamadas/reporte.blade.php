@@ -40,7 +40,7 @@
 @php
     $porFecha = $registros->groupBy(fn($r) => $r->fecha_inasistencia);
 @endphp
-<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
     <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
         <p class="text-xs text-blue-400 uppercase tracking-wide mb-0.5">Total llamadas</p>
         <p class="text-2xl font-bold text-blue-800">{{ $registros->count() }}</p>
@@ -76,6 +76,7 @@
                     <th class="px-4 py-3 text-left">Codigo</th>
                     <th class="px-4 py-3 text-left">Estudiante</th>
                     <th class="px-4 py-3 text-left">Curso</th>
+                    <th class="px-4 py-3 text-left">Ruta</th>
                     <th class="px-4 py-3 text-left">Motivo</th>
                     <th class="px-4 py-3 text-left">Quien atendio</th>
                     <th class="px-4 py-3 text-left">Observacion</th>
@@ -88,6 +89,13 @@
                     <td class="px-4 py-3 font-mono text-gray-500">{{ $r->codigo }}</td>
                     <td class="px-4 py-3 font-semibold text-gray-800">{{ $r->nombre_completo }}</td>
                     <td class="px-4 py-3 text-gray-600">{{ $r->CURSO ?: '—' }}</td>
+                    <td class="px-4 py-3">
+                        @if($r->ruta_transporte)
+                            <span class="text-blue-600 font-medium">🚌 {{ $r->ruta_transporte }}</span>
+                        @else
+                            <span class="text-gray-300">—</span>
+                        @endif
+                    </td>
                     <td class="px-4 py-3 text-gray-700">{{ $r->motivo }}</td>
                     <td class="px-4 py-3 text-gray-600">{{ $r->quien_atendio ?: '—' }}</td>
                     <td class="px-4 py-3 text-gray-500 text-xs">{{ $r->observacion ?: '—' }}</td>

@@ -85,7 +85,7 @@ function sinTauto($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','�
             $totalValor  = $porFacturar->sum('valor');
         @endphp
 
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
                 <p class="text-2xl font-bold text-blue-800">{{ $porFacturar->count() }}</p>
                 <p class="text-xs text-blue-500 mt-1">Estudiantes a facturar</p>
@@ -166,6 +166,7 @@ function sinTauto($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','�
             <div class="px-4 py-3 border-b bg-gray-50">
                 <p class="text-sm font-semibold text-gray-700">Lotes generados automaticamente</p>
             </div>
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 border-b">
                     <tr>
@@ -195,6 +196,7 @@ function sinTauto($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','�
                     @endforeach
                 </tbody>
             </table>
+            </div>
         </div>
         @endif
 

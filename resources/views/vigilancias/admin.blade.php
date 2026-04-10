@@ -184,7 +184,7 @@
     ============================================================ --}}
     <div class="bg-white rounded-xl shadow p-5">
         <h2 class="text-base font-semibold text-blue-900 mb-3">Mapa de posiciones {{ $anio }}</h2>
-        <div class="rounded-xl overflow-hidden border border-gray-200" style="height: 500px;">
+        <div class="rounded-xl overflow-hidden border border-gray-200 isolate" style="height: 500px;">
             <div id="mapa-admin" class="w-full h-full"></div>
         </div>
         <div class="mt-3 flex flex-wrap gap-4 text-xs text-gray-500">
@@ -272,6 +272,126 @@
                 </button>
             </div>
         </form>
+        @endif
+    </div>
+
+    {{-- ============================================================
+         SECCIÓN: CALENDARIO ACADÉMICO
+    ============================================================ --}}
+    <div class="bg-white rounded-xl shadow p-5">
+        <h2 class="text-base font-semibold text-blue-900 mb-1">Calendario Académico</h2>
+        <p class="text-xs text-gray-400 mb-4">
+            Asigna qué día del ciclo (1–6) corresponde a cada fecha y registra eventos especiales.
+        </p>
+
+        @if(session('success_cal'))
+            <div class="mb-3 p-3 bg-green-100 text-green-800 rounded-xl text-sm">✅ {{ session('success_cal') }}</div>
+        @endif
+
+        {{-- Formulario agregar / editar fecha --}}
+        <form method="POST" action="{{ route('vigilancias.calendario.guardar') }}"
+              class="flex flex-wrap gap-3 items-end mb-5">
+            @csrf
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">Fecha</label>
+                <input type="date" name="fecha" required
+                    class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">Día de ciclo (1–6)</label>
+                <select name="dia_ciclo" required
+                    class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500">
+                    @for($d = 1; $d <= 6; $d++)
+                        <option value="{{ $d }}">Día {{ $d }}</option>
+                    @endfor
+                </select>
+            </div>
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-xs text-gray-500 mb-1">Evento (opcional)</label>
+                <input type="text" name="evento" maxlength="200" placeholder="Ej: Día de izadas, Jornada pedagógica…"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">Visibilidad</label>
+                <select name="visibilidad"
+                    class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500">
+                    <option value="interno">Interno (docentes + directivas)</option>
+                    <option value="todos">Para todos</option>
+                    <option value="docentes">Solo docentes</option>
+                    <option value="directivas">Solo directivas</option>
+                    <option value="padres">Solo padres</option>
+                </select>
+            </div>
+            <button type="submit"
+                class="bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium px-5 py-1.5 rounded-lg transition">
+                Guardar fecha
+            </button>
+        </form>
+
+        {{-- Tabla de fechas registradas --}}
+        @if($calendario->isEmpty())
+            <p class="text-sm text-gray-400 italic">No hay fechas registradas para {{ $anio }}.</p>
+        @else
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border-collapse">
+                    <thead>
+                        <tr class="bg-blue-50 text-blue-900 text-xs uppercase">
+                            <th class="px-3 py-2 text-left">Fecha</th>
+                            <th class="px-3 py-2 text-center">Día ciclo</th>
+                            <th class="px-3 py-2 text-left">Evento</th>
+                            <th class="px-3 py-2 text-center">Visibilidad</th>
+                            <th class="px-3 py-2 text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @foreach($calendario as $fila)
+                        <tr class="hover:bg-gray-50 {{ $fila->evento ? 'bg-yellow-50' : '' }}">
+                            <td class="px-3 py-2 font-medium text-gray-700">
+                                {{ \Carbon\Carbon::parse($fila->fecha)->isoFormat('dddd D [de] MMMM') }}
+                            </td>
+                            <td class="px-3 py-2 text-center">
+                                <span class="inline-block bg-blue-100 text-blue-800 font-bold rounded-full px-3 py-0.5">
+                                    D{{ $fila->dia_ciclo }}
+                                </span>
+                            </td>
+                            <td class="px-3 py-2 text-gray-600 italic">
+                                {{ $fila->evento ?: '—' }}
+                            </td>
+                            <td class="px-3 py-2 text-center">
+                                @if($fila->evento)
+                                    @php
+                                        $badges = [
+                                            'todos'       => ['bg-green-100 text-green-800',  'Para todos'],
+                                            'interno'     => ['bg-gray-100 text-gray-600',    'Interno'],
+                                            'docentes'    => ['bg-blue-100 text-blue-800',    'Docentes'],
+                                            'directivas'  => ['bg-purple-100 text-purple-800','Directivas'],
+                                            'padres'      => ['bg-orange-100 text-orange-800','Padres'],
+                                        ];
+                                        [$cls, $lbl] = $badges[$fila->visibilidad] ?? ['bg-gray-100 text-gray-500', $fila->visibilidad];
+                                    @endphp
+                                    <span class="inline-block {{ $cls }} text-xs font-semibold px-2 py-0.5 rounded-full">
+                                        {{ $lbl }}
+                                    </span>
+                                @else
+                                    <span class="text-gray-300">—</span>
+                                @endif
+                            </td>
+                            <td class="px-3 py-2 text-center">
+                                <form method="POST"
+                                      action="{{ route('vigilancias.calendario.eliminar', $fila->id) }}"
+                                      onsubmit="return confirm('¿Eliminar esta fecha?')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit"
+                                        class="text-xs text-red-600 hover:text-red-800 font-medium underline">
+                                        Eliminar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         @endif
     </div>
 

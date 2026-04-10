@@ -53,9 +53,10 @@ class SolicitudCorreccionController extends Controller
         $esSuperior = in_array($profile, ['SuperAd', 'Admin']);
         $anio       = (int) date('Y');
 
-        // Asignaciones del docente para saber qué materias/cursos puede ver
+        // Asignaciones calificables del docente para saber qué materias/cursos puede ver
         $queryAsig = DB::table('ASIGNACION_PCM as a')
             ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
+            ->where('a.calificable', 1)
             ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT');
 
         if (!$esSuperior) {

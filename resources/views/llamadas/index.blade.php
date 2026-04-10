@@ -77,6 +77,9 @@
                     <p class="font-semibold text-gray-800 text-sm">{{ $est->nombre_completo }}</p>
                     <p class="text-xs text-gray-400">
                         Código {{ $est->CODIGO }} · {{ $est->CURSO }}
+                        @if($est->ruta_transporte)
+                            · <span class="text-blue-600 font-medium">🚌 Ruta {{ $est->ruta_transporte }}</span>
+                        @endif
                         @if($est->ASISTENCIA === 'SA')
                             · <span class="text-orange-500 font-medium">Salida anticipada</span>
                         @else

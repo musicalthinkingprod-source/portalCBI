@@ -50,8 +50,19 @@
         </div>
         @else
         <div class="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-xl px-4 py-2 text-sm font-semibold text-blue-800">
-            📅 Día <span class="ml-1 bg-blue-700 text-white rounded-full px-2 py-0.5 text-xs">{{ $diaHoy }}</span>
+            📅 Día académico <span class="ml-1 bg-blue-700 text-white rounded-full px-2 py-0.5 text-xs">{{ $diaHoy }}</span>
         </div>
+
+        {{-- Próxima vigilancia según calendario --}}
+        @if($proximaFechaVig)
+        <div class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-xs text-gray-500">
+            📆 Próxima:
+            <span class="font-semibold text-gray-700">
+                {{ \Carbon\Carbon::parse($proximaFechaVig->fecha)->locale('es')->isoFormat('ddd D MMM') }}
+            </span>
+            · Día <span class="font-bold text-blue-700">{{ $proximaFechaVig->dia_ciclo }}</span>
+        </div>
+        @endif
 
         {{-- Card única según la hora --}}
         <div id="card-d{{ $mostrar }}"
@@ -80,7 +91,7 @@
     </div>
 
     {{-- ── MAPA ── --}}
-    <div class="relative flex-1 rounded-xl overflow-hidden shadow border border-gray-200 min-h-[300px]">
+    <div class="relative flex-1 rounded-xl overflow-hidden shadow border border-gray-200 min-h-[300px] isolate">
         <div id="mapa-vigilancias" class="w-full h-full"></div>
 
         {{-- Leyenda --}}

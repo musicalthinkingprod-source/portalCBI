@@ -46,7 +46,7 @@
     <div class="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
 
         {{-- MAPA --}}
-        <div class="relative flex-1 rounded-xl overflow-hidden shadow border border-gray-200 min-h-[280px]">
+        <div class="relative flex-1 rounded-xl overflow-hidden shadow border border-gray-200 min-h-[280px] isolate">
             <div id="mapa-control" class="w-full h-full"></div>
         </div>
 

@@ -36,6 +36,12 @@
                 <div>
                     <p class="text-xs uppercase tracking-wide opacity-75">CC de facturación</p>
                     <p class="font-bold text-lg leading-tight">{{ number_format($grupo->cc, 0, ',', '.') }}</p>
+                    @if($grupo->nombreTitular)
+                        <p class="font-semibold text-sm mt-0.5">{{ $grupo->nombreTitular }}</p>
+                    @endif
+                    @if($grupo->celTitular)
+                        <p class="text-xs opacity-90 mt-0.5">📞 {{ $grupo->celTitular }}</p>
+                    @endif
                     <p class="text-xs opacity-75 mt-0.5">{{ $grupo->detalle->count() }} estudiante(s)</p>
                 </div>
                 <div class="flex gap-4 flex-wrap">
@@ -55,6 +61,7 @@
             </div>
 
             {{-- Detalle de estudiantes --}}
+            <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 text-gray-500 uppercase text-xs border-b border-gray-200">
                     <tr>
@@ -94,6 +101,7 @@
                     @endforeach
                 </tbody>
             </table>
+            </div>
         </div>
         @endforeach
     </div>

@@ -15,7 +15,7 @@ class VigilanciaController extends Controller
 
         // Día del ciclo que corresponde a hoy según el calendario
         $hoy     = now()->toDateString();
-        $diaHoy  = DB::table('calendario_vigilancias')
+        $diaHoy  = DB::table('calendario_academico')
             ->where('fecha', $hoy)
             ->value('dia_ciclo');
 
@@ -41,13 +41,21 @@ class VigilanciaController extends Controller
             }
         }
 
+        // Próximo día académico con vigilancias para este docente
+        $proximaFechaVig = DB::table('calendario_academico')
+            ->where('fecha', '>', $hoy)
+            ->where('dia_ciclo', '>', 0)
+            ->whereIn('dia_ciclo', array_keys($asignaciones))
+            ->orderBy('fecha')
+            ->first();
+
         // Parsear ambos KML y pasar coordenadas al mapa
         $puntosA = $this->parsearKml('Posiciones Sede A.kml', 'A');
         $puntosB = $this->parsearKml('Posiciones Sede B.kml', 'B');
         $puntosMapa = array_merge($puntosA, $puntosB);
 
         return view('vigilancias.docente', compact(
-            'asignaciones', 'diaHoy', 'anio', 'posHoy', 'puntosMapa'
+            'asignaciones', 'diaHoy', 'anio', 'posHoy', 'puntosMapa', 'proximaFechaVig'
         ));
     }
 
@@ -164,10 +172,15 @@ class VigilanciaController extends Controller
                 ->get();
         }
 
+        $calendario = DB::table('calendario_academico')
+            ->where('anio', $anio)
+            ->orderBy('fecha')
+            ->get();
+
         return view('vigilancias.admin', compact(
             'docentes', 'docentesDestino', 'matriz', 'anio',
             'docentesConAsig', 'verDoc', 'slotsDoc',
-            'puntosMapa', 'posicionDocente'
+            'puntosMapa', 'posicionDocente', 'calendario'
         ));
     }
 
@@ -176,7 +189,7 @@ class VigilanciaController extends Controller
     {
         $anio   = (int) date('Y');
         $hoy    = now()->toDateString();
-        $diaHoy = DB::table('calendario_vigilancias')
+        $diaHoy = DB::table('calendario_academico')
             ->where('fecha', $hoy)
             ->value('dia_ciclo');
 
@@ -397,27 +410,33 @@ class VigilanciaController extends Controller
     public function guardarCalendario(Request $request)
     {
         $request->validate([
-            'fecha'     => 'required|date',
-            'dia_ciclo' => 'required|integer|min:1|max:6',
+            'fecha'       => 'required|date',
+            'dia_ciclo'   => 'required|integer|min:1|max:6',
+            'evento'      => 'nullable|string|max:200',
+            'visibilidad' => 'required|in:todos,interno,docentes,directivas,padres',
         ]);
 
-        $anio  = (int) date('Y', strtotime($request->fecha));
-        $fecha = $request->fecha;
-        $dia   = (int) $request->dia_ciclo;
+        $anio        = (int) date('Y', strtotime($request->fecha));
+        $fecha       = $request->fecha;
+        $dia         = (int) $request->dia_ciclo;
+        $evento      = $request->input('evento');
+        $visibilidad = $request->input('visibilidad', 'interno');
 
-        $existe = DB::table('calendario_vigilancias')->where('fecha', $fecha)->exists();
+        $existe = DB::table('calendario_academico')->where('fecha', $fecha)->exists();
 
         if ($existe) {
-            DB::table('calendario_vigilancias')
+            DB::table('calendario_academico')
                 ->where('fecha', $fecha)
-                ->update(['dia_ciclo' => $dia, 'updated_at' => now()]);
+                ->update(['dia_ciclo' => $dia, 'evento' => $evento, 'visibilidad' => $visibilidad, 'updated_at' => now()]);
         } else {
-            DB::table('calendario_vigilancias')->insert([
-                'fecha'      => $fecha,
-                'dia_ciclo'  => $dia,
-                'anio'       => $anio,
-                'created_at' => now(),
-                'updated_at' => now(),
+            DB::table('calendario_academico')->insert([
+                'fecha'       => $fecha,
+                'dia_ciclo'   => $dia,
+                'anio'        => $anio,
+                'evento'      => $evento,
+                'visibilidad' => $visibilidad,
+                'created_at'  => now(),
+                'updated_at'  => now(),
             ]);
         }
 
@@ -427,7 +446,7 @@ class VigilanciaController extends Controller
     // Elimina una fecha del calendario (admin)
     public function eliminarCalendario(int $id)
     {
-        DB::table('calendario_vigilancias')->where('id', $id)->delete();
+        DB::table('calendario_academico')->where('id', $id)->delete();
         return back()->with('success_cal', 'Fecha eliminada.');
     }
 }

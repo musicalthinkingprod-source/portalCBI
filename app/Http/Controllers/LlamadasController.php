@@ -21,6 +21,7 @@ class LlamadasController extends Controller
                 $join->on('ll.codigo', '=', 'a.CODIGO')
                      ->where('ll.fecha_inasistencia', $fecha);
             })
+            ->leftJoin('listado_transporte as lt', 'lt.codigo', '=', 'a.CODIGO')
             ->where('a.FECHA', $fecha)
             ->whereIn('a.ASISTENCIA', ['A', 'SA'])
             ->select(
@@ -36,7 +37,8 @@ class LlamadasController extends Controller
                 'll.id as llamada_id',
                 'll.motivo',
                 'll.quien_atendio',
-                'll.observacion'
+                'll.observacion',
+                'lt.ruta as ruta_transporte'
             )
             ->orderBy('e.APELLIDO1')
             ->orderBy('e.NOMBRE1')
@@ -93,7 +95,8 @@ class LlamadasController extends Controller
 
         $query = DB::table('llamadas_inasistencia as ll')
             ->join('ESTUDIANTES as e', 'e.CODIGO', '=', 'll.codigo')
-            ->leftJoin('users as u', 'u.id', '=', 'll.registrado_por')
+            ->leftJoin('PRINUSERS as u', 'u.USER', '=', 'll.registrado_por')
+            ->leftJoin('listado_transporte as lt', 'lt.codigo', '=', 'll.codigo')
             ->whereBetween('ll.fecha_inasistencia', [$desde, $hasta])
             ->select(
                 'll.*',
@@ -104,7 +107,8 @@ class LlamadasController extends Controller
                     COALESCE(e.APELLIDO2,'')
                 )) as nombre_completo"),
                 'e.CURSO',
-                'u.name as registrado_nombre'
+                'u.USER as registrado_nombre',
+                'lt.ruta as ruta_transporte'
             );
 
         if ($codigo) {
