@@ -54,6 +54,16 @@
                 <h2 class="text-xl font-semibold text-gray-700">@yield('header', 'Dashboard')</h2>
             </div>
             <div class="flex items-center gap-3">
+                {{-- Búsqueda rápida Ctrl+K --}}
+                <button onclick="abrirPaleta()" id="cmd-btn"
+                    class="hidden sm:flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-400 text-sm rounded-lg px-3 py-1.5 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
+                    </svg>
+                    <span>Buscar...</span>
+                    <kbd class="text-[10px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded font-mono">Ctrl+K</kbd>
+                </button>
+
                 {{-- Campana de notificaciones --}}
                 <div class="relative" id="notif-wrap">
                     <button id="notif-btn" onclick="toggleNotifPanel()"
@@ -124,451 +134,274 @@
         </button>
     </div>
 
-    <nav class="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
+    {{-- Modificado: acordeón por categoría + restructura + filtrado por rol --}}
+    <nav class="flex-1 px-4 py-4 overflow-y-auto" id="sidebar-nav">
 
         @auth
-            @php
-                $profile = auth()->user()->PROFILE;
-                $puedeVerAlumnos = in_array($profile, ['SuperAd', 'Admin', 'Ori']) ||
-                                   str_starts_with($profile, 'Sec');
-            @endphp
+        @php
+            $profile    = auth()->user()->PROFILE;
+            $isDoc      = str_starts_with($profile, 'DOC');
+            $isSec      = str_starts_with($profile, 'Sec');
+            $isContab   = $profile === 'Contab';
+            $isSuperAd  = $profile === 'SuperAd';
+            $isAdmin    = $profile === 'Admin';
+            $isAdminLike = $isSuperAd || $isAdmin;
+            // "Otros" = ConvCor*, Ori, SecC100, SecA, etc. → ven todo excepto Panel de Control
+        @endphp
 
-            {{-- Estudiantes: SuperAd, Admin, Ori, Sec* --}}
-            @if($puedeVerAlumnos)
-            <div>
-                <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Estudiantes</p>
-                <ul class="space-y-1">
-                    <li>
-                        <a href="{{ route('alumnos.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🎒 Consultar estudiante
-                        </a>
-                    </li>
-                    @if(in_array($profile, ['SuperAd', 'Admin']))
-                    <li>
-                        <a href="{{ route('alumnos.create') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            ➕ Matricular estudiante
-                        </a>
-                    </li>
-                    @endif
-                </ul>
-            </div>
-            @endif
+        @php
+        // Helper: renderiza un ítem de menú
+        function sidebarLink($href, $label) {
+            $active = request()->is(ltrim(parse_url($href, PHP_URL_PATH), '/') . '*')
+                   || request()->fullUrlIs($href)
+                   || request()->url() === $href;
+            $cls = $active
+                ? 'flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-700 text-white text-sm font-semibold'
+                : 'flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm';
+            return "<li><a href=\"{$href}\" class=\"{$cls}\">{$label}</a></li>";
+        }
+        @endphp
 
-            {{-- PIAR: SuperAd, Ori y DOC* --}}
-            @if(in_array($profile, ['SuperAd', 'Ori', 'Admin']) || str_starts_with($profile, 'DOC'))
-            <div>
-                <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">PIAR</p>
-                <ul class="space-y-1">
-                    @if(in_array($profile, ['SuperAd', 'Ori']))
-                    <li>
-                        <a href="{{ route('piar.buscar') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📋 Crear / Editar PIAR
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('piar.informe') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📊 Informe Anexo 2
-                        </a>
-                    </li>
-                    @endif
-                    <li>
-                        <a href="{{ route('piar.anexo2.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📝 PIAR Anexo 2
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            @endif
+        {{-- ── Estudiantes: SuperAd, Admin, Ori, Sec* ── --}}
+        @if(!$isDoc && !$isContab && in_array($profile, ['SuperAd','Admin','Ori']) || $isSec)
+        @php $catId = 'estudiantes'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Estudiantes</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('alumnos.index'), '🎒 Consultar estudiante') !!}
+                @if($isAdminLike)
+                {!! sidebarLink(route('alumnos.create'), '➕ Matricular estudiante') !!}
+                @endif
+            </ul>
+        </div>
+        @endif
 
-            {{-- Docentes: perfil DOC*** o SuperAd --}}
-            @if($profile === 'SuperAd' || str_starts_with($profile, 'DOC'))
-            <div>
-                <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Docentes</p>
-                <ul class="space-y-1">
-                    <li>
-                        <a href="{{ route('notas.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📋 Notas
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('notas.v2.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🧪 Planilla ponderada
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('correcciones.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🔧 Corrección de notas
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('english-acq.docente') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🇬🇧 English Acquisition
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('salvavidas.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🏊 Salvavidas
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('derroteros.docente') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📌 Recuperaciones
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('derroteros.horarios') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📅 Horarios recuperación
-                        </a>
-                    </li>
-                    @if(str_starts_with($profile, 'DOC'))
-                    <li>
-                        <a href="{{ route('horarios.mi_horario') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🗓️ Mi Horario
-                        </a>
-                    </li>
-                    @endif
-                    <li>
-                        <a href="{{ route('vigilancias.docente') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🗺️ Vigilancias
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ str_starts_with($profile, 'DOC') ? route('calendario.docente') : route('calendario.index') }}"
-                           class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📆 Calendario académico
-                        </a>
-                    </li>
-                    @if($profile === 'SuperAd')
-                    <li>
-                        <a href="{{ route('horarios.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🗓️ Horarios
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('horarios.disponibilidad') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🟢 Disponibilidad docentes
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('notas.reporte') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📊 Informe de digitación
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('ciclos.informe') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📋 Control de planilla
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('english-acq.informe') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📊 Informe English ACQ
-                        </a>
-                    </li>
-                    @endif
-                </ul>
-            </div>
-            @endif
+        {{-- ── PIAR: SuperAd, Admin, Ori, DOC* ── --}}
+        @if($isAdminLike || $profile === 'Ori' || $isDoc)
+        @php $catId = 'piar'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>PIAR</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                @if($isAdminLike || $profile === 'Ori')
+                {!! sidebarLink(route('piar.buscar'), '📋 Crear / Editar PIAR') !!}
+                {!! sidebarLink(route('piar.informe'), '📊 Informe Anexo 2') !!}
+                @endif
+                {!! sidebarLink(route('piar.anexo2.index'), '📝 PIAR Anexo 2') !!}
+            </ul>
+        </div>
+        @endif
 
-            {{-- Asistencia: oculto para Contab --}}
-            @if($profile !== 'Contab')
-            <div>
-                <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Asistencia</p>
-                <ul class="space-y-1">
-                    @if(str_starts_with($profile, 'Sec') || $profile === 'SuperAd')
-                    <li>
-                        <a href="{{ route('asistencia.registro') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            ✏️ Registrar asistencia
-                        </a>
-                    </li>
-                    @endif
-                    @if($profile === 'SecA' || $profile === 'SuperAd' || $profile === 'Admin')
-                    <li>
-                        <a href="{{ route('asistencia-personal.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            👥 Asistencia personal
-                        </a>
-                    </li>
-                    @if($profile === 'SecA')
-                    <li>
-                        <a href="{{ route('asistencia-personal.registro') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            ✏️ Registrar personal
-                        </a>
-                    </li>
-                    @endif
-                    @endif
-                    <li>
-                        <a href="{{ route('asistencia.reporte') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📋 Reporte de asistencia
-                        </a>
-                    </li>
-                    @if(in_array($profile, ['SuperAd', 'Admin']) || str_starts_with($profile, 'Sec'))
-                    <li>
-                        <a href="{{ route('llamadas.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📞 Llamadas por inasistencia
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('llamadas.reporte') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📊 Reporte de llamadas
-                        </a>
-                    </li>
-                    @endif
-                </ul>
-            </div>
-            @endif
+        {{-- ── Trabajo Docente: SuperAd, DOC* ── --}}
+        @if($isSuperAd || $isDoc)
+        @php $catId = 'trabajo-docente'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Trabajo Docente</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('notas.index'), '📋 Notas') !!}
+                {!! sidebarLink(route('notas.v2.index'), '🧪 Planilla ponderada') !!}
+                {!! sidebarLink(route('english-acq.docente'), '🇬🇧 English Acquisition') !!}
+                {!! sidebarLink(route('salvavidas.index'), '🏊 Salvavidas') !!}
+                {!! sidebarLink(route('derroteros.docente'), '📌 Recuperaciones') !!}
+                {!! sidebarLink(route('derroteros.horarios'), '📅 Horarios recuperación') !!}
+                @if($isDoc)
+                {!! sidebarLink(route('horarios.mi_horario'), '🗓️ Mi Horario') !!}
+                @endif
+            </ul>
+        </div>
+        @endif
 
-            {{-- SecC100: Calendario + Cartera --}}
-            @if($profile === 'SecC100')
-            <div>
-                <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Académico</p>
-                <ul class="space-y-1">
-                    <li>
-                        <a href="{{ route('calendario.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📆 Calendario académico
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('horarios.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🗓️ Horarios
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            <div>
-                <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Cartera</p>
-                <ul class="space-y-1">
-                    <li>
-                        <a href="{{ route('cartera.seguimiento.informe') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📋 Seguimiento cartera
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('cartera.por_cc') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🪪 Cartera por CC
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            @endif
+        {{-- ── Gestión Docente: SuperAd, DOC* ── --}}
+        @if($isSuperAd || $isDoc)
+        @php $catId = 'gestion-docente'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Gestión Docente</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('correcciones.index'), '🔧 Corrección de notas') !!}
+                {!! sidebarLink(route('vigilancias.docente'), '🗺️ Vigilancias') !!}
+                {!! sidebarLink($isDoc ? route('calendario.docente') : route('calendario.index'), '📆 Calendario académico') !!}
+                @if($isSuperAd)
+                {!! sidebarLink(route('horarios.index'), '🗓️ Horarios') !!}
+                {!! sidebarLink(route('horarios.disponibilidad'), '🟢 Disponibilidad docentes') !!}
+                {!! sidebarLink(route('notas.reporte'), '📊 Informe de digitación') !!}
+                {!! sidebarLink(route('ciclos.informe'), '📋 Control de planilla') !!}
+                {!! sidebarLink(route('english-acq.informe'), '📊 Informe English ACQ') !!}
+                @endif
+            </ul>
+        </div>
+        @endif
 
-            {{-- Control: SuperAd, Admin y Contab --}}
-            @if(in_array($profile, ['SuperAd', 'Admin', 'Contab']))
-            <div>
-                <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Control de Pagos</p>
-                <ul class="space-y-1">
-                    <li>
-                        <a href="{{ route('control.estudiante') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🔍 Consultar estudiante
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('pagos.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            💳 Pagos
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('facturacion.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🧾 Facturación
-                        </a>
-                    </li>
-                    @if($profile !== 'Contab')
-                    <li>
-                        <a href="{{ route('facturacion.auto') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            ⚡ Facturación automática
-                        </a>
-                    </li>
-                    @endif
-                    <li>
-                        <a href="{{ route('cartera.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📊 Informe de cartera
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('cartera.deudores') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🔴 Cartera / Anticipos
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('cartera.seguimiento.informe') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📋 Seguimiento cartera
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('cartera.por_cc') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🪪 Cartera por CC
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('parametros.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            ⚙️ Parametros facturacion
-                        </a>
-                    </li>
-                    @if($profile !== 'Contab')
-                    <li>
-                        <a href="{{ route('world-office.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📄 Plantilla World Office
-                        </a>
-                    </li>
-                    @endif
-                </ul>
-            </div>
-            @endif
+        {{-- ── Asistencia: todos excepto Contab ── --}}
+        @if(!$isContab)
+        @php $catId = 'asistencia'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Asistencia</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                @if($isSec || $isSuperAd)
+                {!! sidebarLink(route('asistencia.registro'), '✏️ Registrar asistencia') !!}
+                @endif
+                @if($profile === 'SecA' || $isAdminLike)
+                {!! sidebarLink(route('asistencia-personal.index'), '👥 Asistencia personal') !!}
+                @endif
+                @if($profile === 'SecA')
+                {!! sidebarLink(route('asistencia-personal.registro'), '✏️ Registrar personal') !!}
+                @endif
+                @if(!$isDoc)
+                {!! sidebarLink(route('asistencia.reporte'), '📋 Reporte de asistencia') !!}
+                @endif
+                @if($isAdminLike || $isSec)
+                {!! sidebarLink(route('llamadas.index'), '📞 Llamadas por inasistencia') !!}
+                {!! sidebarLink(route('llamadas.reporte'), '📊 Reporte de llamadas') !!}
+                @endif
+            </ul>
+        </div>
+        @endif
 
-            {{-- Nómina: SuperAd --}}
-            @if($profile === 'SuperAd')
-            <div>
-                <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Nómina</p>
-                <ul class="space-y-1">
-                    <li>
-                        <a href="{{ route('nomina.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            👥 Gestión de personal
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            @endif
+        {{-- ── Control de Pagos: SuperAd, Admin, Contab, SecC100 ── --}}
+        @if(in_array($profile, ['SuperAd','Admin','Contab','SecC100']))
+        @php $catId = 'control-pagos'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Control de Pagos</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                @if($profile !== 'SecC100')
+                {!! sidebarLink(route('control.estudiante'), '🔍 Consultar estudiante') !!}
+                {!! sidebarLink(route('pagos.index'), '💳 Pagos') !!}
+                {!! sidebarLink(route('facturacion.index'), '🧾 Facturación') !!}
+                @if(!$isContab)
+                {!! sidebarLink(route('facturacion.auto'), '⚡ Facturación automática') !!}
+                @endif
+                {!! sidebarLink(route('cartera.index'), '📊 Informe de cartera') !!}
+                {!! sidebarLink(route('cartera.deudores'), '🔴 Cartera / Anticipos') !!}
+                @if(!$isContab)
+                {!! sidebarLink(route('world-office.index'), '📄 Plantilla World Office') !!}
+                @endif
+                {!! sidebarLink(route('parametros.index'), '⚙️ Parámetros facturación') !!}
+                @endif
+                {!! sidebarLink(route('cartera.seguimiento.informe'), '📋 Seguimiento cartera') !!}
+                {!! sidebarLink(route('cartera.por_cc'), '🪪 Cartera por CC') !!}
+            </ul>
+        </div>
+        @endif
 
-            {{-- Circulares: SuperAd --}}
-            @if($profile === 'SuperAd')
-            <div>
-                <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Comunicaciones</p>
-                <ul class="space-y-1">
-                    <li>
-                        <a href="{{ route('circulares.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📄 Circulares
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            @endif
+        {{-- ── Seguimiento Académico: SuperAd, Admin, Sec*, DOC* ── --}}
+        @if($isAdminLike || $isSec || $isDoc)
+        @php $catId = 'seguimiento-academico'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Seguimiento Académico</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                @if($isAdminLike || $isSec)
+                {!! sidebarLink(route('derroteros.index'), '📊 Informe derroteros') !!}
+                {!! sidebarLink(route('salvavidas.reporte'), '📊 Reporte salvavidas') !!}
+                @endif
+                {!! sidebarLink(route('informes.boletin'), '📋 Boletines') !!}
+            </ul>
+        </div>
+        @endif
 
-            {{-- Transporte: SuperAd, Admin y Sec* --}}
-            @if(in_array($profile, ['SuperAd', 'Admin']) || str_starts_with($profile, 'Sec'))
-            <div>
-                <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Transporte</p>
-                <ul class="space-y-1">
-                    <li>
-                        <a href="{{ route('rutas.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🚌 Listado de rutas
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            @endif
+        {{-- ── SecC100: Académico ── --}}
+        @if($profile === 'SecC100')
+        @php $catId = 'academico'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Académico</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('calendario.index'), '📆 Calendario académico') !!}
+                {!! sidebarLink(route('horarios.index'), '🗓️ Horarios') !!}
+            </ul>
+        </div>
+        @endif
 
-            {{-- Seguimiento Académico: SuperAd, Admin y Sec* --}}
-            @if(in_array($profile, ['SuperAd', 'Admin']) || str_starts_with($profile, 'Sec'))
-            <div>
-                <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Seguimiento Académico</p>
-                <ul class="space-y-1">
-                    <li>
-                        <a href="{{ route('derroteros.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📊 Informe derroteros
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('salvavidas.reporte') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📊 Reporte salvavidas
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('derroteros.horarios') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📅 Horarios recuperación
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            @endif
+        {{-- ── ConvCor28: Vigilancias ── --}}
+        @if($profile === 'ConvCor28')
+        @php $catId = 'vigilancias'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Vigilancias</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('vigilancias.control'), '🔍 Control de vigilancias') !!}
+            </ul>
+        </div>
+        @endif
 
-            {{-- Informes Académicos --}}
-            @if(in_array($profile, ['SuperAd', 'Admin']) || str_starts_with($profile, 'DOC'))
-            <div>
-                <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Informes Académicos</p>
-                <ul class="space-y-1">
-                    <li>
-                        <a href="{{ route('informes.boletin') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📋 Boletines
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            @endif
-
-            {{-- Control de vigilancias: ConvCor28 --}}
-            @if($profile === 'ConvCor28')
-            <div>
-                <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Vigilancias</p>
-                <ul class="space-y-1">
-                    <li>
-                        <a href="{{ route('vigilancias.control') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🔍 Control de vigilancias
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            @endif
-
-            @if($profile === 'SuperAd')
-            <div>
-                <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Panel de Control</p>
-                <ul class="space-y-1">
-                    <li>
-                        <a href="{{ route('ciclos.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🗂️ Control de ciclos
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('admin.usuarios') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            👤 Gestión de usuarios
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('admin.directores') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🏫 Directores de grupo
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('admin.asignaciones') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🔄 Asignaciones
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('admin.fechas') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📅 Fechas
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('listados.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🗂️ Listados especiales
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('vigilancias.admin') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🗺️ Gestión de vigilancias
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('asistencia-personal.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            👥 Asistencia personal
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('asistencia-personal.permisos') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            📋 Permisos
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('asistencia-personal.reemplazos') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🔄 Reemplazos
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('vigilancias.control') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                            🔍 Control de vigilancias
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            @endif
+        {{-- ── Panel de Control: solo SuperAd ── --}}
+        @if($isSuperAd)
+        @php $catId = 'panel-control'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Panel de Control</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('ciclos.index'), '🗂️ Control de ciclos') !!}
+                {!! sidebarLink(route('admin.usuarios'), '👤 Gestión de usuarios') !!}
+                {!! sidebarLink(route('admin.directores'), '🏫 Directores de grupo') !!}
+                {!! sidebarLink(route('admin.asignaciones'), '🔄 Asignaciones') !!}
+                {!! sidebarLink(route('admin.fechas'), '📅 Fechas') !!}
+                {!! sidebarLink(route('listados.index'), '🗂️ Listados especiales') !!}
+                {!! sidebarLink(route('vigilancias.admin'), '🗺️ Gestión de vigilancias') !!}
+                {!! sidebarLink(route('vigilancias.control'), '🔍 Control de vigilancias') !!}
+                {!! sidebarLink(route('asistencia-personal.permisos'), '📋 Permisos') !!}
+                {!! sidebarLink(route('asistencia-personal.reemplazos'), '🔄 Reemplazos') !!}
+                {!! sidebarLink(route('nomina.index'), '👥 Gestión de personal') !!}
+                {!! sidebarLink(route('circulares.index'), '📄 Circulares') !!}
+                {!! sidebarLink(route('rutas.index'), '🚌 Listado de rutas') !!}
+            </ul>
+        </div>
+        @endif
 
         @endauth
 
@@ -652,7 +485,187 @@
     });
 </script>
 
+<script>
+// ── Acordeón del sidebar ──────────────────────────────────────────────────
+function toggleCategory(titleEl) {
+    var ul      = titleEl.nextElementSibling;
+    var chevron = titleEl.querySelector('.cat-chevron');
+    var catId   = titleEl.closest('.sidebar-cat').dataset.cat;
+    var isOpen  = ul.style.maxHeight && ul.style.maxHeight !== '0px';
+
+    if (isOpen) {
+        ul.style.maxHeight = '0px';
+        chevron.style.transform = 'rotate(0deg)';
+    } else {
+        ul.style.maxHeight = ul.scrollHeight + 'px';
+        chevron.style.transform = 'rotate(180deg)';
+    }
+
+    var saved = JSON.parse(localStorage.getItem('sidebarCategories') || '{}');
+    saved[catId] = !isOpen;
+    localStorage.setItem('sidebarCategories', JSON.stringify(saved));
+}
+
+// Al cargar: restaurar estado guardado y abrir la categoría activa
+document.addEventListener('DOMContentLoaded', function () {
+    var saved      = JSON.parse(localStorage.getItem('sidebarCategories') || '{}');
+    var currentUrl = window.location.href;
+
+    document.querySelectorAll('.sidebar-cat').forEach(function (cat) {
+        var catId   = cat.dataset.cat;
+        var ul      = cat.querySelector('.cat-body');
+        var chevron = cat.querySelector('.cat-chevron');
+        var titleEl = cat.querySelector('p');
+
+        // ¿Contiene el enlace activo?
+        var hasActive = Array.from(ul.querySelectorAll('a')).some(function (a) {
+            return currentUrl.startsWith(a.href) && a.href !== window.location.origin + '/';
+        });
+
+        var shouldOpen = hasActive || saved[catId] === true;
+
+        if (shouldOpen) {
+            ul.style.maxHeight = ul.scrollHeight + 'px';
+            chevron.style.transform = 'rotate(180deg)';
+        }
+    });
+});
+
+// ── Command Palette (Ctrl+K) ──────────────────────────────────────────────
+(function () {
+    var overlay   = document.getElementById('cmd-overlay');
+    var input     = document.getElementById('cmd-input');
+    var list      = document.getElementById('cmd-list');
+    var modules   = [];
+    var selected  = -1;
+
+    // Indexar módulos desde el DOM del sidebar al cargar
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.sidebar-cat').forEach(function (cat) {
+            var category = cat.querySelector('p > span') ? cat.querySelector('p > span').textContent.trim()
+                         : cat.querySelector('p').textContent.trim();
+            cat.querySelectorAll('ul a').forEach(function (a) {
+                modules.push({
+                    label:    a.textContent.trim(),
+                    href:     a.href,
+                    category: category
+                });
+            });
+        });
+    });
+
+    window.abrirPaleta = function () {
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+        input.value = '';
+        selected = -1;
+        renderList('');
+        setTimeout(function () { input.focus(); }, 50);
+    };
+
+    window.cerrarPaleta = function () {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex');
+    };
+
+    function renderList(query) {
+        var q = query.toLowerCase().trim();
+        var results = q === ''
+            ? modules.slice(0, 12)
+            : modules.filter(function (m) {
+                return m.label.toLowerCase().includes(q) || m.category.toLowerCase().includes(q);
+              }).slice(0, 12);
+
+        if (results.length === 0) {
+            list.innerHTML = '<li class="px-4 py-6 text-center text-sm text-gray-400 italic">Sin resultados.</li>';
+            selected = -1;
+            return;
+        }
+
+        list.innerHTML = results.map(function (m, i) {
+            return '<li><a href="' + m.href + '" class="cmd-item flex items-center justify-between px-4 py-2.5 hover:bg-blue-50 cursor-pointer" data-idx="' + i + '">'
+                + '<span class="text-sm text-gray-800">' + escHtml(m.label) + '</span>'
+                + '<span class="text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full ml-2 shrink-0">' + escHtml(m.category) + '</span>'
+                + '</a></li>';
+        }).join('');
+
+        selected = -1;
+    }
+
+    function escHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function setSelected(idx) {
+        var items = list.querySelectorAll('.cmd-item');
+        items.forEach(function (el) { el.classList.remove('bg-blue-50'); el.style.background=''; });
+        if (idx >= 0 && idx < items.length) {
+            selected = idx;
+            items[idx].classList.add('bg-blue-50');
+            items[idx].scrollIntoView({ block: 'nearest' });
+        }
+    }
+
+    input.addEventListener('input', function () {
+        renderList(input.value);
+        setSelected(0);
+    });
+
+    input.addEventListener('keydown', function (e) {
+        var items = list.querySelectorAll('.cmd-item');
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setSelected(Math.min(selected + 1, items.length - 1));
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setSelected(Math.max(selected - 1, 0));
+        } else if (e.key === 'Enter') {
+            if (selected >= 0 && items[selected]) {
+                window.location.href = items[selected].href;
+            }
+        } else if (e.key === 'Escape') {
+            cerrarPaleta();
+        }
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            if (overlay.classList.contains('hidden')) {
+                abrirPaleta();
+            } else {
+                cerrarPaleta();
+            }
+        }
+        if (e.key === 'Escape' && !overlay.classList.contains('hidden')) {
+            cerrarPaleta();
+        }
+    });
+})();
+</script>
+
 @stack('scripts')
+
+{{-- ── Modal Command Palette (Ctrl+K) ── --}}
+<div id="cmd-overlay" class="fixed inset-0 bg-black/50 z-[3000] hidden items-start justify-center pt-24 px-4"
+     onclick="if(event.target===this)cerrarPaleta()">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+        <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
+            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
+            </svg>
+            <input id="cmd-input" type="text" placeholder="Buscar módulo..."
+                class="flex-1 outline-none text-sm text-gray-700 placeholder-gray-400 bg-transparent">
+            <kbd class="text-[10px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded font-mono flex-shrink-0">Esc</kbd>
+        </div>
+        <ul id="cmd-list" class="max-h-72 overflow-y-auto py-2"></ul>
+        <div class="px-4 py-2 border-t border-gray-50 flex gap-4 text-[10px] text-gray-400">
+            <span><kbd class="bg-gray-100 px-1 rounded">↑↓</kbd> navegar</span>
+            <span><kbd class="bg-gray-100 px-1 rounded">Enter</kbd> ir</span>
+            <span><kbd class="bg-gray-100 px-1 rounded">Esc</kbd> cerrar</span>
+        </div>
+    </div>
+</div>
 
 {{-- ── Sistema de notificaciones en tiempo real (polling) ── --}}
 <script>

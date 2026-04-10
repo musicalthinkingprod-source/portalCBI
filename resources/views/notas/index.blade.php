@@ -20,7 +20,7 @@
 
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Materia</label>
-                    <select name="materia" id="sel-materia"
+                    <select name="materia" id="sel-materia" data-remember="notas_materia"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">— Selecciona una materia —</option>
                         @foreach($materias as $mat)
@@ -33,7 +33,7 @@
 
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Curso</label>
-                    <select name="curso" id="sel-curso"
+                    <select name="curso" id="sel-curso" data-remember="notas_curso"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         {{ !$matSelec ? 'disabled' : '' }}>
                         <option value="">— Selecciona un curso —</option>

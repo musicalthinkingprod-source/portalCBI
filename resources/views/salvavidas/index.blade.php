@@ -17,7 +17,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Período</label>
-                    <select name="periodo" id="sel-periodo"
+                    <select name="periodo" id="sel-periodo" data-remember="salvavidas_periodo"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         @foreach([1,2,3,4] as $p)
                             <option value="{{ $p }}" {{ $periodoSelec == $p ? 'selected' : '' }}>
@@ -29,7 +29,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Materia</label>
-                    <select name="materia" id="sel-materia"
+                    <select name="materia" id="sel-materia" data-remember="salvavidas_materia"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">— Selecciona una materia —</option>
                         @foreach($materias as $mat)
@@ -41,7 +41,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Curso</label>
-                    <select name="curso" id="sel-curso"
+                    <select name="curso" id="sel-curso" data-remember="salvavidas_curso"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         {{ !$matSelec ? 'disabled' : '' }}>
                         <option value="">— Selecciona un curso —</option>

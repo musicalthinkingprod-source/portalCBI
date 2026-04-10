@@ -50,9 +50,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth'])->name('dashboard');
+Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
+    ->middleware(['auth'])->name('dashboard');
 
 Route::post('/verificar-padre', [PadreVerificacionController::class, 'verificar'])->name('padre.verificar');
 

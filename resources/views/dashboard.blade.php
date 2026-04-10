@@ -1,10 +1,213 @@
+{{-- Modificado: Dashboard con tarjetas de resumen con datos reales --}}
 @extends('layouts.app-sidebar')
 
 @section('header', 'Dashboard')
 
 @section('slot')
-    <div class="bg-white rounded-xl shadow p-6">
-        <h3 class="text-2xl font-bold text-blue-800 mb-2">¡Bienvenido!</h3>
-        <p class="text-gray-500">Has iniciado sesión correctamente en el Portal CBI.</p>
+@php
+    Carbon\Carbon::setLocale('es');
+
+    $visColors = [
+        'todos'      => ['border' => '#16a34a', 'badge_bg' => '#dcfce7', 'badge_text' => '#166534'],
+        'interno'    => ['border' => '#94a3b8', 'badge_bg' => '#f1f5f9', 'badge_text' => '#475569'],
+        'docentes'   => ['border' => '#3b82f6', 'badge_bg' => '#dbeafe', 'badge_text' => '#1e40af'],
+        'directivas' => ['border' => '#8b5cf6', 'badge_bg' => '#ede9fe', 'badge_text' => '#5b21b6'],
+        'padres'     => ['border' => '#f97316', 'badge_bg' => '#ffedd5', 'badge_text' => '#9a3412'],
+    ];
+
+    $meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+@endphp
+
+<div class="flex flex-col gap-6">
+
+    {{-- Saludo --}}
+    <div>
+        <h2 class="text-xl font-bold text-gray-800">Hola, {{ auth()->user()->USER }} 👋</h2>
+        <p class="text-sm text-gray-500 mt-0.5">
+            {{ now()->isoFormat('dddd D [de] MMMM [de] YYYY') }}
+            @if($hoy && $hoy->dia_ciclo > 0)
+                · <span class="text-blue-600 font-semibold">Día académico {{ $hoy->dia_ciclo }}</span>
+            @endif
+        </p>
     </div>
+
+    {{-- ── Fila de KPIs ── --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+
+        {{-- Cartera --}}
+        @if($cartera)
+        <div class="bg-white rounded-xl shadow p-5 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Cartera</span>
+                <span class="text-2xl">💰</span>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-gray-800">${{ number_format($cartera['pct'], 1) }}%</div>
+                <div class="text-xs text-gray-500">% de recaudo</div>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-1.5">
+                <div class="bg-green-500 h-1.5 rounded-full" style="width:{{ min($cartera['pct'], 100) }}%"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-1 text-xs text-gray-500">
+                <div>Facturado: <span class="font-semibold text-gray-700">${{ number_format($cartera['facturado'] / 1000000, 1) }}M</span></div>
+                <div>Recaudo: <span class="font-semibold text-green-600">${{ number_format($cartera['recaudado'] / 1000000, 1) }}M</span></div>
+                <div class="col-span-2">Pendiente: <span class="font-semibold text-red-500">${{ number_format($cartera['pendiente'] / 1000000, 1) }}M</span></div>
+            </div>
+            <a href="{{ route('cartera.index') }}" class="text-xs text-blue-600 hover:underline mt-auto">Ver más →</a>
+        </div>
+        @endif
+
+        {{-- Digitación de notas --}}
+        @if($notas)
+        <div class="bg-white rounded-xl shadow p-5 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Digitación notas</span>
+                <span class="text-2xl">📋</span>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-gray-800">{{ $notas['pct'] }}%</div>
+                <div class="text-xs text-gray-500">Período {{ $notas['periodo'] }}</div>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-1.5">
+                <div class="h-1.5 rounded-full {{ $notas['pct'] >= 80 ? 'bg-green-500' : ($notas['pct'] >= 50 ? 'bg-yellow-400' : 'bg-red-400') }}"
+                    style="width:{{ $notas['pct'] }}%"></div>
+            </div>
+            <div class="text-xs text-gray-500">
+                <span class="font-semibold text-gray-700">{{ $notas['con_notas'] }}</span> de
+                <span class="font-semibold text-gray-700">{{ $notas['total'] }}</span> asignaciones con notas
+            </div>
+            <a href="{{ route('notas.reporte') }}" class="text-xs text-blue-600 hover:underline mt-auto">Ver más →</a>
+        </div>
+        @endif
+
+        {{-- Asistencia del día --}}
+        @if($asistencia)
+        <div class="bg-white rounded-xl shadow p-5 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Asistencia hoy</span>
+                <span class="text-2xl">✅</span>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-gray-800">{{ $asistencia['pct'] }}%</div>
+                <div class="text-xs text-gray-500">{{ now()->isoFormat('D MMM') }}</div>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-1.5">
+                <div class="bg-blue-500 h-1.5 rounded-full" style="width:{{ $asistencia['pct'] }}%"></div>
+            </div>
+            <div class="text-xs text-gray-500">
+                <span class="font-semibold text-gray-700">{{ $asistencia['registrados'] }}</span> de
+                <span class="font-semibold text-gray-700">{{ $asistencia['total'] }}</span> estudiantes registrados
+            </div>
+            <a href="{{ route('asistencia.reporte') }}" class="text-xs text-blue-600 hover:underline mt-auto">Ver más →</a>
+        </div>
+        @endif
+
+        {{-- Calendario hoy --}}
+        <div class="bg-white rounded-xl shadow p-5 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Hoy</span>
+                <span class="text-2xl">📆</span>
+            </div>
+            @if($hoy && $hoy->dia_ciclo > 0)
+                <div>
+                    <div class="text-2xl font-bold text-blue-700">Día {{ $hoy->dia_ciclo }}</div>
+                    <div class="text-xs text-gray-500">{{ now()->isoFormat('dddd') }}</div>
+                </div>
+            @else
+                <div>
+                    <div class="text-2xl font-bold text-gray-400">—</div>
+                    <div class="text-xs text-gray-400">Día no académico</div>
+                </div>
+            @endif
+            @if($hoy && $hoy->evento)
+                <div class="text-xs bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 text-yellow-800">
+                    📌 {{ $hoy->evento }}
+                </div>
+            @endif
+            @php
+                $calRoute = str_starts_with($profile, 'DOC') ? route('calendario.docente') : route('calendario.index');
+            @endphp
+            <a href="{{ $calRoute }}" class="text-xs text-blue-600 hover:underline mt-auto">Ver más →</a>
+        </div>
+
+    </div>
+
+    {{-- ── Fila inferior: Digitación detalle + Próximos eventos ── --}}
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+
+        {{-- Próximos eventos --}}
+        <div class="bg-white rounded-xl shadow p-6">
+            <h3 class="text-sm font-bold text-gray-700 mb-4">Próximos eventos</h3>
+            @if($proximosEventos->isEmpty())
+                <p class="text-sm text-gray-400 italic">Sin eventos próximos registrados.</p>
+            @else
+                <ul class="flex flex-col gap-3">
+                    @foreach($proximosEventos as $ev)
+                    @php
+                        $vc = $visColors[$ev->visibilidad] ?? $visColors['interno'];
+                        $esHoy = $ev->fecha === today()->toDateString();
+                    @endphp
+                    <li class="flex items-start gap-3 border-l-4 pl-3"
+                        style="border-color:{{ $vc['border'] }}">
+                        <div class="flex-1 min-w-0">
+                            <div class="text-xs font-semibold text-gray-400">
+                                {{ \Carbon\Carbon::parse($ev->fecha)->isoFormat('ddd D MMM') }}
+                                @if($ev->dia_ciclo > 0)
+                                    · <span class="text-blue-500">Día {{ $ev->dia_ciclo }}</span>
+                                @endif
+                                @if($esHoy)
+                                    <span class="ml-1 bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">HOY</span>
+                                @endif
+                            </div>
+                            <div class="text-sm text-gray-700 mt-0.5">{{ $ev->evento }}</div>
+                        </div>
+                    </li>
+                    @endforeach
+                </ul>
+            @endif
+            <a href="{{ $calRoute }}" class="text-xs text-blue-600 hover:underline mt-4 block">Ver calendario completo →</a>
+        </div>
+
+        {{-- Accesos rápidos --}}
+        <div class="bg-white rounded-xl shadow p-6">
+            <h3 class="text-sm font-bold text-gray-700 mb-4">Accesos rápidos</h3>
+            <div class="grid grid-cols-2 gap-2">
+                @if($notas !== null || str_starts_with($profile, 'DOC'))
+                <a href="{{ route('notas.index') }}"
+                   class="flex items-center gap-2 px-3 py-3 bg-blue-50 hover:bg-blue-100 rounded-xl text-sm text-blue-800 font-medium transition">
+                    📋 Notas
+                </a>
+                @endif
+                @if(str_starts_with($profile, 'Sec') || in_array($profile, ['SuperAd','Admin']))
+                <a href="{{ route('asistencia.registro') }}"
+                   class="flex items-center gap-2 px-3 py-3 bg-green-50 hover:bg-green-100 rounded-xl text-sm text-green-800 font-medium transition">
+                    ✅ Registrar asistencia
+                </a>
+                @endif
+                @if($cartera !== null)
+                <a href="{{ route('pagos.index') }}"
+                   class="flex items-center gap-2 px-3 py-3 bg-purple-50 hover:bg-purple-100 rounded-xl text-sm text-purple-800 font-medium transition">
+                    💳 Pagos
+                </a>
+                <a href="{{ route('facturacion.index') }}"
+                   class="flex items-center gap-2 px-3 py-3 bg-orange-50 hover:bg-orange-100 rounded-xl text-sm text-orange-800 font-medium transition">
+                    🧾 Facturación
+                </a>
+                @endif
+                @if($profile === 'SuperAd')
+                <a href="{{ route('asistencia-personal.reemplazos') }}"
+                   class="flex items-center gap-2 px-3 py-3 bg-yellow-50 hover:bg-yellow-100 rounded-xl text-sm text-yellow-800 font-medium transition">
+                    🔄 Reemplazos
+                </a>
+                <a href="{{ route('admin.usuarios') }}"
+                   class="flex items-center gap-2 px-3 py-3 bg-gray-50 hover:bg-gray-100 rounded-xl text-sm text-gray-700 font-medium transition">
+                    👤 Usuarios
+                </a>
+                @endif
+            </div>
+        </div>
+
+    </div>
+
+</div>
 @endsection
