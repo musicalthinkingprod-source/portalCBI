@@ -72,22 +72,25 @@ class Horario extends Model
      */
     public static function gridPorDocente(string $codigoDoc): array
     {
+        // Materias regulares.
+        // Excluye Proyecto (CODIGO_MAT=31) que se trata por separado.
+        // Usa SUBSTRING_INDEX para manejar subgrupos como '7A-1' → se comparan
+        // contra el curso base '7A' en HORARIOS, y se muestra el subgrupo real.
         $rows = DB::table('HORARIOS as h')
             ->join('ASIGNACION_PCM as a', function ($join) use ($codigoDoc) {
                 $join->on('a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
-                     ->on('a.CURSO', '=', 'h.CURSO')
+                     ->on(DB::raw("SUBSTRING_INDEX(a.CURSO, '-', 1)"), '=', 'h.CURSO')
                      ->where('a.CODIGO_DOC', $codigoDoc);
             })
             ->leftJoin('CODIGOSMAT as cm', 'cm.CODIGO_MAT', '=', 'h.CODIGO_MAT')
-            ->select('h.DIA', 'h.HORA', 'h.CURSO', 'h.CODIGO_MAT', 'cm.NOMBRE_MAT')
+            ->whereNotIn('h.CODIGO_MAT', [31, 200])
+            ->select('h.DIA', 'h.HORA', 'a.CURSO', 'h.CODIGO_MAT', 'cm.NOMBRE_MAT')
             ->orderBy('h.HORA')
             ->orderBy('h.DIA')
             ->get();
 
         $grid = [];
         foreach ($rows as $row) {
-            // Si hay varias asignaciones en el mismo bloque, agrupar
-            $key = $row->HORA . '_' . $row->DIA;
             if (!isset($grid[$row->HORA][$row->DIA])) {
                 $grid[$row->HORA][$row->DIA] = [];
             }
@@ -96,6 +99,98 @@ class Horario extends Model
                 'materia' => $row->NOMBRE_MAT ?? '—',
             ];
         }
+
+        // Artes (25) y Música (26) en bachillerato: en HORARIOS aparecen como
+        // CODIGO_MAT=70 ('Expresión Artística'), no como 25 ni 26. Se buscan
+        // los slots de CODIGO_MAT=70 para los cursos asignados al docente.
+        $asigArtesMusica = DB::table('ASIGNACION_PCM')
+            ->whereIn('CODIGO_MAT', [25, 26])
+            ->where('CODIGO_DOC', $codigoDoc)
+            ->get(['CODIGO_MAT', 'CURSO']);
+
+        // Pre-cargar nombres para evitar N+1
+        $nombresAM = DB::table('CODIGOSMAT')
+            ->whereIn('CODIGO_MAT', [25, 26])
+            ->pluck('NOMBRE_MAT', 'CODIGO_MAT');
+
+        // Pre-cargar todos los slots de CODIGO_MAT=70 para los cursos base del docente
+        $cursosBaseAM = $asigArtesMusica->map(fn($a) => explode('-', $a->CURSO)[0])->unique()->values()->toArray();
+        $slotsAM70 = !empty($cursosBaseAM)
+            ? DB::table('HORARIOS')->where('CODIGO_MAT', 70)
+                ->whereIn('CURSO', $cursosBaseAM)
+                ->get(['CURSO', 'DIA', 'HORA'])
+                ->groupBy('CURSO')
+            : collect();
+
+        foreach ($asigArtesMusica as $asig) {
+            $cursoBase = explode('-', $asig->CURSO)[0]; // '7A-1' → '7A'
+            $nombreMat = $nombresAM[$asig->CODIGO_MAT] ?? '—';
+
+            $slots = $slotsAM70->get($cursoBase, collect());
+
+            foreach ($slots as $slot) {
+                if (!isset($grid[$slot->HORA][$slot->DIA])) {
+                    $grid[$slot->HORA][$slot->DIA] = [];
+                }
+                // Evitar duplicado si ya existe la misma combinación
+                $yaExiste = collect($grid[$slot->HORA][$slot->DIA])
+                    ->contains(fn($c) => $c['curso'] === $asig->CURSO && $c['materia'] === $nombreMat);
+                if (!$yaExiste) {
+                    $grid[$slot->HORA][$slot->DIA][] = [
+                        'curso'   => $asig->CURSO,
+                        'materia' => $nombreMat,
+                    ];
+                }
+            }
+        }
+
+        // Proyecto (CODIGO_MAT=31): la asignación usa el nombre del grupo (GP1, GP2…)
+        // como CURSO en ASIGNACION_PCM, así que se trata por separado.
+        $grupoProyecto = DB::table('ASIGNACION_PCM')
+            ->where('CODIGO_DOC', $codigoDoc)
+            ->where('CODIGO_MAT', 31)
+            ->value('CURSO'); // p.ej. 'GP1'
+
+        if ($grupoProyecto) {
+            $slots = DB::table('HORARIOS')
+                ->where('CODIGO_MAT', 31)
+                ->select('DIA', 'HORA')
+                ->distinct()
+                ->orderBy('HORA')
+                ->orderBy('DIA')
+                ->get();
+
+            foreach ($slots as $slot) {
+                if (!isset($grid[$slot->HORA][$slot->DIA])) {
+                    $grid[$slot->HORA][$slot->DIA] = [];
+                }
+                $grid[$slot->HORA][$slot->DIA][] = [
+                    'curso'   => $grupoProyecto,
+                    'materia' => 'Proyecto',
+                ];
+            }
+        }
+
+        // Atención a Padres (CODIGO_MAT=200, no calificable).
+        // Los slots se almacenan en HORARIOS con CURSO=CODIGO_DOC para que
+        // cada docente tenga sus propios bloques sin interferir con otros.
+        $slotsAP = DB::table('HORARIOS')
+            ->where('CODIGO_MAT', 200)
+            ->where('CURSO', $codigoDoc)
+            ->orderBy('HORA')
+            ->orderBy('DIA')
+            ->get(['DIA', 'HORA']);
+
+        foreach ($slotsAP as $slot) {
+            if (!isset($grid[$slot->HORA][$slot->DIA])) {
+                $grid[$slot->HORA][$slot->DIA] = [];
+            }
+            $grid[$slot->HORA][$slot->DIA][] = [
+                'curso'   => 'Padres',
+                'materia' => 'Atención a Padres',
+            ];
+        }
+
         return $grid;
     }
 

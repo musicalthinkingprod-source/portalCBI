@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\ControlFechasController;
 
 class PiarCaractController extends Controller
 {
@@ -48,8 +49,11 @@ class PiarCaractController extends Controller
                 'e.CODIGO', 'e.NOMBRE1', 'e.NOMBRE2', 'e.APELLIDO1', 'e.APELLIDO2',
                 'e.GRADO', 'e.CURSO', 'pd.DIAGNOSTICO',
                 'a.CODIGO_MAT', 'm.NOMBRE_MAT',
-                DB::raw('CASE WHEN pc.CODIGO_ALUM IS NOT NULL THEN 1 ELSE 0 END as CARACT_MAT_OK'),
-                DB::raw('CASE WHEN pm.CODIGO_ALUM IS NOT NULL THEN 1 ELSE 0 END as AJUSTES_OK')
+                // Alerta basada en contenido diligenciado, no solo en existencia del registro
+                DB::raw("CASE WHEN pc.CARACTERIZACION IS NOT NULL AND pc.CARACTERIZACION != '' THEN 1 ELSE 0 END as CARACT_MAT_OK"),
+                DB::raw("CASE WHEN pm.BARRERAS IS NOT NULL AND pm.BARRERAS != '' THEN 1 ELSE 0 END as AJUSTES_OK"),
+                DB::raw("COALESCE(MAX(pc.ESTADO), 'pendiente') as CARACT_MAT_ESTADO"),
+                DB::raw("COALESCE(MAX(pm.ESTADO), 'pendiente') as AJUSTES_ESTADO")
             )
             ->where('e.ESTADO', 'MATRICULADO')
             ->when($esDocente, fn($q) => $q->where('a.CODIGO_DOC', $codigoDoc))
@@ -93,16 +97,23 @@ class PiarCaractController extends Controller
             $filas = $filas->sortBy(fn($rows) => $rows->first()->APELLIDO1 . $rows->first()->NOMBRE1);
         }
 
-        // Caracterizaciones de director ya guardadas (códigos de alumnos)
+        // Caracterizaciones de director ya guardadas (códigos de alumnos) con su estado
         // Para docentes/directores: solo las propias. Para SuperAd/Ori: cualquier director.
+        // Solo se considera diligenciada si el campo CARACTERIZACION tiene contenido real
         $caractDirGuardadas = DB::table('PIAR_CARACT_DIR')
             ->when($esDocente, fn($q) => $q->where('CODIGO_DOC', $codigoDoc))
-            ->pluck('CODIGO_ALUM')
-            ->flip()
+            ->whereNotNull('CARACTERIZACION')
+            ->where('CARACTERIZACION', '!=', '')
+            ->select('CODIGO_ALUM', DB::raw("COALESCE(ESTADO, 'pendiente') as ESTADO"))
+            ->get()
+            ->keyBy('CODIGO_ALUM')
             ->toArray();
 
+        $etapasControl = ControlFechasController::etapasDelAnio((int) date('Y'));
+        $puedeAprobar  = in_array(auth()->user()->PROFILE, ['SuperAd', 'Ori']);
+
         return view('piar.anexo2.index', compact(
-            'filas', 'esDocente', 'esDirector', 'dirInfo', 'caractDirGuardadas'
+            'filas', 'esDocente', 'esDirector', 'dirInfo', 'caractDirGuardadas', 'etapasControl', 'puedeAprobar'
         ));
     }
 
@@ -138,24 +149,84 @@ class PiarCaractController extends Controller
         $nombreCompleto = trim("{$estudiante->NOMBRE1} {$estudiante->NOMBRE2}");
         $apellidos      = trim("{$estudiante->APELLIDO1} {$estudiante->APELLIDO2}");
 
+        $estadoEtapa = ControlFechasController::estadoEtapa('caract');
+
         return view('piar.caracterizacion.mat', compact(
             'estudiante', 'materia', 'docente', 'piarDiag', 'caract',
-            'nombreCompleto', 'apellidos', 'codigoMat'
+            'nombreCompleto', 'apellidos', 'codigoMat', 'estadoEtapa'
         ));
     }
 
     public function guardarMat(Request $request, string $codigo, int $codigoMat)
     {
+        $esDocente   = $this->esDocente();
+        $estadoEtapa = ControlFechasController::estadoEtapa('caract');
+
+        $existingEstado = DB::table('PIAR_CARACT_MAT')
+            ->where('CODIGO_ALUM', $codigo)->where('CODIGO_MAT', $codigoMat)
+            ->value('ESTADO') ?? 'pendiente';
+
+        // Orientador envía observaciones
+        if (!$esDocente && $request->input('accion') === 'observar') {
+            if ($estadoEtapa === 'finalizado') return back()->withErrors(['etapa' => 'La etapa está finalizada.']);
+            DB::table('PIAR_CARACT_MAT')->updateOrInsert(
+                ['CODIGO_ALUM' => $codigo, 'CODIGO_MAT' => $codigoMat],
+                ['OBSERVACIONES' => $request->OBSERVACIONES, 'ESTADO' => 'con_observaciones', 'updated_at' => now()]
+            );
+            return back()->with('saved', 'Observaciones enviadas al docente.');
+        }
+
+        $tieneObservaciones = $existingEstado === 'con_observaciones';
+        if ($esDocente && $estadoEtapa !== 'abierto' && !$tieneObservaciones) {
+            $msg = match($estadoEtapa) {
+                'cerrado'    => 'La etapa de caracterización está cerrada. No se permiten cambios.',
+                'revision'   => 'La etapa está en revisión. El orientador está revisando tu trabajo.',
+                'finalizado' => 'La etapa está finalizada. No se permiten más cambios.',
+                default      => 'No se pueden guardar cambios en este momento.',
+            };
+            return back()->withErrors(['etapa' => $msg]);
+        }
+        if (!$esDocente && $estadoEtapa === 'finalizado') {
+            return back()->withErrors(['etapa' => 'La etapa está finalizada. No se permiten más cambios.']);
+        }
+
+        $entregar = $request->input('accion') === 'entregar';
+        $nuevoEstado = $entregar ? 'revision' : (in_array($existingEstado, ['aprobado', 'con_observaciones']) ? 'revision' : ($existingEstado ?? 'pendiente'));
+
+        $datos = [
+            'CODIGO_DOC'      => $this->codigoDoc(),
+            'CARACTERIZACION' => $request->CARACTERIZACION,
+            'ESTADO'          => $nuevoEstado,
+            'updated_at'      => now(),
+        ];
+        if (!$esDocente && $request->has('OBSERVACIONES')) {
+            $datos['OBSERVACIONES'] = $request->OBSERVACIONES;
+        }
+
         DB::table('PIAR_CARACT_MAT')->updateOrInsert(
             ['CODIGO_ALUM' => $codigo, 'CODIGO_MAT' => $codigoMat],
-            [
-                'CODIGO_DOC'      => $this->codigoDoc(),
-                'CARACTERIZACION' => $request->CARACTERIZACION,
-                'updated_at'      => now(),
-            ]
+            $datos
         );
 
-        return back()->with('saved', 'Caracterización guardada correctamente.');
+        $msg = $entregar ? 'Caracterización marcada como entregada para revisión.' : 'Caracterización guardada correctamente.';
+        return back()->with('saved', $msg);
+    }
+
+    public function aprobarMat(string $codigo, int $codigoMat)
+    {
+        if (ControlFechasController::estadoEtapa('caract') !== 'revision') {
+            return back()->withErrors(['etapa' => 'Solo se puede aprobar cuando la etapa de caracterización está en estado "En revisión".']);
+        }
+
+        DB::table('PIAR_CARACT_MAT')
+            ->where('CODIGO_ALUM', $codigo)->where('CODIGO_MAT', $codigoMat)
+            ->update([
+                'ESTADO'           => 'aprobado',
+                'APROBADO_POR'     => auth()->user()->name ?? auth()->user()->PROFILE,
+                'FECHA_APROBACION' => today()->toDateString(),
+            ]);
+
+        return back()->with('aprobado', 'Caracterización aprobada.');
     }
 
     // ── FORM: Caracterización por director de grupo ──────────────────────────
@@ -186,28 +257,91 @@ class PiarCaractController extends Controller
         $nombreCompleto = trim("{$estudiante->NOMBRE1} {$estudiante->NOMBRE2}");
         $apellidos      = trim("{$estudiante->APELLIDO1} {$estudiante->APELLIDO2}");
 
+        $estadoEtapa = ControlFechasController::estadoEtapa('caract');
+
         return view('piar.caracterizacion.dir', compact(
             'estudiante', 'docente', 'piarDiag', 'caract',
-            'nombreCompleto', 'apellidos'
+            'nombreCompleto', 'apellidos', 'estadoEtapa'
         ));
     }
 
     public function guardarDir(Request $request, string $codigo)
     {
-        $codigoDoc  = $this->codigoDoc();
+        $codigoDoc   = $this->codigoDoc();
+        $esDocente   = $this->esDocente();
+        $estadoEtapa = ControlFechasController::estadoEtapa('caract');
+
         $estudiante = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->first();
         if (!$estudiante) abort(404);
 
+        $existingEstado = DB::table('PIAR_CARACT_DIR')
+            ->where('CODIGO_ALUM', $codigo)->where('CODIGO_DOC', $codigoDoc)
+            ->value('ESTADO') ?? 'pendiente';
+
+        // Orientador envía observaciones
+        if (!$esDocente && $request->input('accion') === 'observar') {
+            if ($estadoEtapa === 'finalizado') return back()->withErrors(['etapa' => 'La etapa está finalizada.']);
+            DB::table('PIAR_CARACT_DIR')->updateOrInsert(
+                ['CODIGO_ALUM' => $codigo, 'CODIGO_DOC' => $codigoDoc],
+                ['OBSERVACIONES' => $request->OBSERVACIONES, 'ESTADO' => 'con_observaciones', 'updated_at' => now()]
+            );
+            return back()->with('saved', 'Observaciones enviadas al docente.');
+        }
+
+        $tieneObservaciones = $existingEstado === 'con_observaciones';
+        if ($esDocente && $estadoEtapa !== 'abierto' && !$tieneObservaciones) {
+            $msg = match($estadoEtapa) {
+                'cerrado'    => 'La etapa de caracterización está cerrada. No se permiten cambios.',
+                'revision'   => 'La etapa está en revisión. El orientador está revisando tu trabajo.',
+                'finalizado' => 'La etapa está finalizada. No se permiten más cambios.',
+                default      => 'No se pueden guardar cambios en este momento.',
+            };
+            return back()->withErrors(['etapa' => $msg]);
+        }
+        if (!$esDocente && $estadoEtapa === 'finalizado') {
+            return back()->withErrors(['etapa' => 'La etapa está finalizada. No se permiten más cambios.']);
+        }
+
+        $entregar = $request->input('accion') === 'entregar';
+        $nuevoEstado = $entregar ? 'revision' : (in_array($existingEstado, ['aprobado', 'con_observaciones']) ? 'revision' : ($existingEstado ?? 'pendiente'));
+
+        $datos = [
+            'CURSO'           => $estudiante->CURSO,
+            'CARACTERIZACION' => $request->CARACTERIZACION,
+            'ESTADO'          => $nuevoEstado,
+            'updated_at'      => now(),
+        ];
+        if (!$esDocente && $request->has('OBSERVACIONES')) {
+            $datos['OBSERVACIONES'] = $request->OBSERVACIONES;
+        }
+
         DB::table('PIAR_CARACT_DIR')->updateOrInsert(
             ['CODIGO_ALUM' => $codigo, 'CODIGO_DOC' => $codigoDoc],
-            [
-                'CURSO'           => $estudiante->CURSO,
-                'CARACTERIZACION' => $request->CARACTERIZACION,
-                'updated_at'      => now(),
-            ]
+            $datos
         );
 
-        return back()->with('saved', 'Caracterización guardada correctamente.');
+        $msg = $entregar ? 'Caracterización marcada como entregada para revisión.' : 'Caracterización guardada correctamente.';
+        return back()->with('saved', $msg);
+    }
+
+    public function aprobarDir(string $codigo)
+    {
+        if (ControlFechasController::estadoEtapa('caract') !== 'revision') {
+            return back()->withErrors(['etapa' => 'Solo se puede aprobar cuando la etapa de caracterización está en estado "En revisión".']);
+        }
+
+        $estudiante = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->first();
+        if (!$estudiante) abort(404);
+
+        DB::table('PIAR_CARACT_DIR')
+            ->where('CODIGO_ALUM', $codigo)
+            ->update([
+                'ESTADO'           => 'aprobado',
+                'APROBADO_POR'     => auth()->user()->name ?? auth()->user()->PROFILE,
+                'FECHA_APROBACION' => today()->toDateString(),
+            ]);
+
+        return back()->with('aprobado', 'Caracterización de dirección aprobada.');
     }
 
     // ── IMPRESIÓN COMPLETA ANEXO 2 POR ESTUDIANTE (Ori / SuperAd) ───────────

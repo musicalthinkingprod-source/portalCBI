@@ -168,17 +168,10 @@
         <div style="padding:16px 20px 12px; border-bottom:1px solid #f1f5f9;">
             <div class="section-title">
                 📅 Mi Horario
-                @if(!empty($diasConDatos))
-                <span class="badge-count">{{ count($diasConDatos) }} días</span>
-                @endif
             </div>
         </div>
 
-        @if(empty($diasConDatos))
-            <div style="padding:20px;">
-                <div class="empty-msg">No hay horario registrado para este docente.</div>
-            </div>
-        @else
+        @if(true)
         <div class="grid-scroll">
             <table class="hor-table">
                 <thead>
@@ -202,11 +195,6 @@
                 </thead>
                 <tbody>
                     @foreach($bloques as [$h1, $h2])
-                    @php
-                        $tieneH1 = collect($diasConDatos)->some(fn($d) => !empty($grid[$h1][$d]));
-                        $tieneH2 = collect($diasConDatos)->some(fn($d) => !empty($grid[$h2][$d]));
-                        if (!$tieneH1 && !$tieneH2) continue;
-                    @endphp
 
                     {{-- ── Fila 1 del bloque ── --}}
                     <tr>

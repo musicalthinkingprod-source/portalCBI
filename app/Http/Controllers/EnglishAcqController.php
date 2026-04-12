@@ -9,6 +9,38 @@ class EnglishAcqController extends Controller
 {
     private string $tabla = 'NOTAS_ENGLISH_ACQ';
 
+    // Devuelve el período activo (1-4) según calendario_academico, o null si no hay.
+    private static function periodoActivoHoy(int $anio): ?int
+    {
+        $inicios = DB::table('calendario_academico')
+            ->where('anio', $anio)
+            ->where('dia_ciclo', 1)
+            ->orderBy('fecha')
+            ->distinct()
+            ->pluck('fecha')
+            ->values();
+
+        if ($inicios->isEmpty()) return null;
+
+        $hoy = now()->toDateString();
+
+        for ($p = 1; $p <= 4; $p++) {
+            $offset = ($p - 1) * 7;
+            $inicio = $inicios[$offset] ?? null;
+            $finExcl = $inicios[$offset + 7] ?? null; // primer día del período siguiente
+
+            if (!$inicio) continue;
+
+            if ($finExcl) {
+                if ($hoy >= $inicio && $hoy < $finExcl) return $p;
+            } else {
+                if ($hoy >= $inicio) return $p;
+            }
+        }
+
+        return null;
+    }
+
     public function docente(Request $request)
     {
         $profile    = auth()->user()->PROFILE;
@@ -54,16 +86,27 @@ class EnglishAcqController extends Controller
             }
         }
 
+        $esAdmin           = in_array($profile, ['SuperAd', 'Admin']);
+        $periodoCalendario = self::periodoActivoHoy($anio);
+        $registroActivo    = $esAdmin || ($periodoCalendario === $periodoSelec);
+
         return view('english-acq.docente', compact(
-            'cursos', 'cursoSelec', 'periodoSelec', 'anio', 'estudiantes', 'notasMap'
+            'cursos', 'cursoSelec', 'periodoSelec', 'anio', 'estudiantes', 'notasMap',
+            'registroActivo', 'periodoCalendario', 'esAdmin'
         ));
     }
 
     public function registrar(Request $request)
     {
-        $profile    = auth()->user()->PROFILE;
+        $profile   = auth()->user()->PROFILE;
+        $esAdmin   = in_array($profile, ['SuperAd', 'Admin']);
         $codigoAlum = $request->input('CODIGO_ALUM');
-        $periodo    = $request->input('PERIODO');
+        $periodo    = (int) $request->input('PERIODO');
+
+        $periodoActivo = self::periodoActivoHoy((int) date('Y'));
+        if (!$esAdmin && $periodoActivo !== $periodo) {
+            return back()->with('error_acq', 'Solo se pueden registrar descuentos en el período activo según el calendario académico (período ' . ($periodoActivo ?? '—') . ').');
+        }
 
         DB::table($this->tabla)->insert([
             'CODIGO_ALUM' => $codigoAlum,
@@ -110,6 +153,60 @@ class EnglishAcqController extends Controller
         }
 
         return view('english-acq.padres', compact('notas', 'detalle', 'anio'));
+    }
+
+    public function entregar(Request $request)
+    {
+        $request->validate([
+            'periodo' => 'required|integer|between:1,4',
+            'anio'    => 'required|integer|min:2024|max:2030',
+        ]);
+
+        $profile = auth()->user()->PROFILE;
+        if (!in_array($profile, ['SuperAd', 'Admin'])) {
+            abort(403);
+        }
+
+        $periodo = (int) $request->periodo;
+        $anio    = (int) $request->anio;
+
+        // Todos los estudiantes matriculados
+        $estudiantes = DB::table('ESTUDIANTES')
+            ->where('ESTADO', 'MATRICULADO')
+            ->pluck('CODIGO');
+
+        // Conteo de bajadas por alumno para este período/año
+        $descuentos = DB::table($this->tabla)
+            ->where('PERIODO', $periodo)
+            ->where('ANIO', $anio)
+            ->select('CODIGO_ALUM', DB::raw('COUNT(*) as total'))
+            ->groupBy('CODIGO_ALUM')
+            ->pluck('total', 'CODIGO_ALUM');
+
+        $procesados = 0;
+
+        DB::transaction(function () use ($estudiantes, $descuentos, $periodo, $anio, $profile, &$procesados) {
+            foreach ($estudiantes as $codigo) {
+                $bajadas   = $descuentos[$codigo] ?? 0;
+                $nota      = round(max(0, 10 - ($bajadas * 0.25)), 2);
+
+                DB::table('NOTAS_2026')->updateOrInsert(
+                    [
+                        'CODIGO_ALUM' => $codigo,
+                        'PERIODO'     => $periodo,
+                        'CODIGO_MAT'  => 11,
+                        'TIPODENOTA'  => 'N',
+                    ],
+                    [
+                        'NOTA'       => $nota,
+                        'CODIGO_DOC' => $profile,
+                    ]
+                );
+                $procesados++;
+            }
+        });
+
+        return back()->with('success_acq', "Notas English Acquisition período {$periodo}/{$anio} subidas a NOTAS_2026 ({$procesados} estudiantes).");
     }
 
     public function informe(Request $request)

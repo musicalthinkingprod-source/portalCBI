@@ -53,9 +53,10 @@ class AlumnoController extends Controller
         }
 
         // Opciones para filtros
-        $grados = DB::table('ESTUDIANTES')->select('GRADO')->distinct()->whereNotNull('GRADO')->orderBy('GRADO')->pluck('GRADO');
-        $cursos = DB::table('ESTUDIANTES')->select('CURSO')->distinct()->whereNotNull('CURSO')->orderBy('CURSO')->pluck('CURSO');
-        $sedes  = DB::table('ESTUDIANTES')->select('SEDE')->distinct()->whereNotNull('SEDE')->orderBy('SEDE')->pluck('SEDE');
+        $grados = DB::table('ESTUDIANTES')->select('GRADO')->distinct()->whereNotNull('GRADO')
+            ->orderByRaw('CAST(GRADO AS SIGNED)')->pluck('GRADO');
+        $cursos  = DB::table('ESTUDIANTES')->select('CURSO')->distinct()->whereNotNull('CURSO')->orderBy('CURSO')->pluck('CURSO');
+        $sedes   = DB::table('ESTUDIANTES')->select('SEDE')->distinct()->whereNotNull('SEDE')->orderBy('SEDE')->pluck('SEDE');
         $estados = DB::table('ESTUDIANTES')->select('ESTADO')->distinct()->whereNotNull('ESTADO')->orderBy('ESTADO')->pluck('ESTADO');
 
         return view('alumnos.index', compact('estudiantes', 'hayBusqueda', 'grados', 'cursos', 'sedes', 'estados'));
@@ -93,7 +94,7 @@ class AlumnoController extends Controller
             'NOMBRE2'        => $request->NOMBRE2,
             'APELLIDO1'      => $request->APELLIDO1,
             'APELLIDO2'      => $request->APELLIDO2,
-            'GRADO'          => $request->GRADO,
+            'GRADO'          => $request->filled('GRADO') ? (int) $request->GRADO : null,
             'CURSO'          => $request->CURSO,
             'SEDE'           => $request->SEDE,
             'ESTADO'         => $request->ESTADO,
@@ -136,6 +137,70 @@ class AlumnoController extends Controller
         return redirect()->route('alumnos.show', $codigo)->with('success', 'Estudiante matriculado correctamente.');
     }
 
+    public function printList(Request $request)
+    {
+        $hayBusqueda = $request->anyFilled(['buscar', 'grado', 'curso', 'sede', 'estado', 'email_padre']);
+
+        if (!$hayBusqueda) {
+            return redirect()->route('alumnos.index')->withErrors(['buscar' => 'Aplique al menos un filtro antes de imprimir.']);
+        }
+
+        $query = DB::table('ESTUDIANTES as e')
+            ->leftJoin('INFO_PADRES as p', 'e.CODIGO', '=', 'p.CODIGO')
+            ->select('e.CODIGO', 'e.APELLIDO1', 'e.APELLIDO2', 'e.NOMBRE1', 'e.NOMBRE2', 'e.GRADO', 'e.CURSO', 'e.ESTADO');
+
+        if ($request->filled('buscar')) {
+            $b = $request->buscar;
+            $query->where(function($q) use ($b) {
+                $q->where('e.CODIGO', 'like', "%$b%")
+                  ->orWhere('e.NOMBRE1', 'like', "%$b%")
+                  ->orWhere('e.NOMBRE2', 'like', "%$b%")
+                  ->orWhere('e.APELLIDO1', 'like', "%$b%")
+                  ->orWhere('e.APELLIDO2', 'like', "%$b%");
+            });
+        }
+
+        if ($request->filled('grado'))       $query->where('e.GRADO', $request->grado);
+        if ($request->filled('curso'))        $query->where('e.CURSO', $request->curso);
+        if ($request->filled('sede'))         $query->where('e.SEDE', $request->sede);
+        if ($request->filled('estado'))       $query->where('e.ESTADO', $request->estado);
+        if ($request->filled('email_padre')) {
+            $em = $request->email_padre;
+            $query->where(function($q) use ($em) {
+                $q->where('p.EMAIL_MADRE', 'like', "%$em%")
+                  ->orWhere('p.EMAIL_PADRE', 'like', "%$em%")
+                  ->orWhere('p.EMAIL_ACUD', 'like', "%$em%");
+            });
+        }
+
+        switch ($request->input('orden', 'apellidos')) {
+            case 'codigo':
+                $query->orderBy('e.CODIGO');
+                break;
+            case 'grado_apellidos':
+                $query->orderByRaw('CAST(e.GRADO AS SIGNED)')
+                      ->orderBy('e.APELLIDO1')->orderBy('e.APELLIDO2')
+                      ->orderBy('e.NOMBRE1')->orderBy('e.NOMBRE2');
+                break;
+            case 'curso_apellidos':
+                $query->orderBy('e.CURSO')
+                      ->orderBy('e.APELLIDO1')->orderBy('e.APELLIDO2')
+                      ->orderBy('e.NOMBRE1')->orderBy('e.NOMBRE2');
+                break;
+            default: // apellidos
+                $query->orderBy('e.APELLIDO1')->orderBy('e.APELLIDO2')
+                      ->orderBy('e.NOMBRE1')->orderBy('e.NOMBRE2');
+        }
+
+        $estudiantes = $query->get();
+
+        $titulo = $request->input('titulo', 'Listado de Estudiantes');
+        $col1   = trim($request->input('col1', ''));
+        $col2   = trim($request->input('col2', ''));
+
+        return view('alumnos.print_list', compact('estudiantes', 'titulo', 'col1', 'col2'));
+    }
+
     public function printView($codigo)
     {
         $estudiante = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->first();
@@ -169,7 +234,7 @@ class AlumnoController extends Controller
             'NOMBRE2'        => $request->NOMBRE2,
             'APELLIDO1'      => $request->APELLIDO1,
             'APELLIDO2'      => $request->APELLIDO2,
-            'GRADO'          => $request->GRADO,
+            'GRADO'          => $request->filled('GRADO') ? (int) $request->GRADO : null,
             'CURSO'          => $request->CURSO,
             'SEDE'           => $request->SEDE,
             'ESTADO'         => $request->ESTADO,

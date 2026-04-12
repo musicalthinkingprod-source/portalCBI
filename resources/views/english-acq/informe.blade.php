@@ -54,6 +54,38 @@
         </form>
     </div>
 
+    {{-- Entregar notas a NOTAS_2026 (solo admin) --}}
+    @if(in_array(auth()->user()->PROFILE, ['SuperAd', 'Admin']))
+    <div class="bg-white rounded-xl shadow p-5 mb-6 border-l-4 border-green-600">
+        <h3 class="font-bold text-sm text-gray-700 uppercase tracking-wide mb-3">Subir notas a NOTAS_2026</h3>
+        <form method="POST" action="{{ route('english-acq.entregar') }}"
+              onsubmit="return confirm('¿Confirmas subir las notas de English Acquisition a NOTAS_2026? Esto sobreescribirá las notas existentes para el período seleccionado.')">
+            @csrf
+            <div class="flex flex-wrap gap-4 items-end">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Período</label>
+                    <select name="periodo" required
+                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                        @foreach([1,2,3,4] as $p)
+                            <option value="{{ $p }}" {{ ($periodo ?? '') == $p ? 'selected' : '' }}>Período {{ $p }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Año</label>
+                    <input type="number" name="anio" value="{{ $anio }}" min="2024" max="2030" required
+                        class="w-24 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+                <button type="submit"
+                    class="bg-green-700 hover:bg-green-600 text-white text-sm font-semibold px-5 py-2 rounded-lg transition">
+                    Subir notas a NOTAS_2026
+                </button>
+            </div>
+            <p class="text-xs text-gray-400 mt-2">Calcula <code>max(0, 10 − descuentos × 0.25)</code> para todos los estudiantes matriculados y los registra en NOTAS_2026 (CODIGO_MAT 11).</p>
+        </form>
+    </div>
+    @endif
+
     {{-- Resumen por estudiante --}}
     <div class="bg-white rounded-xl shadow overflow-hidden mb-6">
         <div class="px-5 py-3 bg-blue-800 text-white flex items-center justify-between">

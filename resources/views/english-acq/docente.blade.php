@@ -10,6 +10,12 @@
         </div>
     @endif
 
+    @if(session('error_acq'))
+        <div class="mb-4 p-3 bg-red-100 text-red-800 rounded-xl text-sm">
+            ⚠️ {{ session('error_acq') }}
+        </div>
+    @endif
+
     {{-- Filtros --}}
     <div class="bg-white rounded-xl shadow p-5 mb-6">
         <form method="GET" action="{{ route('english-acq.docente') }}" id="form-filtros">
@@ -36,6 +42,27 @@
             </div>
         </form>
     </div>
+
+    {{-- Banner de ventana de registro --}}
+    @if($cursoSelec)
+        @if($registroActivo)
+            <div class="mb-4 p-3 bg-green-50 border border-green-200 text-green-800 rounded-xl text-sm flex items-center gap-2">
+                <span class="font-semibold">Registro abierto</span> — Período {{ $periodoSelec }} está activo según el calendario académico.
+                @if($esAdmin && $periodoCalendario !== $periodoSelec)
+                    <span class="ml-auto text-yellow-600 text-xs">(Admin — período activo real: {{ $periodoCalendario ?? '—' }})</span>
+                @endif
+            </div>
+        @else
+            <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm">
+                <span class="font-semibold">Registro cerrado</span> — El período {{ $periodoSelec }} no corresponde al período activo del calendario académico.
+                @if($periodoCalendario)
+                    Período activo actual: <strong>{{ $periodoCalendario }}</strong>.
+                @else
+                    No hay ningún período activo en este momento.
+                @endif
+            </div>
+        @endif
+    @endif
 
     {{-- Tabla de estudiantes --}}
     @if($cursoSelec && $estudiantes->isNotEmpty())
@@ -69,6 +96,7 @@
                             </span>
                         </td>
                         <td class="px-4 py-3 text-center">
+                            @if($registroActivo)
                             <form method="POST" action="{{ route('english-acq.registrar') }}">
                                 @csrf
                                 <input type="hidden" name="CODIGO_ALUM" value="{{ $est->CODIGO }}">
@@ -81,6 +109,9 @@
                                     🗣️ Habló en español
                                 </button>
                             </form>
+                            @else
+                            <span class="text-gray-300 text-xs">Cerrado</span>
+                            @endif
                         </td>
                     </tr>
                     @endforeach

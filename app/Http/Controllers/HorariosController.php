@@ -61,18 +61,43 @@ class HorariosController extends Controller
         $dias  = Horario::$dias;
         $horas = Horario::$horas;
 
-        // Días del ciclo con clases
-        $diasConDatos = DB::table('HORARIOS as h')
+        // Días del ciclo con clases (materias regulares)
+        $diasRegulares = DB::table('HORARIOS as h')
             ->join('ASIGNACION_PCM as a', function ($join) use ($codigoDoc) {
                 $join->on('a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
-                     ->on('a.CURSO', '=', 'h.CURSO')
+                     ->on(DB::raw("SUBSTRING_INDEX(a.CURSO, '-', 1)"), '=', 'h.CURSO')
                      ->where('a.CODIGO_DOC', $codigoDoc);
             })
+            ->where('h.CODIGO_MAT', '!=', 31)
             ->distinct()
             ->pluck('h.DIA')
-            ->sort()
-            ->values()
             ->toArray();
+
+        // Días de Artes/Música en bachillerato (CODIGO_MAT 25/26 → HORARIOS usa 70)
+        $cursosArtesMusica = DB::table('ASIGNACION_PCM')
+            ->whereIn('CODIGO_MAT', [25, 26])
+            ->where('CODIGO_DOC', $codigoDoc)
+            ->pluck('CURSO')
+            ->map(fn($c) => explode('-', $c)[0])
+            ->unique()->values()->toArray();
+
+        $diasArtesMusica = !empty($cursosArtesMusica)
+            ? DB::table('HORARIOS')->where('CODIGO_MAT', 70)
+                ->whereIn('CURSO', $cursosArtesMusica)
+                ->distinct()->pluck('DIA')->toArray()
+            : [];
+
+        // Días de Proyecto (CODIGO_MAT=31): su asignación usa grupo GP como CURSO
+        $tieneProyecto = DB::table('ASIGNACION_PCM')
+            ->where('CODIGO_DOC', $codigoDoc)
+            ->where('CODIGO_MAT', 31)
+            ->exists();
+
+        $diasProyecto = $tieneProyecto
+            ? DB::table('HORARIOS')->where('CODIGO_MAT', 31)->distinct()->pluck('DIA')->toArray()
+            : [];
+
+        $diasConDatos = [1, 2, 3, 4, 5, 6];
 
         // Próxima fecha de cada día del ciclo (encabezado de columna)
         $proximaFecha = [];
@@ -224,17 +249,40 @@ class HorariosController extends Controller
             $doc = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $docenteActual)->first();
             $nombreDocente = $doc?->NOMBRE_DOC;
 
-            $diasConDatos = DB::table('HORARIOS as h')
+            $diasRegulares = DB::table('HORARIOS as h')
                 ->join('ASIGNACION_PCM as a', function ($join) use ($docenteActual) {
                     $join->on('a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
-                         ->on('a.CURSO', '=', 'h.CURSO')
+                         ->on(DB::raw("SUBSTRING_INDEX(a.CURSO, '-', 1)"), '=', 'h.CURSO')
                          ->where('a.CODIGO_DOC', $docenteActual);
                 })
+                ->where('h.CODIGO_MAT', '!=', 31)
                 ->distinct()
                 ->pluck('h.DIA')
-                ->sort()
-                ->values()
                 ->toArray();
+
+            $cursosArtesMusica = DB::table('ASIGNACION_PCM')
+                ->whereIn('CODIGO_MAT', [25, 26])
+                ->where('CODIGO_DOC', $docenteActual)
+                ->pluck('CURSO')
+                ->map(fn($c) => explode('-', $c)[0])
+                ->unique()->values()->toArray();
+
+            $diasArtesMusica = !empty($cursosArtesMusica)
+                ? DB::table('HORARIOS')->where('CODIGO_MAT', 70)
+                    ->whereIn('CURSO', $cursosArtesMusica)
+                    ->distinct()->pluck('DIA')->toArray()
+                : [];
+
+            $tieneProyecto = DB::table('ASIGNACION_PCM')
+                ->where('CODIGO_DOC', $docenteActual)
+                ->where('CODIGO_MAT', 31)
+                ->exists();
+
+            $diasProyecto = $tieneProyecto
+                ? DB::table('HORARIOS')->where('CODIGO_MAT', 31)->distinct()->pluck('DIA')->toArray()
+                : [];
+
+            $diasConDatos = [1, 2, 3, 4, 5, 6];
 
             // Cargar reemplazos próximos (60 días) mapeados a día del ciclo
             $reemplazos = DB::table('reemplazos_asignados as r')

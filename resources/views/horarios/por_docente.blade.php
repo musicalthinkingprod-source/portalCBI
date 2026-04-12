@@ -82,10 +82,6 @@
             </thead>
             <tbody>
                 @foreach($horas as $horaNum => $horaLabel)
-                @php
-                    $tieneContenido = collect($diasConDatos)->some(fn($d) => !empty($grid[$horaNum][$d]));
-                @endphp
-                @if($tieneContenido)
                 <tr class="{{ $loop->even ? 'bg-gray-50' : 'bg-white' }} border-b border-gray-100">
                     {{-- Columna hora --}}
                     <td class="px-4 py-2 whitespace-nowrap">
@@ -154,7 +150,6 @@
                     </td>
                     @endforeach
                 </tr>
-                @endif
                 @endforeach
             </tbody>
         </table>

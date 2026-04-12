@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\PonderacionArea;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class BoletinController extends Controller
 {
-    public static function datos(int $codigo): array
+    public static function datos(int $codigo, ?int $periodo = null): array
     {
         $anio       = (int) date('Y');
         $estudiante = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->first();
@@ -15,18 +16,43 @@ class BoletinController extends Controller
         if (!$estudiante) return [];
 
         // Notas con materia y área
+        // Extraer grado numérico del curso (ej. "2A" → 2, "10B" → 10)
+        $grado = (int) preg_replace('/\D/', '', $estudiante->CURSO ?? '');
+
+        $hayLogros = DB::getSchemaBuilder()->hasTable('LOGROS_' . $anio);
+
         $notasRaw = collect();
         try {
-            $notasRaw = DB::table('NOTAS_' . $anio . ' as n')
+            $q = DB::table('NOTAS_' . $anio . ' as n')
                 ->join('CODIGOSMAT as m',    'm.CODIGO_MAT',   '=', 'n.CODIGO_MAT')
                 ->join('CODIGOSAREA as a',   'a.CODIGO_AREA',  '=', 'm.AREA_MAT')
-                ->where('n.CODIGO_ALUM', $codigo)
-                ->select('n.PERIODO', 'n.NOTA', 'n.TIPODENOTA',
-                         'm.NOMBRE_MAT', 'm.CODIGO_MAT',
-                         'a.NOMBRE_AREA', 'a.CODIGO_AREA')
-                ->orderBy('a.CODIGO_AREA')
-                ->orderBy('m.NOMBRE_MAT')
-                ->get();
+                ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'n.CODIGO_DOC');
+
+            if ($hayLogros) {
+                $q->leftJoin('LOGROS_' . $anio . ' as l', function ($join) use ($grado) {
+                    $join->on('l.CODIGO_MAT', '=', 'n.CODIGO_MAT')
+                         ->on('l.PERIODO',    '=', 'n.PERIODO')
+                         ->where('l.GRADO',   '=', $grado);
+                });
+            }
+
+            $selectLogro = $hayLogros ? 'l.LOGRO' : DB::raw('NULL as LOGRO');
+            $q->where('n.CODIGO_ALUM', $codigo)
+              ->select([
+                  'n.PERIODO', 'n.NOTA', 'n.TIPODENOTA',
+                  'm.NOMBRE_MAT', 'm.CODIGO_MAT',
+                  'a.NOMBRE_AREA', 'a.CODIGO_AREA',
+                  'd.NOMBRE_DOC',
+                  $selectLogro,
+              ])
+              ->orderBy('a.CODIGO_AREA')
+              ->orderBy('m.NOMBRE_MAT');
+
+            if ($periodo !== null) {
+                $q->where('n.PERIODO', $periodo);
+            }
+
+            $notasRaw = $q->get();
         } catch (\Exception $e) {}
 
         // Construir estructura áreas > materias > periodos
@@ -38,11 +64,16 @@ class BoletinController extends Controller
                 $areas[$ak] = ['nombre' => $n->NOMBRE_AREA, 'materias' => []];
             }
             if (!isset($areas[$ak]['materias'][$mk])) {
-                $areas[$ak]['materias'][$mk] = ['nombre' => $n->NOMBRE_MAT, 'periodos' => []];
+                $areas[$ak]['materias'][$mk] = ['nombre' => $n->NOMBRE_MAT, 'docente' => null, 'periodos' => []];
+            }
+            // Conservar el primer docente disponible a nivel de materia
+            if ($n->NOMBRE_DOC && !$areas[$ak]['materias'][$mk]['docente']) {
+                $areas[$ak]['materias'][$mk]['docente'] = $n->NOMBRE_DOC;
             }
             $areas[$ak]['materias'][$mk]['periodos'][$n->PERIODO] = [
-                'nota' => $n->NOTA,
-                'tipo' => $n->TIPODENOTA,
+                'nota'  => $n->NOTA,
+                'tipo'  => $n->TIPODENOTA,
+                'logro' => $n->LOGRO,
             ];
         }
 
@@ -61,7 +92,9 @@ class BoletinController extends Controller
                 ->keyBy('PERIODO');
         } catch (\Exception $e) {}
 
-        return compact('estudiante', 'areas', 'observaciones', 'director', 'anio');
+        $periodoFiltro = $periodo;
+        $nivel         = PonderacionArea::nivel($estudiante->CURSO ?? null);
+        return compact('estudiante', 'areas', 'observaciones', 'director', 'anio', 'periodoFiltro', 'nivel');
     }
 
     private function accesoDocente(): array|null
@@ -73,11 +106,23 @@ class BoletinController extends Controller
         return $docente ? (array) $docente : [];
     }
 
+    public function promedios(int $codigo)
+    {
+        $datos = self::datos($codigo);
+        if (empty($datos)) abort(404);
+
+        $periodosVisibles = [1, 2, 3, 4];
+        $origen           = 'interno';
+        return view('promedios.informe', array_merge($datos, compact('origen', 'periodosVisibles')));
+    }
+
     public function buscar(Request $request)
     {
-        $profile   = auth()->user()->PROFILE;
-        $esDocente = str_starts_with($profile, 'DOC');
-        $cursoDir  = null;
+        $profile      = auth()->user()->PROFILE;
+        $user         = auth()->user()->USER;
+        $esDocente    = str_starts_with($profile, 'DOC');
+        $esOrientador = str_starts_with($profile, 'Ori');
+        $cursoDir     = null;
 
         if ($esDocente) {
             $doc = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $profile)->first();
@@ -91,37 +136,47 @@ class BoletinController extends Controller
         $q           = trim($request->input('q', ''));
         $estudiantes = collect();
 
-        $query = DB::table('ESTUDIANTES')->where('ESTADO', 'MATRICULADO');
+        if ($esOrientador) {
+            // Todos los estudiantes que tienen PIAR registrado
+            $codigosPiar = DB::table('PIAR_DIAG')->pluck('CODIGO_ALUM');
 
-        // Docente: solo su curso
-        if ($cursoDir) {
-            $query->where('CURSO', $cursoDir);
-        }
+            $estudiantes = DB::table('ESTUDIANTES')
+                ->where('ESTADO', 'MATRICULADO')
+                ->whereIn('CODIGO', $codigosPiar)
+                ->orderBy('APELLIDO1')->orderBy('APELLIDO2')->orderBy('NOMBRE1')
+                ->get();
+        } else {
+            $query = DB::table('ESTUDIANTES')->where('ESTADO', 'MATRICULADO');
 
-        // Búsqueda por texto (solo para SuperAd/Admin)
-        if (!$esDocente && strlen($q) >= 2) {
-            $query->where(function ($q2) use ($q) {
-                $q2->where('NOMBRE',   'like', "%{$q}%")
-                   ->orWhere('APELLIDO1', 'like', "%{$q}%")
-                   ->orWhere('APELLIDO2', 'like', "%{$q}%")
-                   ->orWhere('CODIGO',    'like', "%{$q}%");
-            });
-        }
+            if ($cursoDir) {
+                $query->where('CURSO', $cursoDir);
+            }
 
-        // Docente: carga todos sus estudiantes directo sin necesidad de búsqueda
-        if ($esDocente || strlen($q) >= 2) {
-            $estudiantes = $query->orderBy('APELLIDO1')->orderBy('APELLIDO2')->orderBy('NOMBRE1')->get();
+            if (!$esDocente && strlen($q) >= 2) {
+                $query->where(function ($q2) use ($q) {
+                    $q2->where('NOMBRE1',   'like', "%{$q}%")
+                       ->orWhere('APELLIDO1', 'like', "%{$q}%")
+                       ->orWhere('APELLIDO2', 'like', "%{$q}%")
+                       ->orWhere('CODIGO',    'like', "%{$q}%");
+                });
+            }
+
+            if ($esDocente || strlen($q) >= 2) {
+                $estudiantes = $query->orderBy('APELLIDO1')->orderBy('APELLIDO2')->orderBy('NOMBRE1')->get();
+            }
         }
 
         $puedeImprimir = !$esDocente;
 
-        return view('informes.boletin', compact('estudiantes', 'q', 'esDocente', 'cursoDir', 'puedeImprimir'));
+        return view('informes.boletin', compact('estudiantes', 'q', 'esDocente', 'esOrientador', 'cursoDir', 'puedeImprimir'));
     }
 
     public function ver(int $codigo)
     {
-        $profile   = auth()->user()->PROFILE;
-        $esDocente = str_starts_with($profile, 'DOC');
+        $profile      = auth()->user()->PROFILE;
+        $user         = auth()->user()->USER;
+        $esDocente    = str_starts_with($profile, 'DOC');
+        $esOrientador = str_starts_with($profile, 'Ori');
 
         if ($esDocente) {
             $doc = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $profile)->first();
@@ -131,6 +186,11 @@ class BoletinController extends Controller
             if (!$estudiante || $estudiante->CURSO !== $doc->DIR_GRUPO) {
                 abort(403, 'Este estudiante no pertenece a tu curso.');
             }
+        }
+
+        if ($esOrientador) {
+            $enPiar = DB::table('PIAR_DIAG')->where('CODIGO_ALUM', $codigo)->exists();
+            if (!$enPiar) abort(403, 'Este estudiante no tiene PIAR registrado.');
         }
 
         $datos = self::datos($codigo);

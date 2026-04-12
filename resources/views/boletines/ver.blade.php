@@ -95,8 +95,8 @@
             <span class="font-semibold text-gray-900">{{ $anio }}</span>
         </div>
         <div class="flex gap-2">
-            <span class="text-gray-500 w-32 shrink-0">Estado:</span>
-            <span class="font-semibold text-gray-900">{{ $estudiante->ESTADO ?? '—' }}</span>
+            <span class="text-gray-500 w-32 shrink-0">Código:</span>
+            <span class="font-semibold text-gray-900">{{ $estudiante->CODIGO }}</span>
         </div>
     </div>
 
@@ -106,14 +106,18 @@
     @else
 
     @php
-        $todasLasMedias = [];
+        $promsArea        = [];   // promedio ponderado de cada área → para el promedio general
+        $periodosVisibles = isset($periodoFiltro) && $periodoFiltro ? [$periodoFiltro] : [1,2,3,4];
+        $colN             = count($periodosVisibles);
+        $colspan          = 3 + $colN;
+        $nivelPond        = $nivel ?? \App\Helpers\PonderacionArea::nivel($estudiante->CURSO ?? null);
     @endphp
 
     <table class="w-full text-sm border-collapse mb-5">
         <thead>
             <tr class="bg-blue-900 text-white">
                 <th class="px-3 py-2 text-left font-semibold text-xs uppercase tracking-wide border border-blue-800">Área / Asignatura</th>
-                @foreach([1,2,3,4] as $p)
+                @foreach($periodosVisibles as $p)
                 <th class="px-2 py-2 text-center font-semibold text-xs uppercase tracking-wide border border-blue-800 w-14">P{{ $p }}</th>
                 @endforeach
                 <th class="px-2 py-2 text-center font-semibold text-xs uppercase tracking-wide border border-blue-800 w-20">Promedio</th>
@@ -125,21 +129,21 @@
 
             {{-- Fila de área --}}
             <tr class="area-header bg-blue-50">
-                <td colspan="7" class="px-3 py-1.5 font-bold text-blue-900 text-xs uppercase tracking-wide border border-blue-200">
+                <td colspan="{{ $colspan }}" class="px-3 py-1.5 font-bold text-blue-900 text-xs uppercase tracking-wide border border-blue-200">
                     {{ $area['nombre'] }}
                 </td>
             </tr>
 
-            @php $mediasArea = []; @endphp
+            @php $mediasArea = []; @endphp {{-- cada entrada: ['media'=>float, 'peso'=>float] --}}
 
             @foreach($area['materias'] as $matId => $materia)
             @php
                 $notasPeriodo = $materia['periodos'];
-                $vals = array_filter(array_map(fn($p) => $notasPeriodo[$p]['nota'] ?? null, [1,2,3,4]), fn($v) => $v !== null);
-                $media = count($vals) > 0 ? round(array_sum($vals) / count($vals), 1) : null;
-                if ($media !== null) {
-                    $mediasArea[] = $media;
-                    $todasLasMedias[] = $media;
+                $vals = array_filter(array_map(fn($p) => $notasPeriodo[$p]['nota'] ?? null, $periodosVisibles), fn($v) => $v !== null);
+                $media   = count($vals) > 0 ? round(array_sum($vals) / count($vals), 1) : null;
+                $pesoMat = \App\Helpers\PonderacionArea::peso((int)$matId, $nivelPond);
+                if ($media !== null && $pesoMat > 0) {
+                    $mediasArea[] = ['media' => $media, 'peso' => $pesoMat];
                 }
                 $desempeno = match(true) {
                     $media === null      => null,
@@ -150,9 +154,14 @@
                 };
             @endphp
             <tr class="hover:bg-gray-50 border-b border-gray-100">
-                <td class="px-3 py-1.5 text-gray-800 border-l border-r border-gray-200 pl-6">{{ $materia['nombre'] }}</td>
+                <td class="px-3 py-1.5 text-gray-800 border-l border-r border-gray-200 pl-6">
+                    {{ $materia['nombre'] }}
+                    @if($materia['docente'])
+                        <div class="text-xs text-gray-400 italic mt-0.5">{{ \Str::title(strtolower($materia['docente'])) }}</div>
+                    @endif
+                </td>
 
-                @foreach([1,2,3,4] as $p)
+                @foreach($periodosVisibles as $p)
                 @php
                     $reg  = $notasPeriodo[$p] ?? null;
                     $nota = $reg['nota'] ?? null;
@@ -179,15 +188,43 @@
                     {{ $desempeno['label'] ?? '—' }}
                 </td>
             </tr>
+            @php
+                // Recopilar logros únicos de los períodos visibles para esta materia
+                $logrosData = [];
+                foreach ($periodosVisibles as $lp) {
+                    $txt = $notasPeriodo[$lp]['logro'] ?? null;
+                    if ($txt) $logrosData[$lp] = $txt;
+                }
+                $textosSinDup = array_unique(array_values($logrosData));
+            @endphp
+            @if(!empty($logrosData))
+            <tr class="border-b border-gray-100">
+                <td colspan="{{ $colspan }}" class="px-6 py-2 text-xs text-gray-600 italic leading-snug bg-gray-50 border-l border-r border-gray-200">
+                    @if(count($textosSinDup) === 1)
+                        {{ $textosSinDup[0] }}
+                    @else
+                        @foreach($logrosData as $lp => $ltxt)
+                            <span class="font-semibold not-italic text-gray-500">P{{ $lp }}:</span> {{ $ltxt }}<br>
+                        @endforeach
+                    @endif
+                </td>
+            </tr>
+            @endif
             @endforeach
 
-            {{-- Promedio del área --}}
-            @php $promedioArea = count($mediasArea) > 0 ? round(array_sum($mediasArea) / count($mediasArea), 1) : null; @endphp
+            {{-- Promedio del área (ponderado según tabla de pesos) --}}
+            @php
+                $_sumP = array_sum(array_column($mediasArea, 'peso'));
+                $promedioArea = $_sumP > 0
+                    ? round(array_sum(array_map(fn($m) => $m['media'] * $m['peso'], $mediasArea)) / $_sumP, 1)
+                    : null;
+                if ($promedioArea !== null) $promsArea[] = $promedioArea;
+            @endphp
             <tr class="bg-gray-100">
                 <td class="px-3 py-1 text-xs font-bold text-gray-600 uppercase tracking-wide border border-gray-200 pl-6 italic">
                     Promedio del área
                 </td>
-                <td colspan="4" class="border border-gray-200"></td>
+                <td colspan="{{ $colN }}" class="border border-gray-200"></td>
                 <td class="px-2 py-1 text-center border border-gray-200 font-bold text-blue-900">
                     {{ $promedioArea !== null ? number_format($promedioArea, 1) : '—' }}
                 </td>
@@ -196,10 +233,10 @@
 
         @endforeach
 
-        {{-- Promedio general --}}
-        @php $promGeneral = count($todasLasMedias) > 0 ? round(array_sum($todasLasMedias) / count($todasLasMedias), 1) : null; @endphp
+        {{-- Promedio general = media simple de los promedios ponderados de cada área --}}
+        @php $promGeneral = count($promsArea) > 0 ? round(array_sum($promsArea) / count($promsArea), 1) : null; @endphp
         <tr class="bg-blue-900 text-white">
-            <td class="px-3 py-2 font-bold text-sm uppercase tracking-wide border border-blue-800" colspan="5">
+            <td class="px-3 py-2 font-bold text-sm uppercase tracking-wide border border-blue-800" colspan="{{ 1 + $colN }}">
                 Promedio General
             </td>
             <td class="px-2 py-2 text-center font-bold text-lg border border-blue-800">

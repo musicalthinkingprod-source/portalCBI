@@ -78,9 +78,15 @@ class NotasV2Controller extends Controller
             }
         }
 
+        // Ventana de entrega activa según FECHAS (N1–N4); SuperAd/Admin siempre pueden
+        $codigoVentana = 'N' . $periodo;
+        $entregaActiva = $esSuperior || FechasController::estaActivo($codigoVentana);
+        $fechaEntrega  = DB::table('FECHAS')->where('CODIGO_FECHA', $codigoVentana)->first();
+
         return view('notas.v2', compact(
             'materias', 'cursosDisponibles', 'matSelec', 'cursoSelec', 'periodo',
-            'mapaMateriasCursos', 'materiaNombre', 'columnas', 'estudiantes', 'notasMap'
+            'mapaMateriasCursos', 'materiaNombre', 'columnas', 'estudiantes', 'notasMap',
+            'entregaActiva', 'fechaEntrega', 'esSuperior'
         ));
     }
 
@@ -226,11 +232,17 @@ class NotasV2Controller extends Controller
             'periodo'    => 'required|integer|between:1,4',
         ]);
 
-        $profile   = auth()->user()->PROFILE;
-        $codigoMat = (int) $request->codigo_mat;
-        $curso     = $request->curso;
-        $periodo   = (int) $request->periodo;
-        $anio      = (int) date('Y');
+        $profile      = auth()->user()->PROFILE;
+        $esSuperior   = in_array($profile, ['SuperAd', 'Admin']);
+        $codigoMat    = (int) $request->codigo_mat;
+        $curso        = $request->curso;
+        $periodo      = (int) $request->periodo;
+        $anio         = (int) date('Y');
+
+        // Verificar ventana de entrega
+        if (!$esSuperior && !FechasController::estaActivo('N' . $periodo)) {
+            return back()->with('error_entrega', 'La ventana de entrega de notas para el período ' . $periodo . ' no está abierta en este momento.');
+        }
 
         $columnas = DB::table('planilla_columnas')
             ->where('codigo_mat', $codigoMat)

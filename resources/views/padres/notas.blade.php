@@ -1,5 +1,5 @@
 @extends('layouts.padres')
-@section('header', 'Consultar Notas')
+@section('header', 'Consultar Promedios')
 @section('slot')
 
 @php
@@ -24,7 +24,7 @@
         <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
             <tr>
                 <th class="px-4 py-3 text-left">Materia</th>
-                @foreach([1,2,3,4] as $p)
+                @foreach($periodosVisibles as $p)
                     <th class="px-4 py-3 text-center w-20">P{{ $p }}</th>
                 @endforeach
             </tr>
@@ -33,7 +33,7 @@
             @foreach($materias as $codMat => $registros)
             <tr class="hover:bg-gray-50">
                 <td class="px-4 py-2 font-medium">{{ $registros->first()->NOMBRE_MAT }}</td>
-                @foreach([1,2,3,4] as $p)
+                @foreach($periodosVisibles as $p)
                     @php $nota = $registros->firstWhere('PERIODO', $p); @endphp
                     <td class="px-4 py-2 text-center">
                         @if($nota)

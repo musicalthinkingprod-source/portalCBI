@@ -306,7 +306,7 @@
 <div class="bg-white rounded-lg shadow p-4 mb-6">
     <form method="GET" action="{{ route('listados.index') }}" class="flex flex-wrap items-center gap-3">
         <input type="hidden" name="tab" value="musica">
-        <label class="text-sm font-medium text-gray-700">Curso (grado 6 en adelante):</label>
+        <label class="text-sm font-medium text-gray-700">Curso (grado 7 en adelante):</label>
         <select name="curso_musica" onchange="this.form.submit()"
                 class="border border-gray-300 rounded px-3 py-1.5 text-sm">
             <option value="">— Seleccionar —</option>
@@ -451,7 +451,7 @@
 @else
 <div class="bg-blue-50 border border-blue-200 text-blue-700 p-5 rounded-lg text-sm">
     Selecciona un curso para ver y gestionar sus listados de Música y Artes.
-    <br><span class="text-xs text-blue-500 mt-1 block">Los grados 1–5 toman música y artes juntas (sin listado especial).</span>
+    <br><span class="text-xs text-blue-500 mt-1 block">Los grados 1–6 toman música y artes juntas (sin listado especial).</span>
 </div>
 @endif
 

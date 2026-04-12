@@ -61,13 +61,13 @@ class SalvavidasController extends Controller
                 ->toArray();
         }
 
-        // Períodos abiertos para salvavidas ('S1'..'S4')
+        // Períodos abiertos para subir salvavidas ('V1'..'V4' = ventana docentes)
         $periodosAbiertos = [];
         if ($esSuperior) {
             $periodosAbiertos = [1, 2, 3, 4];
         } else {
             foreach ([1, 2, 3, 4] as $p) {
-                if (FechasController::estaActivo('S' . $p)) {
+                if (FechasController::estaActivo('V' . $p)) {
                     $periodosAbiertos[] = $p;
                 }
             }
@@ -94,8 +94,8 @@ class SalvavidasController extends Controller
         $anio         = (int) date('Y');
         $marcados     = $request->input('salvavidas', []);
 
-        if (!$esSuperior && !FechasController::estaActivo('S' . $periodo)) {
-            return back()->withErrors(['fechas' => "El período {$periodo} de salvavidas no está abierto."]);
+        if (!$esSuperior && !FechasController::estaActivo('V' . $periodo)) {
+            return back()->withErrors(['fechas' => "El período {$periodo} de salvavidas no está abierto para subir."]);
         }
 
         // Todos los estudiantes del curso para saber a quién borrar
@@ -155,11 +155,16 @@ class SalvavidasController extends Controller
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 's.CODIGO_MAT')
             ->where('s.CODIGO_ALUM', $codigo)
             ->where('s.ANIO', $anio)
-            ->select('s.PERIODO', 'm.NOMBRE_MAT')
+            ->select('s.PERIODO', 's.CODIGO_MAT', 'm.NOMBRE_MAT')
             ->orderBy('s.PERIODO')->orderBy('m.NOMBRE_MAT')
             ->get();
 
-        return view('salvavidas.padres', compact('salvavidas', 'anio'));
+        $curso = $estudiante->CURSO ?? '';
+        $urlsSite = $salvavidas->pluck('CODIGO_MAT')->unique()
+            ->mapWithKeys(fn($cm) => [$cm => \App\Http\Controllers\PadresController::urlSite((int)$cm, $curso)])
+            ->toArray();
+
+        return view('salvavidas.padres', compact('salvavidas', 'anio', 'urlsSite'));
     }
 
     public function reporte(Request $request)

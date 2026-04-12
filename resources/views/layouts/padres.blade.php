@@ -45,7 +45,8 @@
                 $facturadoP    = $codigoP ? \Illuminate\Support\Facades\DB::table('facturacion')->where('codigo_alumno', $codigoP)->sum('valor') : 0;
                 $pagadoP       = $codigoP ? \Illuminate\Support\Facades\DB::table('registro_pagos')->where('codigo_alumno', $codigoP)->sum('valor') : 0;
                 $saldoP        = $facturadoP - $pagadoP;
-                $bloqueado     = $saldoP > 100000;
+                $exentoP       = $codigoP ? \App\Http\Controllers\ExencionCarteraController::tieneExencion($codigoP) : false;
+                $bloqueado     = !$exentoP && $saldoP > 100000;
 
                 // Verificación de fechas para cada sección
                 $now            = now();
@@ -70,17 +71,17 @@
             {{-- Consultar notas (requiere F abierto y sin deuda) --}}
             @if($bloqueado)
                 <div class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
-                    <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Consultar notas</div>
+                    <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Consultar promedios</div>
                     <p class="text-xs text-blue-500 mt-0.5 leading-tight">No disponible por saldo pendiente de <strong class="text-blue-400">$ {{ number_format($saldoP, 0, ',', '.') }}</strong>.</p>
                 </div>
             @elseif(!$abiertoNotas)
                 <div class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
-                    <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Consultar notas</div>
+                    <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Consultar promedios</div>
                     <p class="text-xs text-blue-500 mt-0.5 leading-tight">La institución aún no ha publicado las notas finales.</p>
                 </div>
             @else
                 <a href="{{ route('padres.notas') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                    📋 Consultar notas
+                    📋 Consultar promedios
                 </a>
             @endif
 
@@ -143,6 +144,10 @@
 
             <a href="{{ route('padres.calendario') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                 📆 Calendario académico
+            </a>
+
+            <a href="{{ route('padres.atencion_docentes') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                🗓 Atención a padres
             </a>
 
             <a href="{{ route('padres.estado_cuenta') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">

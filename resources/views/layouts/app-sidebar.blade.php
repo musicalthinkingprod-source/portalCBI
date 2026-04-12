@@ -54,16 +54,6 @@
                 <h2 class="text-xl font-semibold text-gray-700">@yield('header', 'Dashboard')</h2>
             </div>
             <div class="flex items-center gap-3">
-                {{-- Búsqueda rápida Ctrl+K --}}
-                <button onclick="abrirPaleta()" id="cmd-btn"
-                    class="hidden sm:flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-400 text-sm rounded-lg px-3 py-1.5 transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
-                    </svg>
-                    <span>Buscar...</span>
-                    <kbd class="text-[10px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded font-mono">Ctrl+K</kbd>
-                </button>
-
                 {{-- Campana de notificaciones --}}
                 <div class="relative" id="notif-wrap">
                     <button id="notif-btn" onclick="toggleNotifPanel()"
@@ -162,8 +152,8 @@
         }
         @endphp
 
-        {{-- ── Estudiantes: SuperAd, Admin, Ori, Sec* ── --}}
-        @if(!$isDoc && !$isContab && in_array($profile, ['SuperAd','Admin','Ori']) || $isSec)
+        {{-- ── Estudiantes: SuperAd, Admin, Ori*, Sec* ── --}}
+        @if(!$isDoc && !$isContab && ($isSec || $isAdminLike || str_starts_with($profile, 'Ori')))
         @php $catId = 'estudiantes'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -182,8 +172,8 @@
         </div>
         @endif
 
-        {{-- ── PIAR: SuperAd, Admin, Ori, DOC* ── --}}
-        @if($isAdminLike || $profile === 'Ori' || $isDoc)
+        {{-- ── PIAR: SuperAd, Admin, Ori*, DOC* ── --}}
+        @if($isAdminLike || str_starts_with($profile, 'Ori') || $isDoc)
         @php $catId = 'piar'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -194,11 +184,12 @@
                 </svg>
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
-                @if($isAdminLike || $profile === 'Ori')
+                @if($isAdminLike || str_starts_with($profile, 'Ori'))
                 {!! sidebarLink(route('piar.buscar'), '📋 Crear / Editar PIAR') !!}
-                {!! sidebarLink(route('piar.informe'), '📊 Informe Anexo 2') !!}
+                {!! sidebarLink(route('piar.informe'), '📊 Informe PIAR') !!}
+                {!! sidebarLink(route('control.piar_fechas'), '🎛️ Control de etapas PIAR') !!}
                 @endif
-                {!! sidebarLink(route('piar.anexo2.index'), '📝 PIAR Anexo 2') !!}
+                {!! sidebarLink(route('piar.anexo2.index'), '📝 Diligenciamiento PIAR') !!}
             </ul>
         </div>
         @endif
@@ -247,7 +238,7 @@
                 {!! sidebarLink(route('horarios.index'), '🗓️ Horarios') !!}
                 {!! sidebarLink(route('horarios.disponibilidad'), '🟢 Disponibilidad docentes') !!}
                 {!! sidebarLink(route('notas.reporte'), '📊 Informe de digitación') !!}
-                {!! sidebarLink(route('ciclos.informe'), '📋 Control de planilla') !!}
+                {!! sidebarLink(route('control.planilla'), '📋 Control de planilla') !!}
                 {!! sidebarLink(route('english-acq.informe'), '📊 Informe English ACQ') !!}
                 @endif
             </ul>
@@ -314,12 +305,33 @@
                 @endif
                 {!! sidebarLink(route('cartera.seguimiento.informe'), '📋 Seguimiento cartera') !!}
                 {!! sidebarLink(route('cartera.por_cc'), '🪪 Cartera por CC') !!}
+                @if($isAdminLike)
+                {!! sidebarLink(route('admin.exenciones-cartera.index'), '🔓 Exenciones portal padres') !!}
+                @endif
             </ul>
         </div>
         @endif
 
-        {{-- ── Seguimiento Académico: SuperAd, Admin, Sec*, DOC* ── --}}
-        @if($isAdminLike || $isSec || $isDoc)
+        {{-- ── Corrección de notas: Ori* (sección propia) ── --}}
+        @if(str_starts_with($profile, 'Ori'))
+        @php $catId = 'correcciones-ori'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Gestión Académica</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('correcciones.index'), '🔧 Solicitudes de corrección') !!}
+                {!! sidebarLink(route('correcciones.create'), '➕ Nueva corrección') !!}
+            </ul>
+        </div>
+        @endif
+
+        {{-- ── Seguimiento Académico: SuperAd, Admin, Sec*, DOC*, Ori* ── --}}
+        @if($isAdminLike || $isSec || $isDoc || str_starts_with($profile, 'Ori'))
         @php $catId = 'seguimiento-academico'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -334,7 +346,9 @@
                 {!! sidebarLink(route('derroteros.index'), '📊 Informe derroteros') !!}
                 {!! sidebarLink(route('salvavidas.reporte'), '📊 Reporte salvavidas') !!}
                 @endif
+                @if($isAdminLike || $isSec || $isDoc || str_starts_with($profile, 'Ori'))
                 {!! sidebarLink(route('informes.boletin'), '📋 Boletines') !!}
+                @endif
             </ul>
         </div>
         @endif
@@ -386,8 +400,7 @@
                 </svg>
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
-                {!! sidebarLink(route('ciclos.index'), '🗂️ Control de ciclos') !!}
-                {!! sidebarLink(route('admin.usuarios'), '👤 Gestión de usuarios') !!}
+{!! sidebarLink(route('admin.usuarios'), '👤 Gestión de usuarios') !!}
                 {!! sidebarLink(route('admin.directores'), '🏫 Directores de grupo') !!}
                 {!! sidebarLink(route('admin.asignaciones'), '🔄 Asignaciones') !!}
                 {!! sidebarLink(route('admin.fechas'), '📅 Fechas') !!}
@@ -399,6 +412,24 @@
                 {!! sidebarLink(route('nomina.index'), '👥 Gestión de personal') !!}
                 {!! sidebarLink(route('circulares.index'), '📄 Circulares') !!}
                 {!! sidebarLink(route('rutas.index'), '🚌 Listado de rutas') !!}
+                {!! sidebarLink(route('backup.index'), '💾 Copia de seguridad') !!}
+            </ul>
+        </div>
+        @endif
+
+        {{-- ── Copia de Seguridad: Admin, Contab, Sec* (no SuperAd, ya lo tiene arriba) ── --}}
+        @if(!$isSuperAd && ($isAdmin || $isContab || $isSec))
+        @php $catId = 'copia-seguridad'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Copia de Seguridad</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('backup.index'), '💾 Descargar copia') !!}
             </ul>
         </div>
         @endif
@@ -727,15 +758,21 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        const urlBackup = '{{ route('backup.index') }}';
         lista.innerHTML = notifs.map(n => {
             const fecha = new Date(n.created_at).toLocaleString('es-CO', {
                 day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
             });
-            return `<li class="px-4 py-3 hover:bg-blue-50 cursor-pointer group" onclick="marcarLeida(${n.id})">
+            const esBackup   = n.tipo === 'backup';
+            const dotColor   = esBackup ? 'bg-amber-500' : 'bg-blue-500';
+            const clickAction = esBackup
+                ? `marcarLeida(${n.id}); window.location.href='${urlBackup}';`
+                : `marcarLeida(${n.id})`;
+            return `<li class="px-4 py-3 hover:bg-blue-50 cursor-pointer group" onclick="${clickAction}">
                 <div class="flex items-start gap-2">
-                    <div class="mt-0.5 w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></div>
+                    <div class="mt-0.5 w-2 h-2 rounded-full ${dotColor} flex-shrink-0"></div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-xs font-semibold text-gray-800 truncate">${escHtml(n.titulo)}</p>
+                        <p class="text-xs font-semibold text-gray-800 truncate">${esBackup ? '💾 ' : ''}${escHtml(n.titulo)}</p>
                         <p class="text-xs text-gray-500 mt-0.5 leading-snug">${escHtml(n.mensaje)}</p>
                         <p class="text-[10px] text-gray-400 mt-1">${fecha}</p>
                     </div>
@@ -767,6 +804,35 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => div && div.remove(), 6000);
     }
 
+    // ── Toast de backup (color ámbar) ──
+    let backupToastMostrado = false;
+    function mostrarToastBackup() {
+        if (backupToastMostrado) return;
+        // Solo una vez por sesión de pestaña
+        if (sessionStorage.getItem('backup_recordado_hoy')) return;
+
+        backupToastMostrado = true;
+        sessionStorage.setItem('backup_recordado_hoy', '1');
+
+        const id  = 'toast-backup';
+        const div = document.createElement('div');
+        div.id    = id;
+        div.style.cssText = [
+            'position:fixed','bottom:24px','right:24px','z-index:9999',
+            'background:#92400e','color:#fff','border-radius:14px',
+            'padding:14px 18px','max-width:340px','box-shadow:0 8px 32px rgba(0,0,0,.25)',
+            'font-size:13px','line-height:1.4','cursor:pointer',
+            'animation:slideInToast .25s ease-out',
+        ].join(';');
+        const urlBackup = '{{ route('backup.index') }}';
+        div.innerHTML = `<strong style="display:block;margin-bottom:4px;">⚠️ Copia de seguridad pendiente</strong>`
+            + `No has descargado la copia de seguridad hoy. `
+            + `<a href="${urlBackup}" style="color:#fde68a;text-decoration:underline;font-weight:600;">Ir al módulo</a>`;
+        div.onclick = (e) => { if (!e.target.closest('a')) div.remove(); };
+        document.body.appendChild(div);
+        setTimeout(() => div && div.remove(), 12000);
+    }
+
     // ── Polling ──
     let ultimoTotal = null;
 
@@ -781,7 +847,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (ultimoTotal !== null && total > ultimoTotal && !panelAbierto) {
                     const nuevas = total - ultimoTotal;
                     if (nuevas === 1 && notificaciones[0]) {
-                        mostrarToast(notificaciones[0].titulo, notificaciones[0].mensaje);
+                        const esBackup = notificaciones[0].tipo === 'backup';
+                        if (esBackup) {
+                            mostrarToastBackup();
+                        } else {
+                            mostrarToast(notificaciones[0].titulo, notificaciones[0].mensaje);
+                        }
                     } else {
                         mostrarToast('Nuevas notificaciones', `Tienes ${nuevas} notificaciones nuevas.`);
                     }

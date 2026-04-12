@@ -25,7 +25,7 @@
 
             {{-- Paso 1: seleccionar materia/curso/periodo --}}
             <form method="GET" action="{{ route('correcciones.create') }}" id="form-selector">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                <div class="grid grid-cols-1 sm:grid-cols-{{ $esOrientador ? '2' : '3' }} gap-4 items-end">
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Materia</label>
                         <select name="materia" id="sel-materia"
@@ -38,6 +38,7 @@
                             @endforeach
                         </select>
                     </div>
+                    @if(!$esOrientador)
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Curso</label>
                         <select name="curso" id="sel-curso"
@@ -52,6 +53,7 @@
                             @endif
                         </select>
                     </div>
+                    @endif
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Período</label>
                         <select name="periodo"
@@ -64,7 +66,7 @@
                 </div>
             </form>
 
-            @if($matSelec && $cursoSelec)
+            @if($matSelec && ($cursoSelec || $esOrientador))
             {{-- Paso 2: formulario de solicitud --}}
             <form method="POST" action="{{ route('correcciones.store') }}" class="space-y-4" id="form-solicitud">
                 @csrf
@@ -86,25 +88,19 @@
                     </select>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                            Nota actual <span class="text-gray-400 normal-case font-normal">(debe coincidir con el sistema)</span>
-                        </label>
-                        <input type="number" name="nota_actual" id="nota-actual"
-                            value="{{ old('nota_actual', $notaActual) }}"
-                            min="0" max="10" step="0.1" required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        @error('nota_actual')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Nota propuesta</label>
-                        <input type="number" name="nota_propuesta"
-                            value="{{ old('nota_propuesta') }}"
-                            min="0" max="10" step="0.1" required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        @error('nota_propuesta')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
-                    </div>
+                @if($notaActual !== null)
+                <div class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm text-gray-600">
+                    Nota actual en el sistema: <strong class="text-gray-900">{{ $notaActual }}</strong>
+                </div>
+                @endif
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Nota propuesta</label>
+                    <input type="number" name="nota_propuesta"
+                        value="{{ old('nota_propuesta') }}"
+                        min="0" max="10" step="0.1" required
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    @error('nota_propuesta')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
@@ -141,29 +137,33 @@
 
 @push('scripts')
 <script>
+    const esOrientador = @json($esOrientador);
     const mapaMaterias = @json($mapaMateriasCursos);
     const selMateria   = document.getElementById('sel-materia');
     const selCurso     = document.getElementById('sel-curso');
     const formSelector = document.getElementById('form-selector');
     const selAlumno    = document.getElementById('sel-alumno');
 
-    function actualizarCursos() {
-        const mat = selMateria.value;
-        selCurso.innerHTML = '<option value="">— Selecciona —</option>';
-        if (!mat || !mapaMaterias[mat]) { selCurso.disabled = true; return; }
-        mapaMaterias[mat].forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c; opt.textContent = c;
-            selCurso.appendChild(opt);
-        });
-        selCurso.disabled = false;
-    }
-
     if (selMateria) {
         selMateria.addEventListener('change', () => {
-            actualizarCursos();
-            selCurso.value = '';
-            formSelector.submit();
+            if (esOrientador) {
+                formSelector.submit();
+            } else {
+                selCurso.innerHTML = '<option value="">— Selecciona —</option>';
+                const mat = selMateria.value;
+                if (mat && mapaMaterias[mat]) {
+                    mapaMaterias[mat].forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c; opt.textContent = c;
+                        selCurso.appendChild(opt);
+                    });
+                    selCurso.disabled = false;
+                } else {
+                    selCurso.disabled = true;
+                }
+                selCurso.value = '';
+                formSelector.submit();
+            }
         });
     }
 
@@ -173,15 +173,14 @@
         });
     }
 
-    // Al cambiar estudiante, buscar su nota actual vía recarga
     if (selAlumno) {
         selAlumno.addEventListener('change', function () {
             if (!this.value) return;
             const url = new URL(window.location.href);
-            url.searchParams.set('materia',    '{{ $matSelec }}');
-            url.searchParams.set('curso',      '{{ $cursoSelec }}');
-            url.searchParams.set('periodo',    '{{ $periodo }}');
-            url.searchParams.set('codigo_alum', this.value);
+            url.searchParams.set('materia',     '{{ $matSelec }}');
+            url.searchParams.set('curso',       '{{ $cursoSelec }}');
+            url.searchParams.set('periodo',     '{{ $periodo }}');
+            url.searchParams.set('codigo_alum',  this.value);
             window.location.href = url.toString();
         });
     }

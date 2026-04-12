@@ -1,19 +1,19 @@
 @extends('layouts.app-sidebar')
 
-@section('header', 'Planilla Ponderada (Prototipo)')
+@section('header', 'Planilla Ponderada')
 
 @section('slot')
 
 @php
     $categorias = [
-        'P' => ['label' => 'Procedimental', 'peso' => '70%', 'color' => 'blue',
-                'bg' => 'bg-blue-700', 'badge' => 'bg-blue-100 text-blue-800', 'ring' => 'focus:ring-blue-400'],
         'C' => ['label' => 'Cognitivo',     'peso' => '20%', 'color' => 'purple',
                 'bg' => 'bg-purple-700', 'badge' => 'bg-purple-100 text-purple-800', 'ring' => 'focus:ring-purple-400'],
+        'P' => ['label' => 'Procedimental', 'peso' => '70%', 'color' => 'blue',
+                'bg' => 'bg-blue-700', 'badge' => 'bg-blue-100 text-blue-800', 'ring' => 'focus:ring-blue-400'],
         'A' => ['label' => 'Actitudinal',   'peso' => '10%', 'color' => 'green',
                 'bg' => 'bg-green-700', 'badge' => 'bg-green-100 text-green-800', 'ring' => 'focus:ring-green-400'],
     ];
-    $columnasPorCat = ['P' => collect(), 'C' => collect(), 'A' => collect()];
+    $columnasPorCat = ['C' => collect(), 'P' => collect(), 'A' => collect()];
     foreach ($columnas as $col) {
         $columnasPorCat[$col->categoria][] = $col;
     }
@@ -179,8 +179,8 @@
                     {{-- Fila 1: grupos de categoría --}}
                     <thead>
                         <tr class="border-b border-gray-200">
-                            <th class="px-4 py-2 text-left bg-gray-50 sticky left-0 z-10 border-r border-gray-200 min-w-[220px]" rowspan="2">
-                                Estudiante
+                            <th class="px-4 py-2 text-left bg-gray-50 sticky left-0 z-10 border-r border-gray-200 min-w-[240px]" rowspan="2">
+                                Código · Estudiante
                             </th>
                             @foreach($categorias as $cat => $cfg)
                                 @php
@@ -250,6 +250,7 @@
                         @foreach($estudiantes as $est)
                         <tr class="hover:bg-gray-50" data-codigo="{{ $est->CODIGO }}">
                             <td class="px-4 py-2 font-medium text-gray-800 sticky left-0 bg-white border-r border-gray-200 z-10 whitespace-nowrap">
+                                <span class="text-gray-400 font-mono text-xs mr-1">{{ $est->CODIGO }}</span>
                                 {{ $est->APELLIDO1 }} {{ $est->APELLIDO2 }} {{ $est->NOMBRE1 }}
                             </td>
 
@@ -334,10 +335,31 @@
                     class="bg-blue-800 hover:bg-blue-700 text-white font-semibold text-sm px-6 py-2 rounded-lg transition">
                     💾 Guardar planilla
                 </button>
-                <button type="button" onclick="confirmarEntrega()"
-                    class="bg-emerald-700 hover:bg-emerald-600 text-white font-semibold text-sm px-6 py-2 rounded-lg transition">
-                    📤 Entregar notas
-                </button>
+                @php
+                    $ventana = $fechaEntrega ?? null;
+                @endphp
+                @if($entregaActiva)
+                    <button type="button" onclick="confirmarEntrega()"
+                        class="bg-emerald-700 hover:bg-emerald-600 text-white font-semibold text-sm px-6 py-2 rounded-lg transition">
+                        📤 Entregar notas
+                    </button>
+                @else
+                    <div class="flex flex-col items-end gap-1">
+                        <button type="button" disabled
+                            class="bg-gray-300 text-gray-500 font-semibold text-sm px-6 py-2 rounded-lg cursor-not-allowed"
+                            title="La ventana de entrega no está abierta">
+                            📤 Entregar notas
+                        </button>
+                        @if($ventana)
+                            <span class="text-xs text-gray-400">
+                                Habilitado del {{ \Carbon\Carbon::parse($ventana->INICIO)->format('d/m H:i') }}
+                                al {{ \Carbon\Carbon::parse($ventana->FIN)->format('d/m H:i') }}
+                            </span>
+                        @else
+                            <span class="text-xs text-gray-400">Ventana N{{ $periodo }} no configurada</span>
+                        @endif
+                    </div>
+                @endif
             </div>
         </div>
     </form>

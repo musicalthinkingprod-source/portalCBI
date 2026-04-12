@@ -7,6 +7,20 @@ use Illuminate\Support\Facades\DB;
 
 class PiarController extends Controller
 {
+    // ── Detecta el período académico actual ──────────────────────────────────
+    private function periodoActual(): int
+    {
+        // Fallback: período más alto registrado en planilla_columnas
+        $p = DB::table('planilla_columnas')->orderByDesc('periodo')->value('periodo');
+        if ($p) return min((int) $p, 3); // PIAR solo tiene P1, P2, P3
+
+        // Fallback por mes
+        $mes = (int) now()->format('n');
+        if ($mes <= 3)  return 1;
+        if ($mes <= 7)  return 2;
+        return 3;
+    }
+
     public function buscar(Request $request)
     {
         $buscar      = $request->input('buscar');
@@ -32,13 +46,17 @@ class PiarController extends Controller
             ->join('ESTUDIANTES as e', 'e.CODIGO', '=', 'pd.CODIGO_ALUM')
             ->where('e.ESTADO', 'MATRICULADO')
             ->select('e.CODIGO', 'e.NOMBRE1', 'e.NOMBRE2', 'e.APELLIDO1', 'e.APELLIDO2',
-                     'e.GRADO', 'e.CURSO', 'pd.DIAGNOSTICO')
+                     'e.GRADO', 'e.CURSO', 'pd.DIAGNOSTICO',
+                     'pd.FECHA_P1', 'pd.PERSONA_P1',
+                     'pd.FECHA_P2', 'pd.PERSONA_P2',
+                     'pd.FECHA_P3', 'pd.PERSONA_P3')
             ->orderBy('e.GRADO')->orderBy('e.CURSO')->orderBy('e.APELLIDO1')
             ->get();
 
-        $totalEnPiar = $estudiantesEnPiar->count();
+        $totalEnPiar   = $estudiantesEnPiar->count();
+        $periodoActual = $this->periodoActual();
 
-        return view('piar.buscar', compact('estudiantes', 'buscar', 'hayBusqueda', 'estudiantesEnPiar', 'totalEnPiar'));
+        return view('piar.buscar', compact('estudiantes', 'buscar', 'hayBusqueda', 'estudiantesEnPiar', 'totalEnPiar', 'periodoActual'));
     }
 
     public function crear(string $codigo)
@@ -53,13 +71,17 @@ class PiarController extends Controller
             ->join('ESTUDIANTES as e', 'e.CODIGO', '=', 'pd.CODIGO_ALUM')
             ->where('e.ESTADO', 'MATRICULADO')
             ->select('e.CODIGO', 'e.NOMBRE1', 'e.NOMBRE2', 'e.APELLIDO1', 'e.APELLIDO2',
-                     'e.GRADO', 'e.CURSO', 'pd.DIAGNOSTICO')
+                     'e.GRADO', 'e.CURSO', 'pd.DIAGNOSTICO',
+                     'pd.FECHA_P1', 'pd.PERSONA_P1',
+                     'pd.FECHA_P2', 'pd.PERSONA_P2',
+                     'pd.FECHA_P3', 'pd.PERSONA_P3')
             ->orderBy('e.GRADO')->orderBy('e.CURSO')->orderBy('e.APELLIDO1')
             ->get();
 
-        $totalEnPiar = $estudiantesEnPiar->count();
+        $totalEnPiar   = $estudiantesEnPiar->count();
+        $periodoActual = $this->periodoActual();
 
-        return view('piar.crear', compact('estudiante', 'padres', 'piar', 'estudiantesEnPiar', 'totalEnPiar'));
+        return view('piar.crear', compact('estudiante', 'padres', 'piar', 'estudiantesEnPiar', 'totalEnPiar', 'periodoActual'));
     }
 
     public function imprimir(string $codigo)
@@ -123,6 +145,99 @@ class PiarController extends Controller
         ));
     }
 
+    public function imprimirTodos(string $codigo)
+    {
+        $estudiante = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->first();
+        if (!$estudiante) abort(404);
+
+        // ── Datos Anexo 1 ────────────────────────────────────────────────────
+        $padres = DB::table('INFO_PADRES')->where('CODIGO', $codigo)->first();
+        $piar   = DB::table('PIAR_DIAG')->where('CODIGO_ALUM', $codigo)->first();
+
+        $nombreCompleto = trim("{$estudiante->NOMBRE1} {$estudiante->NOMBRE2}");
+        $apellidos      = trim("{$estudiante->APELLIDO1} {$estudiante->APELLIDO2}");
+        $tipoDoc = 'TI';
+        $numId   = $estudiante->TAR_ID ?? '';
+        if (!$numId && ($estudiante->REG_CIVIL ?? '')) { $tipoDoc = 'RC'; $numId = $estudiante->REG_CIVIL; }
+        $fechaNac = '';
+        if ($estudiante->FECH_NACIMIENTO ?? null) {
+            try { $fechaNac = \Carbon\Carbon::parse($estudiante->FECH_NACIMIENTO)->translatedFormat('d \d\e F \d\e Y'); }
+            catch (\Exception $e) { $fechaNac = $estudiante->FECH_NACIMIENTO; }
+        }
+        $edad      = $estudiante->EDAD ?? '';
+        $grado     = $estudiante->GRADO ?? '';
+        $curso     = $estudiante->CURSO ?? '';
+        $sede      = $estudiante->SEDE  ? 'Sede ' . $estudiante->SEDE : '';
+        $lugarNac  = $estudiante->LUG_NACIMIENTO ?? '';
+        $direccion = $estudiante->DIRECCION ?? '';
+        $barrio    = $estudiante->BARRIO ?? '';
+        $epsEst    = $estudiante->EPS ?? '';
+        $enferEst  = $estudiante->ENFER ?? '';
+        $telPadres = ''; $correoPadres = '';
+        $nombreMadre = $padres->MADRE     ?? ''; $nombrePadre = $padres->PADRE     ?? '';
+        $empMadre    = $padres->EMP_MADRE ?? ''; $empPadre    = $padres->EMP_PADRE ?? '';
+        $celMadre    = $padres->CEL_MADRE ?? ''; $emailMadre  = $padres->EMAIL_MADRE ?? '';
+        $celPadre    = $padres->CEL_PADRE ?? '';
+        $nombreAcud  = $padres->ACUD      ?? $nombreMadre;
+        $celAcud     = $padres->CEL_ACUD  ?? '';
+        $emailAcud   = $padres->EMAIL_ACUD ?? $emailMadre;
+        if ($padres) {
+            $telPadres    = $padres->CEL_ACUD ?: ($padres->CEL_MADRE ?: ($padres->CEL_PADRE ?: ''));
+            $correoPadres = $padres->EMAIL_ACUD ?: ($padres->EMAIL_MADRE ?: ($padres->EMAIL_PADRE ?: ''));
+        }
+
+        // ── Datos Anexo 2 ────────────────────────────────────────────────────
+        $piarDiag = DB::table('PIAR_DIAG')->where('CODIGO_ALUM', $codigo)->first();
+
+        $caractDir = DB::table('PIAR_CARACT_DIR as pcd')
+            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'pcd.CODIGO_DOC')
+            ->where('pcd.CODIGO_ALUM', $codigo)
+            ->select('pcd.CARACTERIZACION', 'pcd.CURSO', 'd.NOMBRE_DOC')
+            ->first();
+
+        $caractMats = DB::table('PIAR_CARACT_MAT as pc')
+            ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'pc.CODIGO_MAT')
+            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'pc.CODIGO_DOC')
+            ->where('pc.CODIGO_ALUM', $codigo)
+            ->select('pc.CARACTERIZACION', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
+            ->orderBy('m.NOMBRE_MAT')
+            ->get();
+
+        $ajustes = DB::table('PIAR_MAT as pm')
+            ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'pm.CODIGO_MAT')
+            ->join(DB::raw('(SELECT CODIGO_MAT, CURSO, MIN(CODIGO_DOC) AS CODIGO_DOC FROM ASIGNACION_PCM GROUP BY CODIGO_MAT, CURSO) as a'), function ($j) use ($estudiante) {
+                $j->on('a.CODIGO_MAT', '=', 'pm.CODIGO_MAT')->where('a.CURSO', '=', $estudiante->CURSO);
+            })
+            ->join('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'a.CODIGO_DOC')
+            ->where('pm.CODIGO_ALUM', $codigo)
+            ->select('pm.*', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
+            ->orderBy('m.NOMBRE_MAT')
+            ->get();
+
+        $docentesElaboran = collect();
+        if ($caractDir) {
+            $docentesElaboran->push((object)['NOMBRE_DOC' => $caractDir->NOMBRE_DOC, 'CARGO' => 'Director(a) de grupo ' . ($caractDir->CURSO ?? '')]);
+        }
+        foreach ($caractMats as $cm) {
+            if (!$docentesElaboran->contains('NOMBRE_DOC', $cm->NOMBRE_DOC))
+                $docentesElaboran->push((object)['NOMBRE_DOC' => $cm->NOMBRE_DOC, 'CARGO' => 'Docente de ' . $cm->NOMBRE_MAT]);
+        }
+        foreach ($ajustes as $aj) {
+            if (!$docentesElaboran->contains('NOMBRE_DOC', $aj->NOMBRE_DOC))
+                $docentesElaboran->push((object)['NOMBRE_DOC' => $aj->NOMBRE_DOC, 'CARGO' => 'Docente de ' . $aj->NOMBRE_MAT]);
+        }
+
+        return view('piar.imprimir_todos', compact(
+            'estudiante', 'piar', 'piarDiag',
+            'nombreCompleto', 'apellidos', 'tipoDoc', 'numId', 'fechaNac',
+            'edad', 'grado', 'curso', 'sede', 'lugarNac', 'direccion', 'barrio',
+            'epsEst', 'enferEst', 'telPadres', 'correoPadres',
+            'nombreMadre', 'nombrePadre', 'empMadre', 'empPadre',
+            'celMadre', 'emailMadre', 'celPadre', 'nombreAcud', 'celAcud', 'emailAcud',
+            'caractDir', 'caractMats', 'ajustes', 'docentesElaboran'
+        ));
+    }
+
     public function eliminar(string $codigo)
     {
         DB::table('PIAR_DIAG')->where('CODIGO_ALUM', $codigo)->delete();
@@ -135,10 +250,19 @@ class PiarController extends Controller
     {
         $bool = fn($v) => $v === 'si' ? 1 : 0;
 
+        $user = auth()->user()->USER;
+
+        // Conservar el orientador original si ya existe; asignar el usuario actual si es nuevo registro
+        $oriExistente = DB::table('PIAR_DIAG')
+            ->where('CODIGO_ALUM', $codigo)
+            ->value('codigo_ori');
+        $codigoOri = $oriExistente ?? $user;
+
         try {
         DB::table('PIAR_DIAG')->updateOrInsert(
             ['CODIGO_ALUM' => $codigo],
             [
+                'codigo_ori'       => $codigoOri,
                 // Encabezado
                 'DIAGNOSTICO'      => $request->DIAGNOSTICO,
                 'LUGAR_DIL'        => $request->LUGAR_DIL,
@@ -234,6 +358,13 @@ class PiarController extends Controller
                 'DISTANCIA'        => $request->DISTANCIA,
                 'INST_NOMBRE'      => $request->INST_NOMBRE,
                 'INST_SEDE'        => $request->INST_SEDE,
+                // Seguimiento por período
+                'FECHA_P1'         => $request->FECHA_P1 ?: null,
+                'PERSONA_P1'       => $request->PERSONA_P1 ?: null,
+                'FECHA_P2'         => $request->FECHA_P2 ?: null,
+                'PERSONA_P2'       => $request->PERSONA_P2 ?: null,
+                'FECHA_P3'         => $request->FECHA_P3 ?: null,
+                'PERSONA_P3'       => $request->PERSONA_P3 ?: null,
             ]
         );
 
@@ -246,13 +377,18 @@ class PiarController extends Controller
 
     public function informe()
     {
+        $periodoActual = $this->periodoActual();
+
         // Todos los estudiantes matriculados con PIAR_DIAG registrado
         $estudiantes = DB::table('ESTUDIANTES as e')
             ->join('PIAR_DIAG as pd', 'pd.CODIGO_ALUM', '=', 'e.CODIGO')
             ->where('e.ESTADO', 'MATRICULADO')
             ->select('e.CODIGO', 'e.NOMBRE1', 'e.NOMBRE2', 'e.APELLIDO1', 'e.APELLIDO2',
                      'e.GRADO', 'e.CURSO', 'pd.DIAGNOSTICO',
-                     DB::raw("CASE WHEN pd.LUGAR_DIL IS NOT NULL AND pd.LUGAR_DIL != '' THEN 1 ELSE 0 END as ANEXO1_OK"))
+                     DB::raw("CASE WHEN pd.LUGAR_DIL IS NOT NULL AND pd.LUGAR_DIL != '' THEN 1 ELSE 0 END as ANEXO1_OK"),
+                     'pd.FECHA_P1', 'pd.PERSONA_P1',
+                     'pd.FECHA_P2', 'pd.PERSONA_P2',
+                     'pd.FECHA_P3', 'pd.PERSONA_P3')
             ->orderBy('e.GRADO')->orderBy('e.CURSO')->orderBy('e.APELLIDO1')
             ->get();
 
@@ -285,10 +421,11 @@ class PiarController extends Controller
         $caractDirs = DB::table('PIAR_CARACT_DIR as pcd')
             ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'pcd.CODIGO_DOC')
             ->whereIn('pcd.CODIGO_ALUM', $codigoAlums)
-            ->select('pcd.CODIGO_ALUM', 'pcd.CARACTERIZACION', 'd.NOMBRE_DOC')
+            ->select('pcd.CODIGO_ALUM', 'pcd.CARACTERIZACION', 'pcd.ESTADO',
+                     'pcd.APROBADO_POR', 'pcd.FECHA_APROBACION', 'd.NOMBRE_DOC')
             ->get()
             ->groupBy('CODIGO_ALUM');
 
-        return view('piar.informe', compact('estudiantes', 'asignaciones', 'piarMats', 'caractMats', 'caractDirs'));
+        return view('piar.informe', compact('estudiantes', 'asignaciones', 'piarMats', 'caractMats', 'caractDirs', 'periodoActual'));
     }
 }

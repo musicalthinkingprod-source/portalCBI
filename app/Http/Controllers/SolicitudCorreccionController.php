@@ -12,11 +12,12 @@ class SolicitudCorreccionController extends Controller
         return 'NOTAS_' . $anio;
     }
 
-    /** Lista de solicitudes — docentes ven las suyas; admins ven todas */
+    /** Lista de solicitudes — docentes/orientadores ven las suyas; admins ven todas */
     public function index(Request $request)
     {
-        $profile    = auth()->user()->PROFILE;
-        $esSuperior = in_array($profile, ['SuperAd', 'Admin']);
+        $profile      = auth()->user()->PROFILE;
+        $esSuperior   = in_array($profile, ['SuperAd', 'Admin']);
+        $esOrientador = str_starts_with($profile, 'Ori');
 
         $q = DB::table('solicitudes_correccion as s')
             ->leftJoin('CODIGOSMAT as m',   'm.CODIGO_MAT', '=', 's.codigo_mat')
@@ -43,38 +44,47 @@ class SolicitudCorreccionController extends Controller
         $solicitudes  = $q->paginate(30)->withQueryString();
         $pendientes   = DB::table('solicitudes_correccion')->where('estado', 'PENDIENTE')->count();
 
-        return view('correcciones.index', compact('solicitudes', 'esSuperior', 'pendientes'));
+        return view('correcciones.index', compact('solicitudes', 'esSuperior', 'esOrientador', 'pendientes'));
     }
 
-    /** Formulario para el docente */
+    /** Formulario para el docente / orientador */
     public function create(Request $request)
     {
-        $profile    = auth()->user()->PROFILE;
-        $esSuperior = in_array($profile, ['SuperAd', 'Admin']);
-        $anio       = (int) date('Y');
+        $profile      = auth()->user()->PROFILE;
+        $esSuperior   = in_array($profile, ['SuperAd', 'Admin']);
+        $esOrientador = str_starts_with($profile, 'Ori');
+        $anio         = (int) date('Y');
 
-        // Asignaciones calificables del docente para saber qué materias/cursos puede ver
-        $queryAsig = DB::table('ASIGNACION_PCM as a')
-            ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
-            ->where('a.calificable', 1)
-            ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT');
+        if ($esOrientador) {
+            // Orientador ve todas las materias calificables
+            $materias = DB::table('CODIGOSMAT')
+                ->orderBy('NOMBRE_MAT')
+                ->get(['CODIGO_MAT', 'NOMBRE_MAT']);
 
-        if (!$esSuperior) {
-            $queryAsig->where('a.CODIGO_DOC', $profile);
+            $mapaMateriasCursos = []; // no aplica filtro por curso para orientadores
+        } else {
+            // Asignaciones calificables del docente
+            $queryAsig = DB::table('ASIGNACION_PCM as a')
+                ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
+                ->where('a.calificable', 1)
+                ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT');
+
+            if (!$esSuperior) {
+                $queryAsig->where('a.CODIGO_DOC', $profile);
+            }
+
+            $asignaciones = $queryAsig->orderBy('m.NOMBRE_MAT')->orderBy('a.CURSO')->get();
+            $materias     = $asignaciones->unique('CODIGO_MAT')->values();
+
+            $mapaMateriasCursos = [];
+            foreach ($asignaciones as $a) {
+                $mapaMateriasCursos[$a->CODIGO_MAT][] = $a->CURSO;
+            }
+            foreach ($mapaMateriasCursos as &$cs) {
+                $cs = array_values(array_unique($cs));
+            }
         }
 
-        $asignaciones = $queryAsig->orderBy('m.NOMBRE_MAT')->orderBy('a.CURSO')->get();
-        $materias     = $asignaciones->unique('CODIGO_MAT')->values();
-
-        $mapaMateriasCursos = [];
-        foreach ($asignaciones as $a) {
-            $mapaMateriasCursos[$a->CODIGO_MAT][] = $a->CURSO;
-        }
-        foreach ($mapaMateriasCursos as &$cs) {
-            $cs = array_values(array_unique($cs));
-        }
-
-        // Si ya vienen parámetros pre-seleccionados, cargar nota actual
         $matSelec   = $request->input('materia');
         $cursoSelec = $request->input('curso');
         $periodo    = (int) $request->input('periodo', 1);
@@ -95,18 +105,28 @@ class SolicitudCorreccionController extends Controller
             $alumno = DB::table('ESTUDIANTES')->where('CODIGO', $codAlum)->first();
         }
 
-        $estudiantes = collect();
-        if ($matSelec && $cursoSelec) {
+        if ($esOrientador) {
+            // Estudiantes con PIAR — sin filtro por curso
+            $codigosPiar = DB::table('PIAR_DIAG')->pluck('CODIGO_ALUM');
             $estudiantes = DB::table('ESTUDIANTES')
-                ->where('CURSO', $cursoSelec)
                 ->where('ESTADO', 'MATRICULADO')
+                ->whereIn('CODIGO', $codigosPiar)
                 ->orderBy('APELLIDO1')->orderBy('NOMBRE1')
                 ->get();
+        } else {
+            $estudiantes = collect();
+            if ($matSelec && $cursoSelec) {
+                $estudiantes = DB::table('ESTUDIANTES')
+                    ->where('CURSO', $cursoSelec)
+                    ->where('ESTADO', 'MATRICULADO')
+                    ->orderBy('APELLIDO1')->orderBy('NOMBRE1')
+                    ->get();
+            }
         }
 
         return view('correcciones.create', compact(
             'materias', 'mapaMateriasCursos', 'matSelec', 'cursoSelec', 'periodo',
-            'codAlum', 'notaActual', 'alumno', 'estudiantes', 'anio'
+            'codAlum', 'notaActual', 'alumno', 'estudiantes', 'anio', 'esOrientador'
         ));
     }
 
@@ -117,15 +137,14 @@ class SolicitudCorreccionController extends Controller
             'codigo_mat'    => 'required|integer',
             'codigo_alum'   => 'required|integer',
             'periodo'       => 'required|integer|between:1,4',
-            'nota_actual'   => 'required|numeric|min:0|max:10',
-            'nota_propuesta'=> 'required|numeric|min:0|max:10|different:nota_actual',
+            'nota_propuesta'=> 'required|numeric|min:0|max:10',
             'motivo'        => 'required|string|min:10|max:1000',
         ]);
 
         $profile = auth()->user()->PROFILE;
         $anio    = (int) date('Y');
 
-        // Verificar que la nota actual coincida con lo que hay en BD
+        // Tomar la nota actual directamente de la BD
         try {
             $notaReal = DB::table($this->tablaNotas($anio))
                 ->where('CODIGO_ALUM', $request->codigo_alum)
@@ -137,11 +156,11 @@ class SolicitudCorreccionController extends Controller
         }
 
         if ($notaReal === null) {
-            return back()->withErrors(['nota_actual' => 'No se encontró una nota registrada para este estudiante en ese período.'])->withInput();
+            return back()->withErrors(['nota_propuesta' => 'No se encontró una nota registrada para este estudiante en ese período.'])->withInput();
         }
 
-        if ((float) $notaReal !== (float) $request->nota_actual) {
-            return back()->withErrors(['nota_actual' => "La nota actual en el sistema es {$notaReal}, no {$request->nota_actual}."])->withInput();
+        if ((float) $notaReal === (float) $request->nota_propuesta) {
+            return back()->withErrors(['nota_propuesta' => 'La nota propuesta es igual a la nota actual.'])->withInput();
         }
 
         // Verificar que no haya una solicitud PENDIENTE igual
@@ -155,7 +174,7 @@ class SolicitudCorreccionController extends Controller
             ->exists();
 
         if ($yaPendiente) {
-            return back()->withErrors(['motivo' => 'Ya tienes una solicitud pendiente para esta nota.'])->withInput();
+            return back()->withErrors(['motivo' => 'Ya hay una solicitud pendiente para esta nota.'])->withInput();
         }
 
         DB::table('solicitudes_correccion')->insert([
@@ -164,7 +183,7 @@ class SolicitudCorreccionController extends Controller
             'codigo_mat'     => $request->codigo_mat,
             'periodo'        => $request->periodo,
             'anio'           => $anio,
-            'nota_actual'    => $request->nota_actual,
+            'nota_actual'    => $notaReal,
             'nota_propuesta' => $request->nota_propuesta,
             'motivo'         => trim($request->motivo),
             'estado'         => 'PENDIENTE',

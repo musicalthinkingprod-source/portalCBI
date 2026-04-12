@@ -75,7 +75,7 @@ class ListadosEspecialesController extends Controller
 
         $todosLosCursos = DB::table('ESTUDIANTES')
             ->where('ESTADO', 'MATRICULADO')->distinct()->pluck('CURSO')
-            ->filter(fn($c) => preg_match('/^\d/', $c) && (int) $c >= 6)
+            ->filter(fn($c) => preg_match('/^\d/', $c) && (int) $c >= 7)
             ->sortBy(fn($c) => [(int) $c, preg_replace('/^\d+/', '', $c)])
             ->values();
 

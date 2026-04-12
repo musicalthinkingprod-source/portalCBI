@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\DB;
 
 class DeroterosController extends Controller
 {
+    // Materias que no aplican para recuperación/derroteros
+    const SIN_RECUPERACION = [11, 30, 31, 131]; // English Acquisition, Gestión Empresarial, Proyecto, Proyecto PE
+
     private function tablaNotas(int $anio): string
     {
         return 'NOTAS_' . $anio;
@@ -29,6 +32,7 @@ class DeroterosController extends Controller
                 ->where('e.ESTADO', 'MATRICULADO')
                 ->where('n.PERIODO', $periodo)
                 ->where('n.NOTA', '<', 7)
+                ->whereNotIn('n.CODIGO_MAT', self::SIN_RECUPERACION)
                 ->select('n.CODIGO_ALUM', 'n.CODIGO_MAT', 'n.NOTA',
                          'e.APELLIDO1', 'e.APELLIDO2', 'e.NOMBRE1', 'e.NOMBRE2', 'e.CURSO',
                          'm.NOMBRE_MAT');
@@ -56,6 +60,7 @@ class DeroterosController extends Controller
                     ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'd.CODIGO_MAT')
                     ->where('d.PERIODO', $periodo)
                     ->where('d.ANIO', $anio)
+                    ->whereNotIn('d.CODIGO_MAT', self::SIN_RECUPERACION)
                     ->whereNotIn(DB::raw("CONCAT(d.CODIGO_ALUM,'_',d.CODIGO_MAT)"),
                         $fallos->map(fn($f) => $f->CODIGO_ALUM . '_' . $f->CODIGO_MAT)->toArray() ?: ['__none__'])
                     ->select('d.CODIGO_ALUM', 'd.CODIGO_MAT',
@@ -182,6 +187,7 @@ class DeroterosController extends Controller
         $queryAsig = DB::table('ASIGNACION_PCM as a')
             ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
             ->where('a.calificable', 1)
+            ->whereNotIn('a.CODIGO_MAT', self::SIN_RECUPERACION)
             ->select('a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT');
 
         if (!$esSuperior) {
@@ -353,14 +359,11 @@ class DeroterosController extends Controller
 
         $codigo = $estudiante->CODIGO;
 
-        // Verificar deuda
+        // Verificar deuda (solo bloquea la nota, no el acceso)
+        $exento    = \App\Http\Controllers\ExencionCarteraController::tieneExencion($codigo);
         $facturado = DB::table('facturacion')->where('codigo_alumno', $codigo)->sum('valor');
         $pagado    = DB::table('registro_pagos')->where('codigo_alumno', $codigo)->sum('valor');
-        $bloqueado = ($facturado - $pagado) > 100000;
-
-        if ($bloqueado) {
-            return view('derroteros.padres', ['bloqueado' => true, 'derroteros' => collect(), 'anio' => date('Y'), 'periodo' => 1]);
-        }
+        $bloqueado = !$exento && ($facturado - $pagado) > 100000;
 
         $anio    = (int) date('Y');
         $periodo = (int) request()->input('periodo', 1);
@@ -375,6 +378,7 @@ class DeroterosController extends Controller
                 ->where('n.CODIGO_ALUM', $codigo)
                 ->where('n.PERIODO', $periodo)
                 ->where('n.NOTA', '<', 7)
+                ->whereNotIn('n.CODIGO_MAT', self::SIN_RECUPERACION)
                 ->select('n.CODIGO_MAT', 'n.NOTA', 'm.NOMBRE_MAT')
                 ->get();
         } catch (\Exception $e) {}
@@ -423,6 +427,11 @@ class DeroterosController extends Controller
 
         $derroteros = $noElegibles->concat($elegibles)->sortBy('NOMBRE_MAT')->values();
 
-        return view('derroteros.padres', compact('derroteros', 'anio', 'periodo', 'bloqueado'));
+        $curso = $estudiante->CURSO ?? '';
+        $urlsSite = $derroteros->pluck('CODIGO_MAT')->unique()
+            ->mapWithKeys(fn($cm) => [$cm => \App\Http\Controllers\PadresController::urlSite((int)$cm, $curso)])
+            ->toArray();
+
+        return view('derroteros.padres', compact('derroteros', 'anio', 'periodo', 'bloqueado', 'urlsSite'));
     }
 }

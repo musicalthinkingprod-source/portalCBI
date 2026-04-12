@@ -47,7 +47,7 @@
                 <table class="w-full text-sm">
                     <thead class="bg-blue-50 text-blue-900 text-xs uppercase">
                         <tr>
-                            <th class="px-4 py-2 text-left font-semibold">#</th>
+                            <th class="px-4 py-2 text-left font-semibold">Código</th>
                             <th class="px-4 py-2 text-left font-semibold">Estudiante</th>
                             <th class="px-4 py-2 text-center font-semibold">Curso</th>
                             <th class="px-4 py-2 text-left font-semibold">Diagnóstico</th>
@@ -55,9 +55,9 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        @foreach($estudiantesEnPiar as $i => $est)
+                        @foreach($estudiantesEnPiar as $est)
                         <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-2 text-gray-400">{{ $i + 1 }}</td>
+                            <td class="px-4 py-2 font-mono text-xs text-gray-500">{{ $est->CODIGO }}</td>
                             <td class="px-4 py-2 font-medium">
                                 {{ $est->APELLIDO1 }} {{ $est->APELLIDO2 }}, {{ $est->NOMBRE1 }} {{ $est->NOMBRE2 }}
                             </td>

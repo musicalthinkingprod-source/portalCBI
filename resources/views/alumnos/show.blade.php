@@ -11,10 +11,21 @@
                 <h2 class="text-2xl font-bold text-blue-800">
                     {{ $estudiante->APELLIDO1 }} {{ $estudiante->APELLIDO2 }} {{ $estudiante->NOMBRE1 }} {{ $estudiante->NOMBRE2 }}
                 </h2>
+                @php
+                    $gradosLabels = [
+                        -2 => 'Pre-Jardín', -1 => 'Jardín', 0 => 'Transición',
+                        1 => 'Grado 1', 2 => 'Grado 2', 3 => 'Grado 3', 4 => 'Grado 4',
+                        5 => 'Grado 5', 6 => 'Grado 6', 7 => 'Grado 7', 8 => 'Grado 8',
+                        9 => 'Grado 9', 10 => 'Grado 10', 11 => 'Grado 11',
+                    ];
+                    $gradoLabel = $estudiante->GRADO !== null
+                        ? ($gradosLabels[(int)$estudiante->GRADO] ?? $estudiante->GRADO)
+                        : '—';
+                @endphp
                 <div class="flex flex-wrap gap-3 mt-2 text-sm text-gray-500">
                     <span>Código: <strong>{{ $estudiante->CODIGO }}</strong></span>
                     <span>Curso: <strong>{{ $estudiante->CURSO ?? '—' }}</strong></span>
-                    <span>Grado: <strong>{{ $estudiante->GRADO ?? '—' }}</strong></span>
+                    <span>Grado: <strong>{{ $gradoLabel }}</strong></span>
                     <span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $estudiante->ESTADO === 'MATRICULADO' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600' }}">
                         {{ $estudiante->ESTADO ?? '—' }}
                     </span>

@@ -11,8 +11,8 @@ class FechasController extends Controller
     public static function grupos(): array
     {
         return [
-            'P' => ['label' => 'Inicio y Fin de Período',         'icon' => '📅'],
             'N' => ['label' => 'Ingreso de Notas por Docentes',   'icon' => '📝'],
+            'V' => ['label' => 'Subir Salvavidas (Docentes)',     'icon' => '⬆️'],
             'D' => ['label' => 'Consulta de Derroteros',          'icon' => '🗺️'],
             'S' => ['label' => 'Consulta de Salvavidas',          'icon' => '🏊'],
             'B' => ['label' => 'Consulta de Boletines',           'icon' => '📋'],

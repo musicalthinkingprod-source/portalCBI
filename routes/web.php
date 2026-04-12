@@ -11,11 +11,11 @@ use App\Http\Controllers\PadresController;
 use App\Http\Controllers\AlumnoController;
 use App\Http\Controllers\NotasController;
 use App\Http\Controllers\NotasV2Controller;
-use App\Http\Controllers\CiclosController;
 use App\Http\Controllers\SolicitudCorreccionController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\FechasController;
 use App\Http\Controllers\EnglishAcqController;
+use App\Http\Controllers\ControlPlanillaController;
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\SalvavidasController;
 use App\Http\Controllers\DeroterosController;
@@ -23,6 +23,7 @@ use App\Http\Controllers\BoletinController;
 use App\Http\Controllers\PiarController;
 use App\Http\Controllers\PiarMatController;
 use App\Http\Controllers\PiarCaractController;
+use App\Http\Controllers\ControlFechasController;
 use App\Http\Controllers\ParametrosController;
 use App\Http\Controllers\WorldOfficeController;
 use App\Http\Controllers\RutasController;
@@ -34,6 +35,7 @@ use App\Http\Controllers\CircularesController;
 use App\Http\Controllers\HorariosController;
 use App\Http\Controllers\CalendarioAcademicoController;
 use App\Http\Controllers\AsistenciaPersonalController;
+use App\Http\Controllers\BackupController;
 
 /*
 |--------------------------------------------------------------------------
@@ -56,7 +58,7 @@ Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'ind
 Route::post('/verificar-padre', [PadreVerificacionController::class, 'verificar'])->name('padre.verificar');
 
 Route::middleware('padre.verificado')->group(function () {
-    Route::get('/padres/portal', fn() => view('padres.portal'))->name('padres.portal');
+    Route::get('/padres/portal', [PadresController::class, 'portal'])->name('padres.portal');
     Route::get('/padres/estado-cuenta', [PadresController::class, 'estadoCuenta'])->name('padres.estado_cuenta');
     Route::get('/padres/notas', [PadresController::class, 'notas'])->name('padres.notas');
     Route::get('/padres/boletines', [PadresController::class, 'boletines'])->name('padres.boletines');
@@ -65,6 +67,7 @@ Route::middleware('padre.verificado')->group(function () {
     Route::get('/padres/salvavidas', [SalvavidasController::class, 'padres'])->name('padres.salvavidas');
     Route::get('/padres/derroteros', [DeroterosController::class, 'padres'])->name('padres.derroteros');
     Route::get('/padres/calendario', [CalendarioAcademicoController::class, 'padres'])->name('padres.calendario');
+    Route::get('/padres/atencion-docentes', [PadresController::class, 'atencionDocentes'])->name('padres.atencion_docentes');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -86,10 +89,8 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/admin/fechas/{codigo}', [FechasController::class, 'destroy'])->name('admin.fechas.destroy');
         Route::get('/notas/reporte', [NotasController::class, 'reporte'])->name('notas.reporte');
         Route::get('/english-acq/informe', [EnglishAcqController::class, 'informe'])->name('english-acq.informe');
-        Route::get('/ciclos', [CiclosController::class, 'index'])->name('ciclos.index');
-        Route::post('/ciclos', [CiclosController::class, 'store'])->name('ciclos.store');
-        Route::delete('/ciclos/{id}', [CiclosController::class, 'destroy'])->name('ciclos.destroy');
-        Route::get('/ciclos/informe', [CiclosController::class, 'informe'])->name('ciclos.informe');
+        Route::post('/english-acq/entregar', [EnglishAcqController::class, 'entregar'])->name('english-acq.entregar');
+        Route::get('/control/planilla', [ControlPlanillaController::class, 'index'])->name('control.planilla');
         Route::get('/nomina', [NominaController::class, 'index'])->name('nomina.index');
 
         // ── Circulares ────────────────────────────────────────────────────────
@@ -110,6 +111,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/listados-especiales/proyecto/asignar', [ListadosEspecialesController::class, 'asignarProyecto'])->name('listados.proyecto.asignar');
         Route::post('/listados-especiales/musica/asignar', [ListadosEspecialesController::class, 'asignarMusica'])->name('listados.musica.asignar');
         Route::post('/listados-especiales/quitar', [ListadosEspecialesController::class, 'quitar'])->name('listados.quitar');
+    });
+
+    // ── Copia de Seguridad (SuperAd, Admin, Contab, Sec*) ───────────────────
+    Route::middleware('profile:SuperAd,Admin,Contab,Sec*')->group(function () {
+        Route::get('/backup', [BackupController::class, 'index'])->name('backup.index');
+        Route::get('/backup/descargar', [BackupController::class, 'descargar'])->name('backup.descargar');
     });
 
     // ── Control de Pagos: lectura (Admin + Contab + SecC100) ────────────────
@@ -139,6 +146,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/cartera/estudiante/{codigo}/seguimiento', [CarteraController::class, 'storeSeguimiento'])->name('cartera.seguimiento.store');
         Route::delete('/cartera/seguimiento/{id}', [CarteraController::class, 'destroySeguimiento'])->name('cartera.seguimiento.destroy');
         Route::put('/cartera/seguimiento/{id}', [CarteraController::class, 'updateSeguimiento'])->name('cartera.seguimiento.update');
+        Route::get('/admin/exenciones-cartera', [\App\Http\Controllers\ExencionCarteraController::class, 'index'])->name('admin.exenciones-cartera.index');
+        Route::post('/admin/exenciones-cartera', [\App\Http\Controllers\ExencionCarteraController::class, 'store'])->name('admin.exenciones-cartera.store');
+        Route::delete('/admin/exenciones-cartera/{id}', [\App\Http\Controllers\ExencionCarteraController::class, 'destroy'])->name('admin.exenciones-cartera.destroy');
         Route::get('/facturacion/crear', [FacturacionController::class, 'create'])->name('facturacion.create');
         Route::post('/facturacion', [FacturacionController::class, 'store'])->name('facturacion.store');
         Route::get('/facturacion/{id}/editar', [FacturacionController::class, 'edit'])->name('facturacion.edit');
@@ -180,6 +190,7 @@ Route::middleware(['auth'])->group(function () {
     // ── Estudiantes: SuperAd, Admin, Ori, Sec* ───────────────────────────────
     Route::middleware('profile:SuperAd,Admin,Ori,Sec*')->group(function () {
         Route::get('/alumnos', [AlumnoController::class, 'index'])->name('alumnos.index');
+        Route::get('/alumnos/imprimir-lista', [AlumnoController::class, 'printList'])->name('alumnos.print_list');
         Route::get('/alumnos/{codigo}', [AlumnoController::class, 'show'])->name('alumnos.show');
         Route::get('/alumnos/{codigo}/editar', [AlumnoController::class, 'edit'])->name('alumnos.edit');
         Route::put('/alumnos/{codigo}', [AlumnoController::class, 'update'])->name('alumnos.update');
@@ -236,11 +247,17 @@ Route::middleware(['auth'])->group(function () {
 
         // Impresión completa Anexo 2 por estudiante (Ori/SuperAd) — debe ir ANTES de las rutas con {codigoMat}
         Route::get('/piar/anexo2/{codigo}/imprimir-completo',   [PiarCaractController::class, 'imprimirAnexo2'])->name('piar.anexo2.imprimir.est');
+        // Impresión combinada Anexo 1 + Anexo 2
+        Route::get('/piar/{codigo}/imprimir-todos',             [PiarController::class, 'imprimirTodos'])       ->name('piar.imprimir.todos');
 
         // Anexo 2 – Ajustes por período
         Route::get('/piar/anexo2/{codigo}/{codigoMat}',         [PiarMatController::class, 'form'])       ->name('piar.anexo2.form');
         Route::post('/piar/anexo2/{codigo}/{codigoMat}',        [PiarMatController::class, 'guardar'])    ->name('piar.anexo2.guardar');
         Route::get('/piar/anexo2/{codigo}/{codigoMat}/imprimir',[PiarMatController::class, 'imprimir'])   ->name('piar.anexo2.imprimir');
+
+        // Plan Casero
+        Route::get('/piar/plan-casero/{codigo}/{codigoMat}',  [PiarMatController::class, 'formPlanCasero'])   ->name('piar.plan_casero.form');
+        Route::post('/piar/plan-casero/{codigo}/{codigoMat}', [PiarMatController::class, 'guardarPlanCasero'])->name('piar.plan_casero.guardar');
 
         // Caracterización por materia
         Route::get('/piar/caracterizacion/mat/{codigo}/{codigoMat}',  [PiarCaractController::class, 'formMat'])   ->name('piar.caract.mat.form');
@@ -251,15 +268,28 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/piar/caracterizacion/dir/{codigo}', [PiarCaractController::class, 'guardarDir'])->name('piar.caract.dir.guardar');
     });
 
+    // ── PIAR: aprobación de etapas (Ori y SuperAd) ──────────────────────────
+    Route::middleware('profile:SuperAd,Ori')->group(function () {
+        Route::post('/piar/aprobar/caract-mat/{codigo}/{codigoMat}', [PiarCaractController::class, 'aprobarMat'])->name('piar.aprobar.caract.mat');
+        Route::post('/piar/aprobar/caract-dir/{codigo}',             [PiarCaractController::class, 'aprobarDir'])->name('piar.aprobar.caract.dir');
+        Route::post('/piar/aprobar/ajustes/{codigo}/{codigoMat}',    [PiarMatController::class,    'aprobar'])   ->name('piar.aprobar.ajustes');
+    });
+
+    // ── Corrección de notas: SuperAd, Admin, DOC*, Ori* ─────────────────────
+    Route::middleware('profile:SuperAd,Admin,DOC*,Ori*')->group(function () {
+        Route::get('/correcciones', [SolicitudCorreccionController::class, 'index'])->name('correcciones.index');
+        Route::get('/correcciones/nueva', [SolicitudCorreccionController::class, 'create'])->name('correcciones.create');
+        Route::post('/correcciones', [SolicitudCorreccionController::class, 'store'])->name('correcciones.store');
+    });
+    Route::middleware('profile:SuperAd,Admin')->group(function () {
+        Route::post('/correcciones/{id}/aprobar', [SolicitudCorreccionController::class, 'aprobar'])->name('correcciones.aprobar');
+        Route::post('/correcciones/{id}/rechazar', [SolicitudCorreccionController::class, 'rechazar'])->name('correcciones.rechazar');
+    });
+
     // ── Docentes: SuperAd, Admin, DOC* ───────────────────────────────────────
     Route::middleware('profile:SuperAd,Admin,DOC*')->group(function () {
         Route::get('/notas', [NotasController::class, 'index'])->name('notas.index');
         Route::post('/notas/guardar', [NotasController::class, 'guardar'])->name('notas.guardar');
-        Route::get('/correcciones', [SolicitudCorreccionController::class, 'index'])->name('correcciones.index');
-        Route::get('/correcciones/nueva', [SolicitudCorreccionController::class, 'create'])->name('correcciones.create');
-        Route::post('/correcciones', [SolicitudCorreccionController::class, 'store'])->name('correcciones.store');
-        Route::post('/correcciones/{id}/aprobar', [SolicitudCorreccionController::class, 'aprobar'])->name('correcciones.aprobar');
-        Route::post('/correcciones/{id}/rechazar', [SolicitudCorreccionController::class, 'rechazar'])->name('correcciones.rechazar');
         Route::get('/notas-v2', [NotasV2Controller::class, 'index'])->name('notas.v2.index');
         Route::post('/notas-v2/columna', [NotasV2Controller::class, 'agregarColumna'])->name('notas.v2.columna.store');
         Route::delete('/notas-v2/columna/{id}', [NotasV2Controller::class, 'eliminarColumna'])->name('notas.v2.columna.destroy');
@@ -278,6 +308,10 @@ Route::middleware(['auth'])->group(function () {
 
     // ── PIAR: SuperAd y Ori ──────────────────────────────────────────────────
     Route::middleware('profile:SuperAd,Ori')->group(function () {
+        // ── Control de etapas PIAR ───────────────────────────────────────────
+        Route::get('/control/piar-etapas',  [ControlFechasController::class, 'index'])   ->name('control.piar_fechas');
+        Route::post('/control/piar-etapas', [ControlFechasController::class, 'guardar']) ->name('control.piar_fechas.guardar');
+
         Route::get('/piar', [PiarController::class, 'buscar'])->name('piar.buscar');
         Route::get('/piar/informe', [PiarController::class, 'informe'])->name('piar.informe');
         Route::get('/piar/crear/{codigo}', [PiarController::class, 'crear'])->name('piar.crear');
@@ -286,12 +320,17 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/piar/imprimir/{codigo}', [PiarController::class, 'imprimir'])->name('piar.imprimir');
     });
 
-    // ── Horarios y boletines: SuperAd, Admin, Sec*, DOC* ────────────────────
+    // ── Horarios: SuperAd, Admin, Sec*, DOC* ────────────────────────────────
     Route::middleware('profile:SuperAd,Admin,Sec*,DOC*')->group(function () {
         Route::get('/derroteros/horarios', [DeroterosController::class, 'horarios'])->name('derroteros.horarios');
         Route::post('/derroteros/horarios', [DeroterosController::class, 'guardarHorario'])->name('derroteros.horario.guardar');
+    });
+
+    // ── Boletines: SuperAd, Admin, Sec*, DOC*, Ori* ──────────────────────────
+    Route::middleware('profile:SuperAd,Admin,Sec*,DOC*,Ori*')->group(function () {
         Route::get('/informes/boletin', [BoletinController::class, 'buscar'])->name('informes.boletin');
         Route::get('/boletines/{codigo}', [BoletinController::class, 'ver'])->name('boletines.ver');
+        Route::get('/informes/promedios/{codigo}', [BoletinController::class, 'promedios'])->name('informes.promedios');
     });
 
     // ── Asistencia personal: SuperAd y SecA ven el estado; SecA registra ────

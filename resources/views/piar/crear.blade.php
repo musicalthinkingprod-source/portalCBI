@@ -732,17 +732,16 @@
                 <table class="w-full text-sm">
                     <thead class="bg-blue-50 text-blue-900 text-xs uppercase">
                         <tr>
-                            <th class="px-4 py-2 text-left font-semibold">#</th>
+                            <th class="px-4 py-2 text-left font-semibold">Código</th>
                             <th class="px-4 py-2 text-left font-semibold">Estudiante</th>
                             <th class="px-4 py-2 text-left font-semibold">Curso</th>
-                            <th class="px-4 py-2 text-left font-semibold">Diagnóstico</th>
                             <th class="px-4 py-2 text-center font-semibold">Acción</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
-                        @foreach($estudiantesEnPiar as $i => $est)
+                        @foreach($estudiantesEnPiar as $est)
                         <tr class="{{ $est->CODIGO == $estudiante->CODIGO ? 'bg-yellow-50 font-semibold' : 'hover:bg-gray-50' }}">
-                            <td class="px-4 py-2 text-gray-500">{{ $i + 1 }}</td>
+                            <td class="px-4 py-2 font-mono text-xs text-gray-500">{{ $est->CODIGO }}</td>
                             <td class="px-4 py-2">
                                 {{ $est->APELLIDO1 }} {{ $est->APELLIDO2 }}, {{ $est->NOMBRE1 }} {{ $est->NOMBRE2 }}
                                 @if($est->CODIGO == $estudiante->CODIGO)
@@ -753,9 +752,6 @@
                                 <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded">
                                     {{ $est->CURSO }}
                                 </span>
-                            </td>
-                            <td class="px-4 py-2 text-gray-700 max-w-xs truncate" title="{{ $est->DIAGNOSTICO }}">
-                                {{ $est->DIAGNOSTICO ?: '—' }}
                             </td>
                             <td class="px-4 py-2 text-center">
                                 <a href="{{ route('piar.crear', $est->CODIGO) }}"

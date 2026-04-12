@@ -33,8 +33,25 @@
                 </div>
                 @endforeach
 
+                @php
+                    $gradosOpciones = [
+                        -2 => 'Pre-Jardín', -1 => 'Jardín', 0 => 'Transición',
+                        1 => 'Grado 1', 2 => 'Grado 2', 3 => 'Grado 3', 4 => 'Grado 4',
+                        5 => 'Grado 5', 6 => 'Grado 6', 7 => 'Grado 7', 8 => 'Grado 8',
+                        9 => 'Grado 9', 10 => 'Grado 10', 11 => 'Grado 11',
+                    ];
+                @endphp
+                <div>
+                    <label class="block text-xs text-gray-500 mb-1">Grado</label>
+                    <select name="GRADO" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">— Sin grado —</option>
+                        @foreach($gradosOpciones as $valor => $etiqueta)
+                            <option value="{{ $valor }}" {{ old('GRADO') == $valor ? 'selected' : '' }}>{{ $etiqueta }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
                 @foreach([
-                    'GRADO'  => 'Grado',
                     'CURSO'  => 'Curso',
                     'SEDE'   => 'Sede',
                     'ESTADO' => 'Estado',
