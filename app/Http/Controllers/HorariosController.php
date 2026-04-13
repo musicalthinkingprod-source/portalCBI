@@ -177,33 +177,102 @@ class HorariosController extends Controller
             ->get(['CODIGO_DOC', 'NOMBRE_DOC']);
 
         // Qué dicta cada docente por hora en este día del ciclo
+        // El join usa LIKE para capturar sub-grupos (ej. 10A-1, 10A-2 → matchean con 10A)
+        // Nota: MAT=25 (Artes) y MAT=26 (Música) se almacenan en HORARIOS como MAT=70 (Expresión Artística)
+        // Por eso el join acepta también esa equivalencia
         $clasesEnSlot = DB::table('HORARIOS as h')
             ->join('ASIGNACION_PCM as a', function ($join) {
-                $join->on('a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
-                     ->on('a.CURSO', '=', 'h.CURSO');
+                $join->where(function ($q) {
+                         // Coincidencia directa de materia, o Artes/Música → Expresión Artística
+                         $q->whereColumn('a.CODIGO_MAT', 'h.CODIGO_MAT')
+                           ->orWhereRaw("(a.CODIGO_MAT IN (25,26) AND h.CODIGO_MAT = 70)");
+                     })
+                     ->where(function ($q) {
+                         $q->whereColumn('a.CURSO', 'h.CURSO')
+                           ->orWhereRaw("a.CURSO LIKE CONCAT(h.CURSO, '-%')");
+                     });
             })
             ->leftJoin('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'h.CODIGO_MAT')
             ->where('h.DIA', $diaCiclo)
+            ->whereRaw("h.CURSO NOT LIKE 'DOC%'")   // excluir filas de horario propio del docente
             ->select('h.HORA', 'a.CODIGO_DOC', 'h.CURSO', 'm.NOMBRE_MAT')
+            ->get()
+            ->groupBy('HORA');
+
+        // Docentes ocupados por grupos GP (Proyecto): join solo por CODIGO_MAT,
+        // porque el docente de un grupo GP atiende a estudiantes de varios cursos
+        // y está ocupado siempre que esa materia corre en cualquier curso regular
+        $gpOcupados = DB::table('HORARIOS as h')
+            ->join('ASIGNACION_PCM as a', 'a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
+            ->leftJoin('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'h.CODIGO_MAT')
+            ->where('h.DIA', $diaCiclo)
+            ->whereRaw("a.CURSO LIKE 'GP%'")
+            ->whereRaw("h.CURSO NOT LIKE 'DOC%'")
+            ->whereRaw("h.CURSO NOT LIKE 'GP%'")
+            ->select('h.HORA', 'a.CODIGO_DOC', 'a.CURSO', 'm.NOMBRE_MAT')
+            ->distinct()
+            ->get()
+            ->groupBy('HORA');
+
+        // Docentes ocupados por sus propias filas DOC-prefixed en HORARIOS
+        $docOcupadosPropios = DB::table('HORARIOS as h')
+            ->leftJoin('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'h.CODIGO_MAT')
+            ->where('h.DIA', $diaCiclo)
+            ->where('h.CURSO', 'like', 'DOC%')
+            ->where('h.CODIGO_MAT', '!=', 0)
+            ->select('h.HORA', DB::raw('h.CURSO as CODIGO_DOC'), 'm.NOMBRE_MAT')
             ->get()
             ->groupBy('HORA');
 
         // Para cada hora: libres y ocupados con detalle
         $porHora = [];
         foreach ($horas as $horaNum => $horaLabel) {
-            $clases = $clasesEnSlot->get($horaNum, collect());
-            $ocupadosCodigos = $clases->pluck('CODIGO_DOC')->unique()->toArray();
+            $clases    = $clasesEnSlot->get($horaNum, collect());
+            $gpClases  = $gpOcupados->get($horaNum, collect());
+            $propios   = $docOcupadosPropios->get($horaNum, collect());
+
+            $ocupadosCodigos = $clases->pluck('CODIGO_DOC')
+                ->merge($gpClases->pluck('CODIGO_DOC'))
+                ->merge($propios->pluck('CODIGO_DOC'))
+                ->unique()->toArray();
 
             $ocupados = $clases->groupBy('CODIGO_DOC')->map(fn($rows) => [
                 'nombre' => $todosDocentes->firstWhere('CODIGO_DOC', $rows->first()->CODIGO_DOC)?->NOMBRE_DOC ?? $rows->first()->CODIGO_DOC,
-                'clases' => $rows->map(fn($r) => $r->CURSO . ' – ' . ($r->NOMBRE_MAT ?? '?'))->implode(', '),
-            ])->values();
+                'clases' => $rows->sortBy(fn($r) => str_pad(preg_replace('/[^0-9]/', '', $r->CURSO), 4, '0', STR_PAD_LEFT) . $r->CURSO)
+                                 ->map(fn($r) => $r->CURSO . ' – ' . ($r->NOMBRE_MAT ?? '?'))->implode(', '),
+            ]);
+
+            // Añadir ocupados por grupos GP
+            foreach ($gpClases->groupBy('CODIGO_DOC') as $doc => $rows) {
+                if (!$ocupados->has($doc)) {
+                    $ocupados->put($doc, [
+                        'nombre' => $todosDocentes->firstWhere('CODIGO_DOC', $doc)?->NOMBRE_DOC ?? $doc,
+                        'clases' => 'Proyecto (' . $rows->first()->CURSO . ') – ' . ($rows->first()->NOMBRE_MAT ?? '?'),
+                    ]);
+                }
+            }
+
+            // Añadir ocupados por filas DOC-prefixed (Atención a Padres, etc.)
+            foreach ($propios as $p) {
+                if (!$ocupados->has($p->CODIGO_DOC)) {
+                    $ocupados->put($p->CODIGO_DOC, [
+                        'nombre' => $todosDocentes->firstWhere('CODIGO_DOC', $p->CODIGO_DOC)?->NOMBRE_DOC ?? $p->CODIGO_DOC,
+                        'clases' => $p->NOMBRE_MAT ?? '—',
+                    ]);
+                }
+            }
 
             $libres = $todosDocentes->filter(
                 fn($d) => !in_array($d->CODIGO_DOC, $ocupadosCodigos)
             )->values();
 
-            $porHora[$horaNum] = compact('libres', 'ocupados');
+            $ocupadosOrdenados = $ocupados->values()->sortBy(function ($doc) {
+                $primerCurso = explode(',', $doc['clases'])[0];
+                $numero = preg_replace('/[^0-9]/', '', $primerCurso);
+                return str_pad($numero !== '' ? $numero : '0', 4, '0', STR_PAD_LEFT) . $primerCurso;
+            })->values();
+
+            $porHora[$horaNum] = ['libres' => $libres, 'ocupados' => $ocupadosOrdenados];
         }
 
         // Próxima fecha de este día del ciclo
@@ -304,16 +373,56 @@ class HorariosController extends Controller
 
         // Qué docente ocupa cada slot [dia_ciclo][hora] = [CODIGO_DOC, ...]
         $ocupadosPorSlot = [];
+
+        // 1. Clases regulares + Artes/Música (25/26→70) + subgrupos + VOC*
         DB::table('HORARIOS as h')
             ->join('ASIGNACION_PCM as a', function ($join) {
-                $join->on('a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
-                     ->on('a.CURSO', '=', 'h.CURSO');
+                $join->where(function ($q) {
+                         $q->whereColumn('a.CODIGO_MAT', 'h.CODIGO_MAT')
+                           ->orWhereRaw('(a.CODIGO_MAT IN (25,26) AND h.CODIGO_MAT = 70)');
+                     })
+                     ->where(function ($q) {
+                         $q->whereColumn('a.CURSO', 'h.CURSO')
+                           ->orWhereRaw("a.CURSO LIKE CONCAT(h.CURSO, '-%')");
+                     });
             })
+            ->whereRaw("h.CURSO NOT LIKE 'DOC%'")
             ->select('h.DIA', 'h.HORA', 'a.CODIGO_DOC')
+            ->distinct()
             ->get()
             ->each(function ($row) use (&$ocupadosPorSlot) {
                 $ocupadosPorSlot[$row->DIA][$row->HORA][] = $row->CODIGO_DOC;
             });
+
+        // 2. Slots DOC-prefixed (Atención a Padres, etc.)
+        DB::table('HORARIOS')
+            ->whereRaw("CURSO LIKE 'DOC%'")
+            ->where('CODIGO_MAT', '!=', 0)
+            ->select('DIA', 'HORA', DB::raw('CURSO as CODIGO_DOC'))
+            ->get()
+            ->each(function ($row) use (&$ocupadosPorSlot) {
+                $ocupadosPorSlot[$row->DIA][$row->HORA][] = $row->CODIGO_DOC;
+            });
+
+        // 3. Proyecto (GP*): ocupado en cualquier slot de CODIGO_MAT=31
+        DB::table('HORARIOS as h')
+            ->join('ASIGNACION_PCM as a', 'a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
+            ->whereRaw("a.CURSO LIKE 'GP%'")
+            ->whereRaw("h.CURSO NOT LIKE 'DOC%'")
+            ->whereRaw("h.CURSO NOT LIKE 'GP%'")
+            ->select('h.DIA', 'h.HORA', 'a.CODIGO_DOC')
+            ->distinct()
+            ->get()
+            ->each(function ($row) use (&$ocupadosPorSlot) {
+                $ocupadosPorSlot[$row->DIA][$row->HORA][] = $row->CODIGO_DOC;
+            });
+
+        // Deduplicar
+        foreach ($ocupadosPorSlot as $dia => $horas) {
+            foreach ($horas as $hora => $docs) {
+                $ocupadosPorSlot[$dia][$hora] = array_unique($docs);
+            }
+        }
 
         // Inicio del ciclo actual para contar reemplazos
         $inicioCiclo = DB::table('calendario_academico')

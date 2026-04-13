@@ -37,7 +37,7 @@
                 <option value="">— Seleccionar —</option>
                 @foreach($docentes as $doc)
                     <option value="{{ $doc->CODIGO_DOC }}" {{ $doc->CODIGO_DOC === $docenteActual ? 'selected' : '' }}>
-                        {{ $doc->NOMBRE_DOC }}
+                        {{ $doc->NOMBRE_DOC }}{{ ($doc->ESTADO ?? '') !== 'ACTIVO' ? ' ⚠ sin docente' : '' }}
                     </option>
                 @endforeach
             </select>

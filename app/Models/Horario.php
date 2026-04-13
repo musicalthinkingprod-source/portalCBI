@@ -231,24 +231,22 @@ class Horario extends Model
         return DB::table('HORARIOS')
             ->select('CURSO')
             ->distinct()
+            ->whereRaw("CURSO NOT REGEXP '^DOC|^GP|^VOC'")
             ->orderBy('CURSO')
             ->pluck('CURSO')
             ->toArray();
     }
 
     /**
-     * Lista de docentes con asignaciones en HORARIOS.
+     * Lista de docentes con al menos una asignación (ASIGNACION_PCM).
+     * No se filtra por ESTADO ni por coincidencia en HORARIOS, para que
+     * aparezcan también inactivos y docentes con listados especiales.
      */
     public static function docentes(): array
     {
         return DB::table('CODIGOS_DOC as cd')
             ->join('ASIGNACION_PCM as a', 'a.CODIGO_DOC', '=', 'cd.CODIGO_DOC')
-            ->join('HORARIOS as h', function ($join) {
-                $join->on('h.CODIGO_MAT', '=', 'a.CODIGO_MAT')
-                     ->on('h.CURSO', '=', 'a.CURSO');
-            })
-            ->where('cd.ESTADO', 'ACTIVO')
-            ->select('cd.CODIGO_DOC', 'cd.NOMBRE_DOC')
+            ->select('cd.CODIGO_DOC', 'cd.NOMBRE_DOC', 'cd.ESTADO')
             ->distinct()
             ->orderBy('cd.NOMBRE_DOC')
             ->get()

@@ -79,11 +79,14 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/admin/usuarios/{user}', [AdminController::class, 'destroyUsuario'])->name('admin.usuarios.destroy');
         Route::post('/admin/docentes', [AdminController::class, 'storeDocente'])->name('admin.docentes.store');
         Route::post('/admin/docentes/{codigo}/toggle', [AdminController::class, 'toggleDocente'])->name('admin.docentes.toggle');
+        Route::post('/admin/docentes/{codigo}/estado', [AdminController::class, 'setEstadoDocente'])->name('admin.docentes.estado');
         Route::get('/admin/directores', [AdminController::class, 'directores'])->name('admin.directores');
         Route::post('/admin/dir-grupo', [AdminController::class, 'asignarDirGrupo'])->name('admin.dir_grupo');
         Route::get('/admin/asignaciones', [AdminController::class, 'asignaciones'])->name('admin.asignaciones');
         Route::post('/admin/asignaciones/mover', [AdminController::class, 'moverAsignaciones'])->name('admin.asignaciones.mover');
         Route::post('/admin/asignaciones/mover-una', [AdminController::class, 'moverUnaAsignacion'])->name('admin.asignaciones.mover_una');
+        Route::get('/admin/asignaciones/horario', [AdminController::class, 'verHorarioAsignacion'])->name('admin.asignaciones.horario');
+        Route::post('/admin/asignaciones/horario/slot', [AdminController::class, 'asignarSlot'])->name('admin.asignaciones.horario.slot');
         Route::get('/admin/fechas', [FechasController::class, 'index'])->name('admin.fechas');
         Route::post('/admin/fechas', [FechasController::class, 'upsert'])->name('admin.fechas.upsert');
         Route::delete('/admin/fechas/{codigo}', [FechasController::class, 'destroy'])->name('admin.fechas.destroy');

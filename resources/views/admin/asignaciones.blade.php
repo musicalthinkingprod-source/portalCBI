@@ -65,6 +65,7 @@
                 <tr>
                     <th class="px-4 py-3 text-left">Materia</th>
                     <th class="px-4 py-3 text-center w-24">Curso</th>
+                    <th class="px-4 py-3 text-center w-32">Horario</th>
                     <th class="px-4 py-3 text-left">Mover a docente</th>
                 </tr>
             </thead>
@@ -73,6 +74,18 @@
                 <tr class="hover:bg-gray-50">
                     <td class="px-4 py-2 font-medium">{{ $asig->NOMBRE_MAT }}</td>
                     <td class="px-4 py-2 text-center">{{ $asig->CURSO }}</td>
+                    <td class="px-4 py-2 text-center">
+                        @if($asig->tiene_horario)
+                            <span class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-0.5 text-xs font-medium">
+                                ✓ {{ $asig->slots }} slot{{ $asig->slots !== 1 ? 's' : '' }}
+                            </span>
+                        @else
+                            <a href="{{ route('admin.asignaciones.horario', ['docente' => $asig->CODIGO_DOC, 'codigo_mat' => $asig->CODIGO_MAT, 'curso' => $asig->CURSO]) }}"
+                               class="inline-flex items-center gap-1 text-red-600 bg-red-50 border border-red-200 rounded px-2 py-0.5 text-xs font-medium hover:bg-red-100 transition">
+                                Sin horario — asignar →
+                            </a>
+                        @endif
+                    </td>
                     <td class="px-4 py-2">
                         <form method="POST" action="{{ route('admin.asignaciones.mover_una') }}"
                               class="flex gap-2 items-center"

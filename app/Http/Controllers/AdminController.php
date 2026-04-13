@@ -88,12 +88,85 @@ class AdminController extends Controller
                 ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT')
                 ->orderBy('m.NOMBRE_MAT')
                 ->orderBy('a.CURSO')
-                ->get();
+                ->get()
+                ->map(function ($a) {
+                    $cursoBase       = explode('-', $a->CURSO)[0];
+                    $codMatHorario   = in_array($a->CODIGO_MAT, [25, 26]) ? 70 : $a->CODIGO_MAT;
+                    $slots           = DB::table('HORARIOS')
+                        ->where('CURSO', $cursoBase)
+                        ->where('CODIGO_MAT', $codMatHorario)
+                        ->where('CODIGO_MAT', '!=', 0)
+                        ->count();
+                    $a->tiene_horario = $slots > 0;
+                    $a->slots         = $slots;
+                    return $a;
+                });
         }
 
         return view('admin.asignaciones', compact(
             'docentesConAsig', 'docentesActivos', 'asigIndividual', 'verAsigDoc'
         ));
+    }
+
+
+    public function verHorarioAsignacion(Request $request)
+    {
+        $docente    = $request->input('docente');
+        $codigoMat  = (int) $request->input('codigo_mat');
+        $curso      = $request->input('curso');
+
+        abort_if(!$docente || !$codigoMat || !$curso, 404);
+
+        $cursoBase       = explode('-', $curso)[0];
+        $codMatHorario   = in_array($codigoMat, [25, 26]) ? 70 : $codigoMat;
+
+        $nombreDocente = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $docente)->value('NOMBRE_DOC') ?? $docente;
+        $nombreMat     = DB::table('CODIGOSMAT')->where('CODIGO_MAT', $codigoMat)->value('NOMBRE_MAT') ?? '—';
+
+        // Estado actual completo del curso en HORARIOS
+        $horariosCurso = [];
+        DB::table('HORARIOS')->where('CURSO', $cursoBase)
+            ->get(['DIA', 'HORA', 'CODIGO_MAT'])
+            ->each(fn($f) => $horariosCurso[$f->DIA][$f->HORA] = $f->CODIGO_MAT);
+
+        $materiasNombres = DB::table('CODIGOSMAT')->pluck('NOMBRE_MAT', 'CODIGO_MAT')->toArray();
+        $dias  = \App\Models\Horario::$dias;
+        $horas = \App\Models\Horario::$horas;
+
+        return view('admin.horario_asignacion', compact(
+            'docente', 'nombreDocente', 'codigoMat', 'codMatHorario',
+            'curso', 'cursoBase', 'nombreMat',
+            'horariosCurso', 'materiasNombres', 'dias', 'horas'
+        ));
+    }
+
+    public function asignarSlot(Request $request)
+    {
+        $curso           = $request->input('curso');       // curso base
+        $dia             = (int) $request->input('dia');
+        $hora            = (int) $request->input('hora');
+        $codMatHorario   = (int) $request->input('codigo_mat_horario');
+
+        // Solo se permite insertar en slots libres (0 o inexistente)
+        $actual = DB::table('HORARIOS')
+            ->where('CURSO', $curso)->where('DIA', $dia)->where('HORA', $hora)
+            ->value('CODIGO_MAT');
+
+        if ($actual !== null && (int)$actual !== 0) {
+            return response()->json(['ok' => false, 'error' => 'El slot ya tiene una materia asignada.'], 422);
+        }
+
+        DB::table('HORARIOS')->updateOrInsert(
+            ['CURSO' => $curso, 'DIA' => $dia, 'HORA' => $hora],
+            ['CODIGO_MAT' => $codMatHorario]
+        );
+
+        $estado = [];
+        DB::table('HORARIOS')->where('CURSO', $curso)
+            ->get(['DIA', 'HORA', 'CODIGO_MAT'])
+            ->each(fn($f) => $estado[$f->DIA][$f->HORA] = $f->CODIGO_MAT);
+
+        return response()->json(['ok' => true, 'estado' => $estado]);
     }
 
     public function storeUsuario(Request $request)
@@ -173,6 +246,21 @@ class AdminController extends Controller
         DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $codigo)->update(['ESTADO' => $nuevoEstado]);
 
         return back()->with('success_docente', "Docente «{$docente->NOMBRE_DOC}» marcado como {$nuevoEstado}.");
+    }
+
+    public function setEstadoDocente(Request $request, $codigo)
+    {
+        $docente = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $codigo)->first();
+        if (!$docente) return back()->withErrors(['docente' => 'Docente no encontrado.']);
+
+        $estado = $request->input('estado');
+        if (!in_array($estado, ['ACTIVO', 'INCAPACIDAD', 'INACTIVO'])) {
+            return back()->withErrors(['docente' => 'Estado inválido.']);
+        }
+
+        DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $codigo)->update(['ESTADO' => $estado]);
+
+        return back()->with('success_docente', "Docente «{$docente->NOMBRE_DOC}» marcado como {$estado}.");
     }
 
     public function moverUnaAsignacion(Request $request)
