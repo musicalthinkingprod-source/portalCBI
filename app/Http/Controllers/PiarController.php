@@ -195,10 +195,13 @@ class PiarController extends Controller
             ->select('pcd.CARACTERIZACION', 'pcd.CURSO', 'd.NOMBRE_DOC')
             ->first();
 
+        $matsExcluidas = [24, 124, 153]; // Urbanidad y Cívica, Urbanidad y Cívica PE, Pensamiento Lógico
+
         $caractMats = DB::table('PIAR_CARACT_MAT as pc')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'pc.CODIGO_MAT')
             ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'pc.CODIGO_DOC')
             ->where('pc.CODIGO_ALUM', $codigo)
+            ->whereNotIn('pc.CODIGO_MAT', $matsExcluidas)
             ->select('pc.CARACTERIZACION', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
             ->orderBy('m.NOMBRE_MAT')
             ->get();
@@ -210,6 +213,7 @@ class PiarController extends Controller
             })
             ->join('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'a.CODIGO_DOC')
             ->where('pm.CODIGO_ALUM', $codigo)
+            ->whereNotIn('pm.CODIGO_MAT', $matsExcluidas)
             ->select('pm.*', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
             ->orderBy('m.NOMBRE_MAT')
             ->get();
@@ -389,17 +393,22 @@ class PiarController extends Controller
                      'pd.FECHA_P1', 'pd.PERSONA_P1',
                      'pd.FECHA_P2', 'pd.PERSONA_P2',
                      'pd.FECHA_P3', 'pd.PERSONA_P3')
-            ->orderBy('e.GRADO')->orderBy('e.CURSO')->orderBy('e.APELLIDO1')
+            ->orderBy('e.CODIGO')
             ->get();
 
         // Materias asignadas por curso y su estado en PIAR_MAT
         $codigoAlums = $estudiantes->pluck('CODIGO')->toArray();
 
-        // Todas las materias asignadas a los cursos de esos estudiantes
+        // Materias excluidas del PIAR (no aplican caracterización ni ajustes)
+        $matsExcluidas = [24, 124, 153]; // Urbanidad y Cívica, Urbanidad y Cívica PE, Pensamiento Lógico
+
+        // Todas las materias asignadas a los cursos de esos estudiantes (orden alfabético)
         $asignaciones = DB::table('ASIGNACION_PCM as a')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'a.CODIGO_MAT')
             ->join('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'a.CODIGO_DOC')
             ->select('a.CURSO', 'a.CODIGO_MAT', 'a.CODIGO_DOC', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
+            ->whereNotIn('a.CODIGO_MAT', $matsExcluidas)
+            ->orderBy('m.NOMBRE_MAT')
             ->get()
             ->groupBy('CURSO');
 

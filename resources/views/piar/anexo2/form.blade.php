@@ -11,6 +11,12 @@
     <div class="mb-4 p-3 bg-red-100 text-red-800 rounded-xl text-sm">🚫 {{ $errors->first('etapa') }}</div>
 @endif
 
+@php
+    $puedeObservar = in_array(auth()->user()->PROFILE, ['SuperAd', 'Ori']);
+    $estadoActual  = $piarMat->ESTADO ?? 'pendiente';
+    $docentePuede  = !$puedeObservar && ($estadoEtapa === 'abierto' || $estadoActual === 'con_observaciones');
+@endphp
+
 {{-- Banner etapa --}}
 @if($estadoEtapa === 'cerrado')
     <div class="mb-3 px-4 py-2 rounded-lg text-sm bg-red-50 border border-red-200 text-red-800 flex items-center gap-2">🔒 <span>Etapa de ajustes razonables <strong>cerrada</strong>. No se permiten cambios.</span></div>
@@ -19,12 +25,6 @@
 @elseif($estadoEtapa === 'finalizado')
     <div class="mb-3 px-4 py-2 rounded-lg text-sm bg-purple-50 border border-purple-200 text-purple-800 flex items-center gap-2">✓ <span>Etapa <strong>finalizada</strong>. Solo lectura.</span></div>
 @endif
-
-@php
-    $puedeObservar = in_array(auth()->user()->PROFILE, ['SuperAd', 'Ori']);
-    $estadoActual  = $piarMat->ESTADO ?? 'pendiente';
-    $docentePuede  = !$puedeObservar && ($estadoEtapa === 'abierto' || $estadoActual === 'con_observaciones');
-@endphp
 <div class="flex items-center gap-3 mb-3">
     <span class="text-xs font-semibold text-gray-500 uppercase">Estado:</span>
     @if($estadoActual === 'aprobado')

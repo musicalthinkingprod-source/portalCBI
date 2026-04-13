@@ -19,6 +19,9 @@ class PiarCaractController extends Controller
     }
 
     // ── ÍNDICE GENERAL – agrupado por estudiante ────────────────────────────
+    // Materias excluidas del PIAR (no aplican caracterización ni ajustes)
+    private const MATS_EXCLUIDAS_PIAR = [24, 124, 153]; // Urbanidad y Cívica, Urbanidad y Cívica PE, Pensamiento Lógico
+
     public function index()
     {
         $codigoDoc = $this->codigoDoc();
@@ -31,6 +34,8 @@ class PiarCaractController extends Controller
             ->select('DIR_GRUPO', 'NOMBRE_DOC')
             ->first();
         $esDirector = (bool) $dirInfo;
+
+        $esOriSuperAd = in_array(auth()->user()->PROFILE, ['SuperAd', 'Ori']);
 
         // Filas: un registro por (estudiante × materia) con estados de caract. y ajustes
         $filasRaw = DB::table('ESTUDIANTES as e')
@@ -56,13 +61,17 @@ class PiarCaractController extends Controller
                 DB::raw("COALESCE(MAX(pm.ESTADO), 'pendiente') as AJUSTES_ESTADO")
             )
             ->where('e.ESTADO', 'MATRICULADO')
+            ->whereNotIn('a.CODIGO_MAT', self::MATS_EXCLUIDAS_PIAR)
             ->when($esDocente, fn($q) => $q->where('a.CODIGO_DOC', $codigoDoc))
             ->groupBy(
                 'e.CODIGO', 'e.NOMBRE1', 'e.NOMBRE2', 'e.APELLIDO1', 'e.APELLIDO2',
                 'e.GRADO', 'e.CURSO', 'pd.DIAGNOSTICO',
                 'a.CODIGO_MAT', 'm.NOMBRE_MAT'
             )
-            ->orderBy('e.APELLIDO1')->orderBy('e.NOMBRE1')->orderBy('m.NOMBRE_MAT')
+            ->when($esOriSuperAd,
+                fn($q) => $q->orderBy('e.CODIGO')->orderBy('m.NOMBRE_MAT'),
+                fn($q) => $q->orderBy('e.APELLIDO1')->orderBy('e.NOMBRE1')->orderBy('m.NOMBRE_MAT')
+            )
             ->get();
 
         $filas = $filasRaw->groupBy('CODIGO');
@@ -166,12 +175,25 @@ class PiarCaractController extends Controller
             ->where('CODIGO_ALUM', $codigo)->where('CODIGO_MAT', $codigoMat)
             ->value('ESTADO') ?? 'pendiente';
 
+        // CODIGO_DOC real del registro existente (o del docente asignado si no existe aún)
+        $codigoDocReal = DB::table('PIAR_CARACT_MAT')
+            ->where('CODIGO_ALUM', $codigo)->where('CODIGO_MAT', $codigoMat)
+            ->value('CODIGO_DOC');
+
+        if (!$codigoDocReal) {
+            $curso = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->value('CURSO');
+            $codigoDocReal = DB::table('ASIGNACION_PCM')
+                ->where('CODIGO_MAT', $codigoMat)
+                ->where('CURSO', $curso)
+                ->value('CODIGO_DOC') ?? $this->codigoDoc();
+        }
+
         // Orientador envía observaciones
         if (!$esDocente && $request->input('accion') === 'observar') {
             if ($estadoEtapa === 'finalizado') return back()->withErrors(['etapa' => 'La etapa está finalizada.']);
             DB::table('PIAR_CARACT_MAT')->updateOrInsert(
                 ['CODIGO_ALUM' => $codigo, 'CODIGO_MAT' => $codigoMat],
-                ['OBSERVACIONES' => $request->OBSERVACIONES, 'ESTADO' => 'con_observaciones', 'updated_at' => now()]
+                ['CODIGO_DOC' => $codigoDocReal, 'OBSERVACIONES' => $request->OBSERVACIONES, 'ESTADO' => 'con_observaciones', 'updated_at' => now()]
             );
             return back()->with('saved', 'Observaciones enviadas al docente.');
         }
@@ -194,7 +216,7 @@ class PiarCaractController extends Controller
         $nuevoEstado = $entregar ? 'revision' : (in_array($existingEstado, ['aprobado', 'con_observaciones']) ? 'revision' : ($existingEstado ?? 'pendiente'));
 
         $datos = [
-            'CODIGO_DOC'      => $this->codigoDoc(),
+            'CODIGO_DOC'      => $esDocente ? $this->codigoDoc() : $codigoDocReal,
             'CARACTERIZACION' => $request->CARACTERIZACION,
             'ESTADO'          => $nuevoEstado,
             'updated_at'      => now(),
@@ -373,6 +395,7 @@ class PiarCaractController extends Controller
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'pc.CODIGO_MAT')
             ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'pc.CODIGO_DOC')
             ->where('pc.CODIGO_ALUM', $codigo)
+            ->whereNotIn('pc.CODIGO_MAT', self::MATS_EXCLUIDAS_PIAR)
             ->select('pc.CARACTERIZACION', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
             ->orderBy('m.NOMBRE_MAT')
             ->get();
@@ -386,6 +409,7 @@ class PiarCaractController extends Controller
             })
             ->join('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'a.CODIGO_DOC')
             ->where('pm.CODIGO_ALUM', $codigo)
+            ->whereNotIn('pm.CODIGO_MAT', self::MATS_EXCLUIDAS_PIAR)
             ->select('pm.*', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
             ->orderBy('m.NOMBRE_MAT')
             ->get();
