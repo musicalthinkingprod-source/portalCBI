@@ -161,13 +161,14 @@ class Horario extends Model
                 ->get();
 
             foreach ($slots as $slot) {
-                if (!isset($grid[$slot->HORA][$slot->DIA])) {
-                    $grid[$slot->HORA][$slot->DIA] = [];
+                // Solo añadir Proyecto si el docente no tiene ya otra clase en ese slot.
+                // Si tiene clase regular a D1H5 y Proyecto a D1H6, solo se muestra D1H6.
+                if (empty($grid[$slot->HORA][$slot->DIA] ?? [])) {
+                    $grid[$slot->HORA][$slot->DIA][] = [
+                        'curso'   => $grupoProyecto,
+                        'materia' => 'Proyecto',
+                    ];
                 }
-                $grid[$slot->HORA][$slot->DIA][] = [
-                    'curso'   => $grupoProyecto,
-                    'materia' => 'Proyecto',
-                ];
             }
         }
 

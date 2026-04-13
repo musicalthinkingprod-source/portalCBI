@@ -84,7 +84,7 @@
                 @foreach($horas as $horaNum => $horaLabel)
                 <tr class="{{ $loop->even ? 'bg-gray-50' : 'bg-white' }} border-b border-gray-100">
                     {{-- Columna hora --}}
-                    <td class="px-4 py-2 whitespace-nowrap">
+                    <td class="px-4 whitespace-nowrap" style="height:80px;vertical-align:middle;">
                         <span class="font-semibold text-indigo-700 text-xs">{{ $horaNum }}ª hora</span><br>
                         <span class="text-gray-400 text-xs">{{ $horaInicio[$horaNum] ?? '' }} – {{ $horaFin[$horaNum] ?? '' }}</span>
                     </td>
@@ -94,7 +94,7 @@
                         $celdas    = $grid[$horaNum][$diaNum] ?? [];
                         $proxFecha = $proximaFecha[$diaNum] ?? null;
                     @endphp
-                    <td class="px-3 py-2 text-center align-top">
+                    <td class="px-3 text-center" style="height:80px;vertical-align:middle;">
                         @if(!empty($celdas))
                             @foreach($celdas as $celda)
                             @php
@@ -102,9 +102,10 @@
                             @endphp
                             <div class="inline-block min-w-[90px] mb-1">
                                 {{-- Ficha de clase --}}
-                                <div class="bg-indigo-50 border border-indigo-100 rounded-lg px-2 py-1.5 text-center">
-                                    <span class="block text-xs font-bold text-indigo-700">{{ $celda['curso'] }}</span>
-                                    <span class="block text-xs text-gray-600 leading-tight">{{ $celda['materia'] }}</span>
+                                <div class="bg-indigo-50 border border-indigo-100 rounded-lg px-2 text-center"
+                                     style="height:56px;display:flex;flex-direction:column;justify-content:center;overflow:hidden;">
+                                    <span class="block text-xs font-bold text-indigo-700" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $celda['curso'] }}</span>
+                                    <span class="block text-xs text-gray-600" style="overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3;">{{ $celda['materia'] }}</span>
                                 </div>
 
                                 {{-- Reemplazos existentes --}}

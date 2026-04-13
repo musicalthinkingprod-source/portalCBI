@@ -186,7 +186,9 @@
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
                 @if($isAdminLike || str_starts_with($profile, 'Ori'))
                 {!! sidebarLink(route('piar.buscar'), '📋 Crear / Editar PIAR') !!}
+                @if(!$isSuperAd)
                 {!! sidebarLink(route('piar.informe'), '📊 Informe PIAR') !!}
+                @endif
                 {!! sidebarLink(route('control.piar_fechas'), '🎛️ Control de etapas PIAR') !!}
                 @endif
                 {!! sidebarLink(route('piar.anexo2.index'), '📝 Diligenciamiento PIAR') !!}
@@ -211,7 +213,6 @@
                 {!! sidebarLink(route('english-acq.docente'), '🇬🇧 English Acquisition') !!}
                 {!! sidebarLink(route('salvavidas.index'), '🏊 Salvavidas') !!}
                 {!! sidebarLink(route('derroteros.docente'), '📌 Recuperaciones') !!}
-                {!! sidebarLink(route('derroteros.horarios'), '📅 Horarios recuperación') !!}
                 @if($isDoc)
                 {!! sidebarLink(route('horarios.mi_horario'), '🗓️ Mi Horario') !!}
                 @endif
@@ -232,14 +233,13 @@
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
                 {!! sidebarLink(route('correcciones.index'), '🔧 Corrección de notas') !!}
+                @if($isDoc)
                 {!! sidebarLink(route('vigilancias.docente'), '🗺️ Vigilancias') !!}
-                {!! sidebarLink($isDoc ? route('calendario.docente') : route('calendario.index'), '📆 Calendario académico') !!}
+                @endif
                 @if($isSuperAd)
                 {!! sidebarLink(route('horarios.index'), '🗓️ Horarios') !!}
                 {!! sidebarLink(route('horarios.disponibilidad'), '🟢 Disponibilidad docentes') !!}
-                {!! sidebarLink(route('notas.reporte'), '📊 Informe de digitación') !!}
-                {!! sidebarLink(route('control.planilla'), '📋 Control de planilla') !!}
-                {!! sidebarLink(route('english-acq.informe'), '📊 Informe English ACQ') !!}
+                {!! sidebarLink(route('asistencia-personal.reemplazos'), '🔄 Reemplazos') !!}
                 @endif
             </ul>
         </div>
@@ -260,18 +260,20 @@
                 @if($isSec || $isSuperAd)
                 {!! sidebarLink(route('asistencia.registro'), '✏️ Registrar asistencia') !!}
                 @endif
-                @if($profile === 'SecA' || $isAdminLike)
+                @if($profile === 'SecA' || $isAdmin)
                 {!! sidebarLink(route('asistencia-personal.index'), '👥 Asistencia personal') !!}
                 @endif
                 @if($profile === 'SecA')
                 {!! sidebarLink(route('asistencia-personal.registro'), '✏️ Registrar personal') !!}
                 @endif
-                @if(!$isDoc)
+                @if(!$isDoc && !$isSuperAd)
                 {!! sidebarLink(route('asistencia.reporte'), '📋 Reporte de asistencia') !!}
                 @endif
                 @if($isAdminLike || $isSec)
                 {!! sidebarLink(route('llamadas.index'), '📞 Llamadas por inasistencia') !!}
+                @if(!$isSuperAd)
                 {!! sidebarLink(route('llamadas.reporte'), '📊 Reporte de llamadas') !!}
+                @endif
                 @endif
             </ul>
         </div>
@@ -330,8 +332,8 @@
         </div>
         @endif
 
-        {{-- ── Seguimiento Académico: SuperAd, Admin, Sec*, DOC*, Ori* ── --}}
-        @if($isAdminLike || $isSec || $isDoc || str_starts_with($profile, 'Ori'))
+        {{-- ── Seguimiento Académico: Admin, Sec*, DOC*, Ori* (no SuperAd, usa sección Informes) ── --}}
+        @if(!$isSuperAd && ($isAdmin || $isSec || $isDoc || str_starts_with($profile, 'Ori')))
         @php $catId = 'seguimiento-academico'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -342,13 +344,11 @@
                 </svg>
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
-                @if($isAdminLike || $isSec)
+                @if($isAdmin || $isSec)
                 {!! sidebarLink(route('derroteros.index'), '📊 Informe derroteros') !!}
                 {!! sidebarLink(route('salvavidas.reporte'), '📊 Reporte salvavidas') !!}
                 @endif
-                @if($isAdminLike || $isSec || $isDoc || str_starts_with($profile, 'Ori'))
                 {!! sidebarLink(route('informes.boletin'), '📋 Boletines') !!}
-                @endif
             </ul>
         </div>
         @endif
@@ -365,7 +365,6 @@
                 </svg>
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
-                {!! sidebarLink(route('calendario.index'), '📆 Calendario académico') !!}
                 {!! sidebarLink(route('horarios.index'), '🗓️ Horarios') !!}
             </ul>
         </div>
@@ -388,6 +387,84 @@
         </div>
         @endif
 
+        {{-- ── Vigilancias: solo SuperAd ── --}}
+        @if($isSuperAd)
+        @php $catId = 'vigilancias-admin'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Vigilancias</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('vigilancias.admin'), '🗺️ Gestión de vigilancias') !!}
+                {!! sidebarLink(route('vigilancias.control'), '🔍 Control de vigilancias') !!}
+            </ul>
+        </div>
+        @endif
+
+        {{-- ── Gestión Personal: solo SuperAd ── --}}
+        @if($isSuperAd)
+        @php $catId = 'gestion-personal'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Gestión Personal</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('asistencia-personal.index'), '👥 Asistencia personal') !!}
+                {!! sidebarLink(route('asistencia-personal.permisos'), '📋 Permisos') !!}
+            </ul>
+        </div>
+        @endif
+
+        {{-- ── Comunicaciones: solo SuperAd ── --}}
+        @if($isSuperAd)
+        @php $catId = 'comunicaciones'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Comunicaciones</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('circulares.index'), '📄 Circulares') !!}
+                {!! sidebarLink(route('informes.boletin'), '📋 Boletines') !!}
+            </ul>
+        </div>
+        @endif
+
+        {{-- ── Informes: solo SuperAd ── --}}
+        @if($isSuperAd)
+        @php $catId = 'informes'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Informes</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('piar.informe'), '📊 Informe PIAR') !!}
+                {!! sidebarLink(route('notas.reporte'), '📊 Informe de digitación') !!}
+                {!! sidebarLink(route('english-acq.informe'), '📊 Informe English ACQ') !!}
+                {!! sidebarLink(route('derroteros.index'), '📊 Informe derroteros') !!}
+                {!! sidebarLink(route('salvavidas.reporte'), '📊 Reporte salvavidas') !!}
+                {!! sidebarLink(route('asistencia.reporte'), '📋 Reporte de asistencia') !!}
+                {!! sidebarLink(route('llamadas.reporte'), '📊 Reporte de llamadas') !!}
+                {!! sidebarLink(route('control.planilla'), '📋 Informe de planilla') !!}
+            </ul>
+        </div>
+        @endif
+
         {{-- ── Panel de Control: solo SuperAd ── --}}
         @if($isSuperAd)
         @php $catId = 'panel-control'; @endphp
@@ -404,13 +481,9 @@
                 {!! sidebarLink(route('admin.directores'), '🏫 Directores de grupo') !!}
                 {!! sidebarLink(route('admin.asignaciones'), '🔄 Asignaciones') !!}
                 {!! sidebarLink(route('admin.fechas'), '📅 Fechas') !!}
+                {!! sidebarLink(route('calendario.index'), '📆 Calendario académico') !!}
                 {!! sidebarLink(route('listados.index'), '🗂️ Listados especiales') !!}
-                {!! sidebarLink(route('vigilancias.admin'), '🗺️ Gestión de vigilancias') !!}
-                {!! sidebarLink(route('vigilancias.control'), '🔍 Control de vigilancias') !!}
-                {!! sidebarLink(route('asistencia-personal.permisos'), '📋 Permisos') !!}
-                {!! sidebarLink(route('asistencia-personal.reemplazos'), '🔄 Reemplazos') !!}
                 {!! sidebarLink(route('nomina.index'), '👥 Gestión de personal') !!}
-                {!! sidebarLink(route('circulares.index'), '📄 Circulares') !!}
                 {!! sidebarLink(route('rutas.index'), '🚌 Listado de rutas') !!}
                 {!! sidebarLink(route('backup.index'), '💾 Copia de seguridad') !!}
             </ul>
@@ -524,16 +597,27 @@ function toggleCategory(titleEl) {
     var catId   = titleEl.closest('.sidebar-cat').dataset.cat;
     var isOpen  = ul.style.maxHeight && ul.style.maxHeight !== '0px';
 
+    // Cerrar todas las demás categorías
+    var saved = JSON.parse(localStorage.getItem('sidebarCategories') || '{}');
+    document.querySelectorAll('.sidebar-cat').forEach(function (cat) {
+        if (cat.dataset.cat === catId) return;
+        var otherUl      = cat.querySelector('.cat-body');
+        var otherChevron = cat.querySelector('.cat-chevron');
+        otherUl.style.maxHeight = '0px';
+        otherChevron.style.transform = 'rotate(0deg)';
+        saved[cat.dataset.cat] = false;
+    });
+
     if (isOpen) {
         ul.style.maxHeight = '0px';
         chevron.style.transform = 'rotate(0deg)';
+        saved[catId] = false;
     } else {
         ul.style.maxHeight = ul.scrollHeight + 'px';
         chevron.style.transform = 'rotate(180deg)';
+        saved[catId] = true;
     }
 
-    var saved = JSON.parse(localStorage.getItem('sidebarCategories') || '{}');
-    saved[catId] = !isOpen;
     localStorage.setItem('sidebarCategories', JSON.stringify(saved));
 }
 

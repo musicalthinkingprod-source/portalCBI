@@ -201,6 +201,53 @@
     </div>
 
     {{-- ============================================================
+         SECCIÓN 3b: AGREGAR DOCENTE A LA LISTA
+    ============================================================ --}}
+    @if($docentes->where('ESTADO', 'ACTIVO')->count() < DB::table('CODIGOS_DOC')->where('ESTADO', 'ACTIVO')->count())
+    <div class="bg-white rounded-xl shadow p-5">
+        <h2 class="text-base font-semibold text-blue-900 mb-1">Agregar docente a la lista</h2>
+        <p class="text-xs text-gray-400 mb-4">Docentes activos que aún no tienen vigilancias asignadas para {{ $anio }}.</p>
+        @if(session('success_agregar') || $errors->has('agregar_doc'))
+            @if(session('success_agregar'))
+                <div class="mb-3 p-3 bg-green-100 text-green-800 rounded-xl text-sm">✅ {{ session('success_agregar') }}</div>
+            @endif
+            @if($errors->has('agregar_doc'))
+                <div class="mb-3 p-3 bg-red-100 text-red-700 rounded-xl text-sm">⚠️ {{ $errors->first('agregar_doc') }}</div>
+            @endif
+        @endif
+        @php
+            $codigosConAsig = $docentes->pluck('CODIGO_DOC')->toArray();
+            $sinAsignar = DB::table('CODIGOS_DOC')
+                ->where('ESTADO', 'ACTIVO')
+                ->whereNotIn('CODIGO_DOC', $codigosConAsig)
+                ->orderBy('NOMBRE_DOC')->get();
+        @endphp
+        @if($sinAsignar->isNotEmpty())
+        <form method="POST" action="{{ route('vigilancias.docente.agregar') }}" class="flex gap-3 items-end flex-wrap">
+            @csrf
+            <input type="hidden" name="anio" value="{{ $anio }}">
+            <div class="flex-1 min-w-[250px]">
+                <label class="block text-xs text-gray-500 mb-1">Docente</label>
+                <select name="CODIGO_DOC" required
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                    <option value="">— Seleccionar docente —</option>
+                    @foreach($sinAsignar as $d)
+                    <option value="{{ $d->CODIGO_DOC }}">{{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_DOC }})</option>
+                    @endforeach
+                </select>
+            </div>
+            <button type="submit"
+                class="bg-green-700 hover:bg-green-600 text-white font-semibold px-5 py-2 rounded-lg text-sm transition">
+                + Agregar
+            </button>
+        </form>
+        @else
+            <p class="text-sm text-gray-400 italic">Todos los docentes activos ya están en la lista.</p>
+        @endif
+    </div>
+    @endif
+
+    {{-- ============================================================
          SECCIÓN 4: TABLA DE ASIGNACIONES
     ============================================================ --}}
     <div class="bg-white rounded-xl shadow p-5">

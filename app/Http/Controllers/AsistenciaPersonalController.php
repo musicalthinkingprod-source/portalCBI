@@ -48,10 +48,10 @@ class AsistenciaPersonalController extends Controller
             ->leftJoin('asistencia_docentes as a', function ($j) use ($fecha) {
                 $j->on('a.codigo_doc', '=', 'd.CODIGO_DOC')->where('a.fecha', $fecha);
             })
-            ->where('d.ESTADO', 'ACTIVO')
+            ->whereIn('d.ESTADO', ['ACTIVO', 'INCAPACIDAD'])
             ->orderBy('d.NOMBRE_DOC')
             ->select(
-                'd.CODIGO_DOC', 'd.NOMBRE_DOC', 'd.TIPO',
+                'd.CODIGO_DOC', 'd.NOMBRE_DOC', 'd.TIPO', 'd.ESTADO as estado_docente',
                 'a.estado', 'a.hora_llegada', 'a.observacion'
             )
             ->get();
@@ -87,10 +87,10 @@ class AsistenciaPersonalController extends Controller
                   ->where('p.fecha_inicio', '<=', $fecha)
                   ->where('p.fecha_fin',    '>=', $fecha);
             })
-            ->where('d.ESTADO', 'ACTIVO')
+            ->whereIn('d.ESTADO', ['ACTIVO', 'INCAPACIDAD'])
             ->orderBy('d.NOMBRE_DOC')
             ->select(
-                'd.CODIGO_DOC', 'd.NOMBRE_DOC', 'd.TIPO',
+                'd.CODIGO_DOC', 'd.NOMBRE_DOC', 'd.TIPO', 'd.ESTADO as estado_docente',
                 'a.id as asistencia_id', 'a.estado', 'a.hora_llegada', 'a.observacion',
                 'p.tipo as tipo_permiso'
             )
@@ -136,7 +136,7 @@ class AsistenciaPersonalController extends Controller
     public function permisos(Request $request)
     {
         $docentes = DB::table('CODIGOS_DOC')
-            ->where('ESTADO', 'ACTIVO')
+            ->whereIn('ESTADO', ['ACTIVO', 'INCAPACIDAD'])
             ->orderBy('NOMBRE_DOC')
             ->get();
 

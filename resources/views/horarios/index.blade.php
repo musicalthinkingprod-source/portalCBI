@@ -42,5 +42,17 @@
         </div>
 
     </div>
+
+    @if(in_array(auth()->user()->PROFILE, ['SuperAd', 'Ori']))
+    <div class="mt-6 bg-white rounded-xl shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-700 mb-2">🔍 Diagnóstico de conflictos</h2>
+        <p class="text-sm text-gray-500 mb-4">Detecta docentes asignados a más de un curso en el mismo slot (día + hora).</p>
+        <a href="{{ route('horarios.conflictos') }}"
+           class="inline-block bg-red-600 text-white rounded-lg px-5 py-2 text-sm font-medium hover:bg-red-700 transition">
+            Ver conflictos de horario
+        </a>
+    </div>
+    @endif
+
 </div>
 @endsection

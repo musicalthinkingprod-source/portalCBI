@@ -247,11 +247,16 @@ class PiarCaractController extends Controller
             if (!$esDir) abort(403);
         }
 
-        $docente  = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $codigoDoc)->first();
+        // Para Ori/SuperAd, operar sobre el registro del director real del curso
+        $codigoDocDir = $esDocente
+            ? $codigoDoc
+            : (DB::table('CODIGOS_DOC')->where('DIR_GRUPO', $estudiante->CURSO)->value('CODIGO_DOC') ?? $codigoDoc);
+
+        $docente  = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $codigoDocDir)->first();
         $piarDiag = DB::table('PIAR_DIAG')->where('CODIGO_ALUM', $codigo)->first();
         $caract   = DB::table('PIAR_CARACT_DIR')
                         ->where('CODIGO_ALUM', $codigo)
-                        ->where('CODIGO_DOC', $codigoDoc)
+                        ->where('CODIGO_DOC', $codigoDocDir)
                         ->first();
 
         $nombreCompleto = trim("{$estudiante->NOMBRE1} {$estudiante->NOMBRE2}");
@@ -274,15 +279,20 @@ class PiarCaractController extends Controller
         $estudiante = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->first();
         if (!$estudiante) abort(404);
 
+        // Para Ori/SuperAd, operar sobre el registro del director real del curso
+        $codigoDocDir = $esDocente
+            ? $codigoDoc
+            : (DB::table('CODIGOS_DOC')->where('DIR_GRUPO', $estudiante->CURSO)->value('CODIGO_DOC') ?? $codigoDoc);
+
         $existingEstado = DB::table('PIAR_CARACT_DIR')
-            ->where('CODIGO_ALUM', $codigo)->where('CODIGO_DOC', $codigoDoc)
+            ->where('CODIGO_ALUM', $codigo)->where('CODIGO_DOC', $codigoDocDir)
             ->value('ESTADO') ?? 'pendiente';
 
         // Orientador envía observaciones
         if (!$esDocente && $request->input('accion') === 'observar') {
             if ($estadoEtapa === 'finalizado') return back()->withErrors(['etapa' => 'La etapa está finalizada.']);
             DB::table('PIAR_CARACT_DIR')->updateOrInsert(
-                ['CODIGO_ALUM' => $codigo, 'CODIGO_DOC' => $codigoDoc],
+                ['CODIGO_ALUM' => $codigo, 'CODIGO_DOC' => $codigoDocDir],
                 ['OBSERVACIONES' => $request->OBSERVACIONES, 'ESTADO' => 'con_observaciones', 'updated_at' => now()]
             );
             return back()->with('saved', 'Observaciones enviadas al docente.');
@@ -316,7 +326,7 @@ class PiarCaractController extends Controller
         }
 
         DB::table('PIAR_CARACT_DIR')->updateOrInsert(
-            ['CODIGO_ALUM' => $codigo, 'CODIGO_DOC' => $codigoDoc],
+            ['CODIGO_ALUM' => $codigo, 'CODIGO_DOC' => $codigoDocDir],
             $datos
         );
 

@@ -75,7 +75,7 @@
 
 .hor-table td {
     padding: 8px 10px; border-bottom: 1px solid #f1f5f9;
-    vertical-align: middle; text-align: center;
+    vertical-align: middle; text-align: center; height: 80px;
 }
 .hor-table td.col-hora {
     font-size: .78rem; font-weight: 700; color: #64748b;
@@ -87,8 +87,9 @@
 
 .cell-bloque {
     display: inline-flex; flex-direction: column; align-items: center;
+    justify-content: center;
     gap: 2px; padding: 5px 8px; border-radius: 8px;
-    background: #eef2ff; min-width: 80px;
+    background: #eef2ff; min-width: 80px; height: 56px; overflow: hidden;
 }
 .cell-bloque .curso-badge {
     font-size: 11px; font-weight: 800; color: #4338ca;
@@ -96,6 +97,7 @@
 }
 .cell-bloque .mat-name {
     font-size: 10px; color: #4b5563; line-height: 1.3; text-align: center;
+    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
 
 /* Columna de hoy */

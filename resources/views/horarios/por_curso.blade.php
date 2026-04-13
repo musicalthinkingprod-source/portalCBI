@@ -58,14 +58,14 @@
                         @endphp
                         @if($tieneContenido)
                         <tr class="{{ $loop->even ? 'bg-gray-50' : 'bg-white' }} border-b border-gray-100 hover:bg-blue-50 transition">
-                            <td class="px-4 py-3 font-medium text-gray-500 whitespace-nowrap">
+                            <td class="px-4 font-medium text-gray-500 whitespace-nowrap" style="height:80px;vertical-align:middle;">
                                 {{ $horaLabel }}
                             </td>
                             @foreach($diasConDatos as $diaNum)
                                 @php $celda = $grid[$horaNum][$diaNum] ?? null; @endphp
-                                <td class="px-4 py-3 text-center">
+                                <td class="px-4 text-center" style="height:80px;vertical-align:middle;">
                                     @if($celda)
-                                        <div class="font-semibold text-gray-800">{{ $celda['materia'] }}</div>
+                                        <div class="font-semibold text-gray-800 text-sm leading-tight">{{ $celda['materia'] }}</div>
                                         @if($celda['docente'])
                                             <div class="text-xs text-blue-600 mt-0.5">
                                                 <a href="{{ route('horarios.por_docente', ['docente' => $celda['codigo_doc']]) }}"

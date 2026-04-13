@@ -131,6 +131,7 @@
         <h3 class="font-bold text-sm uppercase tracking-wide">Docentes</h3>
         <div class="flex gap-3 text-xs">
             <span class="text-green-300">● {{ $docentes->where('ESTADO','ACTIVO')->count() }} activos</span>
+            <span class="text-yellow-300">● {{ $docentes->where('ESTADO','INCAPACIDAD')->count() }} en incapacidad</span>
             <span class="text-red-300">● {{ $docentes->where('ESTADO','INACTIVO')->count() }} inactivos</span>
         </div>
     </div>
@@ -193,19 +194,20 @@
                     <td class="px-4 py-2 text-xs text-gray-500">{{ $doc->TIPO ?? '—' }}</td>
                     <td class="px-4 py-2 text-center">
                         <span class="px-2 py-0.5 rounded-full text-xs font-semibold
-                            {{ $doc->ESTADO === 'ACTIVO' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600' }}">
-                            {{ $doc->ESTADO }}
+                            {{ $doc->ESTADO === 'ACTIVO' ? 'bg-green-100 text-green-700' : ($doc->ESTADO === 'INCAPACIDAD' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-600') }}">
+                            {{ $doc->ESTADO === 'INCAPACIDAD' ? 'INCAPACIDAD' : $doc->ESTADO }}
                         </span>
                     </td>
                     <td class="px-4 py-2 text-right">
-                        <form method="POST" action="{{ route('admin.docentes.toggle', $doc->CODIGO_DOC) }}">
+                        <form method="POST" action="{{ route('admin.docentes.estado', $doc->CODIGO_DOC) }}" class="flex gap-1 justify-end">
                             @csrf
-                            <button type="submit"
-                                class="text-xs font-semibold px-3 py-1 rounded transition
-                                    {{ $doc->ESTADO === 'ACTIVO'
-                                        ? 'text-red-600 hover:bg-red-50 hover:text-red-700'
-                                        : 'text-green-600 hover:bg-green-50 hover:text-green-700' }}">
-                                {{ $doc->ESTADO === 'ACTIVO' ? 'Marcar inactivo' : 'Marcar activo' }}
+                            <select name="estado" class="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <option value="ACTIVO"      {{ $doc->ESTADO === 'ACTIVO'      ? 'selected' : '' }}>Activo</option>
+                                <option value="INCAPACIDAD" {{ $doc->ESTADO === 'INCAPACIDAD' ? 'selected' : '' }}>Incapacidad</option>
+                                <option value="INACTIVO"    {{ $doc->ESTADO === 'INACTIVO'    ? 'selected' : '' }}>Inactivo</option>
+                            </select>
+                            <button type="submit" class="text-xs font-semibold px-3 py-1 rounded bg-gray-100 hover:bg-blue-50 text-blue-700 transition">
+                                Guardar
                             </button>
                         </form>
                     </td>

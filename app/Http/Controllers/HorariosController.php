@@ -285,6 +285,49 @@ class HorariosController extends Controller
         ));
     }
 
+    public function conflictos()
+    {
+        $dias  = Horario::$dias;
+        $horas = Horario::$horas;
+
+        // Detecta docentes con más de una entrada en el mismo DIA+HORA.
+        // Cubre tanto cursos distintos en paralelo como la misma clase duplicada.
+        // Excluye filas DOC-prefixed (Atención a Padres) y GP (Proyecto).
+        $conflictos = DB::table('HORARIOS as h')
+            ->join('ASIGNACION_PCM as a', function ($join) {
+                $join->where(function ($q) {
+                         $q->whereColumn('a.CODIGO_MAT', 'h.CODIGO_MAT')
+                           ->orWhereRaw('(a.CODIGO_MAT IN (25,26) AND h.CODIGO_MAT = 70)');
+                     })
+                     ->where(function ($q) {
+                         $q->whereColumn('a.CURSO', 'h.CURSO')
+                           ->orWhereRaw("a.CURSO LIKE CONCAT(h.CURSO, '-%')");
+                     });
+            })
+            ->leftJoin('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'h.CODIGO_MAT')
+            ->leftJoin('CODIGOS_DOC as cd', 'cd.CODIGO_DOC', '=', 'a.CODIGO_DOC')
+            ->whereRaw("h.CURSO NOT LIKE 'DOC%'")
+            ->whereRaw("a.CURSO NOT LIKE 'GP%'")
+            ->select(
+                'a.CODIGO_DOC',
+                'cd.NOMBRE_DOC',
+                'h.DIA',
+                'h.HORA',
+                DB::raw('COUNT(*) as n'),
+                DB::raw("GROUP_CONCAT(CONCAT(a.CURSO, ' [', IFNULL(m.NOMBRE_MAT,'?'), ']') ORDER BY a.CURSO SEPARATOR ' | ') as detalle")
+            )
+            ->groupBy('a.CODIGO_DOC', 'cd.NOMBRE_DOC', 'h.DIA', 'h.HORA')
+            ->havingRaw('COUNT(*) > 1')
+            ->orderBy('a.CODIGO_DOC')
+            ->orderBy('h.DIA')
+            ->orderBy('h.HORA')
+            ->get();
+
+        $porDocente = $conflictos->groupBy('CODIGO_DOC');
+
+        return view('horarios.conflictos', compact('porDocente', 'dias', 'horas'));
+    }
+
     public function porDocente(Request $request)
     {
         $docentes      = Horario::docentes();

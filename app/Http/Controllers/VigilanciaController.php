@@ -356,6 +356,42 @@ class VigilanciaController extends Controller
         return back()->with('success_reasig_bloque', $msg);
     }
 
+    // Agrega un docente sin vigilancias a la lista (crea filas vacías)
+    public function agregarDocente(Request $request)
+    {
+        $codigo = $request->CODIGO_DOC;
+        $anio   = (int) $request->input('anio', date('Y'));
+
+        if (!$codigo) {
+            return back()->withErrors(['agregar_doc' => 'Selecciona un docente.']);
+        }
+
+        $existe = DB::table('vigilancias')
+            ->where('CODIGO_DOC', $codigo)->where('ANIO', $anio)->exists();
+
+        if ($existe) {
+            return back()->with('success', 'Este docente ya está en la lista.');
+        }
+
+        $rows = [];
+        for ($dia = 1; $dia <= 6; $dia++) {
+            for ($desc = 1; $desc <= 2; $desc++) {
+                $rows[] = [
+                    'CODIGO_DOC' => $codigo,
+                    'DIA_CICLO'  => $dia,
+                    'DESCANSO'   => $desc,
+                    'POSICION'   => null,
+                    'ANIO'       => $anio,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+        }
+        DB::table('vigilancias')->insert($rows);
+
+        return back()->with('success', 'Docente agregado. Asigna sus posiciones y guarda.');
+    }
+
     // Guarda toda la tabla de asignaciones (admin)
     public function guardarAsignaciones(Request $request)
     {

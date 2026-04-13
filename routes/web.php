@@ -361,6 +361,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/vigilancias/reasignaciones', [VigilanciaController::class, 'reasignaciones'])->name('vigilancias.reasignaciones');
         Route::post('/vigilancias/reasignar/una', [VigilanciaController::class, 'reasignarUna'])->name('vigilancias.reasignar.una');
         Route::post('/vigilancias/reasignar/bloque', [VigilanciaController::class, 'reasignarBloque'])->name('vigilancias.reasignar.bloque');
+        Route::post('/vigilancias/docente/agregar', [VigilanciaController::class, 'agregarDocente'])->name('vigilancias.docente.agregar');
     });
 
     // ── Control de vigilancias: SuperAd y ConvCor28 ──────────────────────
@@ -373,6 +374,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/horarios/curso', [HorariosController::class, 'porCurso'])->name('horarios.por_curso');
     Route::get('/horarios/docente', [HorariosController::class, 'porDocente'])->name('horarios.por_docente');
     Route::get('/horarios/disponibilidad', [HorariosController::class, 'disponibilidad'])->name('horarios.disponibilidad');
+    Route::middleware('profile:SuperAd,Ori')->group(function () {
+        Route::get('/horarios/conflictos', [HorariosController::class, 'conflictos'])->name('horarios.conflictos');
+    });
 
     // ── Mi Horario: vista personal del docente ────────────────────────────
     Route::middleware('profile:DOC*')->group(function () {
