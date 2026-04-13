@@ -91,9 +91,9 @@ class AlumnoController extends Controller
         DB::table('ESTUDIANTES')->insert([
             'CODIGO'         => $codigo,
             'NOMBRE1'        => $request->NOMBRE1,
-            'NOMBRE2'        => $request->NOMBRE2,
+            'NOMBRE2'        => $request->NOMBRE2 ?? '',
             'APELLIDO1'      => $request->APELLIDO1,
-            'APELLIDO2'      => $request->APELLIDO2,
+            'APELLIDO2'      => $request->APELLIDO2 ?? '',
             'GRADO'          => $request->filled('GRADO') ? (int) $request->GRADO : null,
             'CURSO'          => $request->CURSO,
             'SEDE'           => $request->SEDE,
@@ -231,9 +231,9 @@ class AlumnoController extends Controller
     {
         DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->update([
             'NOMBRE1'        => $request->NOMBRE1,
-            'NOMBRE2'        => $request->NOMBRE2,
+            'NOMBRE2'        => $request->NOMBRE2 ?? '',
             'APELLIDO1'      => $request->APELLIDO1,
-            'APELLIDO2'      => $request->APELLIDO2,
+            'APELLIDO2'      => $request->APELLIDO2 ?? '',
             'GRADO'          => $request->filled('GRADO') ? (int) $request->GRADO : null,
             'CURSO'          => $request->CURSO,
             'SEDE'           => $request->SEDE,
