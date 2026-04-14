@@ -61,7 +61,10 @@ class AdminController extends Controller
             ->orderBy('NOMBRE_DOC')
             ->get();
 
-        return view('admin.directores', compact('cursos', 'directores', 'docentes'));
+        $profile      = auth()->user()->PROFILE;
+        $puedeEditar  = in_array($profile, ['SuperAd', 'Admin']);
+
+        return view('admin.directores', compact('cursos', 'directores', 'docentes', 'puedeEditar'));
     }
 
     public function asignaciones(Request $request)

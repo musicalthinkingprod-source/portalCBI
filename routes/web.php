@@ -37,6 +37,7 @@ use App\Http\Controllers\CalendarioAcademicoController;
 use App\Http\Controllers\AsistenciaPersonalController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\ListadoEstudiantesController;
+use App\Http\Controllers\ObservacionesController;
 
 /*
 |--------------------------------------------------------------------------
@@ -83,6 +84,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/admin/docentes/{codigo}/estado', [AdminController::class, 'setEstadoDocente'])->name('admin.docentes.estado');
         Route::get('/admin/directores', [AdminController::class, 'directores'])->name('admin.directores');
         Route::post('/admin/dir-grupo', [AdminController::class, 'asignarDirGrupo'])->name('admin.dir_grupo');
+    });
+
+    // ── Directores de grupo (solo lectura): Ori* ────────────────────────────
+    Route::middleware('profile:Ori*')->group(function () {
+        Route::get('/orientacion/directores', [AdminController::class, 'directores'])->name('orientacion.directores');
         Route::get('/admin/asignaciones', [AdminController::class, 'asignaciones'])->name('admin.asignaciones');
         Route::post('/admin/asignaciones/mover', [AdminController::class, 'moverAsignaciones'])->name('admin.asignaciones.mover');
         Route::post('/admin/asignaciones/mover-una', [AdminController::class, 'moverUnaAsignacion'])->name('admin.asignaciones.mover_una');
@@ -123,7 +129,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/backup/descargar', [BackupController::class, 'descargar'])->name('backup.descargar');
     });
 
-    // ── Control de Pagos: lectura (Admin + Contab + SecC100) ────────────────
+    // ── Control de Pagos: lectura + seguimiento cartera (Admin + Contab + SecC100) ────────────────
     Route::middleware('profile:SuperAd,Admin,Contab,SecC100')->group(function () {
         Route::get('/control/estudiante', [ControlEstudianteController::class, 'index'])->name('control.estudiante');
         Route::get('/pagos', [PagosController::class, 'index'])->name('pagos.index');
@@ -132,6 +138,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/cartera/estudiante/{codigo}', [CarteraController::class, 'estudiante'])->name('cartera.estudiante');
         Route::get('/cartera/seguimiento/informe', [CarteraController::class, 'informeSeguimiento'])->name('cartera.seguimiento.informe');
         Route::get('/cartera/por-cc', [CarteraController::class, 'carteraPorCC'])->name('cartera.por_cc');
+        Route::post('/cartera/estudiante/{codigo}/seguimiento', [CarteraController::class, 'storeSeguimiento'])->name('cartera.seguimiento.store');
+        Route::delete('/cartera/seguimiento/{id}', [CarteraController::class, 'destroySeguimiento'])->name('cartera.seguimiento.destroy');
+        Route::put('/cartera/seguimiento/{id}', [CarteraController::class, 'updateSeguimiento'])->name('cartera.seguimiento.update');
         Route::get('/facturacion', [FacturacionController::class, 'index'])->name('facturacion.index');
         Route::get('/facturacion/exportar', [FacturacionController::class, 'exportarExcel'])->name('facturacion.exportar');
         Route::get('/facturacion/auto', [FacturacionController::class, 'autoIndex'])->name('facturacion.auto');
@@ -153,9 +162,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/pagos/{id}/editar', [PagosController::class, 'edit'])->name('pagos.edit');
         Route::put('/pagos/{id}', [PagosController::class, 'update'])->name('pagos.update');
         Route::delete('/pagos/{id}', [PagosController::class, 'destroy'])->name('pagos.destroy');
-        Route::post('/cartera/estudiante/{codigo}/seguimiento', [CarteraController::class, 'storeSeguimiento'])->name('cartera.seguimiento.store');
-        Route::delete('/cartera/seguimiento/{id}', [CarteraController::class, 'destroySeguimiento'])->name('cartera.seguimiento.destroy');
-        Route::put('/cartera/seguimiento/{id}', [CarteraController::class, 'updateSeguimiento'])->name('cartera.seguimiento.update');
         Route::get('/admin/exenciones-cartera', [\App\Http\Controllers\ExencionCarteraController::class, 'index'])->name('admin.exenciones-cartera.index');
         Route::post('/admin/exenciones-cartera', [\App\Http\Controllers\ExencionCarteraController::class, 'store'])->name('admin.exenciones-cartera.store');
         Route::delete('/admin/exenciones-cartera/{id}', [\App\Http\Controllers\ExencionCarteraController::class, 'destroy'])->name('admin.exenciones-cartera.destroy');
@@ -341,6 +347,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/informes/boletin', [BoletinController::class, 'buscar'])->name('informes.boletin');
         Route::get('/boletines/{codigo}', [BoletinController::class, 'ver'])->name('boletines.ver');
         Route::get('/informes/promedios/{codigo}', [BoletinController::class, 'promedios'])->name('informes.promedios');
+    });
+
+    // ── Observaciones 2026: SuperAd, Admin, DOC* ────────────────────────────
+    Route::middleware('profile:SuperAd,Admin,DOC*')->group(function () {
+        Route::get('/observaciones',  [ObservacionesController::class, 'index'])->name('observaciones.index');
+        Route::post('/observaciones', [ObservacionesController::class, 'store'])->name('observaciones.store');
     });
 
     // ── Asistencia personal: SuperAd y SecA ven el estado; SecA registra ────

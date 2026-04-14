@@ -172,6 +172,23 @@
         </div>
         @endif
 
+        {{-- ── Orientación: Ori* ── --}}
+        @if(str_starts_with($profile, 'Ori'))
+        @php $catId = 'orientacion'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Orientación</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('orientacion.directores'), '🏫 Directores de grupo') !!}
+            </ul>
+        </div>
+        @endif
+
         {{-- ── PIAR: SuperAd, Admin, Ori*, DOC* ── --}}
         @if($isAdminLike || str_starts_with($profile, 'Ori') || $isDoc)
         @php $catId = 'piar'; @endphp
@@ -196,8 +213,8 @@
         </div>
         @endif
 
-        {{-- ── Trabajo Docente: SuperAd, DOC* ── --}}
-        @if($isSuperAd || $isDoc)
+        {{-- ── Trabajo Docente: SuperAd, Admin, DOC* ── --}}
+        @if($isSuperAd || $isAdmin || $isDoc)
         @php $catId = 'trabajo-docente'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -208,6 +225,7 @@
                 </svg>
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                @if($isSuperAd || $isDoc)
                 {!! sidebarLink(route('notas.index'), '📋 Notas') !!}
                 {!! sidebarLink(route('notas.v2.index'), '🧪 Planilla ponderada') !!}
                 {!! sidebarLink(route('english-acq.docente'), '🇬🇧 English Acquisition') !!}
@@ -216,6 +234,8 @@
                 @if($isDoc)
                 {!! sidebarLink(route('horarios.mi_horario'), '🗓️ Mi Horario') !!}
                 @endif
+                @endif
+                {!! sidebarLink(route('observaciones.index'), '📝 Observaciones 2026') !!}
             </ul>
         </div>
         @endif

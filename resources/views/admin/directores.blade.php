@@ -20,7 +20,9 @@
                 <tr>
                     <th class="px-4 py-3 text-left w-24">Curso</th>
                     <th class="px-4 py-3 text-left">Director asignado</th>
+                    @if($puedeEditar)
                     <th class="px-4 py-3 text-left">Cambiar director</th>
+                    @endif
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
@@ -38,6 +40,7 @@
                             <span class="text-gray-400 text-xs italic">Sin director asignado</span>
                         @endif
                     </td>
+                    @if($puedeEditar)
                     <td class="px-4 py-2">
                         <form method="POST" action="{{ route('admin.dir_grupo') }}" class="flex gap-2 items-center">
                             @csrf
@@ -57,9 +60,10 @@
                             </button>
                         </form>
                     </td>
+                    @endif
                 </tr>
                 @empty
-                <tr><td colspan="3" class="px-4 py-4 text-center text-gray-400 text-sm">No hay cursos registrados en las asignaciones.</td></tr>
+                <tr><td colspan="{{ $puedeEditar ? 3 : 2 }}" class="px-4 py-4 text-center text-gray-400 text-sm">No hay cursos registrados en las asignaciones.</td></tr>
                 @endforelse
             </tbody>
         </table>

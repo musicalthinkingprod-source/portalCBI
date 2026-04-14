@@ -185,6 +185,105 @@
 
     @endif
 
+    {{-- ══ Sección: Observaciones 2026 ══ --}}
+    <div class="mt-10 mb-2">
+        <h2 class="text-base font-bold text-gray-700">Diligenciamiento de Observaciones 2026</h2>
+        <p class="text-xs text-gray-400 mt-0.5">Un registro por estudiante por período (máximo = total alumnos del curso)</p>
+    </div>
+
+    @if(empty($observacionesReport))
+        <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-xl p-4 text-sm">
+            No hay directores de grupo asignados.
+        </div>
+    @else
+
+    {{-- Tarjetas resumen observaciones --}}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        @php
+            $totDir = count($observacionesReport);
+            $obsCompletos = [1=>0, 2=>0, 3=>0, 4=>0];
+            foreach ($observacionesReport as $d) {
+                for ($p = 1; $p <= 4; $p++) {
+                    if ($d['periodos'][$p]['esperadas'] > 0 &&
+                        $d['periodos'][$p]['ingresadas'] >= $d['periodos'][$p]['esperadas']) {
+                        $obsCompletos[$p]++;
+                    }
+                }
+            }
+        @endphp
+        @foreach([1,2,3,4] as $p)
+        <div class="bg-white rounded-xl shadow p-4 text-center">
+            <p class="text-xs text-gray-400 uppercase tracking-wide mb-1">Período {{ $p }}</p>
+            <p class="text-2xl font-bold text-purple-700">
+                {{ $obsCompletos[$p] }}<span class="text-base font-normal text-gray-400">/{{ $totDir }}</span>
+            </p>
+            <p class="text-xs text-gray-500 mt-1">directores completos</p>
+        </div>
+        @endforeach
+    </div>
+
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm border-collapse">
+                <thead>
+                    <tr class="bg-purple-800 text-white text-xs uppercase tracking-wide">
+                        <th class="px-4 py-3 text-left border-r border-purple-700 w-48">Director de grupo</th>
+                        <th class="px-4 py-3 text-left border-r border-purple-700 w-24">Código</th>
+                        <th class="px-4 py-3 text-center border-r border-purple-700 w-16">Curso</th>
+                        <th class="px-4 py-3 text-center border-r border-purple-700 w-20">Alumnos</th>
+                        <th class="px-4 py-3 text-center border-r border-purple-700 w-28">Período 1</th>
+                        <th class="px-4 py-3 text-center border-r border-purple-700 w-28">Período 2</th>
+                        <th class="px-4 py-3 text-center border-r border-purple-700 w-28">Período 3</th>
+                        <th class="px-4 py-3 text-center w-28">Período 4</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach($observacionesReport as $dir)
+                    @php $inactivo = ($dir['estado'] ?? 'ACTIVO') !== 'ACTIVO'; @endphp
+                    <tr class="{{ $inactivo ? 'bg-red-50' : 'bg-white' }} hover:bg-gray-50 transition">
+                        <td class="px-4 py-3 font-medium {{ $inactivo ? 'text-red-700' : 'text-gray-800' }}">
+                            {{ $dir['nombre'] }}
+                            @if($inactivo)
+                                <span class="ml-1 px-1.5 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-600">{{ strtoupper($dir['estado']) }}</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 text-xs font-mono text-gray-500 border-l border-gray-100">{{ $dir['codigo'] }}</td>
+                        <td class="px-4 py-3 text-center font-semibold text-purple-700">{{ $dir['curso'] }}</td>
+                        <td class="px-4 py-3 text-center text-gray-500">{{ $dir['periodos'][1]['esperadas'] }}</td>
+                        @foreach([1,2,3,4] as $p)
+                        @php
+                            $esp  = $dir['periodos'][$p]['esperadas'];
+                            $ing  = $dir['periodos'][$p]['ingresadas'];
+                            $falt = $esp - $ing;
+                            $pct  = $esp > 0 ? round(($ing / $esp) * 100) : 0;
+                        @endphp
+                        <td class="px-4 py-3 text-center {{ $p < 4 ? 'border-r border-gray-100' : '' }}">
+                            @if($esp == 0)
+                                <span class="text-gray-300 text-xs">—</span>
+                            @elseif($falt <= 0)
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                                    ✓ {{ $ing }}
+                                </span>
+                            @else
+                                <div class="flex flex-col items-center gap-0.5">
+                                    <span class="text-xs font-bold text-red-600">{{ $ing }}/{{ $esp }}</span>
+                                    <div class="w-16 bg-gray-200 rounded-full h-1.5">
+                                        <div class="h-1.5 rounded-full {{ $pct >= 100 ? 'bg-green-500' : ($pct >= 50 ? 'bg-yellow-400' : 'bg-red-400') }}"
+                                             style="width:{{ $pct }}%"></div>
+                                    </div>
+                                </div>
+                            @endif
+                        </td>
+                        @endforeach
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @endif
+
 @endsection
 
 @push('scripts')
