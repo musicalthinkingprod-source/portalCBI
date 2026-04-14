@@ -4,10 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class FacturacionController extends Controller
 {
@@ -324,66 +320,48 @@ class FacturacionController extends Controller
 
     public function exportarExcel(Request $request)
     {
-        @ini_set('memory_limit', '-1');
-
         $sortable = ['codigo_alumno', 'fecha', 'concepto', 'mes', 'valor'];
         $sortCol  = in_array($request->sort, $sortable) ? $request->sort : 'fecha';
         $sortDir  = $request->direction === 'asc' ? 'asc' : 'desc';
 
         $query = DB::table('facturacion')->orderBy($sortCol, $sortDir);
 
-        if ($request->filled('codigo_alumno'))  $query->where('codigo_alumno', $request->codigo_alumno);
-        if ($request->filled('fecha_desde'))    $query->whereDate('fecha', '>=', $request->fecha_desde);
-        if ($request->filled('fecha_hasta'))    $query->whereDate('fecha', '<=', $request->fecha_hasta);
-        if ($request->filled('concepto'))       $query->where('concepto', 'like', '%' . $request->concepto . '%');
-        if ($request->filled('mes'))            $query->where('mes', 'like', '%' . $request->mes . '%');
-        if ($request->filled('orden'))          $query->where('orden', $request->orden);
+        if ($request->filled('codigo_alumno'))   $query->where('codigo_alumno', $request->codigo_alumno);
+        if ($request->filled('fecha_desde'))     $query->whereDate('fecha', '>=', $request->fecha_desde);
+        if ($request->filled('fecha_hasta'))     $query->whereDate('fecha', '<=', $request->fecha_hasta);
+        if ($request->filled('concepto'))        $query->where('concepto', 'like', '%' . $request->concepto . '%');
+        if ($request->filled('mes'))             $query->where('mes', 'like', '%' . $request->mes . '%');
+        if ($request->filled('orden'))           $query->where('orden', $request->orden);
         if ($request->filled('codigo_concepto')) $query->where('codigo_concepto', 'like', '%' . $request->codigo_concepto . '%');
-        if ($request->filled('centro_costos'))  $query->where('centro_costos', 'like', '%' . $request->centro_costos . '%');
+        if ($request->filled('centro_costos'))   $query->where('centro_costos', 'like', '%' . $request->centro_costos . '%');
 
-        $filas = $query->get();
+        $nombre = 'facturacion_' . date('Ymd_His') . '.csv';
+        $tmp    = tempnam(sys_get_temp_dir(), 'fac') . '.csv';
+        $fh     = fopen($tmp, 'w');
 
-        $spreadsheet = new Spreadsheet();
-        $sheet       = $spreadsheet->getActiveSheet()->setTitle('Facturacion');
+        // BOM para que Excel abra correctamente con tildes
+        fwrite($fh, "\xEF\xBB\xBF");
+        fputcsv($fh, ['CODIGO ALUMNO', 'FECHA', 'CONCEPTO', 'MES', 'ORDEN', 'COD. CONCEPTO', 'CENTRO COSTOS', 'VALOR'], ';');
 
-        $cols = ['CODIGO ALUMNO', 'FECHA', 'CONCEPTO', 'MES', 'ORDEN', 'COD. CONCEPTO', 'CENTRO COSTOS', 'VALOR'];
-        $sheet->fromArray($cols, null, 'A1');
-        $sheet->getStyle('A1:H1')->applyFromArray([
-            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1E3A5F']],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-        ]);
-
-        $fila = 2;
-        foreach ($filas as $f) {
-            $sheet->fromArray([
-                (int) $f->codigo_alumno,
-                $f->fecha,
-                $f->concepto,
-                $f->mes,
-                $f->orden ?? '',
-                $f->codigo_concepto ?? '',
-                $f->centro_costos ?? '',
-                (float) $f->valor,
-            ], null, "A{$fila}");
-            if ($fila % 2 === 0) {
-                $sheet->getStyle("A{$fila}:H{$fila}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F0F4FA');
+        $query->orderBy('id')->chunk(500, function ($filas) use ($fh) {
+            foreach ($filas as $f) {
+                fputcsv($fh, [
+                    $f->codigo_alumno,
+                    $f->fecha,
+                    $f->concepto,
+                    $f->mes,
+                    $f->orden ?? '',
+                    $f->codigo_concepto ?? '',
+                    $f->centro_costos ?? '',
+                    number_format((float) $f->valor, 2, ',', '.'),
+                ], ';');
             }
-            $fila++;
-        }
+        });
 
-        foreach ([1=>14, 2=>14, 3=>38, 4=>12, 5=>8, 6=>15, 7=>15, 8=>14] as $c => $w) {
-            $sheet->getColumnDimensionByColumn($c)->setWidth($w);
-        }
-        $sheet->getStyle("H2:H{$fila}")->getNumberFormat()->setFormatCode('#,##0.00');
-
-        $nombre = 'facturacion_' . date('Ymd_His') . '.xlsx';
-        $writer = new Xlsx($spreadsheet);
-        $tmp    = tempnam(sys_get_temp_dir(), 'fac') . '.xlsx';
-        $writer->save($tmp);
+        fclose($fh);
 
         return response()->download($tmp, $nombre, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Type' => 'text/csv; charset=UTF-8',
         ])->deleteFileAfterSend(true);
     }
 }

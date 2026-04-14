@@ -4,10 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class CarteraController extends Controller
 {
@@ -356,7 +352,6 @@ class CarteraController extends Controller
 
     public function exportarInforme()
     {
-        @ini_set('memory_limit', '-1');
         $facturaPorAlumno = DB::table('facturacion')
             ->select('codigo_alumno', DB::raw('SUM(valor) as total_facturado'))
             ->groupBy('codigo_alumno');
@@ -380,45 +375,28 @@ class CarteraController extends Controller
             ->orderByDesc('saldo')
             ->get();
 
-        $spreadsheet = new Spreadsheet();
-        $sheet       = $spreadsheet->getActiveSheet()->setTitle('Cartera');
+        $nombre = 'informe_cartera_' . date('Ymd_His') . '.csv';
+        $tmp    = tempnam(sys_get_temp_dir(), 'car') . '.csv';
+        $fh     = fopen($tmp, 'w');
 
-        $cols = ['CODIGO', 'NOMBRE', 'CURSO', 'FACTURADO', 'PAGADO', 'SALDO'];
-        $sheet->fromArray($cols, null, 'A1');
-        $sheet->getStyle('A1:F1')->applyFromArray([
-            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1E3A5F']],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-        ]);
+        fwrite($fh, "\xEF\xBB\xBF");
+        fputcsv($fh, ['CODIGO', 'NOMBRE', 'CURSO', 'FACTURADO', 'PAGADO', 'SALDO'], ';');
 
-        $fila = 2;
         foreach ($filas as $f) {
-            $sheet->fromArray([
-                (int) $f->codigo_alumno,
+            fputcsv($fh, [
+                $f->codigo_alumno,
                 trim(preg_replace('/\s+/', ' ', $f->nombre)),
                 $f->CURSO ?? '',
-                (float) $f->total_facturado,
-                (float) $f->total_pagado,
-                (float) $f->saldo,
-            ], null, "A{$fila}");
-            if ($fila % 2 === 0) {
-                $sheet->getStyle("A{$fila}:F{$fila}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F0F4FA');
-            }
-            $fila++;
+                number_format((float) $f->total_facturado, 2, ',', '.'),
+                number_format((float) $f->total_pagado,    2, ',', '.'),
+                number_format((float) $f->saldo,           2, ',', '.'),
+            ], ';');
         }
 
-        foreach ([1=>10, 2=>38, 3=>10, 4=>16, 5=>16, 6=>16] as $c => $w) {
-            $sheet->getColumnDimensionByColumn($c)->setWidth($w);
-        }
-        $sheet->getStyle("D2:F{$fila}")->getNumberFormat()->setFormatCode('#,##0.00');
-
-        $nombre = 'informe_cartera_' . date('Ymd_His') . '.xlsx';
-        $writer = new Xlsx($spreadsheet);
-        $tmp    = tempnam(sys_get_temp_dir(), 'car') . '.xlsx';
-        $writer->save($tmp);
+        fclose($fh);
 
         return response()->download($tmp, $nombre, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Type' => 'text/csv; charset=UTF-8',
         ])->deleteFileAfterSend(true);
     }
 
@@ -470,50 +448,33 @@ class CarteraController extends Controller
 
         $filas = $query->get();
 
-        $spreadsheet = new Spreadsheet();
-        $sheet       = $spreadsheet->getActiveSheet()->setTitle($titulo);
+        $nombreArchivo = strtolower($titulo) . '_' . date('Ymd_His') . '.csv';
+        $tmp           = tempnam(sys_get_temp_dir(), 'deu') . '.csv';
+        $fh            = fopen($tmp, 'w');
 
-        $cols = ['CODIGO', 'NOMBRE', 'CURSO', 'FACTURADO', 'PAGADO', 'SALDO', 'ACUDIENTE', 'CELULAR'];
-        $sheet->fromArray($cols, null, 'A1');
-        $sheet->getStyle('A1:H1')->applyFromArray([
-            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $color]],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-        ]);
+        fwrite($fh, "\xEF\xBB\xBF");
+        fputcsv($fh, ['CODIGO', 'NOMBRE', 'CURSO', 'FACTURADO', 'PAGADO', 'SALDO', 'ACUDIENTE', 'CELULAR'], ';');
 
-        $fila = 2;
         foreach ($filas as $f) {
             $nombre = trim(preg_replace('/\s+/', ' ', implode(' ', array_filter([
                 $f->NOMBRE1, $f->NOMBRE2, $f->APELLIDO1, $f->APELLIDO2
             ]))));
-            $sheet->fromArray([
-                (int) $f->codigo_alumno,
+            fputcsv($fh, [
+                $f->codigo_alumno,
                 $nombre,
                 $f->CURSO ?? '',
-                (float) $f->total_facturado,
-                (float) $f->total_pagado,
-                (float) $f->saldo,
+                number_format((float) $f->total_facturado, 2, ',', '.'),
+                number_format((float) $f->total_pagado,    2, ',', '.'),
+                number_format((float) $f->saldo,           2, ',', '.'),
                 $f->ACUD ?? '',
                 $f->CEL_ACUD ?? '',
-            ], null, "A{$fila}");
-            if ($fila % 2 === 0) {
-                $sheet->getStyle("A{$fila}:H{$fila}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FFF5F5');
-            }
-            $fila++;
+            ], ';');
         }
 
-        foreach ([1=>10, 2=>38, 3=>10, 4=>16, 5=>16, 6=>16, 7=>32, 8=>14] as $c => $w) {
-            $sheet->getColumnDimensionByColumn($c)->setWidth($w);
-        }
-        $sheet->getStyle("D2:F{$fila}")->getNumberFormat()->setFormatCode('#,##0.00');
-
-        $nombreArchivo = strtolower($titulo) . '_' . date('Ymd_His') . '.xlsx';
-        $writer = new Xlsx($spreadsheet);
-        $tmp    = tempnam(sys_get_temp_dir(), 'deu') . '.xlsx';
-        $writer->save($tmp);
+        fclose($fh);
 
         return response()->download($tmp, $nombreArchivo, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Type' => 'text/csv; charset=UTF-8',
         ])->deleteFileAfterSend(true);
     }
 }

@@ -4,10 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class PagosController extends Controller
 {
@@ -109,8 +105,6 @@ class PagosController extends Controller
 
     public function exportarExcel(Request $request)
     {
-        @ini_set('memory_limit', '-1');
-
         $sortable = ['codigo_alumno', 'fecha', 'concepto', 'mes', 'valor'];
         $sortCol  = in_array($request->sort, $sortable) ? $request->sort : 'fecha';
         $sortDir  = $request->direction === 'asc' ? 'asc' : 'desc';
@@ -124,47 +118,30 @@ class PagosController extends Controller
         if ($request->filled('mes'))           $query->where('mes', 'like', '%' . $request->mes . '%');
         if ($request->filled('orden'))         $query->where('orden', 'like', '%' . $request->orden . '%');
 
-        $filas = $query->get();
+        $nombre = 'pagos_' . date('Ymd_His') . '.csv';
+        $tmp    = tempnam(sys_get_temp_dir(), 'pag') . '.csv';
+        $fh     = fopen($tmp, 'w');
 
-        $spreadsheet = new Spreadsheet();
-        $sheet       = $spreadsheet->getActiveSheet()->setTitle('Pagos');
+        fwrite($fh, "\xEF\xBB\xBF");
+        fputcsv($fh, ['CODIGO ALUMNO', 'FECHA', 'CONCEPTO', 'MES', 'ORDEN', 'VALOR'], ';');
 
-        $cols = ['CODIGO ALUMNO', 'FECHA', 'CONCEPTO', 'MES', 'ORDEN', 'VALOR'];
-        $sheet->fromArray($cols, null, 'A1');
-        $sheet->getStyle('A1:F1')->applyFromArray([
-            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1E3A5F']],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-        ]);
-
-        $fila = 2;
-        foreach ($filas as $p) {
-            $sheet->fromArray([
-                (int) $p->codigo_alumno,
-                $p->fecha,
-                $p->concepto,
-                $p->mes,
-                $p->orden ?? '',
-                (float) $p->valor,
-            ], null, "A{$fila}");
-            if ($fila % 2 === 0) {
-                $sheet->getStyle("A{$fila}:F{$fila}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F0F4FA');
+        $query->orderBy('id')->chunk(500, function ($filas) use ($fh) {
+            foreach ($filas as $p) {
+                fputcsv($fh, [
+                    $p->codigo_alumno,
+                    $p->fecha,
+                    $p->concepto,
+                    $p->mes,
+                    $p->orden ?? '',
+                    number_format((float) $p->valor, 2, ',', '.'),
+                ], ';');
             }
-            $fila++;
-        }
+        });
 
-        foreach ([1=>14, 2=>14, 3=>38, 4=>12, 5=>10, 6=>14] as $c => $w) {
-            $sheet->getColumnDimensionByColumn($c)->setWidth($w);
-        }
-        $sheet->getStyle("F2:F{$fila}")->getNumberFormat()->setFormatCode('#,##0.00');
-
-        $nombre = 'pagos_' . date('Ymd_His') . '.xlsx';
-        $writer = new Xlsx($spreadsheet);
-        $tmp    = tempnam(sys_get_temp_dir(), 'pag') . '.xlsx';
-        $writer->save($tmp);
+        fclose($fh);
 
         return response()->download($tmp, $nombre, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Type' => 'text/csv; charset=UTF-8',
         ])->deleteFileAfterSend(true);
     }
 }
