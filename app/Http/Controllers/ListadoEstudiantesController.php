@@ -38,8 +38,10 @@ class ListadoEstudiantesController extends Controller
 
         $query->orderBy('CURSO')->orderBy('APELLIDO1')->orderBy('NOMBRE1');
 
-        $tmp    = storage_path('app') . DIRECTORY_SEPARATOR . 'est_' . uniqid() . '.xlsx';
-        $writer = new \OpenSpout\Writer\XLSX\Writer();
+        $tmp     = storage_path('app') . DIRECTORY_SEPARATOR . 'est_' . uniqid() . '.xlsx';
+        $options = new \OpenSpout\Writer\XLSX\Options();
+        $options->setTempFolder(storage_path('app'));
+        $writer  = new \OpenSpout\Writer\XLSX\Writer($options);
         $writer->openToFile($tmp);
 
         $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['CODIGO', 'NOMBRE', 'CURSO', 'SEDE']));

@@ -335,8 +335,10 @@ class FacturacionController extends Controller
         if ($request->filled('codigo_concepto')) $query->where('codigo_concepto', 'like', '%' . $request->codigo_concepto . '%');
         if ($request->filled('centro_costos'))   $query->where('centro_costos', 'like', '%' . $request->centro_costos . '%');
 
-        $tmp    = storage_path('app') . DIRECTORY_SEPARATOR . 'fac_' . uniqid() . '.xlsx';
-        $writer = new \OpenSpout\Writer\XLSX\Writer();
+        $tmp     = storage_path('app') . DIRECTORY_SEPARATOR . 'fac_' . uniqid() . '.xlsx';
+        $options = new \OpenSpout\Writer\XLSX\Options();
+        $options->setTempFolder(storage_path('app'));
+        $writer  = new \OpenSpout\Writer\XLSX\Writer($options);
         $writer->openToFile($tmp);
 
         $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(
