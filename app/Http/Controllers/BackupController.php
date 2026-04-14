@@ -15,20 +15,17 @@ class BackupController extends Controller
         $profile   = auth()->user()->PROFILE;
         $isSuperAd = $profile === 'SuperAd';
 
-        // Última copia del usuario actual
         $miUltimaCopia = DB::table('copias_seguridad')
             ->where('usuario', auth()->user()->USER)
             ->orderByDesc('created_at')
             ->first();
 
-        // ¿Ya se hizo copia hoy (cualquier usuario del grupo)?
         $copiaHoy = DB::table('copias_seguridad')
             ->whereDate('fecha', today())
             ->exists();
 
-        // Para SuperAd: historial completo + resumen por usuario
-        $historial   = collect();
-        $porUsuario  = collect();
+        $historial  = collect();
+        $porUsuario = collect();
 
         if ($isSuperAd) {
             $historial = DB::table('copias_seguridad')
@@ -50,7 +47,9 @@ class BackupController extends Controller
 
     public function descargar(Request $request)
     {
-        // Registrar la descarga ANTES de empezar el stream
+        @ini_set('memory_limit', '-1');
+        @set_time_limit(0);
+
         DB::table('copias_seguridad')->insert([
             'usuario'    => auth()->user()->USER,
             'profile'    => auth()->user()->PROFILE,
@@ -66,43 +65,38 @@ class BackupController extends Controller
         $dbPass  = config('database.connections.mysql.password');
 
         $filename = 'backup_' . $dbName . '_' . now()->format('Y-m-d_H-i-s') . '.sql';
-        $usuario  = auth()->user()->USER;
-        $profile  = auth()->user()->PROFILE;
-        $fecha    = now()->format('d/m/Y H:i:s');
+        $tmpPath  = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'portalcbi_' . uniqid() . '.sql';
 
-        return response()->stream(function () use ($dbName, $dbHost, $dbPort, $dbUser, $dbPass, $usuario, $profile, $fecha) {
+        // Cabecera legible
+        $header  = "-- ==========================================================\n";
+        $header .= "-- Portal CBI — Copia de Seguridad\n";
+        $header .= "-- Base de datos : {$dbName}\n";
+        $header .= "-- Generada      : " . now()->format('d/m/Y H:i:s') . " (America/Bogota)\n";
+        $header .= "-- Usuario       : " . auth()->user()->USER . " (" . auth()->user()->PROFILE . ")\n";
+        $header .= "-- ==========================================================\n\n";
 
-            @ini_set('memory_limit', '-1');
-            @set_time_limit(0);
+        file_put_contents($tmpPath, $header);
 
-            // Cabecera legible
-            echo "-- ==========================================================\n";
-            echo "-- Portal CBI — Copia de Seguridad\n";
-            echo "-- Base de datos : {$dbName}\n";
-            echo "-- Generada      : {$fecha} (America/Bogota)\n";
-            echo "-- Usuario       : {$usuario} ({$profile})\n";
-            echo "-- ==========================================================\n\n";
-            ob_flush(); flush();
+        $mysqldump = $this->encontrarMysqldump();
 
-            $mysqldump = $this->encontrarMysqldump();
-
-            if ($mysqldump) {
-                $this->dumpConMysqldump($mysqldump, $dbName, $dbHost, $dbPort, $dbUser, $dbPass);
-            } else {
-                $this->dumpConPHP($dbName);
+        if ($mysqldump && function_exists('proc_open')) {
+            $ok = $this->dumpConMysqldump($mysqldump, $tmpPath, $dbName, $dbHost, $dbPort, $dbUser, $dbPass);
+            if (!$ok) {
+                // Si mysqldump fallo, reescribir el archivo con el método PHP
+                file_put_contents($tmpPath, $header);
+                $this->dumpConPHP($tmpPath);
             }
+        } else {
+            $this->dumpConPHP($tmpPath);
+        }
 
-        }, 200, [
+        return response()->download($tmpPath, $filename, [
             'Content-Type'        => 'application/octet-stream',
-            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
             'Cache-Control'       => 'no-cache, no-store, must-revalidate',
-            'Pragma'              => 'no-cache',
-            'Expires'             => '0',
-            'X-Accel-Buffering'   => 'no',
-        ]);
+        ])->deleteFileAfterSend(true);
     }
 
-    // ── Busca el ejecutable mysqldump según el sistema operativo ────────────
+    // ── Busca mysqldump en rutas comunes según el SO ─────────────────────────
 
     private function encontrarMysqldump(): ?string
     {
@@ -122,17 +116,19 @@ class BackupController extends Controller
             if (is_executable($path)) return $path;
         }
 
-        // Último recurso: buscarlo en el PATH del sistema
-        $which = PHP_OS_FAMILY === 'Windows' ? 'where mysqldump.exe 2>NUL' : 'which mysqldump 2>/dev/null';
-        $found = trim((string) shell_exec($which));
-        return ($found && is_executable($found)) ? $found : null;
+        if (function_exists('shell_exec')) {
+            $which = PHP_OS_FAMILY === 'Windows' ? 'where mysqldump.exe 2>NUL' : 'which mysqldump 2>/dev/null';
+            $found = trim((string) shell_exec($which));
+            if ($found && is_executable($found)) return $found;
+        }
+
+        return null;
     }
 
-    // ── Dump usando mysqldump (completo, rápido, sin límite de memoria) ─────
+    // ── Dump con mysqldump → escribe directo al archivo temporal ────────────
 
-    private function dumpConMysqldump(string $mysqldump, string $dbName, string $dbHost, int|string $dbPort, string $dbUser, string $dbPass): void
+    private function dumpConMysqldump(string $mysqldump, string $tmpPath, string $dbName, string $dbHost, int|string $dbPort, string $dbUser, string $dbPass): bool
     {
-        // Credenciales en archivo temporal para no exponerlas en la línea de comando
         $cnfPath = tempnam(sys_get_temp_dir(), 'dmp') . '.cnf';
         file_put_contents($cnfPath, implode("\n", [
             '[client]',
@@ -142,10 +138,13 @@ class BackupController extends Controller
             'port=' . (int) $dbPort,
         ]));
 
+        $stderr = PHP_OS_FAMILY === 'Windows' ? '2>NUL' : '2>/dev/null';
+
         $cmd = sprintf(
-            '"%s" --defaults-extra-file="%s" --single-transaction --routines --triggers --hex-blob --default-character-set=utf8mb4 2>/dev/null "%s"',
+            '"%s" --defaults-extra-file="%s" --single-transaction --routines --triggers --hex-blob --default-character-set=utf8mb4 %s "%s"',
             $mysqldump,
             $cnfPath,
+            $stderr,
             $dbName
         );
 
@@ -157,31 +156,40 @@ class BackupController extends Controller
 
         $process = proc_open($cmd, $descriptors, $pipes);
 
+        $exito = false;
+
         if (is_resource($process)) {
             fclose($pipes[0]);
 
+            $fh = fopen($tmpPath, 'ab');
             while (!feof($pipes[1])) {
-                echo fread($pipes[1], 65536);
-                ob_flush(); flush();
+                $chunk = fread($pipes[1], 65536);
+                if ($chunk !== false && $chunk !== '') {
+                    fwrite($fh, $chunk);
+                    $exito = true;
+                }
             }
-
+            fclose($fh);
             fclose($pipes[1]);
             fclose($pipes[2]);
             proc_close($process);
         }
 
         @unlink($cnfPath);
+
+        return $exito;
     }
 
-    // ── Dump en PHP puro (fallback) — sin el bug de comas ──────────────────
+    // ── Dump PHP puro (fallback) → escribe al archivo temporal ──────────────
 
-    private function dumpConPHP(string $dbName): void
+    private function dumpConPHP(string $tmpPath): void
     {
         $pdo = DB::connection()->getPdo();
+        $fh  = fopen($tmpPath, 'ab');
 
-        echo "SET NAMES utf8mb4;\n";
-        echo "SET FOREIGN_KEY_CHECKS=0;\n";
-        echo "SET SQL_MODE='NO_AUTO_VALUE_ON_ZERO';\n\n";
+        fwrite($fh, "SET NAMES utf8mb4;\n");
+        fwrite($fh, "SET FOREIGN_KEY_CHECKS=0;\n");
+        fwrite($fh, "SET SQL_MODE='NO_AUTO_VALUE_ON_ZERO';\n\n");
 
         $tablesResult = DB::select('SHOW TABLES');
 
@@ -191,15 +199,14 @@ class BackupController extends Controller
             $createResult = DB::select("SHOW CREATE TABLE `{$table}`");
             $createSql    = $createResult[0]->{'Create Table'};
 
-            echo "-- ----------------------------------------------------------\n";
-            echo "-- Tabla: `{$table}`\n";
-            echo "-- ----------------------------------------------------------\n";
-            echo "DROP TABLE IF EXISTS `{$table}`;\n";
-            echo $createSql . ";\n\n";
+            fwrite($fh, "-- ----------------------------------------------------------\n");
+            fwrite($fh, "-- Tabla: `{$table}`\n");
+            fwrite($fh, "-- ----------------------------------------------------------\n");
+            fwrite($fh, "DROP TABLE IF EXISTS `{$table}`;\n");
+            fwrite($fh, $createSql . ";\n\n");
 
-            // Datos en lotes usando cursor (sin acumular en memoria)
-            $offset = 0;
-            $chunk  = 200;
+            $offset   = 0;
+            $chunk    = 200;
             $hayDatos = false;
 
             while (true) {
@@ -208,42 +215,36 @@ class BackupController extends Controller
                 if ($rows->isEmpty()) break;
 
                 if (!$hayDatos) {
-                    // Primer lote: abrir INSERT
-                    echo "INSERT INTO `{$table}` VALUES\n";
+                    fwrite($fh, "INSERT INTO `{$table}` VALUES\n");
                     $hayDatos = true;
                 } else {
-                    // Lotes siguientes: separador entre grupos
-                    echo ",\n";
+                    fwrite($fh, ",\n");
                 }
 
                 $lines = [];
                 foreach ($rows as $row) {
                     $cols = array_map(function ($v) use ($pdo) {
-                        if ($v === null)                    return 'NULL';
-                        if (is_int($v) || is_float($v))    return $v;
+                        if ($v === null)                 return 'NULL';
+                        if (is_int($v) || is_float($v)) return $v;
                         return $pdo->quote($v);
                     }, (array) $row);
                     $lines[] = '(' . implode(', ', $cols) . ')';
                 }
 
-                echo implode(",\n", $lines);
+                fwrite($fh, implode(",\n", $lines));
 
                 $offset += $chunk;
-
-                ob_flush(); flush();
 
                 if ($rows->count() < $chunk) break;
             }
 
-            if ($hayDatos) {
-                echo ";\n";
-            }
+            if ($hayDatos) fwrite($fh, ";\n");
 
-            echo "\n";
-            ob_flush(); flush();
+            fwrite($fh, "\n");
         }
 
-        echo "SET FOREIGN_KEY_CHECKS=1;\n";
-        echo "-- Fin de la copia de seguridad\n";
+        fwrite($fh, "SET FOREIGN_KEY_CHECKS=1;\n");
+        fwrite($fh, "-- Fin de la copia de seguridad\n");
+        fclose($fh);
     }
 }
