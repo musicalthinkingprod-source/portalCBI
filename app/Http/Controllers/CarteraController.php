@@ -375,7 +375,7 @@ class CarteraController extends Controller
             ->orderByDesc('saldo')
             ->get();
 
-        $tmp    = tempnam(storage_path('app'), 'car') . '.xlsx';
+        $tmp    = storage_path('app') . DIRECTORY_SEPARATOR . 'car_' . uniqid() . '.xlsx';
         $writer = new \OpenSpout\Writer\XLSX\Writer();
         $writer->openToFile($tmp);
 
@@ -450,7 +450,7 @@ class CarteraController extends Controller
 
         $filas = $query->get();
 
-        $tmp    = tempnam(storage_path('app'), 'deu') . '.xlsx';
+        $tmp    = storage_path('app') . DIRECTORY_SEPARATOR . 'deu_' . uniqid() . '.xlsx';
         $writer = new \OpenSpout\Writer\XLSX\Writer();
         $writer->openToFile($tmp);
 

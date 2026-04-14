@@ -38,7 +38,7 @@ class ListadoEstudiantesController extends Controller
 
         $query->orderBy('CURSO')->orderBy('APELLIDO1')->orderBy('NOMBRE1');
 
-        $tmp    = tempnam(storage_path('app'), 'est') . '.xlsx';
+        $tmp    = storage_path('app') . DIRECTORY_SEPARATOR . 'est_' . uniqid() . '.xlsx';
         $writer = new \OpenSpout\Writer\XLSX\Writer();
         $writer->openToFile($tmp);
 

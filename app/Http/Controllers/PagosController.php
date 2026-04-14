@@ -118,7 +118,7 @@ class PagosController extends Controller
         if ($request->filled('mes'))           $query->where('mes', 'like', '%' . $request->mes . '%');
         if ($request->filled('orden'))         $query->where('orden', 'like', '%' . $request->orden . '%');
 
-        $tmp    = tempnam(storage_path('app'), 'pag') . '.xlsx';
+        $tmp    = storage_path('app') . DIRECTORY_SEPARATOR . 'pag_' . uniqid() . '.xlsx';
         $writer = new \OpenSpout\Writer\XLSX\Writer();
         $writer->openToFile($tmp);
 
