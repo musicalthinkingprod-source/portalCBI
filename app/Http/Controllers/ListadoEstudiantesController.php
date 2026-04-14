@@ -38,23 +38,20 @@ class ListadoEstudiantesController extends Controller
 
         $query->orderBy('CURSO')->orderBy('APELLIDO1')->orderBy('NOMBRE1');
 
-        $tmp     = storage_path('app') . DIRECTORY_SEPARATOR . 'est_' . uniqid() . '.xlsx';
-        $options = new \OpenSpout\Writer\XLSX\Options(tempFolder: storage_path('app'));
-        $writer  = new \OpenSpout\Writer\XLSX\Writer($options);
-        $writer->openToFile($tmp);
-
-        $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['CODIGO', 'NOMBRE', 'CURSO', 'SEDE']));
+        $tmp    = storage_path('app') . DIRECTORY_SEPARATOR . 'est_' . uniqid() . '.xlsx';
+        $writer = new \App\Helpers\SimpleXlsx();
+        $writer->addRow(['CODIGO', 'NOMBRE', 'CURSO', 'SEDE']);
 
         foreach ($query->get() as $e) {
-            $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([
+            $writer->addRow([
                 (int) $e->CODIGO,
                 trim(preg_replace('/\s+/', ' ', $e->NOMBRE_COMPLETO)),
                 $e->CURSO,
                 $e->SEDE,
-            ]));
+            ]);
         }
 
-        $writer->close();
+        $writer->save($tmp);
 
         $nombre = 'listado_estudiantes_' . date('Ymd') . '.xlsx';
         return response()->download($tmp, $nombre, [

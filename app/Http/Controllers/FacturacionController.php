@@ -335,31 +335,24 @@ class FacturacionController extends Controller
         if ($request->filled('codigo_concepto')) $query->where('codigo_concepto', 'like', '%' . $request->codigo_concepto . '%');
         if ($request->filled('centro_costos'))   $query->where('centro_costos', 'like', '%' . $request->centro_costos . '%');
 
-        $tmp     = storage_path('app') . DIRECTORY_SEPARATOR . 'fac_' . uniqid() . '.xlsx';
-        $options = new \OpenSpout\Writer\XLSX\Options(tempFolder: storage_path('app'));
-        $writer  = new \OpenSpout\Writer\XLSX\Writer($options);
-        $writer->openToFile($tmp);
+        $tmp    = storage_path('app') . DIRECTORY_SEPARATOR . 'fac_' . uniqid() . '.xlsx';
+        $writer = new \App\Helpers\SimpleXlsx();
+        $writer->addRow(['CODIGO ALUMNO', 'FECHA', 'CONCEPTO', 'MES', 'ORDEN', 'COD. CONCEPTO', 'CENTRO COSTOS', 'VALOR']);
 
-        $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(
-            ['CODIGO ALUMNO', 'FECHA', 'CONCEPTO', 'MES', 'ORDEN', 'COD. CONCEPTO', 'CENTRO COSTOS', 'VALOR']
-        ));
+        foreach ($query->get() as $f) {
+            $writer->addRow([
+                (int) $f->codigo_alumno,
+                $f->fecha,
+                $f->concepto,
+                $f->mes,
+                $f->orden ?? '',
+                $f->codigo_concepto ?? '',
+                $f->centro_costos ?? '',
+                (float) $f->valor,
+            ]);
+        }
 
-        $query->chunk(500, function ($filas) use ($writer) {
-            foreach ($filas as $f) {
-                $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([
-                    (int) $f->codigo_alumno,
-                    $f->fecha,
-                    $f->concepto,
-                    $f->mes,
-                    $f->orden ?? '',
-                    $f->codigo_concepto ?? '',
-                    $f->centro_costos ?? '',
-                    (float) $f->valor,
-                ]));
-            }
-        });
-
-        $writer->close();
+        $writer->save($tmp);
 
         $nombre = 'facturacion_' . date('Ymd_His') . '.xlsx';
         return response()->download($tmp, $nombre, [

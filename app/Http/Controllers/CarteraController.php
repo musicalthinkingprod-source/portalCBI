@@ -375,27 +375,22 @@ class CarteraController extends Controller
             ->orderByDesc('saldo')
             ->get();
 
-        $tmp     = storage_path('app') . DIRECTORY_SEPARATOR . 'car_' . uniqid() . '.xlsx';
-        $options = new \OpenSpout\Writer\XLSX\Options(tempFolder: storage_path('app'));
-        $writer  = new \OpenSpout\Writer\XLSX\Writer($options);
-        $writer->openToFile($tmp);
-
-        $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(
-            ['CODIGO', 'NOMBRE', 'CURSO', 'FACTURADO', 'PAGADO', 'SALDO']
-        ));
+        $tmp    = storage_path('app') . DIRECTORY_SEPARATOR . 'car_' . uniqid() . '.xlsx';
+        $writer = new \App\Helpers\SimpleXlsx();
+        $writer->addRow(['CODIGO', 'NOMBRE', 'CURSO', 'FACTURADO', 'PAGADO', 'SALDO']);
 
         foreach ($filas as $f) {
-            $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([
+            $writer->addRow([
                 (int) $f->codigo_alumno,
                 trim(preg_replace('/\s+/', ' ', $f->nombre)),
                 $f->CURSO ?? '',
                 (float) $f->total_facturado,
                 (float) $f->total_pagado,
                 (float) $f->saldo,
-            ]));
+            ]);
         }
 
-        $writer->close();
+        $writer->save($tmp);
 
         $nombre = 'informe_cartera_' . date('Ymd_His') . '.xlsx';
         return response()->download($tmp, $nombre, [
@@ -451,20 +446,15 @@ class CarteraController extends Controller
 
         $filas = $query->get();
 
-        $tmp     = storage_path('app') . DIRECTORY_SEPARATOR . 'deu_' . uniqid() . '.xlsx';
-        $options = new \OpenSpout\Writer\XLSX\Options(tempFolder: storage_path('app'));
-        $writer  = new \OpenSpout\Writer\XLSX\Writer($options);
-        $writer->openToFile($tmp);
-
-        $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(
-            ['CODIGO', 'NOMBRE', 'CURSO', 'FACTURADO', 'PAGADO', 'SALDO', 'ACUDIENTE', 'CELULAR']
-        ));
+        $tmp    = storage_path('app') . DIRECTORY_SEPARATOR . 'deu_' . uniqid() . '.xlsx';
+        $writer = new \App\Helpers\SimpleXlsx();
+        $writer->addRow(['CODIGO', 'NOMBRE', 'CURSO', 'FACTURADO', 'PAGADO', 'SALDO', 'ACUDIENTE', 'CELULAR']);
 
         foreach ($filas as $f) {
             $nombre = trim(preg_replace('/\s+/', ' ', implode(' ', array_filter([
                 $f->NOMBRE1, $f->NOMBRE2, $f->APELLIDO1, $f->APELLIDO2
             ]))));
-            $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([
+            $writer->addRow([
                 (int) $f->codigo_alumno,
                 $nombre,
                 $f->CURSO ?? '',
@@ -473,10 +463,10 @@ class CarteraController extends Controller
                 (float) $f->saldo,
                 $f->ACUD ?? '',
                 $f->CEL_ACUD ?? '',
-            ]));
+            ]);
         }
 
-        $writer->close();
+        $writer->save($tmp);
 
         $nombreArchivo = strtolower($titulo) . '_' . date('Ymd_His') . '.xlsx';
         return response()->download($tmp, $nombreArchivo, [

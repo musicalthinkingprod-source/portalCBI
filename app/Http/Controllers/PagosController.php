@@ -118,29 +118,22 @@ class PagosController extends Controller
         if ($request->filled('mes'))           $query->where('mes', 'like', '%' . $request->mes . '%');
         if ($request->filled('orden'))         $query->where('orden', 'like', '%' . $request->orden . '%');
 
-        $tmp     = storage_path('app') . DIRECTORY_SEPARATOR . 'pag_' . uniqid() . '.xlsx';
-        $options = new \OpenSpout\Writer\XLSX\Options(tempFolder: storage_path('app'));
-        $writer  = new \OpenSpout\Writer\XLSX\Writer($options);
-        $writer->openToFile($tmp);
+        $tmp    = storage_path('app') . DIRECTORY_SEPARATOR . 'pag_' . uniqid() . '.xlsx';
+        $writer = new \App\Helpers\SimpleXlsx();
+        $writer->addRow(['CODIGO ALUMNO', 'FECHA', 'CONCEPTO', 'MES', 'ORDEN', 'VALOR']);
 
-        $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(
-            ['CODIGO ALUMNO', 'FECHA', 'CONCEPTO', 'MES', 'ORDEN', 'VALOR']
-        ));
+        foreach ($query->get() as $p) {
+            $writer->addRow([
+                (int) $p->codigo_alumno,
+                $p->fecha,
+                $p->concepto,
+                $p->mes,
+                $p->orden ?? '',
+                (float) $p->valor,
+            ]);
+        }
 
-        $query->chunk(500, function ($filas) use ($writer) {
-            foreach ($filas as $p) {
-                $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([
-                    (int) $p->codigo_alumno,
-                    $p->fecha,
-                    $p->concepto,
-                    $p->mes,
-                    $p->orden ?? '',
-                    (float) $p->valor,
-                ]));
-            }
-        });
-
-        $writer->close();
+        $writer->save($tmp);
 
         $nombre = 'pagos_' . date('Ymd_His') . '.xlsx';
         return response()->download($tmp, $nombre, [
