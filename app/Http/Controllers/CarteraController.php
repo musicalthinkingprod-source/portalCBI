@@ -376,8 +376,7 @@ class CarteraController extends Controller
             ->get();
 
         $tmp     = storage_path('app') . DIRECTORY_SEPARATOR . 'car_' . uniqid() . '.xlsx';
-        $options = new \OpenSpout\Writer\XLSX\Options();
-        $options->setTempFolder(storage_path('app'));
+        $options = new \OpenSpout\Writer\XLSX\Options(tempFolder: storage_path('app'));
         $writer  = new \OpenSpout\Writer\XLSX\Writer($options);
         $writer->openToFile($tmp);
 
@@ -453,8 +452,7 @@ class CarteraController extends Controller
         $filas = $query->get();
 
         $tmp     = storage_path('app') . DIRECTORY_SEPARATOR . 'deu_' . uniqid() . '.xlsx';
-        $options = new \OpenSpout\Writer\XLSX\Options();
-        $options->setTempFolder(storage_path('app'));
+        $options = new \OpenSpout\Writer\XLSX\Options(tempFolder: storage_path('app'));
         $writer  = new \OpenSpout\Writer\XLSX\Writer($options);
         $writer->openToFile($tmp);
 

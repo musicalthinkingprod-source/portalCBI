@@ -336,8 +336,7 @@ class FacturacionController extends Controller
         if ($request->filled('centro_costos'))   $query->where('centro_costos', 'like', '%' . $request->centro_costos . '%');
 
         $tmp     = storage_path('app') . DIRECTORY_SEPARATOR . 'fac_' . uniqid() . '.xlsx';
-        $options = new \OpenSpout\Writer\XLSX\Options();
-        $options->setTempFolder(storage_path('app'));
+        $options = new \OpenSpout\Writer\XLSX\Options(tempFolder: storage_path('app'));
         $writer  = new \OpenSpout\Writer\XLSX\Writer($options);
         $writer->openToFile($tmp);
 
