@@ -335,33 +335,34 @@ class FacturacionController extends Controller
         if ($request->filled('codigo_concepto')) $query->where('codigo_concepto', 'like', '%' . $request->codigo_concepto . '%');
         if ($request->filled('centro_costos'))   $query->where('centro_costos', 'like', '%' . $request->centro_costos . '%');
 
-        $nombre = 'facturacion_' . date('Ymd_His') . '.csv';
-        $tmp    = tempnam(sys_get_temp_dir(), 'fac') . '.csv';
-        $fh     = fopen($tmp, 'w');
+        $tmp    = tempnam(sys_get_temp_dir(), 'fac') . '.xlsx';
+        $writer = new \OpenSpout\Writer\XLSX\Writer();
+        $writer->openToFile($tmp);
 
-        // BOM para que Excel abra correctamente con tildes
-        fwrite($fh, "\xEF\xBB\xBF");
-        fputcsv($fh, ['CODIGO ALUMNO', 'FECHA', 'CONCEPTO', 'MES', 'ORDEN', 'COD. CONCEPTO', 'CENTRO COSTOS', 'VALOR'], ';');
+        $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(
+            ['CODIGO ALUMNO', 'FECHA', 'CONCEPTO', 'MES', 'ORDEN', 'COD. CONCEPTO', 'CENTRO COSTOS', 'VALOR']
+        ));
 
-        $query->orderBy('id')->chunk(500, function ($filas) use ($fh) {
+        $query->chunk(500, function ($filas) use ($writer) {
             foreach ($filas as $f) {
-                fputcsv($fh, [
-                    $f->codigo_alumno,
+                $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([
+                    (int) $f->codigo_alumno,
                     $f->fecha,
                     $f->concepto,
                     $f->mes,
                     $f->orden ?? '',
                     $f->codigo_concepto ?? '',
                     $f->centro_costos ?? '',
-                    number_format((float) $f->valor, 2, ',', '.'),
-                ], ';');
+                    (float) $f->valor,
+                ]));
             }
         });
 
-        fclose($fh);
+        $writer->close();
 
+        $nombre = 'facturacion_' . date('Ymd_His') . '.xlsx';
         return response()->download($tmp, $nombre, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ])->deleteFileAfterSend(true);
     }
 }

@@ -375,28 +375,30 @@ class CarteraController extends Controller
             ->orderByDesc('saldo')
             ->get();
 
-        $nombre = 'informe_cartera_' . date('Ymd_His') . '.csv';
-        $tmp    = tempnam(sys_get_temp_dir(), 'car') . '.csv';
-        $fh     = fopen($tmp, 'w');
+        $tmp    = tempnam(sys_get_temp_dir(), 'car') . '.xlsx';
+        $writer = new \OpenSpout\Writer\XLSX\Writer();
+        $writer->openToFile($tmp);
 
-        fwrite($fh, "\xEF\xBB\xBF");
-        fputcsv($fh, ['CODIGO', 'NOMBRE', 'CURSO', 'FACTURADO', 'PAGADO', 'SALDO'], ';');
+        $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(
+            ['CODIGO', 'NOMBRE', 'CURSO', 'FACTURADO', 'PAGADO', 'SALDO']
+        ));
 
         foreach ($filas as $f) {
-            fputcsv($fh, [
-                $f->codigo_alumno,
+            $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([
+                (int) $f->codigo_alumno,
                 trim(preg_replace('/\s+/', ' ', $f->nombre)),
                 $f->CURSO ?? '',
-                number_format((float) $f->total_facturado, 2, ',', '.'),
-                number_format((float) $f->total_pagado,    2, ',', '.'),
-                number_format((float) $f->saldo,           2, ',', '.'),
-            ], ';');
+                (float) $f->total_facturado,
+                (float) $f->total_pagado,
+                (float) $f->saldo,
+            ]));
         }
 
-        fclose($fh);
+        $writer->close();
 
+        $nombre = 'informe_cartera_' . date('Ymd_His') . '.xlsx';
         return response()->download($tmp, $nombre, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ])->deleteFileAfterSend(true);
     }
 
@@ -448,33 +450,35 @@ class CarteraController extends Controller
 
         $filas = $query->get();
 
-        $nombreArchivo = strtolower($titulo) . '_' . date('Ymd_His') . '.csv';
-        $tmp           = tempnam(sys_get_temp_dir(), 'deu') . '.csv';
-        $fh            = fopen($tmp, 'w');
+        $tmp    = tempnam(sys_get_temp_dir(), 'deu') . '.xlsx';
+        $writer = new \OpenSpout\Writer\XLSX\Writer();
+        $writer->openToFile($tmp);
 
-        fwrite($fh, "\xEF\xBB\xBF");
-        fputcsv($fh, ['CODIGO', 'NOMBRE', 'CURSO', 'FACTURADO', 'PAGADO', 'SALDO', 'ACUDIENTE', 'CELULAR'], ';');
+        $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(
+            ['CODIGO', 'NOMBRE', 'CURSO', 'FACTURADO', 'PAGADO', 'SALDO', 'ACUDIENTE', 'CELULAR']
+        ));
 
         foreach ($filas as $f) {
             $nombre = trim(preg_replace('/\s+/', ' ', implode(' ', array_filter([
                 $f->NOMBRE1, $f->NOMBRE2, $f->APELLIDO1, $f->APELLIDO2
             ]))));
-            fputcsv($fh, [
-                $f->codigo_alumno,
+            $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([
+                (int) $f->codigo_alumno,
                 $nombre,
                 $f->CURSO ?? '',
-                number_format((float) $f->total_facturado, 2, ',', '.'),
-                number_format((float) $f->total_pagado,    2, ',', '.'),
-                number_format((float) $f->saldo,           2, ',', '.'),
+                (float) $f->total_facturado,
+                (float) $f->total_pagado,
+                (float) $f->saldo,
                 $f->ACUD ?? '',
                 $f->CEL_ACUD ?? '',
-            ], ';');
+            ]));
         }
 
-        fclose($fh);
+        $writer->close();
 
+        $nombreArchivo = strtolower($titulo) . '_' . date('Ymd_His') . '.xlsx';
         return response()->download($tmp, $nombreArchivo, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ])->deleteFileAfterSend(true);
     }
 }

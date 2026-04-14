@@ -38,26 +38,26 @@ class ListadoEstudiantesController extends Controller
 
         $query->orderBy('CURSO')->orderBy('APELLIDO1')->orderBy('NOMBRE1');
 
-        $nombre = 'listado_estudiantes_' . date('Ymd') . '.csv';
-        $tmp    = tempnam(sys_get_temp_dir(), 'est') . '.csv';
-        $fh     = fopen($tmp, 'w');
+        $tmp    = tempnam(sys_get_temp_dir(), 'est') . '.xlsx';
+        $writer = new \OpenSpout\Writer\XLSX\Writer();
+        $writer->openToFile($tmp);
 
-        fwrite($fh, "\xEF\xBB\xBF");
-        fputcsv($fh, ['CODIGO', 'NOMBRE', 'CURSO', 'SEDE'], ';');
+        $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['CODIGO', 'NOMBRE', 'CURSO', 'SEDE']));
 
         foreach ($query->get() as $e) {
-            fputcsv($fh, [
-                $e->CODIGO,
+            $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([
+                (int) $e->CODIGO,
                 trim(preg_replace('/\s+/', ' ', $e->NOMBRE_COMPLETO)),
                 $e->CURSO,
                 $e->SEDE,
-            ], ';');
+            ]));
         }
 
-        fclose($fh);
+        $writer->close();
 
+        $nombre = 'listado_estudiantes_' . date('Ymd') . '.xlsx';
         return response()->download($tmp, $nombre, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ])->deleteFileAfterSend(true);
     }
 }

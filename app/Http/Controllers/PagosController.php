@@ -118,30 +118,32 @@ class PagosController extends Controller
         if ($request->filled('mes'))           $query->where('mes', 'like', '%' . $request->mes . '%');
         if ($request->filled('orden'))         $query->where('orden', 'like', '%' . $request->orden . '%');
 
-        $nombre = 'pagos_' . date('Ymd_His') . '.csv';
-        $tmp    = tempnam(sys_get_temp_dir(), 'pag') . '.csv';
-        $fh     = fopen($tmp, 'w');
+        $tmp    = tempnam(sys_get_temp_dir(), 'pag') . '.xlsx';
+        $writer = new \OpenSpout\Writer\XLSX\Writer();
+        $writer->openToFile($tmp);
 
-        fwrite($fh, "\xEF\xBB\xBF");
-        fputcsv($fh, ['CODIGO ALUMNO', 'FECHA', 'CONCEPTO', 'MES', 'ORDEN', 'VALOR'], ';');
+        $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(
+            ['CODIGO ALUMNO', 'FECHA', 'CONCEPTO', 'MES', 'ORDEN', 'VALOR']
+        ));
 
-        $query->orderBy('id')->chunk(500, function ($filas) use ($fh) {
+        $query->chunk(500, function ($filas) use ($writer) {
             foreach ($filas as $p) {
-                fputcsv($fh, [
-                    $p->codigo_alumno,
+                $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([
+                    (int) $p->codigo_alumno,
                     $p->fecha,
                     $p->concepto,
                     $p->mes,
                     $p->orden ?? '',
-                    number_format((float) $p->valor, 2, ',', '.'),
-                ], ';');
+                    (float) $p->valor,
+                ]));
             }
         });
 
-        fclose($fh);
+        $writer->close();
 
+        $nombre = 'pagos_' . date('Ymd_His') . '.xlsx';
         return response()->download($tmp, $nombre, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ])->deleteFileAfterSend(true);
     }
 }
