@@ -8,6 +8,13 @@
     <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
         <a href="{{ route('cartera.index') }}" class="text-blue-700 hover:underline text-sm">← Volver a informe de cartera</a>
 
+        <div class="flex items-center gap-3">
+            <a href="{{ route('cartera.exportar.deudores', array_filter(['tab' => $tab, 'corte' => $corte])) }}"
+                class="bg-green-700 hover:bg-green-800 text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition whitespace-nowrap">
+                ⬇️ Excel
+            </a>
+        </div>
+
         <form method="GET" action="{{ route('cartera.deudores') }}" class="flex items-center gap-2">
             <input type="hidden" name="tab" value="{{ $tab }}">
             <label class="text-xs font-semibold text-gray-500 whitespace-nowrap">Fecha de corte:</label>

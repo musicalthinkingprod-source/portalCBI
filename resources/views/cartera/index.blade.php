@@ -4,6 +4,13 @@
 
 @section('slot')
 
+    <div class="flex justify-end mb-4">
+        <a href="{{ route('cartera.exportar.informe') }}"
+            class="bg-green-700 hover:bg-green-800 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
+            ⬇️ Descargar Excel
+        </a>
+    </div>
+
     {{-- Resumen principal --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 

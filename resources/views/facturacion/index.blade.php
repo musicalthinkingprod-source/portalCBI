@@ -49,6 +49,10 @@
                 @if(request()->hasAny(['codigo_alumno','fecha','concepto','mes','orden','codigo_concepto','centro_costos']))
                     <a href="{{ route('facturacion.index') }}" class="text-xs text-red-500 hover:text-red-700 font-semibold">✕ Limpiar filtros</a>
                 @endif
+                <a href="{{ route('facturacion.exportar', request()->query()) }}"
+                    class="bg-green-700 hover:bg-green-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                    ⬇️ Excel
+                </a>
             </div>
         </div>
 

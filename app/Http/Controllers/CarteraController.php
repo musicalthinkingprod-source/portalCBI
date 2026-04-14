@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class CarteraController extends Controller
 {
@@ -343,5 +347,160 @@ class CarteraController extends Controller
         return view('cartera.por_cc', compact(
             'porCC', 'granTotalFacturado', 'granTotalPagado', 'granTotalSaldo'
         ));
+    }
+
+    // ── Exportar informe de cartera general ──────────────────────────────────
+
+    public function exportarInforme()
+    {
+        $facturaPorAlumno = DB::table('facturacion')
+            ->select('codigo_alumno', DB::raw('SUM(valor) as total_facturado'))
+            ->groupBy('codigo_alumno');
+
+        $pagoPorAlumno = DB::table('registro_pagos')
+            ->select('codigo_alumno', DB::raw('SUM(valor) as total_pagado'))
+            ->groupBy('codigo_alumno');
+
+        $filas = DB::table(DB::raw("({$facturaPorAlumno->toSql()}) as f"))
+            ->mergeBindings($facturaPorAlumno)
+            ->leftJoinSub($pagoPorAlumno, 'p', 'f.codigo_alumno', '=', 'p.codigo_alumno')
+            ->leftJoin('ESTUDIANTES as e', 'e.CODIGO', '=', 'f.codigo_alumno')
+            ->select(
+                'f.codigo_alumno',
+                DB::raw("TRIM(CONCAT(COALESCE(e.NOMBRE1,''),' ',COALESCE(e.NOMBRE2,''),' ',COALESCE(e.APELLIDO1,''),' ',COALESCE(e.APELLIDO2,''))) as nombre"),
+                'e.CURSO',
+                'f.total_facturado',
+                DB::raw('COALESCE(p.total_pagado, 0) as total_pagado'),
+                DB::raw('f.total_facturado - COALESCE(p.total_pagado, 0) as saldo')
+            )
+            ->orderByDesc('saldo')
+            ->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet       = $spreadsheet->getActiveSheet()->setTitle('Cartera');
+
+        $cols = ['CODIGO', 'NOMBRE', 'CURSO', 'FACTURADO', 'PAGADO', 'SALDO'];
+        $sheet->fromArray($cols, null, 'A1');
+        $sheet->getStyle('A1:F1')->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1E3A5F']],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        ]);
+
+        $fila = 2;
+        foreach ($filas as $f) {
+            $sheet->fromArray([
+                (int) $f->codigo_alumno,
+                trim(preg_replace('/\s+/', ' ', $f->nombre)),
+                $f->CURSO ?? '',
+                (float) $f->total_facturado,
+                (float) $f->total_pagado,
+                (float) $f->saldo,
+            ], null, "A{$fila}");
+            if ($fila % 2 === 0) {
+                $sheet->getStyle("A{$fila}:F{$fila}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F0F4FA');
+            }
+            $fila++;
+        }
+
+        foreach (range(1, 6) as $c) $sheet->getColumnDimensionByColumn($c)->setAutoSize(true);
+        $sheet->getStyle("D2:F{$fila}")->getNumberFormat()->setFormatCode('#,##0.00');
+
+        $nombre = 'informe_cartera_' . date('Ymd_His') . '.xlsx';
+        $writer = new Xlsx($spreadsheet);
+        $tmp    = tempnam(sys_get_temp_dir(), 'car') . '.xlsx';
+        $writer->save($tmp);
+
+        return response()->download($tmp, $nombre, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ])->deleteFileAfterSend(true);
+    }
+
+    // ── Exportar cartera / anticipos (deudores) ──────────────────────────────
+
+    public function exportarDeudores(Request $request)
+    {
+        $tab   = $request->input('tab', 'cartera');
+        $corte = $request->filled('corte') ? $request->input('corte') : null;
+
+        $facturaSub = DB::table('facturacion')
+            ->select('codigo_alumno', DB::raw('SUM(valor) as total_facturado'))
+            ->when($corte, fn($q) => $q->whereDate('fecha', '<=', $corte))
+            ->groupBy('codigo_alumno');
+
+        $pagoSub = DB::table('registro_pagos')
+            ->select('codigo_alumno', DB::raw('SUM(valor) as total_pagado'))
+            ->when($corte, fn($q) => $q->whereDate('fecha', '<=', $corte))
+            ->groupBy('codigo_alumno');
+
+        $query = DB::table(DB::raw("({$facturaSub->toSql()}) as f"))
+            ->mergeBindings($facturaSub)
+            ->leftJoinSub($pagoSub, 'p', 'f.codigo_alumno', '=', 'p.codigo_alumno')
+            ->leftJoin('ESTUDIANTES as e', 'e.CODIGO', '=', 'f.codigo_alumno')
+            ->leftJoin('INFO_PADRES as ip', 'ip.CODIGO', '=', 'f.codigo_alumno')
+            ->select(
+                'f.codigo_alumno',
+                'e.NOMBRE1', 'e.NOMBRE2', 'e.APELLIDO1', 'e.APELLIDO2', 'e.CURSO',
+                'f.total_facturado',
+                DB::raw('COALESCE(p.total_pagado, 0) as total_pagado'),
+                DB::raw('f.total_facturado - COALESCE(p.total_pagado, 0) as saldo'),
+                'ip.ACUD', 'ip.CEL_ACUD'
+            );
+
+        if ($tab === 'anticipos') {
+            $query->whereRaw('f.total_facturado - COALESCE(p.total_pagado, 0) < 0')->orderBy('saldo');
+            $titulo = 'Anticipos';
+            $color  = '1A5C38';
+        } else {
+            $query->whereRaw('f.total_facturado - COALESCE(p.total_pagado, 0) > 0')->orderByDesc('saldo');
+            $titulo = 'Cartera';
+            $color  = '7B1A1A';
+        }
+
+        $filas = $query->get();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet       = $spreadsheet->getActiveSheet()->setTitle($titulo);
+
+        $cols = ['CODIGO', 'NOMBRE', 'CURSO', 'FACTURADO', 'PAGADO', 'SALDO', 'ACUDIENTE', 'CELULAR'];
+        $sheet->fromArray($cols, null, 'A1');
+        $sheet->getStyle('A1:H1')->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => $color]],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+        ]);
+
+        $fila = 2;
+        foreach ($filas as $f) {
+            $nombre = trim(preg_replace('/\s+/', ' ', implode(' ', array_filter([
+                $f->NOMBRE1, $f->NOMBRE2, $f->APELLIDO1, $f->APELLIDO2
+            ]))));
+            $sheet->fromArray([
+                (int) $f->codigo_alumno,
+                $nombre,
+                $f->CURSO ?? '',
+                (float) $f->total_facturado,
+                (float) $f->total_pagado,
+                (float) $f->saldo,
+                $f->ACUD ?? '',
+                $f->CEL_ACUD ?? '',
+            ], null, "A{$fila}");
+            if ($fila % 2 === 0) {
+                $sheet->getStyle("A{$fila}:H{$fila}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('FFF5F5');
+            }
+            $fila++;
+        }
+
+        foreach (range(1, 8) as $c) $sheet->getColumnDimensionByColumn($c)->setAutoSize(true);
+        $sheet->getStyle("D2:F{$fila}")->getNumberFormat()->setFormatCode('#,##0.00');
+
+        $nombreArchivo = strtolower($titulo) . '_' . date('Ymd_His') . '.xlsx';
+        $writer = new Xlsx($spreadsheet);
+        $tmp    = tempnam(sys_get_temp_dir(), 'deu') . '.xlsx';
+        $writer->save($tmp);
+
+        return response()->download($tmp, $nombreArchivo, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ])->deleteFileAfterSend(true);
     }
 }

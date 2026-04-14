@@ -133,7 +133,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/cartera/seguimiento/informe', [CarteraController::class, 'informeSeguimiento'])->name('cartera.seguimiento.informe');
         Route::get('/cartera/por-cc', [CarteraController::class, 'carteraPorCC'])->name('cartera.por_cc');
         Route::get('/facturacion', [FacturacionController::class, 'index'])->name('facturacion.index');
+        Route::get('/facturacion/exportar', [FacturacionController::class, 'exportarExcel'])->name('facturacion.exportar');
         Route::get('/facturacion/auto', [FacturacionController::class, 'autoIndex'])->name('facturacion.auto');
+        Route::get('/pagos/exportar', [PagosController::class, 'exportarExcel'])->name('pagos.exportar');
+        Route::get('/cartera/exportar-informe', [CarteraController::class, 'exportarInforme'])->name('cartera.exportar.informe');
+        Route::get('/cartera/deudores/exportar', [CarteraController::class, 'exportarDeudores'])->name('cartera.exportar.deudores');
         Route::get('/world-office', [WorldOfficeController::class, 'index'])->name('world-office.index');
         Route::get('/listado-estudiantes', [ListadoEstudiantesController::class, 'index'])->name('listado-estudiantes.index');
         Route::post('/listado-estudiantes/exportar', [ListadoEstudiantesController::class, 'exportar'])->name('listado-estudiantes.exportar');
