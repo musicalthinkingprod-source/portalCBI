@@ -43,7 +43,7 @@ class NotasController extends Controller
             ->select('le.GRUPO', DB::raw('COUNT(*) as total'))
             ->groupBy('le.GRUPO')
             ->pluck('total', 'GRUPO');
-        $estPorCurso = $estPorCurso->merge($conteosLE);
+        $estPorCurso = $estPorCurso->union($conteosLE);
 
         // Notas ingresadas para materias normales (ASIGNACION.CURSO = ESTUDIANTE.CURSO)
         $notasConteo = [];
@@ -61,7 +61,7 @@ class NotasController extends Controller
                 ->where('a.calificable', 1)
                 ->whereNotIn('n.CODIGO_MAT', [25, 26, 31])
                 ->select('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO',
-                         DB::raw('COUNT(*) as total'))
+                         DB::raw('COUNT(DISTINCT n.CODIGO_ALUM) as total'))
                 ->groupBy('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO')
                 ->get();
 
@@ -81,7 +81,7 @@ class NotasController extends Controller
                 ->where('a.calificable', 1)
                 ->where('n.CODIGO_MAT', 31)
                 ->select('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO',
-                         DB::raw('COUNT(*) as total'))
+                         DB::raw('COUNT(DISTINCT n.CODIGO_ALUM) as total'))
                 ->groupBy('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO')
                 ->get();
 
@@ -105,7 +105,7 @@ class NotasController extends Controller
                     (n.CODIGO_MAT = 26 AND le.GRUPO = CONCAT(a.CURSO, '-1'))
                 )")
                 ->select('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO',
-                         DB::raw('COUNT(*) as total'))
+                         DB::raw('COUNT(DISTINCT n.CODIGO_ALUM) as total'))
                 ->groupBy('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO')
                 ->get();
 
@@ -125,7 +125,7 @@ class NotasController extends Controller
                 ->whereIn('n.CODIGO_MAT', [25, 26])
                 ->whereRaw("CAST(REGEXP_REPLACE(a.CURSO, '[^0-9]', '') AS UNSIGNED) < 6")
                 ->select('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO',
-                         DB::raw('COUNT(*) as total'))
+                         DB::raw('COUNT(DISTINCT n.CODIGO_ALUM) as total'))
                 ->groupBy('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO')
                 ->get();
 
@@ -165,8 +165,46 @@ class NotasController extends Controller
             $docentes[$doc]['asignaciones'][] = $detalle;
         }
 
+        // ── Observaciones 2026 por director de grupo ─────────────────────────
+        $obsConteo = [];
+        try {
+            $rowsObs = DB::table('OBSERVACIONES_2026 as o')
+                ->join('ESTUDIANTES as e', 'e.CODIGO', '=', 'o.CODIGO_ALUM')
+                ->where('e.ESTADO', 'MATRICULADO')
+                ->select('e.CURSO', 'o.PERIODO', DB::raw('COUNT(*) as total'))
+                ->groupBy('e.CURSO', 'o.PERIODO')
+                ->get();
+            foreach ($rowsObs as $r) {
+                $obsConteo[$r->CURSO][$r->PERIODO] = $r->total;
+            }
+        } catch (\Exception $e) {}
+
+        $observacionesReport = [];
+        $directoresGrupo = DB::table('CODIGOS_DOC')
+            ->whereNotNull('DIR_GRUPO')
+            ->orderBy('DIR_GRUPO')
+            ->get();
+
+        foreach ($directoresGrupo as $dir) {
+            $totalEst = $estPorCurso[$dir->DIR_GRUPO] ?? 0;
+            $periodos = [];
+            for ($p = 1; $p <= 4; $p++) {
+                $periodos[$p] = [
+                    'esperadas'  => $totalEst,
+                    'ingresadas' => $obsConteo[$dir->DIR_GRUPO][$p] ?? 0,
+                ];
+            }
+            $observacionesReport[] = [
+                'codigo'  => $dir->CODIGO_DOC,
+                'nombre'  => $dir->NOMBRE_DOC ?? $dir->CODIGO_DOC,
+                'estado'  => $dir->ESTADO ?? 'ACTIVO',
+                'curso'   => $dir->DIR_GRUPO,
+                'periodos'=> $periodos,
+            ];
+        }
+
         $anio = date('Y');
-        return view('notas.reporte', compact('docentes', 'anio'));
+        return view('notas.reporte', compact('docentes', 'anio', 'observacionesReport'));
     }
 
     public function index(Request $request)
