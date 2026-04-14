@@ -87,7 +87,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ── Directores de grupo (solo lectura): Ori* ────────────────────────────
-    Route::middleware('profile:Ori*')->group(function () {
+    Route::middleware('profile:SuperAd,Admin,Ori*')->group(function () {
         Route::get('/orientacion/directores', [AdminController::class, 'directores'])->name('orientacion.directores');
         Route::get('/admin/asignaciones', [AdminController::class, 'asignaciones'])->name('admin.asignaciones');
         Route::post('/admin/asignaciones/mover', [AdminController::class, 'moverAsignaciones'])->name('admin.asignaciones.mover');
