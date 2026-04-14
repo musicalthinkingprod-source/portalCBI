@@ -36,6 +36,7 @@ use App\Http\Controllers\HorariosController;
 use App\Http\Controllers\CalendarioAcademicoController;
 use App\Http\Controllers\AsistenciaPersonalController;
 use App\Http\Controllers\BackupController;
+use App\Http\Controllers\ListadoEstudiantesController;
 
 /*
 |--------------------------------------------------------------------------
@@ -134,6 +135,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/facturacion', [FacturacionController::class, 'index'])->name('facturacion.index');
         Route::get('/facturacion/auto', [FacturacionController::class, 'autoIndex'])->name('facturacion.auto');
         Route::get('/world-office', [WorldOfficeController::class, 'index'])->name('world-office.index');
+        Route::get('/listado-estudiantes', [ListadoEstudiantesController::class, 'index'])->name('listado-estudiantes.index');
+        Route::post('/listado-estudiantes/exportar', [ListadoEstudiantesController::class, 'exportar'])->name('listado-estudiantes.exportar');
         Route::get('/importacion/registro-pagos', [ImportacionController::class, 'show'])->name('importacion.registro_pagos.show');
         Route::get('/importacion/facturacion', [ImportacionController::class, 'showFacturacion'])->name('importacion.facturacion.show');
         Route::get('/parametros', [ParametrosController::class, 'index'])->name('parametros.index');

@@ -129,7 +129,7 @@
                         <td class="px-4 py-3">{{ $pago->concepto }}</td>
                         <td class="px-4 py-3">{{ $pago->mes }}</td>
                         <td class="px-4 py-3">{{ $pago->orden ?? '—' }}</td>
-                        <td class="px-4 py-3 text-right font-medium text-green-700">$ {{ number_format($pago->valor, 0, ',', '.') }}</td>
+                        <td class="px-4 py-3 text-right font-medium text-green-700 whitespace-nowrap">$ {{ number_format($pago->valor, 0, ',', '.') }}</td>
                         <td class="px-4 py-3 text-center whitespace-nowrap">
                             @if(!$esReadOnly)
                             <a href="{{ route('pagos.edit', $pago->id) }}"

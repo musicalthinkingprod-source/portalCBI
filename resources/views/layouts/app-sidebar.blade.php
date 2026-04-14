@@ -266,7 +266,7 @@
                 @if($profile === 'SecA')
                 {!! sidebarLink(route('asistencia-personal.registro'), '✏️ Registrar personal') !!}
                 @endif
-                @if(!$isDoc && !$isSuperAd)
+                @if(!$isSuperAd)
                 {!! sidebarLink(route('asistencia.reporte'), '📋 Reporte de asistencia') !!}
                 @endif
                 @if($isAdminLike || $isSec)
@@ -300,9 +300,8 @@
                 @endif
                 {!! sidebarLink(route('cartera.index'), '📊 Informe de cartera') !!}
                 {!! sidebarLink(route('cartera.deudores'), '🔴 Cartera / Anticipos') !!}
-                @if(!$isContab)
+                {!! sidebarLink(route('listado-estudiantes.index'), '🎓 Listado estudiantes') !!}
                 {!! sidebarLink(route('world-office.index'), '📄 Plantilla World Office') !!}
-                @endif
                 {!! sidebarLink(route('parametros.index'), '⚙️ Parámetros facturación') !!}
                 @endif
                 {!! sidebarLink(route('cartera.seguimiento.informe'), '📋 Seguimiento cartera') !!}

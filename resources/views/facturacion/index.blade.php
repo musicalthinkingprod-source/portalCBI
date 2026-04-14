@@ -145,7 +145,7 @@
                         <td class="px-4 py-3">{{ $f->orden ?? '—' }}</td>
                         <td class="px-4 py-3">{{ $f->codigo_concepto ?? '—' }}</td>
                         <td class="px-4 py-3">{{ $f->centro_costos ?? '—' }}</td>
-                        <td class="px-4 py-3 text-right font-medium text-blue-800">$ {{ number_format($f->valor, 0, ',', '.') }}</td>
+                        <td class="px-4 py-3 text-right font-medium text-blue-800 whitespace-nowrap">$ {{ number_format($f->valor, 0, ',', '.') }}</td>
                         <td class="px-4 py-3 text-center whitespace-nowrap">
                             @if(!$esReadOnly)
                             <a href="{{ route('facturacion.edit', $f->id) }}"
