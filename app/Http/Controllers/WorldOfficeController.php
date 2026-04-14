@@ -56,6 +56,8 @@ class WorldOfficeController extends Controller
 
     public function exportarCSV(Request $request)
     {
+        @ini_set('memory_limit', '-1');
+
         $request->validate([
             'mes'               => 'required|string',
             'fecha_facturacion' => 'required|date',
@@ -158,9 +160,10 @@ class WorldOfficeController extends Controller
             $fila++;
         }
 
-        // Ajustar ancho de columnas automáticamente
-        foreach (range(1, $totalCols) as $colIdx) {
-            $sheet->getColumnDimensionByColumn($colIdx)->setAutoSize(true);
+        // Anchos fijos de columnas (evita cargar todo en memoria)
+        foreach ([1=>18,2=>6,3=>10,4=>18,5=>16,6=>18,7=>16,8=>30,9=>14,10=>14,
+                  11=>14,12=>32,13=>16,14=>10,15=>8,16=>14,17=>16,18=>16,19=>30] as $colIdx => $w) {
+            $sheet->getColumnDimensionByColumn($colIdx)->setWidth($w);
         }
 
         // Alinear columna VALOR (P = col 16) a la derecha

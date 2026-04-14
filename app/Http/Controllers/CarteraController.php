@@ -356,6 +356,7 @@ class CarteraController extends Controller
 
     public function exportarInforme()
     {
+        @ini_set('memory_limit', '-1');
         $facturaPorAlumno = DB::table('facturacion')
             ->select('codigo_alumno', DB::raw('SUM(valor) as total_facturado'))
             ->groupBy('codigo_alumno');
@@ -406,7 +407,9 @@ class CarteraController extends Controller
             $fila++;
         }
 
-        foreach (range(1, 6) as $c) $sheet->getColumnDimensionByColumn($c)->setAutoSize(true);
+        foreach ([1=>10, 2=>38, 3=>10, 4=>16, 5=>16, 6=>16] as $c => $w) {
+            $sheet->getColumnDimensionByColumn($c)->setWidth($w);
+        }
         $sheet->getStyle("D2:F{$fila}")->getNumberFormat()->setFormatCode('#,##0.00');
 
         $nombre = 'informe_cartera_' . date('Ymd_His') . '.xlsx';
@@ -423,6 +426,8 @@ class CarteraController extends Controller
 
     public function exportarDeudores(Request $request)
     {
+        @ini_set('memory_limit', '-1');
+
         $tab        = $request->input('tab', 'cartera');
         $fechaDesde = $request->filled('fecha_desde') ? $request->input('fecha_desde') : null;
         $fechaHasta = $request->filled('fecha_hasta') ? $request->input('fecha_hasta') : null;
@@ -497,7 +502,9 @@ class CarteraController extends Controller
             $fila++;
         }
 
-        foreach (range(1, 8) as $c) $sheet->getColumnDimensionByColumn($c)->setAutoSize(true);
+        foreach ([1=>10, 2=>38, 3=>10, 4=>16, 5=>16, 6=>16, 7=>32, 8=>14] as $c => $w) {
+            $sheet->getColumnDimensionByColumn($c)->setWidth($w);
+        }
         $sheet->getStyle("D2:F{$fila}")->getNumberFormat()->setFormatCode('#,##0.00');
 
         $nombreArchivo = strtolower($titulo) . '_' . date('Ymd_His') . '.xlsx';

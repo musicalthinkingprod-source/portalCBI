@@ -324,6 +324,8 @@ class FacturacionController extends Controller
 
     public function exportarExcel(Request $request)
     {
+        @ini_set('memory_limit', '-1');
+
         $sortable = ['codigo_alumno', 'fecha', 'concepto', 'mes', 'valor'];
         $sortCol  = in_array($request->sort, $sortable) ? $request->sort : 'fecha';
         $sortDir  = $request->direction === 'asc' ? 'asc' : 'desc';
@@ -370,7 +372,9 @@ class FacturacionController extends Controller
             $fila++;
         }
 
-        foreach (range(1, 8) as $c) $sheet->getColumnDimensionByColumn($c)->setAutoSize(true);
+        foreach ([1=>14, 2=>14, 3=>38, 4=>12, 5=>8, 6=>15, 7=>15, 8=>14] as $c => $w) {
+            $sheet->getColumnDimensionByColumn($c)->setWidth($w);
+        }
         $sheet->getStyle("H2:H{$fila}")->getNumberFormat()->setFormatCode('#,##0.00');
 
         $nombre = 'facturacion_' . date('Ymd_His') . '.xlsx';

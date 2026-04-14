@@ -28,6 +28,7 @@ class ListadoEstudiantesController extends Controller
 
     public function exportar(Request $request)
     {
+        @ini_set('memory_limit', '-1');
         $query = DB::table('ESTUDIANTES')
             ->whereRaw("TRIM(UPPER(ESTADO)) = 'MATRICULADO'")
             ->select(
@@ -80,8 +81,8 @@ class ListadoEstudiantesController extends Controller
             $fila++;
         }
 
-        foreach (range(1, 4) as $col) {
-            $sheet->getColumnDimensionByColumn($col)->setAutoSize(true);
+        foreach ([1=>12, 2=>38, 3=>10, 4=>10] as $col => $w) {
+            $sheet->getColumnDimensionByColumn($col)->setWidth($w);
         }
 
         $nombre = 'listado_estudiantes_' . date('Ymd') . '.xlsx';
