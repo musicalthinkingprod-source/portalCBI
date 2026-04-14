@@ -231,7 +231,7 @@ class PiarCaractController extends Controller
         );
 
         $msg = $entregar ? 'Caracterización marcada como entregada para revisión.' : 'Caracterización guardada correctamente.';
-        return back()->with('saved', $msg);
+        return redirect()->route('piar.caract.mat.form', [$codigo, $codigoMat])->with('saved', $msg);
     }
 
     public function aprobarMat(string $codigo, int $codigoMat)
@@ -353,7 +353,7 @@ class PiarCaractController extends Controller
         );
 
         $msg = $entregar ? 'Caracterización marcada como entregada para revisión.' : 'Caracterización guardada correctamente.';
-        return back()->with('saved', $msg);
+        return redirect()->route('piar.caract.dir.form', $codigo)->with('saved', $msg);
     }
 
     public function aprobarDir(string $codigo)

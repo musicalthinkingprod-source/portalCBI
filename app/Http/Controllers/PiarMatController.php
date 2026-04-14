@@ -235,7 +235,7 @@ class PiarMatController extends Controller
         );
 
         $msg = $entregar ? 'Ajustes marcados como entregados para revisión.' : 'PIAR Anexo 2 guardado correctamente.';
-        return back()->with('saved', $msg);
+        return redirect()->route('piar.anexo2.form', [$codigo, $codigoMat])->with('saved', $msg);
     }
 
     // ── Plan Casero ──────────────────────────────────────────────────────────
@@ -309,7 +309,7 @@ class PiarMatController extends Controller
             ]
         );
 
-        return back()->with('saved', 'Plan Casero guardado correctamente.');
+        return redirect()->route('piar.plan_casero.form', [$codigo, $codigoMat])->with('saved', 'Plan Casero guardado correctamente.');
     }
 
     // ── Aprobar (Ori / SuperAd) ───────────────────────────────────────────────
