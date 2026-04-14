@@ -65,7 +65,7 @@ class BackupController extends Controller
         $dbPass  = config('database.connections.mysql.password');
 
         $filename = 'backup_' . $dbName . '_' . now()->format('Y-m-d_H-i-s') . '.sql';
-        $tmpPath  = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'portalcbi_' . uniqid() . '.sql';
+        $tmpPath  = storage_path('app') . DIRECTORY_SEPARATOR . 'portalcbi_' . uniqid() . '.sql';
 
         // Cabecera legible
         $header  = "-- ==========================================================\n";
@@ -129,7 +129,7 @@ class BackupController extends Controller
 
     private function dumpConMysqldump(string $mysqldump, string $tmpPath, string $dbName, string $dbHost, int|string $dbPort, string $dbUser, string $dbPass): bool
     {
-        $cnfPath = tempnam(sys_get_temp_dir(), 'dmp') . '.cnf';
+        $cnfPath = tempnam(storage_path('app'), 'dmp') . '.cnf';
         file_put_contents($cnfPath, implode("\n", [
             '[client]',
             'user=' . $dbUser,
