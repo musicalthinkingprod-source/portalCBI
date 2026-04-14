@@ -16,8 +16,8 @@
 </div>
 @endif
 
-{{-- Selector de curso (solo para Admin/SuperAd) --}}
-@unless($isDoc)
+{{-- Selector de curso (solo para quienes no son directores de grupo) --}}
+@if(!$isDirector)
 <div class="bg-white rounded-xl shadow p-5 mb-6">
     <form method="GET" action="{{ route('observaciones.index') }}" class="flex gap-3 items-end flex-wrap">
         <div>
@@ -37,7 +37,7 @@
         </button>
     </form>
 </div>
-@endunless
+@endif
 
 @if($cursoDir)
 
@@ -53,7 +53,7 @@
 <div class="flex gap-1 mb-5">
     @foreach([1,2,3,4] as $p)
     @php $tabAbierto = in_array($p, $periodosAbiertos); @endphp
-    <a href="{{ route('observaciones.index', array_filter(['periodo' => $p, 'curso' => $isDoc ? null : $cursoDir])) }}"
+    <a href="{{ route('observaciones.index', array_filter(['periodo' => $p, 'curso' => $isDirector ? null : $cursoDir])) }}"
        class="px-5 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-1.5
               {{ $periodo === $p
                  ? ($tabAbierto ? 'bg-blue-700 text-white shadow' : 'bg-gray-600 text-white shadow')
