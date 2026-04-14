@@ -216,17 +216,20 @@ class CarteraController extends Controller
 
     public function deudores(Request $request)
     {
-        $tab   = $request->input('tab', 'cartera'); // 'cartera' | 'anticipos'
-        $corte = $request->filled('corte') ? $request->input('corte') : null;
+        $tab        = $request->input('tab', 'cartera'); // 'cartera' | 'anticipos'
+        $fechaDesde = $request->filled('fecha_desde') ? $request->input('fecha_desde') : null;
+        $fechaHasta = $request->filled('fecha_hasta') ? $request->input('fecha_hasta') : null;
 
         $facturaSub = DB::table('facturacion')
             ->select('codigo_alumno', DB::raw('SUM(valor) as total_facturado'))
-            ->when($corte, fn($q) => $q->whereDate('fecha', '<=', $corte))
+            ->when($fechaDesde, fn($q) => $q->whereDate('fecha', '>=', $fechaDesde))
+            ->when($fechaHasta, fn($q) => $q->whereDate('fecha', '<=', $fechaHasta))
             ->groupBy('codigo_alumno');
 
         $pagoSub = DB::table('registro_pagos')
             ->select('codigo_alumno', DB::raw('SUM(valor) as total_pagado'))
-            ->when($corte, fn($q) => $q->whereDate('fecha', '<=', $corte))
+            ->when($fechaDesde, fn($q) => $q->whereDate('fecha', '>=', $fechaDesde))
+            ->when($fechaHasta, fn($q) => $q->whereDate('fecha', '<=', $fechaHasta))
             ->groupBy('codigo_alumno');
 
         $query = DB::table(DB::raw("({$facturaSub->toSql()}) as f"))
@@ -256,7 +259,7 @@ class CarteraController extends Controller
 
         $resultados = $query->paginate(25)->withQueryString();
 
-        return view('cartera.deudores', compact('resultados', 'tab', 'corte'));
+        return view('cartera.deudores', compact('resultados', 'tab', 'fechaDesde', 'fechaHasta'));
     }
 
     public function carteraPorCC()
@@ -420,17 +423,20 @@ class CarteraController extends Controller
 
     public function exportarDeudores(Request $request)
     {
-        $tab   = $request->input('tab', 'cartera');
-        $corte = $request->filled('corte') ? $request->input('corte') : null;
+        $tab        = $request->input('tab', 'cartera');
+        $fechaDesde = $request->filled('fecha_desde') ? $request->input('fecha_desde') : null;
+        $fechaHasta = $request->filled('fecha_hasta') ? $request->input('fecha_hasta') : null;
 
         $facturaSub = DB::table('facturacion')
             ->select('codigo_alumno', DB::raw('SUM(valor) as total_facturado'))
-            ->when($corte, fn($q) => $q->whereDate('fecha', '<=', $corte))
+            ->when($fechaDesde, fn($q) => $q->whereDate('fecha', '>=', $fechaDesde))
+            ->when($fechaHasta, fn($q) => $q->whereDate('fecha', '<=', $fechaHasta))
             ->groupBy('codigo_alumno');
 
         $pagoSub = DB::table('registro_pagos')
             ->select('codigo_alumno', DB::raw('SUM(valor) as total_pagado'))
-            ->when($corte, fn($q) => $q->whereDate('fecha', '<=', $corte))
+            ->when($fechaDesde, fn($q) => $q->whereDate('fecha', '>=', $fechaDesde))
+            ->when($fechaHasta, fn($q) => $q->whereDate('fecha', '<=', $fechaHasta))
             ->groupBy('codigo_alumno');
 
         $query = DB::table(DB::raw("({$facturaSub->toSql()}) as f"))

@@ -4,36 +4,37 @@
 
 @section('slot')
 
-    {{-- Nav + filtro de corte --}}
+    {{-- Nav + filtro de rango --}}
     <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
         <a href="{{ route('cartera.index') }}" class="text-blue-700 hover:underline text-sm">← Volver a informe de cartera</a>
 
-        <div class="flex items-center gap-3">
-            <a href="{{ route('cartera.exportar.deudores', array_filter(['tab' => $tab, 'corte' => $corte])) }}"
-                class="bg-green-700 hover:bg-green-800 text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition whitespace-nowrap">
-                ⬇️ Excel
-            </a>
-        </div>
-
-        <form method="GET" action="{{ route('cartera.deudores') }}" class="flex items-center gap-2">
+        <form method="GET" action="{{ route('cartera.deudores') }}" class="flex flex-wrap items-center gap-2">
             <input type="hidden" name="tab" value="{{ $tab }}">
-            <label class="text-xs font-semibold text-gray-500 whitespace-nowrap">Fecha de corte:</label>
-            <input type="date" name="corte" value="{{ $corte ?? '' }}"
+            <label class="text-xs font-semibold text-gray-500 whitespace-nowrap">Desde:</label>
+            <input type="date" name="fecha_desde" value="{{ $fechaDesde ?? '' }}"
+                class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <label class="text-xs font-semibold text-gray-500 whitespace-nowrap">Hasta:</label>
+            <input type="date" name="fecha_hasta" value="{{ $fechaHasta ?? '' }}"
                 class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
             <button type="submit"
                 class="bg-blue-800 hover:bg-blue-700 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition">
                 Aplicar
             </button>
-            @if($corte)
+            @if($fechaDesde || $fechaHasta)
             <a href="{{ route('cartera.deudores', ['tab' => $tab]) }}"
-                class="text-xs text-red-500 hover:text-red-700 font-semibold whitespace-nowrap">✕ Quitar corte</a>
+                class="text-xs text-red-500 hover:text-red-700 font-semibold whitespace-nowrap">✕ Quitar fechas</a>
             @endif
         </form>
+
+        <a href="{{ route('cartera.exportar.deudores', array_filter(['tab' => $tab, 'fecha_desde' => $fechaDesde, 'fecha_hasta' => $fechaHasta])) }}"
+            class="bg-green-700 hover:bg-green-800 text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition whitespace-nowrap">
+            ⬇️ Excel
+        </a>
     </div>
 
     {{-- Tabs --}}
     <div class="flex gap-1 mb-5">
-        <a href="{{ route('cartera.deudores', array_filter(['tab' => 'cartera', 'corte' => $corte])) }}"
+        <a href="{{ route('cartera.deudores', array_filter(['tab' => 'cartera', 'fecha_desde' => $fechaDesde, 'fecha_hasta' => $fechaHasta])) }}"
             class="px-5 py-2 rounded-t-lg text-sm font-semibold transition border-b-2
             {{ $tab !== 'anticipos'
                 ? 'bg-white border-red-600 text-red-700'
@@ -43,7 +44,7 @@
                 <span class="ml-1 text-xs text-red-400">{{ $resultados->total() }}</span>
             @endif
         </a>
-        <a href="{{ route('cartera.deudores', array_filter(['tab' => 'anticipos', 'corte' => $corte])) }}"
+        <a href="{{ route('cartera.deudores', array_filter(['tab' => 'anticipos', 'fecha_desde' => $fechaDesde, 'fecha_hasta' => $fechaHasta])) }}"
             class="px-5 py-2 rounded-t-lg text-sm font-semibold transition border-b-2
             {{ $tab === 'anticipos'
                 ? 'bg-white border-green-600 text-green-700'
@@ -55,10 +56,11 @@
         </a>
     </div>
 
-    @if($corte)
+    @if($fechaDesde || $fechaHasta)
     <div class="mb-4 px-4 py-2 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl text-sm inline-flex items-center gap-2">
-        📅 Corte al <strong>{{ \Carbon\Carbon::parse($corte)->format('d/m/Y') }}</strong>
-        — solo se consideran movimientos hasta esta fecha.
+        📅 Mostrando movimientos
+        @if($fechaDesde) desde <strong>{{ \Carbon\Carbon::parse($fechaDesde)->format('d/m/Y') }}</strong> @endif
+        @if($fechaHasta) hasta <strong>{{ \Carbon\Carbon::parse($fechaHasta)->format('d/m/Y') }}</strong> @endif
     </div>
     @endif
 

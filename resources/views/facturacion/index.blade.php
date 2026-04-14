@@ -46,7 +46,7 @@
             <h3 class="font-bold text-blue-800">Todos los registros</h3>
             <div class="flex items-center gap-3">
                 <span class="text-xs text-gray-400">{{ $facturas->total() }} registros</span>
-                @if(request()->hasAny(['codigo_alumno','fecha','concepto','mes','orden','codigo_concepto','centro_costos']))
+                @if(request()->hasAny(['codigo_alumno','fecha_desde','fecha_hasta','concepto','mes','orden','codigo_concepto','centro_costos']))
                     <a href="{{ route('facturacion.index') }}" class="text-xs text-red-500 hover:text-red-700 font-semibold">✕ Limpiar filtros</a>
                 @endif
                 <a href="{{ route('facturacion.exportar', request()->query()) }}"
@@ -102,8 +102,14 @@
                                 class="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400">
                         </td>
                         <td class="px-2 py-1">
-                            <input type="date" name="fecha" value="{{ request('fecha') }}"
-                                class="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400">
+                            <div class="flex flex-col gap-0.5">
+                                <input type="date" name="fecha_desde" value="{{ request('fecha_desde') }}"
+                                    title="Desde"
+                                    class="w-full border border-gray-300 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                <input type="date" name="fecha_hasta" value="{{ request('fecha_hasta') }}"
+                                    title="Hasta"
+                                    class="w-full border border-gray-300 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400">
+                            </div>
                         </td>
                         <td class="px-2 py-1">
                             <input type="text" name="concepto" value="{{ request('concepto') }}"

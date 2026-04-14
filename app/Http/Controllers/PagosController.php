@@ -22,8 +22,11 @@ class PagosController extends Controller
         if ($request->filled('codigo_alumno')) {
             $query->where('codigo_alumno', $request->codigo_alumno);
         }
-        if ($request->filled('fecha')) {
-            $query->where('fecha', $request->fecha);
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('fecha', '>=', $request->fecha_desde);
+        }
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('fecha', '<=', $request->fecha_hasta);
         }
         if ($request->filled('concepto')) {
             $query->where('concepto', 'like', '%' . $request->concepto . '%');
@@ -113,7 +116,8 @@ class PagosController extends Controller
         $query = DB::table('registro_pagos')->orderBy($sortCol, $sortDir);
 
         if ($request->filled('codigo_alumno')) $query->where('codigo_alumno', $request->codigo_alumno);
-        if ($request->filled('fecha'))         $query->where('fecha', $request->fecha);
+        if ($request->filled('fecha_desde'))   $query->whereDate('fecha', '>=', $request->fecha_desde);
+        if ($request->filled('fecha_hasta'))   $query->whereDate('fecha', '<=', $request->fecha_hasta);
         if ($request->filled('concepto'))      $query->where('concepto', 'like', '%' . $request->concepto . '%');
         if ($request->filled('mes'))           $query->where('mes', 'like', '%' . $request->mes . '%');
         if ($request->filled('orden'))         $query->where('orden', 'like', '%' . $request->orden . '%');
