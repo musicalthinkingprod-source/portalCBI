@@ -240,8 +240,8 @@
         </div>
         @endif
 
-        {{-- ── Gestión Docente: SuperAd, DOC* ── --}}
-        @if($isSuperAd || $isDoc)
+        {{-- ── Gestión Docente: SuperAd, Admin, DOC* ── --}}
+        @if($isSuperAd || $isAdmin || $isDoc)
         @php $catId = 'gestion-docente'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
