@@ -19,3 +19,6 @@ yarn-error.log
 /.vscode
 vendor.tar.gz
 subir.env
+/public/test.php
+/public/limpiar.php
+/public/extraer.php
