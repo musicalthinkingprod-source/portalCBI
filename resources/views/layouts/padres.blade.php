@@ -60,8 +60,8 @@
                     ->where('CODIGO_FECHA', 'like', 'B%')
                     ->where('INICIO', '<=', $now)->where('FIN', '>=', $now)->exists();
                 $abiertoNotas = \Illuminate\Support\Facades\DB::table('FECHAS')
-                    ->where('CODIGO_FECHA', 'like', 'N%')
-                    ->where('INICIO', '<=', $now)->where('FIN', '>=', $now)->exists();
+                    ->where('CODIGO_FECHA', 'like', 'B%')
+                    ->where('INICIO', '<=', $now)->exists();
             @endphp
 
             <a href="{{ route('padres.portal') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
@@ -77,7 +77,7 @@
             @elseif(!$abiertoNotas)
                 <div class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
                     <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Consultar promedios</div>
-                    <p class="text-xs text-blue-500 mt-0.5 leading-tight">La institución aún no ha publicado las notas finales.</p>
+                    <p class="text-xs text-blue-500 mt-0.5 leading-tight">Disponible a partir de la primera entrega de boletines.</p>
                 </div>
             @else
                 <a href="{{ route('padres.notas') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
@@ -133,6 +133,18 @@
                     Algunas opciones están bloqueadas.
                 </div>
             @endif
+
+            <a href="{{ route('padres.circulares') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                📢 Circulares
+            </a>
+
+            <a href="{{ route('padres.documentacion') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                📁 Documentación
+            </a>
+
+            <a href="{{ route('padres.conducto_regular') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                🗺️ Conducto regular
+            </a>
 
             <a href="{{ route('padres.english_acq') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                 🇬🇧 English Acquisition

@@ -38,6 +38,7 @@ use App\Http\Controllers\AsistenciaPersonalController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\ListadoEstudiantesController;
 use App\Http\Controllers\ObservacionesController;
+use App\Http\Controllers\DocumentacionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,6 +74,10 @@ Route::middleware('padre.verificado')->group(function () {
     Route::get('/padres/derroteros', [DeroterosController::class, 'padres'])->name('padres.derroteros');
     Route::get('/padres/calendario', [CalendarioAcademicoController::class, 'padres'])->name('padres.calendario');
     Route::get('/padres/atencion-docentes', [PadresController::class, 'atencionDocentes'])->name('padres.atencion_docentes');
+    Route::get('/padres/conducto-regular', [PadresController::class, 'conductoRegular'])->name('padres.conducto_regular');
+    Route::get('/padres/circulares', [PadresController::class, 'circulares'])->name('padres.circulares');
+    Route::get('/padres/circulares/{circular}', [PadresController::class, 'circularShow'])->name('padres.circulares.show');
+    Route::get('/padres/documentacion', [DocumentacionController::class, 'padres'])->name('padres.documentacion');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -106,7 +111,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/control/planilla', [ControlPlanillaController::class, 'index'])->name('control.planilla');
         Route::get('/nomina', [NominaController::class, 'index'])->name('nomina.index');
 
+
         // ── Circulares ────────────────────────────────────────────────────────
+    });
+
+    Route::middleware('profile:SuperAd,Admin,Ori*,SecC100')->group(function () {
         Route::get('/circulares', [CircularesController::class, 'index'])->name('circulares.index');
         Route::get('/circulares/nueva', [CircularesController::class, 'create'])->name('circulares.create');
         Route::post('/circulares', [CircularesController::class, 'store'])->name('circulares.store');
@@ -115,6 +124,16 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/circulares/{circular}', [CircularesController::class, 'update'])->name('circulares.update');
         Route::delete('/circulares/{circular}', [CircularesController::class, 'destroy'])->name('circulares.destroy');
         Route::get('/circulares/{circular}/pdf', [CircularesController::class, 'pdf'])->name('circulares.pdf');
+    });
+
+    Route::middleware('profile:SuperAd,Admin,Ori*')->group(function () {
+        // ── Documentación institucional ───────────────────────────────────────
+        Route::get('/documentacion', [DocumentacionController::class, 'index'])->name('documentacion.index');
+        Route::get('/documentacion/crear', [DocumentacionController::class, 'create'])->name('documentacion.create');
+        Route::post('/documentacion', [DocumentacionController::class, 'store'])->name('documentacion.store');
+        Route::get('/documentacion/{documento}/editar', [DocumentacionController::class, 'edit'])->name('documentacion.edit');
+        Route::put('/documentacion/{documento}', [DocumentacionController::class, 'update'])->name('documentacion.update');
+        Route::delete('/documentacion/{documento}', [DocumentacionController::class, 'destroy'])->name('documentacion.destroy');
 
         // ── Listados Especiales ───────────────────────────────────────────────
         Route::get('/listados-especiales', [ListadosEspecialesController::class, 'index'])->name('listados.index');
@@ -176,8 +195,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/facturacion/auto/preview', [FacturacionController::class, 'autoPreview'])->name('facturacion.auto.preview');
         Route::post('/facturacion/auto/generar', [FacturacionController::class, 'autoGenerar'])->name('facturacion.auto.generar');
         Route::delete('/facturacion/auto/lote/{lote}', [FacturacionController::class, 'autoEliminarLote'])->name('facturacion.auto.lote.destroy');
-        Route::post('/world-office/plantilla', [WorldOfficeController::class, 'guardarPlantilla'])->name('world-office.plantilla.store');
-        Route::post('/world-office/exportar', [WorldOfficeController::class, 'exportarCSV'])->name('world-office.exportar');
         Route::post('/importacion/registro-pagos', [ImportacionController::class, 'importarRegistroPagos'])->name('importacion.registro_pagos');
         Route::delete('/importacion/registro-pagos/lote/{lote}', [ImportacionController::class, 'eliminarLotePagos'])->name('importacion.registro_pagos.lote.destroy');
         Route::post('/importacion/facturacion', [ImportacionController::class, 'importarFacturacion'])->name('importacion.facturacion');
@@ -206,6 +223,12 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/parametros/observaciones/{id}', [ParametrosController::class, 'destroyObservacion'])->name('parametros.observaciones.destroy');
     });
 
+    // ── World Office: escritura habilitada también para Contab ───────────────
+    Route::middleware('profile:SuperAd,Admin,Contab')->group(function () {
+        Route::post('/world-office/plantilla', [WorldOfficeController::class, 'guardarPlantilla'])->name('world-office.plantilla.store');
+        Route::post('/world-office/exportar', [WorldOfficeController::class, 'exportarCSV'])->name('world-office.exportar');
+    });
+
     // ── Estudiantes: SuperAd, Admin, Ori, Sec* ───────────────────────────────
     Route::middleware('profile:SuperAd,Admin,Ori,Sec*')->group(function () {
         Route::get('/alumnos', [AlumnoController::class, 'index'])->name('alumnos.index');
@@ -232,10 +255,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/calendario', [CalendarioAcademicoController::class, 'index'])->name('calendario.index');
     });
 
-    // ── Calendario: edición de eventos (solo SuperAd y Admin) ────────────────
+    // ── Calendario: gestión de eventos (solo SuperAd y Admin) ────────────────
     Route::middleware('profile:SuperAd,Admin')->group(function () {
-        Route::put('/calendario/{fecha}/evento', [CalendarioAcademicoController::class, 'guardarEvento'])->name('calendario.evento.guardar');
-        Route::delete('/calendario/{fecha}/evento', [CalendarioAcademicoController::class, 'eliminarEvento'])->name('calendario.evento.eliminar');
+        Route::post('/calendario/{fecha}/eventos',  [CalendarioAcademicoController::class, 'crearEvento'])     ->name('calendario.evento.crear');
+        Route::put('/calendario/evento/{id}',       [CalendarioAcademicoController::class, 'actualizarEvento'])->name('calendario.evento.actualizar');
+        Route::delete('/calendario/evento/{id}',    [CalendarioAcademicoController::class, 'eliminarEvento'])  ->name('calendario.evento.eliminar');
     });
 
     // ── Calendario académico: Docentes (solo lectura) ─────────────────────────

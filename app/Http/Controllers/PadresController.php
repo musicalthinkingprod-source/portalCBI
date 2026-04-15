@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\FechasController;
+use App\Models\Circular;
 use App\Http\Controllers\ExencionCarteraController;
 
 class PadresController extends Controller
@@ -150,11 +151,19 @@ class PadresController extends Controller
             ->where('FIN', '>=', $now)
             ->exists();
 
+        // Promedios: visible desde que empiece la 1ª entrega de boletines (B1)
+        $algunBoletinIniciado = DB::table('FECHAS')
+            ->where('CODIGO_FECHA', 'like', 'B%')
+            ->where('INICIO', '<=', $now)
+            ->exists();
+
         $modulos = [
-            ['label' => 'Consultar promedios',   'icon' => '📋', 'route' => 'padres.notas',        'activo' => !$bloqueado && $abierto('N'), 'requiere_pago' => true],
+            ['label' => 'Consultar promedios',   'icon' => '📋', 'route' => 'padres.notas',        'activo' => !$bloqueado && $algunBoletinIniciado, 'requiere_pago' => true],
             ['label' => 'Boletines',             'icon' => '📝', 'route' => 'padres.boletines',     'activo' => !$bloqueado && $abierto('B'), 'requiere_pago' => true],
             ['label' => 'Salvavidas',            'icon' => '🏊', 'route' => 'padres.salvavidas',    'activo' => $abierto('S'),               'requiere_pago' => false],
             ['label' => 'Derroteros',            'icon' => '📌', 'route' => 'padres.derroteros',    'activo' => $abierto('D'),               'requiere_pago' => false],
+            ['label' => 'Circulares',             'icon' => '📢', 'route' => 'padres.circulares',    'activo' => true,                        'requiere_pago' => false],
+            ['label' => 'Documentación',          'icon' => '📁', 'route' => 'padres.documentacion', 'activo' => true,                        'requiere_pago' => false],
             ['label' => 'English Acquisition',   'icon' => '🇬🇧', 'route' => 'padres.english_acq',  'activo' => true,                        'requiere_pago' => false],
             ['label' => 'Asistencia',            'icon' => '📅', 'route' => 'padres.asistencia',    'activo' => true,                        'requiere_pago' => false],
             ['label' => 'Estado de cuenta',      'icon' => '📊', 'route' => 'padres.estado_cuenta', 'activo' => true,                        'requiere_pago' => false],
@@ -190,10 +199,28 @@ class PadresController extends Controller
 
     public function notas()
     {
-        $bloqueo = $this->verificarAcceso('N');
-        if ($bloqueo === 'sin_sesion') return redirect()->route('padres.portal');
-        if ($bloqueo === 'deuda')      return redirect()->route('padres.portal')->with('aviso', 'No puedes consultar las notas mientras tengas un saldo pendiente.');
-        if ($bloqueo === 'fechas')     return redirect()->route('padres.portal')->with('aviso', 'La institución aún no ha publicado las notas finales.');
+        $estudiante = session('padre_estudiante');
+        if (!$estudiante) return redirect()->route('padres.portal');
+
+        // Bloqueo por deuda
+        $codigo    = $estudiante->CODIGO;
+        $exento    = ExencionCarteraController::tieneExencion($codigo);
+        if (!$exento) {
+            $facturado = DB::table('facturacion')->where('codigo_alumno', $codigo)->sum('valor');
+            $pagado    = DB::table('registro_pagos')->where('codigo_alumno', $codigo)->sum('valor');
+            if (($facturado - $pagado) > 100000) {
+                return redirect()->route('padres.portal')->with('aviso', 'No puedes consultar los promedios mientras tengas un saldo pendiente.');
+            }
+        }
+
+        // Cerrado hasta que empiece la 1ª entrega de boletines
+        $algunBoletinIniciado = DB::table('FECHAS')
+            ->where('CODIGO_FECHA', 'like', 'B%')
+            ->where('INICIO', '<=', now())
+            ->exists();
+        if (!$algunBoletinIniciado) {
+            return redirect()->route('padres.portal')->with('aviso', 'La consulta de promedios estará disponible a partir de la primera entrega de boletines.');
+        }
 
         $estudiante = session('padre_estudiante');
         $anio       = (int) date('Y');
@@ -256,11 +283,25 @@ class PadresController extends Controller
             ->orderBy('h.HORA')
             ->get();
 
-        // Materias que cada docente le dicta al curso del estudiante
+        // Materias que cada docente le dicta al curso del estudiante.
+        // - Artes (25) y Música (26): coincidencia exacta, porque en bachillerato
+        //   cada curso solo tiene UNO de los dos y no deben mezclarse subgrupos.
+        // - Resto de materias: SUBSTRING_INDEX para cubrir subgrupos (ej: '7A-1' → '7A').
         $materiasDocente = DB::table('ASIGNACION_PCM as a')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'a.CODIGO_MAT')
-            ->where('a.CURSO', $curso)
             ->where('a.CODIGO_MAT', '!=', 200)
+            ->where(function ($q) use ($curso) {
+                $q->where(function ($q2) use ($curso) {
+                        // Artes y Música: solo curso exacto
+                        $q2->whereIn('a.CODIGO_MAT', [25, 26])
+                           ->where('a.CURSO', $curso);
+                    })
+                  ->orWhere(function ($q2) use ($curso) {
+                        // Resto: permite subgrupos (7A-1 → 7A)
+                        $q2->whereNotIn('a.CODIGO_MAT', [25, 26])
+                           ->whereRaw("SUBSTRING_INDEX(a.CURSO, '-', 1) = ?", [$curso]);
+                    });
+            })
             ->get(['a.CODIGO_DOC', 'm.NOMBRE_MAT'])
             ->groupBy('CODIGO_DOC')
             ->map(fn($items) => $items->pluck('NOMBRE_MAT'));
@@ -313,6 +354,47 @@ class PadresController extends Controller
         return view('padres.atencion-docentes', compact(
             'estudiante', 'docentes', 'proximaFecha', 'horaInicio', 'horaFin', 'directivos'
         ));
+    }
+
+    public function conductoRegular()
+    {
+        $estudiante = session('padre_estudiante');
+        if (!$estudiante) return redirect()->route('padres.portal');
+        return view('padres.conducto-regular', compact('estudiante'));
+    }
+
+    public function circulares()
+    {
+        $estudiante = session('padre_estudiante');
+        if (!$estudiante) return redirect()->route('padres.portal');
+
+        // Extraer grado del curso: "PJ", "J", "T", "1A" → "1", "10B-1" → "10"
+        preg_match('/^(PJ|J|T|\d+)/', $estudiante->CURSO ?? '', $m);
+        $gradoEstudiante = $m[1] ?? null;
+
+        $circulares = Circular::where('estado', 'publicada')
+            ->where(function ($q) use ($gradoEstudiante) {
+                $q->whereNull('grados'); // visibles para todos
+                if ($gradoEstudiante) {
+                    $q->orWhereJsonContains('grados', $gradoEstudiante);
+                }
+            })
+            ->orderByDesc('numero')
+            ->get();
+
+        return view('padres.circulares', compact('circulares', 'estudiante'));
+    }
+
+    public function circularShow(\App\Models\Circular $circular)
+    {
+        $estudiante = session('padre_estudiante');
+        if (!$estudiante) return redirect()->route('padres.portal');
+
+        if ($circular->estado !== 'publicada') {
+            return redirect()->route('padres.circulares');
+        }
+
+        return view('padres.circular-show', compact('circular', 'estudiante'));
     }
 
     public function estadoCuenta()

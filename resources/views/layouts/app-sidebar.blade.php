@@ -442,8 +442,8 @@
         </div>
         @endif
 
-        {{-- ── Comunicaciones: solo SuperAd ── --}}
-        @if($isSuperAd)
+        {{-- ── Comunicaciones: SuperAd, Admin, Ori*, SecC100 ── --}}
+        @if($isSuperAd || $isAdmin || str_starts_with($profile, 'Ori') || $profile === 'SecC100')
         @php $catId = 'comunicaciones'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -455,7 +455,10 @@
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
                 {!! sidebarLink(route('circulares.index'), '📄 Circulares') !!}
+                @if($isSuperAd || $isAdmin || str_starts_with($profile, 'Ori'))
+                {!! sidebarLink(route('documentacion.index'), '📁 Documentación') !!}
                 {!! sidebarLink(route('informes.boletin'), '📋 Boletines') !!}
+                @endif
             </ul>
         </div>
         @endif
