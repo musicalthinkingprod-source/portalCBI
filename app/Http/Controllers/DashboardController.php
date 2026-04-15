@@ -66,7 +66,7 @@ class DashboardController extends Controller
         $asistencia = null;
         if (in_array($profile, ['SuperAd', 'Admin']) || str_starts_with($profile, 'Sec')) {
             $totalEstudiantes = DB::table('ESTUDIANTES')
-                ->where('ESTADO', 'ACTIVO')
+                ->whereRaw("TRIM(ESTADO) = 'MATRICULADO'")
                 ->count();
 
             $registradosHoy = DB::table('ASISTENCIA')

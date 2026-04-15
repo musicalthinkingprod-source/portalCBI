@@ -279,6 +279,40 @@
 .btn-cancel:hover { background: #e2e8f0; }
 
 .modal-alert { font-size: .78rem; color: #dc2626; margin-top: 8px; display: none; }
+
+/* ── Eventos en modal ── */
+.ev-item-modal {
+    border-radius: 8px; padding: 8px 10px; margin-bottom: 6px;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+}
+.ev-item-content { flex: 1 1 0; min-width: 0; }
+.ev-item-texto { font-size: .82rem; color: #1e293b; line-height: 1.4; display: block; word-break: break-word; }
+.ev-badge-sm { display: inline-block; font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 999px; margin-top: 3px; }
+.ev-item-btns { display: flex; gap: 4px; flex-shrink: 0; margin-top: 1px; }
+.ev-btn-edit, .ev-btn-del {
+    background: none; border: 1px solid #e2e8f0; border-radius: 6px;
+    padding: 2px 7px; font-size: 11px; cursor: pointer; line-height: 1.6; transition: all .12s;
+}
+.ev-btn-edit:hover { background: #eff6ff; border-color: #bfdbfe; }
+.ev-btn-del:hover  { background: #fee2e2; border-color: #fecaca; }
+
+/* Vis mini (edición inline) */
+.vis-grid-mini { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 8px; }
+.vis-btn-mini {
+    padding: 4px 9px; border-radius: 6px; border: 1.5px solid #e2e8f0;
+    font-size: 9px; font-weight: 700; cursor: pointer; transition: all .12s; background: #fff; color: #64748b;
+}
+.btn-save-sm {
+    background: #1d4ed8; color: #fff; border: none; border-radius: 7px;
+    padding: 6px 14px; font-size: .78rem; font-weight: 700; cursor: pointer;
+}
+.btn-save-sm:hover { background: #1e40af; }
+.btn-cancel-sm {
+    background: #f1f5f9; color: #64748b; border: none; border-radius: 7px;
+    padding: 6px 14px; font-size: .78rem; font-weight: 700; cursor: pointer;
+}
+.btn-cancel-sm:hover { background: #e2e8f0; }
+.modal-sep { border: none; border-top: 1px solid #f1f5f9; margin: 14px 0; }
 </style>
 
 <div style="display:flex; flex-direction:column; gap:18px;">
@@ -333,17 +367,21 @@
         </div>
     </div>
 
-    {{-- Evento de hoy --}}
-    @if($hoy && $hoy->evento)
-    @php $vc = $visColors[$hoy->visibilidad] ?? $visColors['interno']; @endphp
+    {{-- Eventos de hoy --}}
+    @if($eventosHoy->isNotEmpty())
+    <div style="display:flex;flex-direction:column;gap:6px;">
+    @foreach($eventosHoy as $eventoHoy)
+    @php $vc = $visColors[$eventoHoy->visibilidad] ?? $visColors['interno']; @endphp
     <div class="hoy-banner" style="border-color:{{ $vc['border'] }}; background:{{ $vc['bg'] }}; color:{{ $vc['badge_text'] }};">
         <span style="margin-top:1px;">📌</span>
         <div>
-            <strong>Hoy:</strong> {{ $hoy->evento }}
+            <strong>Hoy:</strong> {{ $eventoHoy->evento }}
             <span class="ev-badge" style="background:{{ $vc['badge_bg'] }};color:{{ $vc['badge_text'] }};margin-left:6px;">
                 {{ $vc['label'] }}
             </span>
         </div>
+    </div>
+    @endforeach
     </div>
     @endif
 
@@ -364,23 +402,27 @@
         @endphp
         @for($d = 1; $d <= $diasEnMes; $d++)
         @php
-            $fechaStr   = \Carbon\Carbon::create($anio, $mes, $d)->toDateString();
-            $entrada    = $diasMes[$fechaStr] ?? null;
-            $esHoy      = $fechaStr === $hoyStr;
-            $esDiaHabil = $entrada && $entrada->dia_ciclo > 0;
-            $tieneEvento= $entrada && $entrada->evento;
-            $vc         = $tieneEvento ? ($visColors[$entrada->visibilidad] ?? $visColors['interno']) : null;
-            $dow        = \Carbon\Carbon::create($anio, $mes, $d)->dayOfWeekIso; // 1=Lun
+            $fechaStr      = \Carbon\Carbon::create($anio, $mes, $d)->toDateString();
+            $entrada       = $diasMes[$fechaStr] ?? null;
+            $esHoy         = $fechaStr === $hoyStr;
+            $esDiaHabil    = $entrada && $entrada->dia_ciclo > 0;
+            $eventosDelDia = $eventosPorFecha[$fechaStr] ?? collect();
+            $tieneEvento   = $eventosDelDia->isNotEmpty();
+            $primerEvento  = $tieneEvento ? $eventosDelDia->first() : null;
+            $vc            = $tieneEvento ? ($visColors[$primerEvento->visibilidad] ?? $visColors['interno']) : null;
+            $dow           = \Carbon\Carbon::create($anio, $mes, $d)->dayOfWeekIso;
 
             $itemClass = 'cal-list-item';
             if ($esHoy)           $itemClass .= ' hoy';
             elseif (!$esDiaHabil) $itemClass .= ' nohabil';
             elseif ($tieneEvento) $itemClass .= ' con-evento';
+
+            $eventosJson = json_encode($eventosDelDia->values()->toArray());
         @endphp
         <div class="{{ $itemClass }}"
             @if($tieneEvento && !$esHoy) style="border-left-color:{{ $vc['border'] }}; background:{{ $vc['bg'] }};" @endif
-            @if($entrada !== null && $puedeEditar)
-                onclick="abrirModal('{{ $fechaStr }}', {{ $d }}, '{{ addslashes($entrada->evento ?? '') }}', '{{ $entrada->visibilidad ?? 'interno' }}', {{ $esDiaHabil ? 'true' : 'false' }})"
+            @if($puedeEditar)
+                onclick="abrirModal('{{ $fechaStr }}', {{ $d }}, {!! $eventosJson !!}, {{ $esDiaHabil ? 'true' : 'false' }})"
                 style="{{ ($tieneEvento && !$esHoy) ? 'border-left-color:'.$vc['border'].'; background:'.$vc['bg'].';' : '' }} cursor:pointer;"
             @endif
         >
@@ -397,12 +439,15 @@
                 @endif
 
                 @if($tieneEvento)
-                    <div class="cli-evento">{{ $entrada->evento }}</div>
+                    @foreach($eventosDelDia as $evItem)
+                    @php $vcEv = $visColors[$evItem->visibilidad] ?? $visColors['interno']; @endphp
+                    <div class="cli-evento" style="{{ !$esHoy ? 'color:#1e293b;' : '' }}">{{ $evItem->evento }}</div>
                     @if(!$esHoy)
-                    <span class="cli-badge" style="background:{{ $vc['badge_bg'] }};color:{{ $vc['badge_text'] }};">
-                        {{ $vc['label'] }}
+                    <span class="cli-badge" style="background:{{ $vcEv['badge_bg'] }};color:{{ $vcEv['badge_text'] }};">
+                        {{ $vcEv['label'] }}
                     </span>
                     @endif
+                    @endforeach
                 @elseif(!$esDiaHabil)
                     <div style="font-size:.75rem;color:#94a3b8;">No académico</div>
                 @else
@@ -410,9 +455,9 @@
                 @endif
             </div>
 
-            @if($entrada !== null && $puedeEditar)
+            @if($puedeEditar)
             <button class="cli-edit-btn"
-                onclick="event.stopPropagation(); abrirModal('{{ $fechaStr }}', {{ $d }}, '{{ addslashes($entrada->evento ?? '') }}', '{{ $entrada->visibilidad ?? 'interno' }}', {{ $esDiaHabil ? 'true' : 'false' }})">
+                onclick="event.stopPropagation(); abrirModal('{{ $fechaStr }}', {{ $d }}, {!! $eventosJson !!}, {{ $esDiaHabil ? 'true' : 'false' }})">
                 ✏️
             </button>
             @endif
@@ -454,12 +499,15 @@
                 @for($d = 1; $d <= $diasEnMes; $d++)
                 @php
                     if ($col > 7) { echo '</tr><tr>'; $col = 1; }
-                    $fechaStr    = \Carbon\Carbon::create($anio, $mes, $d)->toDateString();
-                    $entrada     = $diasMes[$fechaStr] ?? null;
-                    $esHoy       = $fechaStr === $hoyStr;
-                    $tieneEvento = $entrada && $entrada->evento;
-                    $esDiaHabil  = $entrada && $entrada->dia_ciclo > 0;
-                    $vc          = $tieneEvento ? ($visColors[$entrada->visibilidad] ?? $visColors['interno']) : null;
+                    $fechaStr      = \Carbon\Carbon::create($anio, $mes, $d)->toDateString();
+                    $entrada       = $diasMes[$fechaStr] ?? null;
+                    $esHoy         = $fechaStr === $hoyStr;
+                    $esDiaHabil    = $entrada && $entrada->dia_ciclo > 0;
+                    $eventosDelDia = $eventosPorFecha[$fechaStr] ?? collect();
+                    $tieneEvento   = $eventosDelDia->isNotEmpty();
+                    $primerEvento  = $tieneEvento ? $eventosDelDia->first() : null;
+                    $vc            = $tieneEvento ? ($visColors[$primerEvento->visibilidad] ?? $visColors['interno']) : null;
+                    $eventosJson   = json_encode($eventosDelDia->values()->toArray());
 
                     $cellClass = 'cal-cell';
                     if ($esHoy) {
@@ -467,24 +515,21 @@
                     } elseif ($esDiaHabil) {
                         $cellClass .= ' cal-cell-habil';
                         if ($puedeEditar) $cellClass .= ' cal-cell-editable';
-                    } elseif ($entrada !== null) {
-                        // Día no hábil pero con registro (puede tener evento)
-                        $cellClass .= ' cal-cell-nohabil';
-                        if ($puedeEditar) $cellClass .= ' cal-cell-editable';
                     } else {
                         $cellClass .= ' cal-cell-nohabil';
+                        if ($puedeEditar) $cellClass .= ' cal-cell-editable';
                     }
                 @endphp
                 <td>
                     <div class="{{ $cellClass }}"
                         @if($tieneEvento && !$esHoy) style="border-color:{{ $vc['border'] }}; background:{{ $vc['bg'] }};" @endif
-                        @if($entrada !== null && $puedeEditar)
-                            onclick="abrirModal('{{ $fechaStr }}', {{ $d }}, '{{ addslashes($entrada->evento ?? '') }}', '{{ $entrada->visibilidad ?? 'interno' }}', {{ $esDiaHabil ? 'true' : 'false' }})"
+                        @if($puedeEditar)
+                            onclick="abrirModal('{{ $fechaStr }}', {{ $d }}, {!! $eventosJson !!}, {{ $esDiaHabil ? 'true' : 'false' }})"
                         @endif
                     >
                         <div class="cell-num">
                             <span>{{ $d }}</span>
-                            @if($entrada !== null && $puedeEditar)
+                            @if($puedeEditar)
                             <span class="cell-edit-icon">✏️</span>
                             @endif
                         </div>
@@ -493,11 +538,15 @@
                         <div class="cell-dia-label">Día {{ $entrada->dia_ciclo }}</div>
                         @endif
 
-                        @if($tieneEvento)
+                        @foreach($eventosDelDia->take(2) as $evCell)
+                        @php $vcCell = $visColors[$evCell->visibilidad] ?? $visColors['interno']; @endphp
                         <div class="cell-evento"
-                            @if(!$esHoy) style="background:{{ $vc['badge_bg'] }};color:{{ $vc['badge_text'] }};" @endif>
-                            {{ $entrada->evento }}
+                            @if(!$esHoy) style="background:{{ $vcCell['badge_bg'] }};color:{{ $vcCell['badge_text'] }};" @endif>
+                            {{ $evCell->evento }}
                         </div>
+                        @endforeach
+                        @if($eventosDelDia->count() > 2)
+                        <div style="font-size:8px;color:#94a3b8;margin-top:1px;">+{{ $eventosDelDia->count() - 2 }} más</div>
                         @endif
                     </div>
                 </td>
@@ -532,12 +581,7 @@
                 <ul class="ev-list">
                     @foreach($proximosEventos as $ev)
                     @php $vc = $visColors[$ev->visibilidad] ?? $visColors['interno']; @endphp
-                    <li class="ev-item {{ $puedeEditar ? 'editable' : '' }}"
-                        style="border-left-color:{{ $vc['border'] }};"
-                        @if($puedeEditar)
-                            onclick="abrirModal('{{ $ev->fecha }}', {{ \Carbon\Carbon::parse($ev->fecha)->day }}, '{{ addslashes($ev->evento) }}', '{{ $ev->visibilidad }}', true)"
-                        @endif
-                    >
+                    <li class="ev-item" style="border-left-color:{{ $vc['border'] }};">
                         <div class="ev-date">
                             {{ \Carbon\Carbon::parse($ev->fecha)->isoFormat('ddd D MMM') }}
                             @if($ev->dia_ciclo > 0)
@@ -558,46 +602,35 @@
 </div>
 
 @if($puedeEditar)
-{{-- ── Modal de edición ── --}}
+{{-- ── Modal de eventos ── --}}
 <div class="modal-overlay" id="cal-modal" onclick="cerrarModal(event)">
     <div class="modal-box" onclick="event.stopPropagation()">
         <div class="modal-title" id="modal-titulo"></div>
-        <div class="modal-sub" id="modal-sub"></div>
+        <div class="modal-sub" id="modal-sub" style="margin-bottom:14px;"></div>
 
-        <div style="margin-bottom:14px;">
-            <label class="form-label" for="modal-evento">Descripción del evento</label>
-            <textarea class="form-textarea" id="modal-evento" placeholder="Ej: Izada de bandera, Reunión de padres…" rows="3"></textarea>
+        {{-- Lista de eventos existentes --}}
+        <div id="eventos-lista"></div>
+
+        <hr class="modal-sep">
+
+        {{-- Formulario nuevo evento --}}
+        <label class="form-label">Agregar evento</label>
+        <textarea class="form-textarea" id="nuevo-texto" placeholder="Ej: Izada de bandera, Reunión de padres…" rows="2" style="margin-bottom:8px;"></textarea>
+
+        <label class="form-label" style="margin-bottom:5px;">Visibilidad</label>
+        <div class="vis-grid" id="vis-nuevo">
+            @foreach(['todos'=>['Todos','#dcfce7','#166534','#16a34a'],'docentes'=>['Docentes','#dbeafe','#1e40af','#3b82f6'],'directivas'=>['Directivas','#ede9fe','#5b21b6','#8b5cf6'],'padres'=>['Padres','#ffedd5','#9a3412','#f97316'],'interno'=>['Interno','#f1f5f9','#475569','#94a3b8']] as $vk => $vv)
+            <button type="button" class="vis-btn" data-vis="{{ $vk }}"
+                style="color:{{ $vv[2] }};"
+                onclick="selVis('nuevo','{{ $vk }}')">{{ $vv[0] }}</button>
+            @endforeach
         </div>
 
-        <div style="margin-bottom:6px;">
-            <label class="form-label">Visibilidad</label>
-            <div class="vis-grid" id="vis-grid">
-                @php
-                    $visBtns = [
-                        'todos'      => ['label' => 'Todos',      'bg' => '#dcfce7', 'text' => '#166534', 'border' => '#16a34a'],
-                        'docentes'   => ['label' => 'Docentes',   'bg' => '#dbeafe', 'text' => '#1e40af', 'border' => '#3b82f6'],
-                        'directivas' => ['label' => 'Directivas', 'bg' => '#ede9fe', 'text' => '#5b21b6', 'border' => '#8b5cf6'],
-                        'padres'     => ['label' => 'Padres',     'bg' => '#ffedd5', 'text' => '#9a3412', 'border' => '#f97316'],
-                        'interno'    => ['label' => 'Interno',    'bg' => '#f1f5f9', 'text' => '#475569', 'border' => '#94a3b8'],
-                    ];
-                @endphp
-                @foreach($visBtns as $key => $vb)
-                <button type="button" class="vis-btn"
-                    data-vis="{{ $key }}"
-                    style="color:{{ $vb['text'] }};"
-                    onclick="seleccionarVis('{{ $key }}')">
-                    {{ $vb['label'] }}
-                </button>
-                @endforeach
-            </div>
-        </div>
+        <div class="modal-alert" id="modal-alert">Por favor escribe un evento antes de agregar.</div>
 
-        <div class="modal-alert" id="modal-alert">Por favor escribe un evento antes de guardar.</div>
-
-        <div class="modal-actions">
-            <button class="btn-save" id="modal-btn-guardar" onclick="guardarEvento()">Guardar</button>
-            <button class="btn-delete {{ 'hidden' }}" id="modal-btn-eliminar" onclick="eliminarEvento()">Eliminar</button>
-            <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+        <div class="modal-actions" style="margin-top:16px;">
+            <button class="btn-save" id="btn-agregar" onclick="crearEvento()">+ Agregar evento</button>
+            <button class="btn-cancel" onclick="cerrarModal()">Cerrar</button>
         </div>
     </div>
 </div>
@@ -605,43 +638,165 @@
 <script>
 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
-// Colores de los botones de visibilidad
 const VIS_STYLES = {
-    todos:      { bg: '#dcfce7', text: '#166534', border: '#16a34a' },
-    docentes:   { bg: '#dbeafe', text: '#1e40af', border: '#3b82f6' },
-    directivas: { bg: '#ede9fe', text: '#5b21b6', border: '#8b5cf6' },
-    padres:     { bg: '#ffedd5', text: '#9a3412', border: '#f97316' },
-    interno:    { bg: '#f1f5f9', text: '#475569', border: '#94a3b8' },
+    todos:      { bg: '#dcfce7', text: '#166534', border: '#16a34a', label: 'Todos' },
+    docentes:   { bg: '#dbeafe', text: '#1e40af', border: '#3b82f6', label: 'Docentes' },
+    directivas: { bg: '#ede9fe', text: '#5b21b6', border: '#8b5cf6', label: 'Directivas' },
+    padres:     { bg: '#ffedd5', text: '#9a3412', border: '#f97316', label: 'Padres' },
+    interno:    { bg: '#f1f5f9', text: '#475569', border: '#94a3b8', label: 'Interno' },
 };
 
-let modalFecha = null;
-let modalVisSeleccionada = 'interno';
+let modalFecha   = null;
+let modalEventos = [];
+let visNuevo     = 'interno';
+let visEdicion   = 'interno';
 
-function abrirModal(fecha, dia, evento, visibilidad, esDiaHabil) {
-    modalFecha = fecha;
+function abrirModal(fecha, dia, eventos, esDiaHabil) {
+    modalFecha   = fecha;
+    modalEventos = eventos || [];
 
-    // Título
     const [anio, mes, d] = fecha.split('-');
-    const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    const meses = ['enero','febrero','marzo','abril','mayo','junio','julio',
+                   'agosto','septiembre','octubre','noviembre','diciembre'];
     document.getElementById('modal-titulo').textContent =
-        `${d} de ${meses[parseInt(mes)-1]} de ${anio}`;
+        `${parseInt(d)} de ${meses[parseInt(mes)-1]} de ${anio}`;
     document.getElementById('modal-sub').textContent = esDiaHabil ? 'Día académico' : '';
 
-    // Contenido
-    document.getElementById('modal-evento').value = evento || '';
+    renderLista(modalEventos);
 
-    // Visibilidad
-    seleccionarVis(visibilidad || 'interno');
-
-    // Botón eliminar: solo si ya había evento
-    const btnEliminar = document.getElementById('modal-btn-eliminar');
-    btnEliminar.classList.toggle('hidden', !evento);
-
-    // Limpiar alertas
+    document.getElementById('nuevo-texto').value = '';
+    selVis('nuevo', 'interno');
     document.getElementById('modal-alert').style.display = 'none';
 
     document.getElementById('cal-modal').classList.add('open');
-    setTimeout(() => document.getElementById('modal-evento').focus(), 100);
+    setTimeout(() => document.getElementById('nuevo-texto').focus(), 100);
+}
+
+function renderLista(eventos) {
+    const lista = document.getElementById('eventos-lista');
+    if (!eventos || eventos.length === 0) {
+        lista.innerHTML = '<p style="font-size:.78rem;color:#94a3b8;font-style:italic;margin-bottom:4px;">Sin eventos para este día.</p>';
+        return;
+    }
+    lista.innerHTML = eventos.map(ev => itemHTML(ev)).join('');
+}
+
+function itemHTML(ev) {
+    const s = VIS_STYLES[ev.visibilidad] || VIS_STYLES.interno;
+    return `<div class="ev-item-modal" id="ev-${ev.id}" style="border-left:3px solid ${s.border};background:${s.bg};">
+        <div class="ev-item-content">
+            <span class="ev-item-texto">${escH(ev.evento)}</span>
+            <span class="ev-badge-sm" style="background:${s.bg};color:${s.text};">${s.label}</span>
+        </div>
+        <div class="ev-item-btns">
+            <button class="ev-btn-edit" title="Editar" onclick="iniciarEdicion(${ev.id})">✏️</button>
+            <button class="ev-btn-del"  title="Eliminar" onclick="eliminarEvento(${ev.id})">🗑️</button>
+        </div>
+    </div>`;
+}
+
+function iniciarEdicion(id) {
+    const ev = modalEventos.find(e => e.id === id);
+    if (!ev) return;
+    visEdicion = ev.visibilidad;
+    document.getElementById(`ev-${id}`).outerHTML = `
+        <div id="ev-${id}" style="margin-bottom:6px;">
+            <textarea class="form-textarea" id="edit-txt-${id}" rows="2" style="margin-bottom:6px;">${escH(ev.evento)}</textarea>
+            <div class="vis-grid-mini" id="vis-edit-${id}">
+                ${visGridMini('edit-' + id, visEdicion)}
+            </div>
+            <div style="display:flex;gap:6px;">
+                <button class="btn-save-sm" onclick="guardarEdicion(${id})">Guardar</button>
+                <button class="btn-cancel-sm" onclick="cancelarEdicion(${id})">Cancelar</button>
+            </div>
+        </div>`;
+}
+
+function cancelarEdicion(id) {
+    const ev = modalEventos.find(e => e.id === id);
+    if (!ev) { location.reload(); return; }
+    document.getElementById(`ev-${id}`).outerHTML = itemHTML(ev);
+}
+
+function visGridMini(prefix, seleccionada) {
+    return Object.entries(VIS_STYLES).map(([k, s]) => {
+        const sel = k === seleccionada;
+        const style = sel
+            ? `background:${s.bg};border-color:${s.border};color:${s.text};`
+            : `background:#fff;border-color:#e2e8f0;color:#64748b;`;
+        return `<button type="button" class="vis-btn-mini" data-vis="${k}" style="${style}"
+            onclick="selVis('${prefix}','${k}')">${s.label}</button>`;
+    }).join('');
+}
+
+function selVis(prefix, vis) {
+    const container = document.getElementById(`vis-${prefix}`);
+    if (!container) return;
+    container.querySelectorAll('[data-vis]').forEach(btn => {
+        const k = btn.dataset.vis;
+        const s = VIS_STYLES[k];
+        if (k === vis) {
+            btn.style.background  = s.bg;
+            btn.style.borderColor = s.border;
+            btn.style.color       = s.text;
+        } else {
+            btn.style.background  = '#fff';
+            btn.style.borderColor = '#e2e8f0';
+            btn.style.color       = '#64748b';
+        }
+    });
+    if (prefix === 'nuevo') visNuevo = vis;
+    else visEdicion = vis;
+}
+
+async function guardarEdicion(id) {
+    const texto = document.getElementById(`edit-txt-${id}`).value.trim();
+    if (!texto) return;
+    try {
+        const r = await fetch(`/calendario/evento/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
+            body: JSON.stringify({ evento: texto, visibilidad: visEdicion }),
+        });
+        if (!r.ok) throw new Error();
+        location.reload();
+    } catch { alert('Error al guardar.'); }
+}
+
+async function eliminarEvento(id) {
+    if (!confirm('¿Eliminar este evento?')) return;
+    try {
+        const r = await fetch(`/calendario/evento/${id}`, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': CSRF },
+        });
+        if (!r.ok) throw new Error();
+        location.reload();
+    } catch { alert('Error al eliminar.'); }
+}
+
+async function crearEvento() {
+    const texto  = document.getElementById('nuevo-texto').value.trim();
+    const alerta = document.getElementById('modal-alert');
+    if (!texto) { alerta.style.display = 'block'; return; }
+    alerta.style.display = 'none';
+
+    const btn = document.getElementById('btn-agregar');
+    btn.disabled = true; btn.textContent = 'Agregando…';
+
+    try {
+        const r = await fetch(`/calendario/${modalFecha}/eventos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
+            body: JSON.stringify({ evento: texto, visibilidad: visNuevo }),
+        });
+        if (!r.ok) throw new Error();
+        location.reload();
+    } catch {
+        btn.disabled = false; btn.textContent = '+ Agregar evento';
+        alerta.textContent = 'Error al agregar. Intenta de nuevo.';
+        alerta.style.display = 'block';
+    }
 }
 
 function cerrarModal(e) {
@@ -650,67 +805,12 @@ function cerrarModal(e) {
     modalFecha = null;
 }
 
-function seleccionarVis(vis) {
-    modalVisSeleccionada = vis;
-    document.querySelectorAll('.vis-btn').forEach(btn => {
-        const k = btn.dataset.vis;
-        const s = VIS_STYLES[k];
-        if (k === vis) {
-            btn.style.background  = s.bg;
-            btn.style.borderColor = s.border;
-            btn.style.color       = s.text;
-            btn.classList.add('selected');
-        } else {
-            btn.style.background  = '#fff';
-            btn.style.borderColor = '#e2e8f0';
-            btn.style.color       = '#64748b';
-            btn.classList.remove('selected');
-        }
-    });
+function escH(s) {
+    return String(s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-async function guardarEvento() {
-    const texto = document.getElementById('modal-evento').value.trim();
-    const alerta = document.getElementById('modal-alert');
-    if (!texto) { alerta.style.display = 'block'; return; }
-    alerta.style.display = 'none';
-
-    const btn = document.getElementById('modal-btn-guardar');
-    btn.disabled = true; btn.textContent = 'Guardando…';
-
-    try {
-        const r = await fetch(`/calendario/${modalFecha}/evento`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
-            body: JSON.stringify({ evento: texto, visibilidad: modalVisSeleccionada }),
-        });
-        if (!r.ok) throw new Error();
-        location.reload();
-    } catch {
-        btn.disabled = false; btn.textContent = 'Guardar';
-        alerta.textContent = 'Error al guardar. Intenta de nuevo.';
-        alerta.style.display = 'block';
-    }
-}
-
-async function eliminarEvento() {
-    if (!confirm('¿Eliminar el evento de esta fecha?')) return;
-
-    try {
-        const r = await fetch(`/calendario/${modalFecha}/evento`, {
-            method: 'DELETE',
-            headers: { 'X-CSRF-TOKEN': CSRF },
-        });
-        if (!r.ok) throw new Error();
-        location.reload();
-    } catch {
-        const alerta = document.getElementById('modal-alert');
-        alerta.textContent = 'Error al eliminar. Intenta de nuevo.';
-        alerta.style.display = 'block';
-    }
-}
-
-// Cerrar con Escape
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') document.getElementById('cal-modal').classList.remove('open');
 });

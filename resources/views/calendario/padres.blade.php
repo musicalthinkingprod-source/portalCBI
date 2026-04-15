@@ -23,9 +23,9 @@
         <div>
             <p class="text-xs text-gray-400 uppercase tracking-widest">{{ \Carbon\Carbon::parse($hoy->fecha)->isoFormat('dddd D [de] MMMM') }}</p>
             <p class="text-lg font-semibold text-gray-800">Día académico {{ $hoy->dia_ciclo }} de 6</p>
-            @if($hoy->evento && in_array($hoy->visibilidad, ['todos','padres']))
-                <p class="text-sm text-blue-700 mt-0.5">{{ $hoy->evento }}</p>
-            @endif
+            @foreach($eventosHoy as $evH)
+                <p class="text-sm text-blue-700 mt-0.5">{{ $evH->evento }}</p>
+            @endforeach
         </div>
     </div>
     @endif
@@ -58,11 +58,11 @@
 
                 @for($d = 1; $d <= $diasEnMes; $d++)
                     @php
-                        $fechaStr    = \Carbon\Carbon::create($anio, $mes, $d)->toDateString();
-                        $entrada     = $diasMes[$fechaStr] ?? null;
-                        $esHoy       = $fechaStr === $hoyStr;
-                        $tieneEvento = $entrada && $entrada->evento
-                                       && in_array($entrada->visibilidad, ['todos','padres']);
+                        $fechaStr      = \Carbon\Carbon::create($anio, $mes, $d)->toDateString();
+                        $entrada       = $diasMes[$fechaStr] ?? null;
+                        $esHoy         = $fechaStr === $hoyStr;
+                        $eventosDelDia = $eventosPorFecha[$fechaStr] ?? collect();
+                        $tieneEvento   = $eventosDelDia->isNotEmpty();
                     @endphp
                     <div class="relative rounded-lg p-1 text-center text-xs min-h-[52px] flex flex-col items-center justify-start pt-1
                         {{ $esHoy ? 'bg-blue-700 text-white' : ($entrada && $entrada->dia_ciclo > 0 ? 'bg-gray-50 hover:bg-blue-50' : 'text-gray-300') }}
@@ -71,8 +71,11 @@
                         @if($entrada && $entrada->dia_ciclo > 0)
                             <span class="mt-0.5 text-[10px] font-bold {{ $esHoy ? 'text-blue-200' : 'text-blue-600' }}">D{{ $entrada->dia_ciclo }}</span>
                         @endif
-                        @if($tieneEvento)
-                            <span class="mt-0.5 w-1.5 h-1.5 rounded-full {{ $esHoy ? 'bg-yellow-300' : 'bg-yellow-500' }} inline-block"></span>
+                        @foreach($eventosDelDia->take(2) as $evCell)
+                            <span class="mt-0.5 text-[9px] leading-tight {{ $esHoy ? 'text-yellow-200' : 'text-yellow-700' }} font-medium w-full overflow-hidden" style="display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;" title="{{ $evCell->evento }}">{{ $evCell->evento }}</span>
+                        @endforeach
+                        @if($eventosDelDia->count() > 2)
+                            <span class="text-[8px] text-gray-400">+{{ $eventosDelDia->count()-2 }} más</span>
                         @endif
                     </div>
                 @endfor
@@ -81,7 +84,7 @@
             <div class="mt-3 flex flex-wrap gap-3 text-xs text-gray-500">
                 <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-blue-700 inline-block"></span> Hoy</span>
                 <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-gray-50 border border-gray-200 inline-block"></span> Día académico</span>
-                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-yellow-500 inline-block"></span> Con evento</span>
+                <span class="flex items-center gap-1"><span class="ring-1 ring-yellow-400 rounded w-3 h-3 inline-block"></span> Con evento</span>
             </div>
         </div>
 
@@ -93,7 +96,7 @@
             @else
                 <ul class="space-y-3">
                     @foreach($proximosEventos as $ev)
-                    <li class="border-l-2 border-blue-200 pl-3">
+                    <li class="border-l-2 border-yellow-400 pl-3">
                         <p class="text-xs text-gray-400">
                             {{ \Carbon\Carbon::parse($ev->fecha)->isoFormat('ddd D MMM') }}
                             @if($ev->dia_ciclo > 0)· <span class="font-semibold text-blue-600">D{{ $ev->dia_ciclo }}</span>@endif

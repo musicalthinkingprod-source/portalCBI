@@ -195,12 +195,16 @@
         </div>
     </div>
 
-    {{-- Evento de hoy --}}
-    @if($hoy && $hoy->evento)
-    @php $vc = $visColors[$hoy->visibilidad] ?? $visColors['interno']; @endphp
+    {{-- Eventos de hoy --}}
+    @if($eventosHoy->isNotEmpty())
+    <div style="display:flex;flex-direction:column;gap:6px;">
+    @foreach($eventosHoy as $eventoHoy)
+    @php $vc = $visColors[$eventoHoy->visibilidad] ?? $visColors['interno']; @endphp
     <div class="hoy-banner" style="border-color:{{ $vc['border'] }}; background:{{ $vc['bg'] }}; color:{{ $vc['badge_text'] }};">
         <span style="margin-top:1px;">📌</span>
-        <div><strong>Hoy:</strong> {{ $hoy->evento }}</div>
+        <div><strong>Hoy:</strong> {{ $eventoHoy->evento }}</div>
+    </div>
+    @endforeach
     </div>
     @endif
 
@@ -216,14 +220,16 @@
         @php $diasSemana = ['', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']; @endphp
         @for($d = 1; $d <= $diasEnMes; $d++)
         @php
-            $fechaStr   = \Carbon\Carbon::create($anio, $mes, $d)->toDateString();
-            $entrada    = $diasMes[$fechaStr] ?? null;
-            $esHoy      = $fechaStr === $hoyStr;
-            $esDiaHabil = $entrada && $entrada->dia_ciclo > 0;
-            $tieneEvento= $entrada && $entrada->evento;
-            $vc         = $tieneEvento ? ($visColors[$entrada->visibilidad] ?? $visColors['interno']) : null;
-            $dow        = \Carbon\Carbon::create($anio, $mes, $d)->dayOfWeekIso;
-            $itemClass  = 'cal-list-item';
+            $fechaStr      = \Carbon\Carbon::create($anio, $mes, $d)->toDateString();
+            $entrada       = $diasMes[$fechaStr] ?? null;
+            $esHoy         = $fechaStr === $hoyStr;
+            $esDiaHabil    = $entrada && $entrada->dia_ciclo > 0;
+            $eventosDelDia = $eventosPorFecha[$fechaStr] ?? collect();
+            $tieneEvento   = $eventosDelDia->isNotEmpty();
+            $primerEvento  = $tieneEvento ? $eventosDelDia->first() : null;
+            $vc            = $tieneEvento ? ($visColors[$primerEvento->visibilidad] ?? $visColors['interno']) : null;
+            $dow           = \Carbon\Carbon::create($anio, $mes, $d)->dayOfWeekIso;
+            $itemClass     = 'cal-list-item';
             if ($esHoy)           $itemClass .= ' hoy';
             elseif (!$esDiaHabil) $itemClass .= ' nohabil';
         @endphp
@@ -240,7 +246,9 @@
                     <div class="cli-dia">Día {{ $entrada->dia_ciclo }}</div>
                 @endif
                 @if($tieneEvento)
-                    <div class="cli-evento">{{ $entrada->evento }}</div>
+                    @foreach($eventosDelDia as $evItem)
+                    <div class="cli-evento" style="{{ !$esHoy ? 'color:#1e293b;' : '' }}">{{ $evItem->evento }}</div>
+                    @endforeach
                 @elseif(!$esDiaHabil)
                     <div style="font-size:.75rem;color:#94a3b8;">No académico</div>
                 @else
@@ -284,17 +292,19 @@
                 @for($d = 1; $d <= $diasEnMes; $d++)
                 @php
                     if ($col > 7) { echo '</tr><tr>'; $col = 1; }
-                    $fechaStr    = \Carbon\Carbon::create($anio, $mes, $d)->toDateString();
-                    $entrada     = $diasMes[$fechaStr] ?? null;
-                    $esHoy       = $fechaStr === $hoyStr;
-                    $tieneEvento = $entrada && $entrada->evento;
-                    $esDiaHabil  = $entrada && $entrada->dia_ciclo > 0;
-                    $vc          = $tieneEvento ? ($visColors[$entrada->visibilidad] ?? $visColors['interno']) : null;
+                    $fechaStr      = \Carbon\Carbon::create($anio, $mes, $d)->toDateString();
+                    $entrada       = $diasMes[$fechaStr] ?? null;
+                    $esHoy         = $fechaStr === $hoyStr;
+                    $esDiaHabil    = $entrada && $entrada->dia_ciclo > 0;
+                    $eventosDelDia = $eventosPorFecha[$fechaStr] ?? collect();
+                    $tieneEvento   = $eventosDelDia->isNotEmpty();
+                    $primerEvento  = $tieneEvento ? $eventosDelDia->first() : null;
+                    $vc            = $tieneEvento ? ($visColors[$primerEvento->visibilidad] ?? $visColors['interno']) : null;
 
                     $cellClass = 'cal-cell';
-                    if ($esHoy)                $cellClass .= ' cal-cell-hoy';
-                    elseif ($esDiaHabil)       $cellClass .= ' cal-cell-habil';
-                    else                       $cellClass .= ' cal-cell-nohabil';
+                    if ($esHoy)          $cellClass .= ' cal-cell-hoy';
+                    elseif ($esDiaHabil) $cellClass .= ' cal-cell-habil';
+                    else                 $cellClass .= ' cal-cell-nohabil';
                 @endphp
                 <td>
                     <div class="{{ $cellClass }}"
@@ -306,11 +316,15 @@
                         <div class="cell-dia-label">Día {{ $entrada->dia_ciclo }}</div>
                         @endif
 
-                        @if($tieneEvento)
+                        @foreach($eventosDelDia->take(2) as $evCell)
+                        @php $vcCell = $visColors[$evCell->visibilidad] ?? $visColors['interno']; @endphp
                         <div class="cell-evento"
-                            @if(!$esHoy) style="background:{{ $vc['badge_bg'] }};color:{{ $vc['badge_text'] }};" @endif>
-                            {{ $entrada->evento }}
+                            @if(!$esHoy) style="background:{{ $vcCell['badge_bg'] }};color:{{ $vcCell['badge_text'] }};" @endif>
+                            {{ $evCell->evento }}
                         </div>
+                        @endforeach
+                        @if($eventosDelDia->count() > 2)
+                        <div style="font-size:8px;color:#94a3b8;margin-top:1px;">+{{ $eventosDelDia->count() - 2 }} más</div>
                         @endif
                     </div>
                 </td>

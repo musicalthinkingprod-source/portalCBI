@@ -27,8 +27,6 @@ class CalendarioAcademicoController extends Controller
 
     /**
      * Calcula ciclo y periodo actuales a partir de los días del calendario.
-     * Ciclo = cuántos "día 1" han aparecido hasta hoy inclusive.
-     * Periodo = ceil(ciclo / 7). Ciclo en periodo = ((ciclo-1) % 7) + 1.
      */
     private function infoCicloHoy(int $anio, string $hoy): array
     {
@@ -50,12 +48,43 @@ class CalendarioAcademicoController extends Controller
     }
 
     /**
+     * Carga los eventos del mes desde la tabla calendario_eventos,
+     * filtrados por visibilidad del perfil, agrupados por fecha.
+     */
+    private function eventosPorFecha(string $desde, string $hasta, array $visibles): \Illuminate\Support\Collection
+    {
+        return DB::table('calendario_eventos')
+            ->whereBetween('fecha', [$desde, $hasta])
+            ->whereIn('visibilidad', $visibles)
+            ->orderBy('fecha')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('fecha');
+    }
+
+    /**
+     * Carga próximos eventos (30 días) con dia_ciclo desde join.
+     */
+    private function proximosEventos(array $visibles): \Illuminate\Support\Collection
+    {
+        return DB::table('calendario_eventos as ce')
+            ->leftJoin('calendario_academico as ca', 'ca.fecha', '=', 'ce.fecha')
+            ->where('ce.fecha', '>=', now()->toDateString())
+            ->where('ce.fecha', '<=', now()->addDays(30)->toDateString())
+            ->whereIn('ce.visibilidad', $visibles)
+            ->orderBy('ce.fecha')
+            ->orderBy('ce.id')
+            ->select('ce.*', 'ca.dia_ciclo')
+            ->get();
+    }
+
+    /**
      * Vista para usuarios internos autenticados.
      */
     public function index(Request $request)
     {
-        $profile    = auth()->user()->PROFILE;
-        $visibles   = $this->visibilidadesPorPerfil($profile);
+        $profile  = auth()->user()->PROFILE;
+        $visibles = $this->visibilidadesPorPerfil($profile);
 
         $mes  = (int) $request->input('mes',  now()->month);
         $anio = (int) $request->input('anio', now()->year);
@@ -63,85 +92,108 @@ class CalendarioAcademicoController extends Controller
         $inicio = Carbon::create($anio, $mes, 1)->startOfMonth();
         $fin    = $inicio->copy()->endOfMonth();
 
-        // Todos los días del mes para la grilla (dia_ciclo siempre visible,
-        // el evento solo se mostrará si su visibilidad está permitida)
+        // Estructura del calendario (sin filtrado de eventos)
         $diasMes = DB::table('calendario_academico')
             ->whereBetween('fecha', [$inicio->toDateString(), $fin->toDateString()])
             ->orderBy('fecha')
             ->get()
-            ->map(function ($row) use ($visibles) {
-                // Ocultar el texto del evento si no tiene permiso
-                if ($row->evento && ! in_array($row->visibilidad, $visibles)) {
-                    $row->evento      = null;
-                    $row->visibilidad = null;
-                }
-                return $row;
-            })
             ->keyBy('fecha');
 
-        // Eventos próximos (30 días) visibles para este perfil
-        $proximosEventos = DB::table('calendario_academico')
-            ->where('fecha', '>=', now()->toDateString())
-            ->where('fecha', '<=', now()->addDays(30)->toDateString())
-            ->whereNotNull('evento')
-            ->whereIn('visibilidad', $visibles)
-            ->orderBy('fecha')
-            ->get();
+        // Eventos del mes filtrados por visibilidad, agrupados por fecha
+        $eventosPorFecha = $this->eventosPorFecha(
+            $inicio->toDateString(), $fin->toDateString(), $visibles
+        );
+
+        $proximosEventos = $this->proximosEventos($visibles);
 
         $hoyStr = now()->toDateString();
 
-        // Día académico de hoy
         $hoy = DB::table('calendario_academico')
             ->where('fecha', $hoyStr)
             ->first();
 
-        // Próximo día académico (mañana o el siguiente hábil)
+        $eventosHoy = DB::table('calendario_eventos')
+            ->where('fecha', $hoyStr)
+            ->whereIn('visibilidad', $visibles)
+            ->orderBy('id')
+            ->get();
+
         $manana = DB::table('calendario_academico')
             ->where('fecha', '>', $hoyStr)
             ->where('dia_ciclo', '>', 0)
             ->orderBy('fecha')
             ->first();
 
-        // Ciclo y periodo actuales
         $infoCiclo = $this->infoCicloHoy($anio, $hoyStr);
+        $puedeEditar = in_array($profile, ['SuperAd', 'Admin']);
 
         return view('calendario.index', compact(
-            'diasMes', 'proximosEventos', 'hoy', 'manana', 'infoCiclo',
-            'mes', 'anio', 'inicio', 'visibles', 'profile'
+            'diasMes', 'eventosPorFecha', 'proximosEventos',
+            'hoy', 'eventosHoy', 'manana', 'infoCiclo',
+            'mes', 'anio', 'inicio', 'visibles', 'profile', 'puedeEditar'
         ));
     }
 
     /**
-     * Guarda o actualiza el evento y visibilidad de una fecha.
+     * Crea un nuevo evento para una fecha.
      * Solo SuperAd / Admin.
      */
-    public function guardarEvento(Request $request, string $fecha)
+    public function crearEvento(Request $request, string $fecha)
     {
         $request->validate([
-            'evento'      => 'nullable|string|max:200',
+            'evento'      => 'required|string|max:200',
             'visibilidad' => 'required|in:todos,interno,docentes,directivas,padres',
         ]);
 
-        DB::table('calendario_academico')
-            ->where('fecha', $fecha)
+        // Asegurar que la fecha tenga registro en calendario_academico
+        if (!DB::table('calendario_academico')->where('fecha', $fecha)->exists()) {
+            DB::table('calendario_academico')->insert([
+                'fecha'     => $fecha,
+                'anio'      => (int) substr($fecha, 0, 4),
+                'dia_ciclo' => 0,
+            ]);
+        }
+
+        $id = DB::table('calendario_eventos')->insertGetId([
+            'fecha'       => $fecha,
+            'evento'      => $request->input('evento'),
+            'visibilidad' => $request->input('visibilidad'),
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+
+        return response()->json(['ok' => true, 'id' => $id]);
+    }
+
+    /**
+     * Actualiza un evento existente por ID.
+     * Solo SuperAd / Admin.
+     */
+    public function actualizarEvento(Request $request, int $id)
+    {
+        $request->validate([
+            'evento'      => 'required|string|max:200',
+            'visibilidad' => 'required|in:todos,interno,docentes,directivas,padres',
+        ]);
+
+        DB::table('calendario_eventos')
+            ->where('id', $id)
             ->update([
-                'evento'      => $request->input('evento') ?: null,
+                'evento'      => $request->input('evento'),
                 'visibilidad' => $request->input('visibilidad'),
+                'updated_at'  => now(),
             ]);
 
         return response()->json(['ok' => true]);
     }
 
     /**
-     * Elimina el evento de una fecha (pone evento = null).
+     * Elimina un evento por ID.
      * Solo SuperAd / Admin.
      */
-    public function eliminarEvento(string $fecha)
+    public function eliminarEvento(int $id)
     {
-        DB::table('calendario_academico')
-            ->where('fecha', $fecha)
-            ->update(['evento' => null, 'visibilidad' => 'interno']);
-
+        DB::table('calendario_eventos')->where('id', $id)->delete();
         return response()->json(['ok' => true]);
     }
 
@@ -162,28 +214,25 @@ class CalendarioAcademicoController extends Controller
             ->whereBetween('fecha', [$inicio->toDateString(), $fin->toDateString()])
             ->orderBy('fecha')
             ->get()
-            ->map(function ($row) use ($visibles) {
-                if ($row->evento && ! in_array($row->visibilidad, $visibles)) {
-                    $row->evento      = null;
-                    $row->visibilidad = null;
-                }
-                return $row;
-            })
             ->keyBy('fecha');
 
-        $proximosEventos = DB::table('calendario_academico')
-            ->where('fecha', '>=', now()->toDateString())
-            ->where('fecha', '<=', now()->addDays(30)->toDateString())
-            ->whereNotNull('evento')
-            ->whereIn('visibilidad', $visibles)
-            ->orderBy('fecha')
-            ->get();
+        $eventosPorFecha = $this->eventosPorFecha(
+            $inicio->toDateString(), $fin->toDateString(), $visibles
+        );
+
+        $proximosEventos = $this->proximosEventos($visibles);
 
         $hoyStr = now()->toDateString();
 
         $hoy = DB::table('calendario_academico')
             ->where('fecha', $hoyStr)
             ->first();
+
+        $eventosHoy = DB::table('calendario_eventos')
+            ->where('fecha', $hoyStr)
+            ->whereIn('visibilidad', $visibles)
+            ->orderBy('id')
+            ->get();
 
         $manana = DB::table('calendario_academico')
             ->where('fecha', '>', $hoyStr)
@@ -194,7 +243,8 @@ class CalendarioAcademicoController extends Controller
         $infoCiclo = $this->infoCicloHoy($anio, $hoyStr);
 
         return view('calendario.docente', compact(
-            'diasMes', 'proximosEventos', 'hoy', 'manana', 'infoCiclo',
+            'diasMes', 'eventosPorFecha', 'proximosEventos',
+            'hoy', 'eventosHoy', 'manana', 'infoCiclo',
             'mes', 'anio', 'inicio'
         ));
     }
@@ -218,20 +268,25 @@ class CalendarioAcademicoController extends Controller
             ->get()
             ->keyBy('fecha');
 
-        $proximosEventos = DB::table('calendario_academico')
-            ->where('fecha', '>=', now()->toDateString())
-            ->where('fecha', '<=', now()->addDays(30)->toDateString())
-            ->whereNotNull('evento')
-            ->whereIn('visibilidad', $visibles)
-            ->orderBy('fecha')
-            ->get();
+        $eventosPorFecha = $this->eventosPorFecha(
+            $inicio->toDateString(), $fin->toDateString(), $visibles
+        );
+
+        $proximosEventos = $this->proximosEventos($visibles);
 
         $hoy = DB::table('calendario_academico')
             ->where('fecha', now()->toDateString())
             ->first();
 
+        $eventosHoy = DB::table('calendario_eventos')
+            ->where('fecha', now()->toDateString())
+            ->whereIn('visibilidad', $visibles)
+            ->orderBy('id')
+            ->get();
+
         return view('calendario.padres', compact(
-            'diasMes', 'proximosEventos', 'hoy', 'mes', 'anio', 'inicio'
+            'diasMes', 'eventosPorFecha', 'proximosEventos',
+            'hoy', 'eventosHoy', 'mes', 'anio', 'inicio'
         ));
     }
 }

@@ -123,10 +123,4 @@
         @endif
     </div>
 
-    {{-- Observaciones --}}
-    <div class="bg-white rounded-xl shadow p-5">
-        <h3 class="font-bold text-blue-800 mb-2">Observaciones</h3>
-        <p class="text-sm text-gray-400 italic">Próximamente disponible.</p>
-    </div>
-
 @endsection

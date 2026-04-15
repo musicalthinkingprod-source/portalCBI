@@ -19,7 +19,22 @@
       "Bash(npm run:*)",
       "Bash(git checkout:*)",
       "Bash(find /c/laragon/www/portalcbi/resources/views -name \"*.blade.php\" -exec grep -l \"active\\\\|nav-link\\\\|tab-pane\" {} \\\\;)",
-      "Bash(explorer \"C:\\\\laragon\\\\www\\\\portalcbi\\\\storage\\\\app\")"
+      "Bash(explorer \"C:\\\\laragon\\\\www\\\\portalcbi\\\\storage\\\\app\")",
+      "Bash(mysqldump --version)",
+      "Bash(where mysqldump:*)",
+      "Bash(gh repo:*)",
+      "Bash(mysql -u root -e \"SHOW TABLES LIKE '%OBSERVACIONES%'\" portalcbi)",
+      "Bash(mysql -u root -e \"SHOW TABLES LIKE '%observaciones%'\" portalcbi)",
+      "Bash(mysql -u root portalcbi -e \"DESCRIBE OBSERVACIONES_2025\")",
+      "Bash(mysql -u root -e \"DESCRIBE OBSERVACIONES_2025\" portalcbi)",
+      "Bash(mysql:*)",
+      "Bash(powershell -Command \"Compress-Archive -Path 'openspout' -DestinationPath 'C:/Users/DANICA~1/Desktop/openspout.zip' -Force\")",
+      "Read(//c/Users/DANICA~1/Desktop/**)",
+      "Read(//c/Users/DANICAR SOUND/Desktop/**)",
+      "Bash(powershell -Command ':*)",
+      "Bash(powershell -command \"'{0:N2} MB' -f \\(\\(Get-ChildItem vendor -Recurse | Measure-Object -Property Length -Sum\\).Sum / 1MB\\)\")",
+      "Bash(powershell -command \"Compress-Archive -Path 'vendor' -DestinationPath 'vendor.zip' -Force\")",
+      "Bash(composer remove:*)"
     ]
   }
 }

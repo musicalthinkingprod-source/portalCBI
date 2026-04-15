@@ -27,7 +27,7 @@ function sinTwo($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í'
     {{-- ── Panel izquierdo: Plantilla empresa ─────────────────────────────── --}}
     <div class="bg-white rounded-xl shadow p-6">
         <h3 class="font-semibold text-gray-700 mb-1">Datos fijos de empresa</h3>
-        <p class="text-xs text-gray-400 mb-5">Estos valores se repiten en cada fila del CSV exportado.</p>
+        <p class="text-xs text-gray-400 mb-5">Estos valores se repiten en cada fila del Excel exportado.</p>
 
         <form method="POST" action="{{ route('world-office.plantilla.store') }}" class="space-y-4">
             @csrf
@@ -71,7 +71,7 @@ function sinTwo($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í'
             <div>
                 <label class="block text-xs text-gray-500 mb-1 font-medium">
                     Numero de factura inicial
-                    <span class="text-gray-400 font-normal">(desde donde arranca la numeracion en el proximo CSV)</span>
+                    <span class="text-gray-400 font-normal">(desde donde arranca la numeracion en el proximo Excel)</span>
                 </label>
                 <input name="numero_inicio" type="number" min="1" required
                     value="{{ old('numero_inicio', $plantilla->numero_inicio ?? 1) }}"
@@ -201,7 +201,7 @@ function sinTwo($s){ return str_replace(['Á','É','Í','Ó','Ú','á','é','í'
             </button>
         </form>
 
-        {{-- Columnas del CSV --}}
+        {{-- Columnas del Excel --}}
         <details class="mt-5">
             <summary class="text-xs text-gray-400 cursor-pointer hover:text-gray-600 select-none">
                 Ver las 19 columnas del archivo Excel
