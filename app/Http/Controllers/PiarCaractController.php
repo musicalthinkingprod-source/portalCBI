@@ -35,7 +35,7 @@ class PiarCaractController extends Controller
             ->first();
         $esDirector = (bool) $dirInfo;
 
-        $esOriSuperAd = in_array(auth()->user()->PROFILE, ['SuperAd', 'Ori']);
+        $esOriSuperAd = auth()->user()->PROFILE === 'SuperAd' || str_starts_with(auth()->user()->PROFILE, 'Ori');
 
         // Filas: un registro por (estudiante × materia) con estados de caract. y ajustes
         $filasRaw = DB::table('ESTUDIANTES as e')

@@ -402,9 +402,11 @@ class PiarController extends Controller
         // Materias excluidas del PIAR (no aplican caracterización ni ajustes)
         $matsExcluidas = [24, 124, 153]; // Urbanidad y Cívica, Urbanidad y Cívica PE, Pensamiento Lógico
 
-        // Todas las materias asignadas a los cursos de esos estudiantes (orden alfabético)
+        // Todas las materias asignadas a los cursos de esos estudiantes (deduplicadas por CURSO+CODIGO_MAT)
         $asignaciones = DB::table('ASIGNACION_PCM as a')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'a.CODIGO_MAT')
+            ->join(DB::raw('(SELECT CODIGO_MAT, CURSO, MIN(CODIGO_DOC) AS CODIGO_DOC FROM ASIGNACION_PCM GROUP BY CODIGO_MAT, CURSO) as au'),
+                function ($j) { $j->on('au.CODIGO_MAT','=','a.CODIGO_MAT')->on('au.CURSO','=','a.CURSO')->on('au.CODIGO_DOC','=','a.CODIGO_DOC'); })
             ->join('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'a.CODIGO_DOC')
             ->select('a.CURSO', 'a.CODIGO_MAT', 'a.CODIGO_DOC', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
             ->whereNotIn('a.CODIGO_MAT', $matsExcluidas)

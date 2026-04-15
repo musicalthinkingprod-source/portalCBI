@@ -5,7 +5,7 @@
 @section('slot')
 
 @php
-    $puedeObservar = in_array(auth()->user()->PROFILE, ['SuperAd', 'Ori']);
+    $puedeObservar = auth()->user()->PROFILE === 'SuperAd' || str_starts_with(auth()->user()->PROFILE, 'Ori');
     $estadoActual  = $caract->ESTADO ?? 'pendiente';
     $docentePuede  = !$puedeObservar && ($estadoEtapa === 'abierto' || $estadoActual === 'con_observaciones');
 @endphp
