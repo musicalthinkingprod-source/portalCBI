@@ -4,6 +4,8 @@
 
 @section('slot')
 
+@php $esSuperAd = auth()->user()->PROFILE === 'SuperAd'; @endphp
+
 <form method="POST" action="{{ route('circulares.update', $circular) }}">
     @csrf @method('PUT')
 
@@ -15,9 +17,10 @@
                 <h2 class="text-sm font-semibold text-gray-700 border-b pb-2">Datos de la circular</h2>
 
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Número</label>
-                    <input type="text" value="{{ $circular->numero }}" disabled
-                        class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 font-mono text-blue-800">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Número <span class="text-red-500">*</span></label>
+                    <input type="text" name="numero" value="{{ old('numero', $circular->numero) }}"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono text-blue-800 @error('numero') border-red-400 @enderror">
+                    @error('numero') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
@@ -42,18 +45,80 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">Emitido por <span class="text-red-500">*</span></label>
-                    <input type="text" name="emitido_por" value="{{ old('emitido_por', $circular->emitido_por) }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm @error('emitido_por') border-red-400 @enderror">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Firmado por <span class="text-red-500">*</span></label>
+                    @if($esSuperAd)
+                        <input type="text" name="emitido_por" value="{{ old('emitido_por', $circular->emitido_por) }}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm @error('emitido_por') border-red-400 @enderror">
+                    @else
+                        <input type="hidden" name="emitido_por" value="{{ $circular->emitido_por }}">
+                        <p class="px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-700">{{ $circular->emitido_por }}</p>
+                    @endif
                     @error('emitido_por') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Cargo del firmante</label>
+                    @if($esSuperAd)
+                        <input type="text" name="cargo" value="{{ old('cargo', $circular->cargo) }}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm @error('cargo') border-red-400 @enderror">
+                    @else
+                        <input type="hidden" name="cargo" value="{{ $circular->cargo }}">
+                        <p class="px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-700">{{ $circular->cargo }}</p>
+                    @endif
+                    @error('cargo') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Estado</label>
-                    <select name="estado" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                        <option value="borrador" @selected(old('estado', $circular->estado) === 'borrador')>Borrador</option>
-                        <option value="publicada" @selected(old('estado', $circular->estado) === 'publicada')>Publicada</option>
-                    </select>
+                    @if($esSuperAd)
+                        <select name="estado" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                            <option value="borrador" @selected(old('estado', $circular->estado) === 'borrador')>Borrador</option>
+                            <option value="publicada" @selected(old('estado', $circular->estado) === 'publicada')>Publicada</option>
+                        </select>
+                    @else
+                        <input type="hidden" name="estado" value="{{ $circular->estado }}">
+                        @if($circular->estado === 'publicada')
+                            <p class="px-3 py-2 text-sm bg-green-50 border border-green-200 rounded-lg text-green-700 text-xs">✅ Publicada</p>
+                        @else
+                            <p class="px-3 py-2 text-sm bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 text-xs">
+                                🔒 Solo la rectora puede publicar circulares
+                            </p>
+                        @endif
+                    @endif
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Enlace (Google Drive)</label>
+                    <input type="url" name="link" value="{{ old('link', $circular->link) }}" placeholder="https://drive.google.com/..."
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm @error('link') border-red-400 @enderror">
+                    @error('link') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Visible para</label>
+                    <p class="text-xs text-gray-400 mb-2">Sin selección = todos los grados</p>
+                    @php
+                        $todosGrados = [
+                            'Preescolar'   => ['PJ' => 'PreJardín', 'J' => 'Jardín', 'T' => 'Transición'],
+                            'Primaria'     => ['1' => '1°', '2' => '2°', '3' => '3°', '4' => '4°', '5' => '5°'],
+                            'Bachillerato' => ['6' => '6°', '7' => '7°', '8' => '8°', '9' => '9°', '10' => '10°', '11' => '11°'],
+                        ];
+                        $selGrados = array_map('strval', old('grados', $circular->grados ?? []));
+                    @endphp
+                    @foreach($todosGrados as $nivel => $opciones)
+                    <p class="text-xs text-gray-400 mt-2 mb-1">{{ $nivel }}</p>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($opciones as $val => $etiqueta)
+                        <label class="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" name="grados[]" value="{{ $val }}"
+                                {{ in_array((string)$val, $selGrados) ? 'checked' : '' }}
+                                class="rounded border-gray-300 text-blue-700">
+                            <span class="text-sm text-gray-700">{{ $etiqueta }}</span>
+                        </label>
+                        @endforeach
+                    </div>
+                    @endforeach
+                    @error('grados') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
 
@@ -72,33 +137,11 @@
         {{-- Editor --}}
         <div class="lg:col-span-2">
             <div class="bg-white rounded-xl shadow p-5">
-                <h2 class="text-sm font-semibold text-gray-700 border-b pb-2 mb-3">Contenido de la circular</h2>
+                <h2 class="text-sm font-semibold text-gray-700 border-b pb-2 mb-3">Contenido de la circular <span class="text-xs font-normal text-gray-400">(opcional si hay enlace a Drive)</span></h2>
 
                 @error('contenido') <p class="text-red-500 text-xs mb-2">{{ $message }}</p> @enderror
 
-                <div id="toolbar" class="border border-gray-200 rounded-t-lg px-2 py-1 bg-gray-50 flex flex-wrap gap-1">
-                    <button class="ql-bold"></button>
-                    <button class="ql-italic"></button>
-                    <button class="ql-underline"></button>
-                    <span class="ql-formats">
-                        <select class="ql-size">
-                            <option value="small">Pequeño</option>
-                            <option selected>Normal</option>
-                            <option value="large">Grande</option>
-                        </select>
-                    </span>
-                    <span class="ql-formats">
-                        <button class="ql-list" value="ordered"></button>
-                        <button class="ql-list" value="bullet"></button>
-                    </span>
-                    <span class="ql-formats">
-                        <select class="ql-align"></select>
-                    </span>
-                    <button class="ql-clean"></button>
-                </div>
-                <div id="editor" style="min-height: 420px; font-size: 14px;"
-                    class="border border-t-0 border-gray-200 rounded-b-lg px-4 py-3"></div>
-
+                <div id="editor" style="min-height: 420px;">{!! old('contenido', $circular->contenido) !!}</div>
                 <input type="hidden" name="contenido" id="contenido-input">
             </div>
         </div>
@@ -106,19 +149,28 @@
     </div>
 </form>
 
-<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
-<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
 <script>
-    const quill = new Quill('#editor', {
-        modules: { toolbar: '#toolbar' },
-        theme: 'snow',
-    });
-
-    // Carga el contenido existente
-    quill.root.innerHTML = {!! json_encode($circular->contenido) !!};
+    let ckEditor;
+    ClassicEditor.create(document.querySelector('#editor'), {
+        language: 'es',
+        toolbar: [
+            'heading', '|',
+            'bold', 'italic', 'underline', '|',
+            'alignment:left', 'alignment:center', 'alignment:right', 'alignment:justify', '|',
+            'bulletedList', 'numberedList', '|',
+            'insertTable', '|',
+            'undo', 'redo'
+        ],
+        table: {
+            contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells']
+        },
+    }).then(editor => {
+        ckEditor = editor;
+    }).catch(console.error);
 
     document.querySelector('form').addEventListener('submit', function () {
-        document.getElementById('contenido-input').value = quill.root.innerHTML;
+        document.getElementById('contenido-input').value = ckEditor ? ckEditor.getData() : '';
     });
 </script>
 

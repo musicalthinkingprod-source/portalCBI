@@ -1,6 +1,6 @@
 @php
     $diasNombre  = [1=>'Día 1',2=>'Día 2',3=>'Día 3',4=>'Día 4',5=>'Día 5',6=>'Día 6'];
-    $diaCicloHoy = \App\Models\Horario::diaCicloHoy();
+    // $diaCicloHoy viene del scope de la vista padre (atencion-docentes.blade.php)
 @endphp
 
 <div class="bg-white rounded-2xl shadow-sm border {{ $doc['es_propio'] ? 'border-blue-200' : 'border-gray-100' }} p-5 flex flex-col gap-3">

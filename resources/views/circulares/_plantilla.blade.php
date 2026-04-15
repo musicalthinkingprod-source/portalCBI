@@ -1,66 +1,145 @@
 {{--
-    Plantilla institucional de circular.
+    Plantilla institucional de circular — Formato CBI-FCE001
     Se usa desde show.blade.php (dentro del layout) y desde pdf.blade.php (standalone).
     La variable $circular debe estar disponible en el contexto.
 --}}
 
-<div style="font-family: Arial, sans-serif; color: #1a1a1a; max-width: 720px; margin: 0 auto; padding: 40px 48px;">
+<div style="font-family: Arial, Helvetica, sans-serif; color: #1a1a1a; max-width: 740px; margin: 0 auto; padding: 40px 48px;">
 
-    {{-- Encabezado institucional --}}
-    <table style="width:100%; border-bottom: 3px solid #1e3a8a; margin-bottom: 24px;">
+    {{-- ═══════════════════════════════════════
+         ENCABEZADO — tabla oficial CBI-FCE001
+         ═══════════════════════════════════════ --}}
+    <table style="width:100%; border-collapse:collapse; border:1.5px solid #374151; margin-bottom:0;">
         <tr>
-            <td style="width:80px; vertical-align:middle;">
-                <img src="{{ public_path('images/escudoCBI.png') }}" alt="Logo CBI"
-                     style="height:70px; width:auto;"
+            {{-- Logo (rowspan 3) --}}
+            <td rowspan="3"
+                style="width:90px; border-right:1.5px solid #374151; text-align:center; vertical-align:middle; padding:10px;">
+                <img src="{{ public_path('images/escudoCBI.png') }}"
+                     alt="Logo CBI"
+                     style="height:72px; width:auto;"
                      onerror="this.style.display='none'">
             </td>
-            <td style="vertical-align:middle; padding-left: 16px;">
-                <div style="font-size:18px; font-weight:700; color:#1e3a8a; letter-spacing:0.5px;">
-                    COLEGIO BELLO INTEGRAL
-                </div>
-                <div style="font-size:11px; color:#6b7280; margin-top:2px;">
-                    Resolución de Aprobación — NIT: 900.000.000-0
-                </div>
+            {{-- Fila 1 centro: "FORMATO" --}}
+            <td style="border-right:1.5px solid #374151; border-bottom:1px solid #374151;
+                        text-align:center; vertical-align:middle; padding:6px 12px;">
+                <span style="font-size:13px; font-weight:700; letter-spacing:0.5px;">FORMATO</span>
             </td>
-            <td style="text-align:right; vertical-align:middle;">
-                <div style="font-size:11px; color:#6b7280;">Circular</div>
-                <div style="font-size:22px; font-weight:700; color:#1e3a8a; font-family:monospace;">
+            {{-- Fila 1 derecha: Código --}}
+            <td style="border-bottom:1px solid #374151; text-align:center; vertical-align:middle;
+                        padding:6px 12px; width:160px;">
+                <span style="font-size:11px; color:#374151;">Código</span><br>
+                <span style="font-size:12px; font-weight:700;">CBI-FCE001</span>
+            </td>
+        </tr>
+        <tr>
+            {{-- Fila 2 centro: "CIRCULAR EXTERNA" --}}
+            <td style="border-right:1.5px solid #374151; border-bottom:1px solid #374151;
+                        text-align:center; vertical-align:middle; padding:6px 12px;">
+                <span style="font-size:14px; font-weight:700; letter-spacing:0.3px;">CIRCULAR EXTERNA</span>
+            </td>
+            {{-- Fila 2 derecha: Versión --}}
+            <td style="border-bottom:1px solid #374151; text-align:center; vertical-align:middle;
+                        padding:6px 12px;">
+                <span style="font-size:11px; color:#374151;">Versión 01</span>
+            </td>
+        </tr>
+        <tr>
+            {{-- Fila 3 centro: Número de circular --}}
+            <td style="border-right:1.5px solid #374151; text-align:center; vertical-align:middle; padding:6px 12px;">
+                <span style="font-size:13px; font-weight:700; color:#1e3a8a; letter-spacing:0.5px;">
                     {{ $circular->numero }}
-                </div>
+                </span>
+            </td>
+            {{-- Fila 3 derecha: Fecha de aprobación (fija) --}}
+            <td style="text-align:center; vertical-align:middle; padding:6px 12px;">
+                <span style="font-size:10px; color:#374151;">Fecha Aprobación</span><br>
+                <span style="font-size:11px; font-weight:600;">2008-ENE-08</span>
             </td>
         </tr>
     </table>
 
-    {{-- Ficha de datos --}}
-    <table style="width:100%; font-size:13px; margin-bottom:28px; border-collapse:collapse;">
+    {{-- Filas de datos: ASUNTO y FECHA --}}
+    <table style="width:100%; border-collapse:collapse;
+                  border-left:1.5px solid #374151;
+                  border-right:1.5px solid #374151;
+                  border-bottom:1.5px solid #374151;
+                  margin-bottom:28px;">
         <tr>
-            <td style="width:110px; font-weight:600; color:#374151; padding:4px 0;">FECHA:</td>
-            <td style="color:#111827;">{{ $circular->fecha->translatedFormat('j \d\e F \d\e Y') }}</td>
+            <td style="width:110px; font-weight:700; font-size:12px; padding:7px 12px;
+                        border-bottom:1px solid #374151; border-right:1px solid #374151;
+                        vertical-align:top; text-transform:uppercase; color:#111827;">
+                ASUNTO
+            </td>
+            <td style="font-size:12px; font-weight:700; padding:7px 12px;
+                        border-bottom:1px solid #374151; text-transform:uppercase; color:#111827;">
+                {{ $circular->asunto }}
+            </td>
         </tr>
         <tr>
-            <td style="font-weight:600; color:#374151; padding:4px 0;">DIRIGIDO A:</td>
-            <td style="color:#111827;">{{ $circular->dirigido_a }}</td>
-        </tr>
-        <tr>
-            <td style="font-weight:600; color:#374151; padding:4px 0;">DE:</td>
-            <td style="color:#111827;">{{ $circular->emitido_por }}</td>
-        </tr>
-        <tr>
-            <td style="font-weight:600; color:#374151; padding:4px 0; vertical-align:top;">ASUNTO:</td>
-            <td style="color:#111827; font-weight:600;">{{ $circular->asunto }}</td>
+            <td style="font-weight:700; font-size:12px; padding:7px 12px;
+                        border-right:1px solid #374151; vertical-align:middle;
+                        text-transform:uppercase; color:#111827;">
+                FECHA
+            </td>
+            <td style="font-size:12px; font-weight:700; padding:7px 12px;
+                        text-transform:uppercase; color:#111827;">
+                {{ mb_strtoupper($circular->fecha->locale('es')->isoFormat('D [DE] MMMM [DE] YYYY')) }}
+            </td>
         </tr>
     </table>
 
-    <hr style="border:none; border-top:1px solid #e5e7eb; margin-bottom:24px;">
+    {{-- ═══════════════════
+         CUERPO DE LA CIRCULAR
+         ═══════════════════ --}}
 
-    {{-- Cuerpo --}}
-    <div style="font-size:13.5px; line-height:1.8; text-align:justify;">
+    {{-- Saludo / Dirigido a --}}
+    @if($circular->dirigido_a)
+    <p style="font-size:13.5px; margin-bottom:10px;">
+        {{ $circular->dirigido_a }}:
+    </p>
+    @endif
+
+    <p style="font-size:13.5px; margin-bottom:20px;">
+        Reciban un cordial saludo.
+    </p>
+
+    {{-- Contenido --}}
+    @if($circular->contenido)
+    <div style="font-size:13.5px; line-height:1.85; text-align:justify; margin-bottom:24px;">
         {!! $circular->contenido !!}
     </div>
+    @elseif($circular->link)
+    <div style="text-align:center; padding: 32px 0; margin-bottom:24px;">
+        <p style="font-size:13px; color:#6b7280; margin-bottom:16px;">Esta circular está disponible en Google Drive.</p>
+        <a href="{{ $circular->link }}" target="_blank" rel="noopener"
+           style="display:inline-block; background:#1e3a8a; color:#fff; padding:10px 28px;
+                  border-radius:8px; font-size:13px; font-weight:600; text-decoration:none;">
+            Ver circular en Drive
+        </a>
+    </div>
+    @endif
 
-    {{-- Pie --}}
-    <div style="margin-top:48px; font-size:12px; color:#6b7280; text-align:center; border-top:1px solid #e5e7eb; padding-top:16px;">
-        {{ $circular->emitido_por }} &nbsp;·&nbsp; {{ $circular->fecha->format('Y') }}
+    {{-- ═══════════════════
+         PIE DE FIRMA
+         ═══════════════════ --}}
+    <div style="margin-top:52px;">
+        {{-- Imagen de firma --}}
+        @php $firmaPath = public_path('images/firma.png'); @endphp
+        @if(file_exists($firmaPath))
+            <img src="{{ $firmaPath }}" alt="Firma"
+                 style="height:72px; width:auto; display:block; margin-bottom:4px;">
+        @else
+            <div style="height:72px; margin-bottom:4px;"></div>
+        @endif
+
+        <p style="font-size:13px; font-weight:700; margin:0; line-height:1.4;">
+            {{ mb_strtoupper($circular->emitido_por) }}
+        </p>
+        @if($circular->cargo)
+        <p style="font-size:13px; margin:0; color:#374151;">
+            {{ $circular->cargo }}
+        </p>
+        @endif
     </div>
 
 </div>

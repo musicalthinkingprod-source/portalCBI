@@ -137,6 +137,25 @@ class EnglishAcqController extends Controller
         $notas   = [];
         $detalle = [];
 
+        // Determinar hasta qué período ha iniciado el calendario
+        $inicios = DB::table('calendario_academico')
+            ->where('anio', $anio)
+            ->where('dia_ciclo', 1)
+            ->orderBy('fecha')
+            ->distinct()
+            ->pluck('fecha')
+            ->values();
+
+        $hoy = now()->toDateString();
+        $periodosIniciados = [];
+        for ($p = 1; $p <= 4; $p++) {
+            $offset = ($p - 1) * 7;
+            $inicio = $inicios[$offset] ?? null;
+            if ($inicio && $hoy >= $inicio) {
+                $periodosIniciados[] = $p;
+            }
+        }
+
         for ($p = 1; $p <= 4; $p++) {
             $registros = DB::table($this->tabla)
                 ->where('CODIGO_ALUM', $codigo)
@@ -152,7 +171,9 @@ class EnglishAcqController extends Controller
             }
         }
 
-        return view('english-acq.padres', compact('notas', 'detalle', 'anio'));
+        $periodoActual = self::periodoActivoHoy($anio) ?? (count($periodosIniciados) ? max($periodosIniciados) : 1);
+
+        return view('english-acq.padres', compact('notas', 'detalle', 'anio', 'periodosIniciados', 'periodoActual'));
     }
 
     public function entregar(Request $request)
