@@ -10,7 +10,11 @@ class AlumnoController extends Controller
     public function index(Request $request)
     {
         $estudiantes = collect();
-        $hayBusqueda = $request->anyFilled(['buscar', 'grado', 'curso', 'sede', 'estado', 'email_padre']);
+        $allFilters = ['buscar', 'grado', 'curso', 'sede', 'estado', 'email_padre',
+                       'rh', 'eps', 'barrio', 'estrato', 'acudiente', 'entrada',
+                       'ret_cart', 'ret_acad', 'ret_conv', 'ret_rect',
+                       'nombre_acud', 'celular'];
+        $hayBusqueda = $request->anyFilled($allFilters);
 
         if ($hayBusqueda) {
             $query = DB::table('ESTUDIANTES as e')
@@ -28,10 +32,22 @@ class AlumnoController extends Controller
                 });
             }
 
-            if ($request->filled('grado'))       $query->where('e.GRADO', $request->grado);
-            if ($request->filled('curso'))        $query->where('e.CURSO', $request->curso);
-            if ($request->filled('sede'))         $query->where('e.SEDE', $request->sede);
-            if ($request->filled('estado'))       $query->where('e.ESTADO', $request->estado);
+            if ($request->filled('grado'))     $query->where('e.GRADO', $request->grado);
+            if ($request->filled('curso'))      $query->where('e.CURSO', $request->curso);
+            if ($request->filled('sede'))       $query->where('e.SEDE', $request->sede);
+            if ($request->filled('estado'))     $query->where('e.ESTADO', $request->estado);
+            if ($request->filled('rh'))         $query->where('e.RH', $request->rh);
+            if ($request->filled('eps'))        $query->where('e.EPS', 'like', '%'.$request->eps.'%');
+            if ($request->filled('barrio'))     $query->where('e.BARRIO', 'like', '%'.$request->barrio.'%');
+            if ($request->filled('estrato'))    $query->where('e.ESTRATO', $request->estrato);
+            if ($request->filled('acudiente'))  $query->where('e.ACUDIENTE', $request->acudiente);
+            if ($request->filled('entrada'))    $query->where('e.ENTRADA', $request->entrada);
+
+            if ($request->filled('ret_cart'))   $query->where('e.RET_CART', $request->ret_cart);
+            if ($request->filled('ret_acad'))   $query->where('e.RET_ACAD', $request->ret_acad);
+            if ($request->filled('ret_conv'))   $query->where('e.RET_CONV', $request->ret_conv);
+            if ($request->filled('ret_rect'))   $query->where('e.RET_RECT', $request->ret_rect);
+
             if ($request->filled('email_padre')) {
                 $em = $request->email_padre;
                 $query->where(function($q) use ($em) {
@@ -40,26 +56,46 @@ class AlumnoController extends Controller
                       ->orWhere('p.EMAIL_ACUD', 'like', "%$em%");
                 });
             }
+            if ($request->filled('nombre_acud')) {
+                $na = $request->nombre_acud;
+                $query->where(function($q) use ($na) {
+                    $q->where('p.MADRE', 'like', "%$na%")
+                      ->orWhere('p.PADRE', 'like', "%$na%")
+                      ->orWhere('p.ACUD', 'like', "%$na%");
+                });
+            }
+            if ($request->filled('celular')) {
+                $cel = $request->celular;
+                $query->where(function($q) use ($cel) {
+                    $q->where('p.CEL_MADRE', 'like', "%$cel%")
+                      ->orWhere('p.CEL_PADRE', 'like', "%$cel%")
+                      ->orWhere('p.CEL_ACUD', 'like', "%$cel%");
+                });
+            }
 
-            // Matriculados primero, luego ordenar por apellidos y nombres
             $estudiantes = $query
                 ->orderByRaw("CASE WHEN e.ESTADO = 'MATRICULADO' THEN 0 ELSE 1 END")
-                ->orderBy('e.APELLIDO1')
-                ->orderBy('e.APELLIDO2')
-                ->orderBy('e.NOMBRE1')
-                ->orderBy('e.NOMBRE2')
-                ->paginate(20)
-                ->withQueryString();
+                ->orderBy('e.APELLIDO1')->orderBy('e.APELLIDO2')
+                ->orderBy('e.NOMBRE1')->orderBy('e.NOMBRE2')
+                ->paginate(20)->withQueryString();
         }
 
         // Opciones para filtros
-        $grados = DB::table('ESTUDIANTES')->select('GRADO')->distinct()->whereNotNull('GRADO')
-            ->orderByRaw('CAST(GRADO AS SIGNED)')->pluck('GRADO');
-        $cursos  = DB::table('ESTUDIANTES')->select('CURSO')->distinct()->whereNotNull('CURSO')->orderBy('CURSO')->pluck('CURSO');
-        $sedes   = DB::table('ESTUDIANTES')->select('SEDE')->distinct()->whereNotNull('SEDE')->orderBy('SEDE')->pluck('SEDE');
-        $estados = DB::table('ESTUDIANTES')->select('ESTADO')->distinct()->whereNotNull('ESTADO')->orderBy('ESTADO')->pluck('ESTADO');
+        $grados    = DB::table('ESTUDIANTES')->select('GRADO')->distinct()->whereNotNull('GRADO')
+                        ->orderByRaw('CAST(GRADO AS SIGNED)')->pluck('GRADO');
+        $cursos    = DB::table('ESTUDIANTES')->select('CURSO')->distinct()->whereNotNull('CURSO')->orderBy('CURSO')->pluck('CURSO');
+        $sedes     = DB::table('ESTUDIANTES')->select('SEDE')->distinct()->whereNotNull('SEDE')->orderBy('SEDE')->pluck('SEDE');
+        $estados   = DB::table('ESTUDIANTES')->select('ESTADO')->distinct()->whereNotNull('ESTADO')->orderBy('ESTADO')->pluck('ESTADO');
+        $rhs       = DB::table('ESTUDIANTES')->select('RH')->distinct()->whereNotNull('RH')->where('RH','!=','')->orderBy('RH')->pluck('RH');
+        $estratos  = DB::table('ESTUDIANTES')->select('ESTRATO')->distinct()->whereNotNull('ESTRATO')->orderBy('ESTRATO')->pluck('ESTRATO');
+        $acudientes= DB::table('ESTUDIANTES')->select('ACUDIENTE')->distinct()->whereNotNull('ACUDIENTE')->where('ACUDIENTE','!=','')->orderBy('ACUDIENTE')->pluck('ACUDIENTE');
+        $entradas  = DB::table('ESTUDIANTES')->select('ENTRADA')->distinct()->whereNotNull('ENTRADA')->where('ENTRADA','!=','')->orderBy('ENTRADA')->pluck('ENTRADA');
 
-        return view('alumnos.index', compact('estudiantes', 'hayBusqueda', 'grados', 'cursos', 'sedes', 'estados'));
+        return view('alumnos.index', compact(
+            'estudiantes', 'hayBusqueda',
+            'grados', 'cursos', 'sedes', 'estados',
+            'rhs', 'estratos', 'acudientes', 'entradas'
+        ));
     }
 
     public function show($codigo)
@@ -139,7 +175,11 @@ class AlumnoController extends Controller
 
     public function printList(Request $request)
     {
-        $hayBusqueda = $request->anyFilled(['buscar', 'grado', 'curso', 'sede', 'estado', 'email_padre']);
+        $allFilters = ['buscar', 'grado', 'curso', 'sede', 'estado', 'email_padre',
+                       'rh', 'eps', 'barrio', 'estrato', 'acudiente', 'entrada',
+                       'ret_cart', 'ret_acad', 'ret_conv', 'ret_rect',
+                       'nombre_acud', 'celular'];
+        $hayBusqueda = $request->anyFilled($allFilters);
 
         if (!$hayBusqueda) {
             return redirect()->route('alumnos.index')->withErrors(['buscar' => 'Aplique al menos un filtro antes de imprimir.']);
@@ -160,16 +200,42 @@ class AlumnoController extends Controller
             });
         }
 
-        if ($request->filled('grado'))       $query->where('e.GRADO', $request->grado);
-        if ($request->filled('curso'))        $query->where('e.CURSO', $request->curso);
-        if ($request->filled('sede'))         $query->where('e.SEDE', $request->sede);
-        if ($request->filled('estado'))       $query->where('e.ESTADO', $request->estado);
+        if ($request->filled('grado'))     $query->where('e.GRADO', $request->grado);
+        if ($request->filled('curso'))      $query->where('e.CURSO', $request->curso);
+        if ($request->filled('sede'))       $query->where('e.SEDE', $request->sede);
+        if ($request->filled('estado'))     $query->where('e.ESTADO', $request->estado);
+        if ($request->filled('rh'))         $query->where('e.RH', $request->rh);
+        if ($request->filled('eps'))        $query->where('e.EPS', 'like', '%'.$request->eps.'%');
+        if ($request->filled('barrio'))     $query->where('e.BARRIO', 'like', '%'.$request->barrio.'%');
+        if ($request->filled('estrato'))    $query->where('e.ESTRATO', $request->estrato);
+        if ($request->filled('acudiente'))  $query->where('e.ACUDIENTE', $request->acudiente);
+        if ($request->filled('entrada'))    $query->where('e.ENTRADA', $request->entrada);
+        if ($request->filled('ret_cart'))   $query->where('e.RET_CART', $request->ret_cart);
+        if ($request->filled('ret_acad'))   $query->where('e.RET_ACAD', $request->ret_acad);
+        if ($request->filled('ret_conv'))   $query->where('e.RET_CONV', $request->ret_conv);
+        if ($request->filled('ret_rect'))   $query->where('e.RET_RECT', $request->ret_rect);
         if ($request->filled('email_padre')) {
             $em = $request->email_padre;
             $query->where(function($q) use ($em) {
                 $q->where('p.EMAIL_MADRE', 'like', "%$em%")
                   ->orWhere('p.EMAIL_PADRE', 'like', "%$em%")
                   ->orWhere('p.EMAIL_ACUD', 'like', "%$em%");
+            });
+        }
+        if ($request->filled('nombre_acud')) {
+            $na = $request->nombre_acud;
+            $query->where(function($q) use ($na) {
+                $q->where('p.MADRE', 'like', "%$na%")
+                  ->orWhere('p.PADRE', 'like', "%$na%")
+                  ->orWhere('p.ACUD', 'like', "%$na%");
+            });
+        }
+        if ($request->filled('celular')) {
+            $cel = $request->celular;
+            $query->where(function($q) use ($cel) {
+                $q->where('p.CEL_MADRE', 'like', "%$cel%")
+                  ->orWhere('p.CEL_PADRE', 'like', "%$cel%")
+                  ->orWhere('p.CEL_ACUD', 'like', "%$cel%");
             });
         }
 

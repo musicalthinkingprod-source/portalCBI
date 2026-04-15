@@ -25,59 +25,141 @@
             </div>
 
             {{-- Búsqueda avanzada --}}
-            <div id="busqueda-avanzada" class="{{ request()->anyFilled(['grado','curso','sede','estado','email_padre']) ? '' : 'hidden' }} border-t pt-4 mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                @php
-                    $gradosLabels = [
-                        -2 => 'Pre-Jardín', -1 => 'Jardín', 0 => 'Transición',
-                        1 => 'Grado 1', 2 => 'Grado 2', 3 => 'Grado 3', 4 => 'Grado 4',
-                        5 => 'Grado 5', 6 => 'Grado 6', 7 => 'Grado 7', 8 => 'Grado 8',
-                        9 => 'Grado 9', 10 => 'Grado 10', 11 => 'Grado 11',
-                    ];
-                @endphp
-                <div>
-                    <label class="block text-xs text-gray-500 mb-1">Grado</label>
-                    <select name="grado" class="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Todos</option>
-                        @foreach($grados as $g)
-                            <option value="{{ $g }}" {{ request()->filled('grado') && request('grado') == $g ? 'selected' : '' }}>
-                                {{ $gradosLabels[(int)$g] ?? $g }}
-                            </option>
-                        @endforeach
-                    </select>
+            @php
+                $filtrosAvanzados = ['grado','curso','sede','estado','email_padre','rh','eps','barrio','estrato','acudiente','entrada','ret_cart','ret_acad','ret_conv','ret_rect','nombre_acud','celular'];
+                $gradosLabels = [
+                    -2 => 'Pre-Jardín', -1 => 'Jardín', 0 => 'Transición',
+                    1 => 'Grado 1', 2 => 'Grado 2', 3 => 'Grado 3', 4 => 'Grado 4',
+                    5 => 'Grado 5', 6 => 'Grado 6', 7 => 'Grado 7', 8 => 'Grado 8',
+                    9 => 'Grado 9', 10 => 'Grado 10', 11 => 'Grado 11',
+                ];
+                $sel = 'w-full border border-gray-300 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+                $inp = 'w-full border border-gray-300 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+            @endphp
+            <div id="busqueda-avanzada" class="{{ request()->anyFilled($filtrosAvanzados) ? '' : 'hidden' }} border-t pt-4 mt-2">
+
+                {{-- Fila 1: Clasificación académica --}}
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Clasificación</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-4">
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Grado</label>
+                        <select name="grado" class="{{ $sel }}">
+                            <option value="">Todos</option>
+                            @foreach($grados as $g)
+                                <option value="{{ $g }}" {{ request('grado') == $g ? 'selected' : '' }}>{{ $gradosLabels[(int)$g] ?? $g }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Curso</label>
+                        <select name="curso" class="{{ $sel }}">
+                            <option value="">Todos</option>
+                            @foreach($cursos as $c)
+                                <option value="{{ $c }}" {{ request('curso') == $c ? 'selected' : '' }}>{{ $c }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Sede</label>
+                        <select name="sede" class="{{ $sel }}">
+                            <option value="">Todas</option>
+                            @foreach($sedes as $s)
+                                <option value="{{ $s }}" {{ request('sede') == $s ? 'selected' : '' }}>{{ $s }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Estado</label>
+                        <select name="estado" class="{{ $sel }}">
+                            <option value="">Todos</option>
+                            @foreach($estados as $e)
+                                <option value="{{ $e }}" {{ request('estado') == $e ? 'selected' : '' }}>{{ $e }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Jornada (entrada)</label>
+                        <select name="entrada" class="{{ $sel }}">
+                            <option value="">Todas</option>
+                            @foreach($entradas as $en)
+                                <option value="{{ $en }}" {{ request('entrada') == $en ? 'selected' : '' }}>{{ $en }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Tipo acudiente</label>
+                        <select name="acudiente" class="{{ $sel }}">
+                            <option value="">Todos</option>
+                            @foreach($acudientes as $a)
+                                <option value="{{ $a }}" {{ request('acudiente') == $a ? 'selected' : '' }}>{{ $a }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-xs text-gray-500 mb-1">Curso</label>
-                    <select name="curso" class="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Todos</option>
-                        @foreach($cursos as $c)
-                            <option value="{{ $c }}" {{ request('curso') == $c ? 'selected' : '' }}>{{ $c }}</option>
-                        @endforeach
-                    </select>
+
+                {{-- Fila 2: Datos personales --}}
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Datos personales</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-4">
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">RH</label>
+                        <select name="rh" class="{{ $sel }}">
+                            <option value="">Todos</option>
+                            @foreach($rhs as $r)
+                                <option value="{{ $r }}" {{ request('rh') == $r ? 'selected' : '' }}>{{ $r }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Estrato</label>
+                        <select name="estrato" class="{{ $sel }}">
+                            <option value="">Todos</option>
+                            @foreach($estratos as $es)
+                                <option value="{{ $es }}" {{ request('estrato') == $es ? 'selected' : '' }}>{{ $es }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">EPS</label>
+                        <input type="text" name="eps" value="{{ request('eps') }}" placeholder="Ej: Sura…" class="{{ $inp }}">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Barrio</label>
+                        <input type="text" name="barrio" value="{{ request('barrio') }}" placeholder="Ej: El Centro…" class="{{ $inp }}">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Nombre acudiente/padre/madre</label>
+                        <input type="text" name="nombre_acud" value="{{ request('nombre_acud') }}" placeholder="Ej: López…" class="{{ $inp }}">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Celular (cualquier acudiente)</label>
+                        <input type="text" name="celular" value="{{ request('celular') }}" placeholder="Ej: 3001234567" class="{{ $inp }}">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Email (cualquier acudiente)</label>
+                        <input type="text" name="email_padre" value="{{ request('email_padre') }}" placeholder="correo@…" class="{{ $inp }}">
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-xs text-gray-500 mb-1">Sede</label>
-                    <select name="sede" class="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Todas</option>
-                        @foreach($sedes as $s)
-                            <option value="{{ $s }}" {{ request('sede') == $s ? 'selected' : '' }}>{{ $s }}</option>
-                        @endforeach
-                    </select>
+
+                {{-- Fila 3: Paz y salvo --}}
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Paz y salvo</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    @foreach([
+                        'ret_cart' => 'Cartera',
+                        'ret_acad' => 'Académico',
+                        'ret_conv' => 'Convivencia',
+                        'ret_rect' => 'Rectoría',
+                    ] as $field => $label)
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">{{ $label }}</label>
+                        <select name="{{ $field }}" class="{{ $sel }}">
+                            <option value="">Todos</option>
+                            <option value="1" {{ request($field) === '1' ? 'selected' : '' }}>✅ A paz y salvo</option>
+                            <option value="0" {{ request($field) === '0' ? 'selected' : '' }}>❌ Pendiente</option>
+                        </select>
+                    </div>
+                    @endforeach
                 </div>
-                <div>
-                    <label class="block text-xs text-gray-500 mb-1">Estado</label>
-                    <select name="estado" class="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Todos</option>
-                        @foreach($estados as $e)
-                            <option value="{{ $e }}" {{ request('estado') == $e ? 'selected' : '' }}>{{ $e }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-500 mb-1">Email padre/madre/acudiente</label>
-                    <input type="text" name="email_padre" value="{{ request('email_padre') }}"
-                        class="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="correo@...">
-                </div>
+
             </div>
 
         </form>
