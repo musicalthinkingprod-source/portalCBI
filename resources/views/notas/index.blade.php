@@ -135,12 +135,12 @@
                                             {{ !$abierto
                                                 ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
                                                 : 'border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400' }}
-                                            {{ $nVal !== '' && $nVal < 6 ? 'text-red-600 font-semibold' : ($nVal !== '' && $abierto ? 'text-green-700 font-semibold' : '') }}
+                                            {{ $nVal !== '' && round((float)$nVal, 1) < 7 ? 'text-red-600 font-semibold' : ($nVal !== '' && $abierto ? 'text-green-700 font-semibold' : '') }}
                                             {{ $abierto ? 'nota-input' : '' }}">
                                 </td>
                                 @endforeach
                                 <td class="px-4 py-2 text-center font-semibold prom-cell
-                                    {{ $prom !== null && $prom < 6 ? 'text-red-600' : ($prom !== null ? 'text-green-700' : 'text-gray-400') }}">
+                                    {{ $prom !== null && $prom < 7 ? 'text-red-600' : ($prom !== null ? 'text-green-700' : 'text-gray-400') }}">
                                     {{ $prom !== null ? $prom : '—' }}
                                 </td>
                             </tr>
@@ -211,6 +211,22 @@
         if (selCurso.value) formFiltros.submit();
     });
 
+    // Restaurar selección guardada cuando la página carga sin parámetros en la URL
+    @if(!$matSelec || !$cursoSelec)
+    setTimeout(function () {
+        if (!selMateria.value) return;
+        actualizarCursos();
+        const savedCurso = localStorage.getItem('remember_notas_curso');
+        if (savedCurso) {
+            const existe = Array.from(selCurso.options).some(o => o.value === savedCurso);
+            if (existe) {
+                selCurso.value = savedCurso;
+                formFiltros.submit();
+            }
+        }
+    }, 0);
+    @endif
+
     // Recalcular promedio en tiempo real al editar notas
     document.querySelectorAll('.nota-input').forEach(input => {
         input.addEventListener('input', function () {
@@ -225,9 +241,10 @@
 
                 // Color según aprobación
                 if (inp.value !== '') {
-                    inp.classList.toggle('text-red-600', v < 6);
+                    const vr = Math.round(v * 10) / 10;
+                    inp.classList.toggle('text-red-600', vr < 7);
                     inp.classList.toggle('font-semibold', true);
-                    inp.classList.toggle('text-green-700', v >= 6);
+                    inp.classList.toggle('text-green-700', vr >= 7);
                 } else {
                     inp.classList.remove('text-red-600','text-green-700','font-semibold');
                 }
@@ -237,7 +254,7 @@
                 const prom = Math.round((sum / count) * 10) / 10;
                 promCell.textContent = prom;
                 promCell.className = 'px-4 py-2 text-center font-semibold prom-cell ' +
-                    (prom < 6 ? 'text-red-600' : 'text-green-700');
+                    (prom < 7 ? 'text-red-600' : 'text-green-700');
             } else {
                 promCell.textContent = '—';
                 promCell.className = 'px-4 py-2 text-center font-semibold prom-cell text-gray-400';

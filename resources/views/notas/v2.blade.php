@@ -267,7 +267,7 @@
                                         data-cat="{{ $cat }}"
                                         data-peso="{{ $col->peso ?? 1 }}"
                                         class="nota-input w-16 text-center border border-gray-300 rounded px-1 py-1 text-xs focus:outline-none focus:ring-2 {{ $cfg['ring'] }}
-                                            {{ $val !== '' && $val < 6 ? 'text-red-600 font-semibold' : ($val !== '' ? 'text-green-700 font-semibold' : '') }}">
+                                            {{ $val !== '' && round((float)$val, 1) < 7 ? 'text-red-600 font-semibold' : ($val !== '' ? 'text-green-700 font-semibold' : '') }}">
                                 </td>
                                 @endforeach
 
@@ -320,7 +320,7 @@
                                     if ($sumaTotal > 0) $notaFinal = round($sumaTotal, 1);
                                 @endphp
                                 <span class="nota-final font-bold text-sm
-                                    {{ $notaFinal !== null && $notaFinal < 6 ? 'text-red-600' : ($notaFinal !== null ? 'text-green-700' : 'text-gray-300') }}">
+                                    {{ $notaFinal !== null && $notaFinal < 7 ? 'text-red-600' : ($notaFinal !== null ? 'text-green-700' : 'text-gray-300') }}">
                                     {{ $notaFinal !== null ? number_format($notaFinal, 1) : '—' }}
                                 </span>
                             </td>
@@ -462,6 +462,22 @@
     }
     if (selMateria) selMateria.addEventListener('change', () => { actualizarCursos(); selCurso.value = ''; });
 
+    // Restaurar selección guardada cuando la página carga sin parámetros en la URL
+    @if(!$matSelec || !$cursoSelec)
+    setTimeout(function () {
+        if (!selMateria || !selMateria.value) return;
+        actualizarCursos();
+        const savedCurso = localStorage.getItem('remember_notasv2_curso');
+        if (savedCurso) {
+            const existe = Array.from(selCurso.options).some(o => o.value === savedCurso);
+            if (existe) {
+                selCurso.value = savedCurso;
+                document.getElementById('form-filtros').submit();
+            }
+        }
+    }, 0);
+    @endif
+
     // ── Recalcular promedios ponderados en tiempo real ───────────────────────
     const PESOS_CAT   = { P: 0.70, C: 0.20, A: 0.10 };
     const pesosPorCat = @json($pesosPorCat ?? []);  // pesos explícitos por categoría
@@ -500,8 +516,9 @@
             const promCell = row.querySelector(`.prom-cat[data-cat="${cat}"]`);
             if (promCell) {
                 promCell.textContent = prom !== null ? prom.toFixed(1) : '—';
+                const promR = prom !== null ? Math.round(prom * 10) / 10 : null;
                 promCell.className = 'prom-cat font-semibold text-xs ' +
-                    (prom !== null ? (prom < 6 ? 'text-red-600' : 'text-green-700') : 'text-gray-400');
+                    (promR !== null ? (promR < 7 ? 'text-red-600' : 'text-green-700') : 'text-gray-400');
             }
         });
 
@@ -520,7 +537,7 @@
                 const final = Math.round(suma * 10) / 10;
                 finalCell.textContent = final.toFixed(1);
                 finalCell.className = 'nota-final font-bold text-sm ' +
-                    (final < 6 ? 'text-red-600' : 'text-green-700');
+                    (final < 7 ? 'text-red-600' : 'text-green-700');
             } else {
                 finalCell.textContent = '—';
                 finalCell.className = 'nota-final font-bold text-sm text-gray-300';
@@ -600,8 +617,9 @@
         input.addEventListener('input', function () {
             const v = parseFloat(this.value);
             if (this.value !== '') {
-                this.classList.toggle('text-red-600',   v < 6);
-                this.classList.toggle('text-green-700', v >= 6);
+                const vr = Math.round(v * 10) / 10;
+                this.classList.toggle('text-red-600',   vr < 7);
+                this.classList.toggle('text-green-700', vr >= 7);
                 this.classList.add('font-semibold');
             } else {
                 this.classList.remove('text-red-600','text-green-700','font-semibold');
