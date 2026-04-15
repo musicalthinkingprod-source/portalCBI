@@ -222,9 +222,6 @@ $pctPendiente  = 100 - $pctAprobado - $pctRevision;
                             <a href="{{ route('piar.caract.dir.form', $est->CODIGO) }}"
                                class="text-xs text-blue-500 hover:underline">Ver</a>
                         @endif
-                    @elseif($esOriSuperAd)
-                        <a href="{{ route('piar.caract.dir.form', $est->CODIGO) }}"
-                           class="text-xs text-yellow-600 hover:underline">✏️ Llenar</a>
                     @endif
                 </div>
             </td>
@@ -260,9 +257,6 @@ $pctPendiente  = 100 - $pctAprobado - $pctRevision;
                             <a href="{{ route('piar.caract.mat.form', [$est->CODIGO, $mat->CODIGO_MAT]) }}"
                                class="text-xs text-blue-500 hover:underline">Ver</a>
                         @endif
-                    @elseif($esOriSuperAd)
-                        <a href="{{ route('piar.caract.mat.form', [$est->CODIGO, $mat->CODIGO_MAT]) }}"
-                           class="text-xs text-yellow-600 hover:underline">✏️ Llenar</a>
                     @endif
                 </div>
             </td>
@@ -279,9 +273,6 @@ $pctPendiente  = 100 - $pctAprobado - $pctRevision;
                             <a href="{{ route('piar.anexo2.form', [$est->CODIGO, $mat->CODIGO_MAT]) }}"
                                class="text-xs text-blue-500 hover:underline">Ver</a>
                         @endif
-                    @elseif($esOriSuperAd)
-                        <a href="{{ route('piar.anexo2.form', [$est->CODIGO, $mat->CODIGO_MAT]) }}"
-                           class="text-xs text-yellow-600 hover:underline">✏️ Llenar</a>
                     @endif
                 </div>
             </td>
