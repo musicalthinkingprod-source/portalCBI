@@ -27,7 +27,7 @@
 
 {{-- Barra de acciones --}}
 <div class="flex items-center justify-between mb-4">
-    <a href="{{ route('piar.anexo2.index') }}" class="text-blue-700 hover:underline text-sm">← Volver al listado</a>
+    <a href="{{ $puedeObservar ? route('piar.informe') : route('piar.anexo2.index') }}" class="text-blue-700 hover:underline text-sm">← Volver</a>
     @if($docentePuede)
     <button type="submit" form="form-plan-casero"
         class="bg-indigo-700 hover:bg-indigo-600 text-white text-sm font-semibold px-5 py-2 rounded-lg transition">

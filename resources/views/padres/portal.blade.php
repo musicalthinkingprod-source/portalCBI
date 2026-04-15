@@ -371,28 +371,45 @@
 </div>
 @endif
 
-{{-- Fila 4: Módulos --}}
-<div>
-    <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Accesos rápidos</p>
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        @foreach($modulos as $mod)
-            @if($mod['activo'])
-                <a href="{{ route($mod['route']) }}"
-                   class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-col items-center gap-2 hover:border-blue-300 hover:shadow-md transition group text-center">
-                    <span class="text-3xl">{{ $mod['icon'] }}</span>
-                    <span class="text-xs font-semibold text-gray-700 group-hover:text-blue-700 leading-tight">{{ $mod['label'] }}</span>
-                </a>
-            @else
-                <div class="bg-gray-50 rounded-2xl border border-gray-100 p-4 flex flex-col items-center gap-2 cursor-not-allowed opacity-60 text-center">
-                    <span class="text-3xl grayscale">{{ $mod['icon'] }}</span>
-                    <span class="text-xs font-semibold text-gray-400 leading-tight">{{ $mod['label'] }}</span>
-                    <span class="text-xs text-gray-400">
-                        @if($mod['requiere_pago'] && $bloqueado) Saldo pendiente @else No disponible @endif
-                    </span>
-                </div>
-            @endif
-        @endforeach
+{{-- Fila 4: Módulos por sección --}}
+@php
+    $secciones = collect($modulos)->groupBy('seccion');
+    $iconoSeccion = [
+        'Académico'       => '🎓',
+        'Comunicaciones'  => '📣',
+        'Financiero'      => '💳',
+        'Contacto'        => '📞',
+    ];
+@endphp
+
+<div class="space-y-6">
+    @foreach($secciones as $nombreSeccion => $mods)
+    <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+            <span>{{ $iconoSeccion[$nombreSeccion] ?? '' }}</span>
+            {{ $nombreSeccion }}
+        </p>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            @foreach($mods as $mod)
+                @if($mod['activo'])
+                    <a href="{{ route($mod['route']) }}"
+                       class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-col items-center gap-2 hover:border-blue-300 hover:shadow-md transition group text-center">
+                        <span class="text-3xl">{{ $mod['icon'] }}</span>
+                        <span class="text-xs font-semibold text-gray-700 group-hover:text-blue-700 leading-tight">{{ $mod['label'] }}</span>
+                    </a>
+                @else
+                    <div class="bg-gray-50 rounded-2xl border border-gray-100 p-4 flex flex-col items-center gap-2 cursor-not-allowed opacity-60 text-center">
+                        <span class="text-3xl grayscale">{{ $mod['icon'] }}</span>
+                        <span class="text-xs font-semibold text-gray-400 leading-tight">{{ $mod['label'] }}</span>
+                        <span class="text-xs text-gray-400">
+                            @if($mod['requiere_pago'] && $bloqueado) Saldo pendiente @else No disponible @endif
+                        </span>
+                    </div>
+                @endif
+            @endforeach
+        </div>
     </div>
+    @endforeach
 </div>
 
 @endsection

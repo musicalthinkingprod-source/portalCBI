@@ -43,7 +43,7 @@
 
 {{-- Barra de acciones --}}
 <div class="flex items-center justify-between mb-4">
-    <a href="{{ route('piar.anexo2.index') }}" class="text-blue-700 hover:underline text-sm">← Volver a la lista</a>
+    <a href="{{ $puedeObservar ? route('piar.informe') : route('piar.anexo2.index') }}" class="text-blue-700 hover:underline text-sm">← Volver</a>
     <div class="flex gap-3">
         @if($puedeObservar)
             @if($estadoEtapa !== 'finalizado')

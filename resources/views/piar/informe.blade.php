@@ -11,9 +11,10 @@ $esOriSuperAd = auth()->user()->PROFILE === 'SuperAd' || str_starts_with(auth()-
 if (!function_exists('estadoBadge')) {
     function estadoBadge(string $estado): string {
         return match($estado) {
-            'aprobado' => '<span class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">✓ Aprobado</span>',
-            'revision' => '<span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">👁 En revisión</span>',
-            default    => '<span class="inline-flex items-center gap-1 bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">Pendiente</span>',
+            'aprobado'         => '<span class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">✓ Aprobado</span>',
+            'revision'         => '<span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">👁 En revisión</span>',
+            'con_observaciones'=> '<span class="inline-flex items-center gap-1 bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">💬 Con observaciones</span>',
+            default            => '<span class="inline-flex items-center gap-1 bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">Pendiente</span>',
         };
     }
 }
@@ -28,16 +29,16 @@ foreach ($estudiantes as $est) {
     $cDirs  = $caractDirs[$est->CODIGO] ?? collect();
 
     // Estado caract. director
-    $dirEstado = $cDirs->isNotEmpty() ? ($cDirs->first()->ESTADO ?? 'pendiente') : 'pendiente';
-    if (!$cDirs->isNotEmpty() || empty($cDirs->first()->CARACTERIZACION)) $dirEstado = 'pendiente';
+    $cDirReg   = $cDirs->first();
+    $dirEstado = $cDirReg ? ($cDirReg->ESTADO ?? 'pendiente') : 'pendiente';
     $cuentaEstados[$dirEstado]++;
 
     foreach ($mats as $mat) {
         $cmReg = ($caractMats[$est->CODIGO] ?? collect())[$mat->CODIGO_MAT] ?? null;
         $pmReg = ($piarMats[$est->CODIGO]   ?? collect())[$mat->CODIGO_MAT] ?? null;
 
-        $cmEstado = ($cmReg && !empty($cmReg->CARACTERIZACION)) ? ($cmReg->ESTADO ?? 'pendiente') : 'pendiente';
-        $pmEstado = ($pmReg && !empty($pmReg->BARRERAS))        ? ($pmReg->ESTADO ?? 'pendiente') : 'pendiente';
+        $cmEstado = $cmReg ? ($cmReg->ESTADO ?? 'pendiente') : 'pendiente';
+        $pmEstado = $pmReg ? ($pmReg->ESTADO ?? 'pendiente') : 'pendiente';
 
         $cuentaEstados[$cmEstado]++;
         $cuentaEstados[$pmEstado]++;
@@ -204,7 +205,7 @@ $pctPendiente  = 100 - $pctAprobado - $pctRevision;
         @php
             $cDir      = $cDirs->first();
             $dirTiene  = $cDir && !empty($cDir->CARACTERIZACION);
-            $dirEstado = $dirTiene ? ($cDir->ESTADO ?? 'pendiente') : 'pendiente';
+            $dirEstado = $cDir ? ($cDir->ESTADO ?? 'pendiente') : 'pendiente';
         @endphp
         <tr class="bg-blue-50/50">
             <td class="px-4 py-3 font-semibold text-blue-800 text-sm">Dirección de grupo</td>
@@ -214,14 +215,12 @@ $pctPendiente  = 100 - $pctAprobado - $pctRevision;
             <td class="px-4 py-3 text-center">
                 <div class="flex flex-col items-center gap-1">
                     {!! estadoBadge($dirEstado) !!}
-                    @if($dirTiene)
-                        @if($dirEstado === 'revision')
-                            <a href="{{ route('piar.caract.dir.form', $est->CODIGO) }}"
-                               class="text-xs font-semibold text-orange-600 hover:text-orange-800 hover:underline">👁 Revisar</a>
-                        @else
-                            <a href="{{ route('piar.caract.dir.form', $est->CODIGO) }}"
-                               class="text-xs text-blue-500 hover:underline">Ver</a>
-                        @endif
+                    @if($esOriSuperAd)
+                        <a href="{{ route('piar.caract.dir.form', $est->CODIGO) }}"
+                           class="text-xs font-semibold text-orange-600 hover:text-orange-800 hover:underline">👁 Revisar</a>
+                    @elseif($dirTiene)
+                        <a href="{{ route('piar.caract.dir.form', $est->CODIGO) }}"
+                           class="text-xs text-blue-500 hover:underline">Ver</a>
                     @endif
                 </div>
             </td>
@@ -236,8 +235,8 @@ $pctPendiente  = 100 - $pctAprobado - $pctRevision;
             $pmReg    = $matsPiar[$mat->CODIGO_MAT] ?? null;
             $cmTiene  = $cmReg && !empty($cmReg->CARACTERIZACION);
             $pmTiene  = $pmReg && !empty($pmReg->BARRERAS);
-            $cmEstado = $cmTiene ? ($cmReg->ESTADO ?? 'pendiente') : 'pendiente';
-            $pmEstado = $pmTiene ? ($pmReg->ESTADO ?? 'pendiente') : 'pendiente';
+            $cmEstado = $cmReg ? ($cmReg->ESTADO ?? 'pendiente') : 'pendiente';
+            $pmEstado = $pmReg ? ($pmReg->ESTADO ?? 'pendiente') : 'pendiente';
             $filaOk  = $cmEstado === 'aprobado' && $pmEstado === 'aprobado';
             $filaMal = $cmEstado === 'pendiente' || $pmEstado === 'pendiente';
         @endphp
@@ -249,14 +248,12 @@ $pctPendiente  = 100 - $pctAprobado - $pctRevision;
             <td class="px-4 py-3 text-center">
                 <div class="flex flex-col items-center gap-1">
                     {!! estadoBadge($cmEstado) !!}
-                    @if($cmTiene)
-                        @if($cmEstado === 'revision')
-                            <a href="{{ route('piar.caract.mat.form', [$est->CODIGO, $mat->CODIGO_MAT]) }}"
-                               class="text-xs font-semibold text-orange-600 hover:text-orange-800 hover:underline">👁 Revisar</a>
-                        @else
-                            <a href="{{ route('piar.caract.mat.form', [$est->CODIGO, $mat->CODIGO_MAT]) }}"
-                               class="text-xs text-blue-500 hover:underline">Ver</a>
-                        @endif
+                    @if($esOriSuperAd)
+                        <a href="{{ route('piar.caract.mat.form', [$est->CODIGO, $mat->CODIGO_MAT]) }}"
+                           class="text-xs font-semibold text-orange-600 hover:text-orange-800 hover:underline">👁 Revisar</a>
+                    @elseif($cmTiene)
+                        <a href="{{ route('piar.caract.mat.form', [$est->CODIGO, $mat->CODIGO_MAT]) }}"
+                           class="text-xs text-blue-500 hover:underline">Ver</a>
                     @endif
                 </div>
             </td>
@@ -265,14 +262,12 @@ $pctPendiente  = 100 - $pctAprobado - $pctRevision;
             <td class="px-4 py-3 text-center">
                 <div class="flex flex-col items-center gap-1">
                     {!! estadoBadge($pmEstado) !!}
-                    @if($pmTiene)
-                        @if($pmEstado === 'revision')
-                            <a href="{{ route('piar.anexo2.form', [$est->CODIGO, $mat->CODIGO_MAT]) }}"
-                               class="text-xs font-semibold text-orange-600 hover:text-orange-800 hover:underline">👁 Revisar</a>
-                        @else
-                            <a href="{{ route('piar.anexo2.form', [$est->CODIGO, $mat->CODIGO_MAT]) }}"
-                               class="text-xs text-blue-500 hover:underline">Ver</a>
-                        @endif
+                    @if($esOriSuperAd)
+                        <a href="{{ route('piar.anexo2.form', [$est->CODIGO, $mat->CODIGO_MAT]) }}"
+                           class="text-xs font-semibold text-orange-600 hover:text-orange-800 hover:underline">👁 Revisar</a>
+                    @elseif($pmTiene)
+                        <a href="{{ route('piar.anexo2.form', [$est->CODIGO, $mat->CODIGO_MAT]) }}"
+                           class="text-xs text-blue-500 hover:underline">Ver</a>
                     @endif
                 </div>
             </td>

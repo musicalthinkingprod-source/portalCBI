@@ -158,17 +158,22 @@ class PadresController extends Controller
             ->exists();
 
         $modulos = [
-            ['label' => 'Consultar promedios',   'icon' => '📋', 'route' => 'padres.notas',        'activo' => !$bloqueado && $algunBoletinIniciado, 'requiere_pago' => true],
-            ['label' => 'Boletines',             'icon' => '📝', 'route' => 'padres.boletines',     'activo' => !$bloqueado && $abierto('B'), 'requiere_pago' => true],
-            ['label' => 'Salvavidas',            'icon' => '🏊', 'route' => 'padres.salvavidas',    'activo' => $abierto('S'),               'requiere_pago' => false],
-            ['label' => 'Derroteros',            'icon' => '📌', 'route' => 'padres.derroteros',    'activo' => $abierto('D'),               'requiere_pago' => false],
-            ['label' => 'Circulares',             'icon' => '📢', 'route' => 'padres.circulares',    'activo' => true,                        'requiere_pago' => false],
-            ['label' => 'Documentación',          'icon' => '📁', 'route' => 'padres.documentacion', 'activo' => true,                        'requiere_pago' => false],
-            ['label' => 'English Acquisition',   'icon' => '🇬🇧', 'route' => 'padres.english_acq',  'activo' => true,                        'requiere_pago' => false],
-            ['label' => 'Asistencia',            'icon' => '📅', 'route' => 'padres.asistencia',    'activo' => true,                        'requiere_pago' => false],
-            ['label' => 'Estado de cuenta',      'icon' => '📊', 'route' => 'padres.estado_cuenta', 'activo' => true,                        'requiere_pago' => false],
-            ['label' => 'Atención a padres',      'icon' => '🗓', 'route' => 'padres.atencion_docentes', 'activo' => true,                    'requiere_pago' => false],
-            ['label' => 'Calendario académico',  'icon' => '📆', 'route' => 'padres.calendario',    'activo' => true,                        'requiere_pago' => false],
+            // ── Académico ──────────────────────────────────────────────────
+            ['seccion' => 'Académico', 'label' => 'Consultar promedios',  'icon' => '📋', 'route' => 'padres.notas',            'activo' => !$bloqueado && $algunBoletinIniciado, 'requiere_pago' => true],
+            ['seccion' => 'Académico', 'label' => 'Boletines',            'icon' => '📝', 'route' => 'padres.boletines',         'activo' => !$bloqueado && $abierto('B'),          'requiere_pago' => true],
+            ['seccion' => 'Académico', 'label' => 'Salvavidas',           'icon' => '🏊', 'route' => 'padres.salvavidas',        'activo' => $abierto('S'),                        'requiere_pago' => false],
+            ['seccion' => 'Académico', 'label' => 'Derroteros',           'icon' => '📌', 'route' => 'padres.derroteros',        'activo' => $abierto('D'),                        'requiere_pago' => false],
+            ['seccion' => 'Académico', 'label' => 'Asistencia',           'icon' => '📅', 'route' => 'padres.asistencia',        'activo' => true,                                 'requiere_pago' => false],
+            ['seccion' => 'Académico', 'label' => 'English Acquisition',  'icon' => '🇬🇧', 'route' => 'padres.english_acq',     'activo' => true,                                 'requiere_pago' => false],
+            ['seccion' => 'Académico', 'label' => 'Calendario académico', 'icon' => '📆', 'route' => 'padres.calendario',        'activo' => true,                                 'requiere_pago' => false],
+            // ── Comunicaciones ─────────────────────────────────────────────
+            ['seccion' => 'Comunicaciones', 'label' => 'Circulares',    'icon' => '📢', 'route' => 'padres.circulares',    'activo' => true, 'requiere_pago' => false],
+            ['seccion' => 'Comunicaciones', 'label' => 'Documentación', 'icon' => '📁', 'route' => 'padres.documentacion', 'activo' => true, 'requiere_pago' => false],
+            // ── Financiero ─────────────────────────────────────────────────
+            ['seccion' => 'Financiero', 'label' => 'Estado de cuenta', 'icon' => '📊', 'route' => 'padres.estado_cuenta', 'activo' => true, 'requiere_pago' => false],
+            // ── Contacto ───────────────────────────────────────────────────
+            ['seccion' => 'Contacto', 'label' => 'Atención a padres',  'icon' => '🗓', 'route' => 'padres.atencion_docentes', 'activo' => true, 'requiere_pago' => false],
+            ['seccion' => 'Contacto', 'label' => 'Conducto regular',   'icon' => '🗺️', 'route' => 'padres.conducto_regular',  'activo' => true, 'requiere_pago' => false],
         ];
 
         return view('padres.portal', compact(

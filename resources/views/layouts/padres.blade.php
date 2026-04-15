@@ -39,7 +39,7 @@
         </div>
         @endif
 
-        <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        <nav class="flex-1 px-4 py-5 overflow-y-auto">
             @php
                 $codigoP       = session('padre_estudiante')->CODIGO ?? null;
                 $facturadoP    = $codigoP ? \Illuminate\Support\Facades\DB::table('facturacion')->where('codigo_alumno', $codigoP)->sum('valor') : 0;
@@ -48,123 +48,129 @@
                 $exentoP       = $codigoP ? \App\Http\Controllers\ExencionCarteraController::tieneExencion($codigoP) : false;
                 $bloqueado     = !$exentoP && $saldoP > 100000;
 
-                // Verificación de fechas para cada sección
-                $now            = now();
-                $abiertoDerrotero = \Illuminate\Support\Facades\DB::table('FECHAS')
-                    ->where('CODIGO_FECHA', 'like', 'D%')
-                    ->where('INICIO', '<=', $now)->where('FIN', '>=', $now)->exists();
-                $abiertoSalvavidas = \Illuminate\Support\Facades\DB::table('FECHAS')
-                    ->where('CODIGO_FECHA', 'like', 'S%')
-                    ->where('INICIO', '<=', $now)->where('FIN', '>=', $now)->exists();
-                $abiertoBoletin = \Illuminate\Support\Facades\DB::table('FECHAS')
-                    ->where('CODIGO_FECHA', 'like', 'B%')
-                    ->where('INICIO', '<=', $now)->where('FIN', '>=', $now)->exists();
-                $abiertoNotas = \Illuminate\Support\Facades\DB::table('FECHAS')
-                    ->where('CODIGO_FECHA', 'like', 'B%')
-                    ->where('INICIO', '<=', $now)->exists();
+                $now               = now();
+                $abiertoDerrotero  = \Illuminate\Support\Facades\DB::table('FECHAS')->where('CODIGO_FECHA', 'like', 'D%')->where('INICIO', '<=', $now)->where('FIN', '>=', $now)->exists();
+                $abiertoSalvavidas = \Illuminate\Support\Facades\DB::table('FECHAS')->where('CODIGO_FECHA', 'like', 'S%')->where('INICIO', '<=', $now)->where('FIN', '>=', $now)->exists();
+                $abiertoBoletin    = \Illuminate\Support\Facades\DB::table('FECHAS')->where('CODIGO_FECHA', 'like', 'B%')->where('INICIO', '<=', $now)->where('FIN', '>=', $now)->exists();
+                $abiertoNotas      = \Illuminate\Support\Facades\DB::table('FECHAS')->where('CODIGO_FECHA', 'like', 'B%')->where('INICIO', '<=', $now)->exists();
             @endphp
 
-            <a href="{{ route('padres.portal') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+            {{-- Inicio --}}
+            <a href="{{ route('padres.portal') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm mb-2">
                 🏠 Inicio
             </a>
 
-            {{-- Consultar notas (requiere F abierto y sin deuda) --}}
             @if($bloqueado)
-                <div class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
-                    <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Consultar promedios</div>
-                    <p class="text-xs text-blue-500 mt-0.5 leading-tight">No disponible por saldo pendiente de <strong class="text-blue-400">$ {{ number_format($saldoP, 0, ',', '.') }}</strong>.</p>
-                </div>
-            @elseif(!$abiertoNotas)
-                <div class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
-                    <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Consultar promedios</div>
-                    <p class="text-xs text-blue-500 mt-0.5 leading-tight">Disponible a partir de la primera entrega de boletines.</p>
-                </div>
-            @else
-                <a href="{{ route('padres.notas') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                    📋 Consultar promedios
-                </a>
-            @endif
-
-            {{-- Salvavidas --}}
-            @if(!$abiertoSalvavidas)
-                <div class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
-                    <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Salvavidas</div>
-                    <p class="text-xs text-blue-500 mt-0.5 leading-tight">La institución aún no ha habilitado la consulta de salvavidas.</p>
-                </div>
-            @else
-                <a href="{{ route('padres.salvavidas') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                    🏊 Salvavidas
-                </a>
-            @endif
-
-            {{-- Derroteros --}}
-            @if(!$abiertoDerrotero)
-                <div class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
-                    <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Derroteros</div>
-                    <p class="text-xs text-blue-500 mt-0.5 leading-tight">La institución aún no ha habilitado la consulta de derroteros.</p>
-                </div>
-            @else
-                <a href="{{ route('padres.derroteros') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                    📌 Derroteros
-                </a>
-            @endif
-
-            {{-- Boletines (requiere B abierto y sin deuda) --}}
-            @if($bloqueado)
-                <div class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
-                    <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Boletines</div>
-                    <p class="text-xs text-blue-500 mt-0.5 leading-tight">No disponible por saldo pendiente de <strong class="text-blue-400">$ {{ number_format($saldoP, 0, ',', '.') }}</strong>.</p>
-                </div>
-            @elseif(!$abiertoBoletin)
-                <div class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
-                    <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Boletines</div>
-                    <p class="text-xs text-blue-500 mt-0.5 leading-tight">La institución aún no ha publicado los boletines.</p>
-                </div>
-            @else
-                <a href="{{ route('padres.boletines') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                    📝 Boletines
-                </a>
-            @endif
-
-            @if($bloqueado)
-                <div class="mt-2 mx-1 p-2 bg-red-900 bg-opacity-50 rounded-lg text-xs text-red-300 text-center">
-                    ⚠️ Tienes un saldo pendiente de<br>
+                <div class="mb-3 mx-1 p-2 bg-red-900 bg-opacity-50 rounded-lg text-xs text-red-300 text-center">
+                    ⚠️ Saldo pendiente de<br>
                     <strong>$ {{ number_format($saldoP, 0, ',', '.') }}</strong><br>
-                    Algunas opciones están bloqueadas.
+                    Algunos módulos bloqueados.
                 </div>
             @endif
 
-            <a href="{{ route('padres.circulares') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                📢 Circulares
-            </a>
+            {{-- ── Académico ──────────────────────────────────────────── --}}
+            <div class="sidebar-cat mb-1" data-cat="academico">
+                <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+                   onclick="toggleCategoryP(this)">
+                    <span>🎓 Académico</span>
+                    <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </p>
+                <ul class="space-y-0.5 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
 
-            <a href="{{ route('padres.documentacion') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                📁 Documentación
-            </a>
+                    @if($bloqueado)
+                        <li class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
+                            <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Consultar promedios</div>
+                        </li>
+                    @elseif(!$abiertoNotas)
+                        <li class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
+                            <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Consultar promedios</div>
+                            <p class="text-xs text-blue-500 mt-0.5 leading-tight">Disponible a partir de la primera entrega de boletines.</p>
+                        </li>
+                    @else
+                        <li><a href="{{ route('padres.notas') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">📋 Consultar promedios</a></li>
+                    @endif
 
-            <a href="{{ route('padres.conducto_regular') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                🗺️ Conducto regular
-            </a>
+                    @if($bloqueado)
+                        <li class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
+                            <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Boletines</div>
+                        </li>
+                    @elseif(!$abiertoBoletin)
+                        <li class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
+                            <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Boletines</div>
+                            <p class="text-xs text-blue-500 mt-0.5 leading-tight">La institución aún no ha publicado los boletines.</p>
+                        </li>
+                    @else
+                        <li><a href="{{ route('padres.boletines') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">📝 Boletines</a></li>
+                    @endif
 
-            <a href="{{ route('padres.english_acq') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                🇬🇧 English Acquisition
-            </a>
+                    @if(!$abiertoSalvavidas)
+                        <li class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
+                            <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Salvavidas</div>
+                        </li>
+                    @else
+                        <li><a href="{{ route('padres.salvavidas') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">🏊 Salvavidas</a></li>
+                    @endif
 
-            <a href="{{ route('padres.asistencia') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                📅 Asistencia
-            </a>
+                    @if(!$abiertoDerrotero)
+                        <li class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
+                            <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Derroteros</div>
+                        </li>
+                    @else
+                        <li><a href="{{ route('padres.derroteros') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">📌 Derroteros</a></li>
+                    @endif
 
-            <a href="{{ route('padres.calendario') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                📆 Calendario académico
-            </a>
+                    <li><a href="{{ route('padres.asistencia') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">📅 Asistencia</a></li>
+                    <li><a href="{{ route('padres.english_acq') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">🇬🇧 English Acquisition</a></li>
+                    <li><a href="{{ route('padres.calendario') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">📆 Calendario académico</a></li>
+                </ul>
+            </div>
 
-            <a href="{{ route('padres.atencion_docentes') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                🗓 Atención a padres
-            </a>
+            {{-- ── Comunicaciones ─────────────────────────────────────── --}}
+            <div class="sidebar-cat mb-1" data-cat="comunicaciones">
+                <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+                   onclick="toggleCategoryP(this)">
+                    <span>📣 Comunicaciones</span>
+                    <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </p>
+                <ul class="space-y-0.5 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                    <li><a href="{{ route('padres.circulares') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">📢 Circulares</a></li>
+                    <li><a href="{{ route('padres.documentacion') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">📁 Documentación</a></li>
+                </ul>
+            </div>
 
-            <a href="{{ route('padres.estado_cuenta') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
-                📊 Estado de cuenta
-            </a>
+            {{-- ── Financiero ──────────────────────────────────────────── --}}
+            <div class="sidebar-cat mb-1" data-cat="financiero">
+                <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+                   onclick="toggleCategoryP(this)">
+                    <span>💳 Financiero</span>
+                    <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </p>
+                <ul class="space-y-0.5 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                    <li><a href="{{ route('padres.estado_cuenta') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">📊 Estado de cuenta</a></li>
+                </ul>
+            </div>
+
+            {{-- ── Contacto ────────────────────────────────────────────── --}}
+            <div class="sidebar-cat mb-1" data-cat="contacto">
+                <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+                   onclick="toggleCategoryP(this)">
+                    <span>📞 Contacto</span>
+                    <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </p>
+                <ul class="space-y-0.5 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                    <li><a href="{{ route('padres.atencion_docentes') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">🗓 Atención a padres</a></li>
+                    <li><a href="{{ route('padres.conducto_regular') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">🗺️ Conducto regular</a></li>
+                </ul>
+            </div>
+
         </nav>
 
         <div class="px-4 py-4 border-t border-blue-700">
@@ -205,6 +211,62 @@
         sidebar.classList.toggle('-translate-x-full');
         overlay.classList.toggle('hidden');
     }
+</script>
+
+<script>
+// ── Acordeón del sidebar de padres ────────────────────────────────────────
+function toggleCategoryP(titleEl) {
+    var ul      = titleEl.nextElementSibling;
+    var chevron = titleEl.querySelector('.cat-chevron');
+    var catId   = titleEl.closest('.sidebar-cat').dataset.cat;
+    var isOpen  = ul.style.maxHeight && ul.style.maxHeight !== '0px';
+
+    // Cerrar todas las demás
+    var saved = JSON.parse(localStorage.getItem('padresCats') || '{}');
+    document.querySelectorAll('.sidebar-cat').forEach(function (cat) {
+        if (cat.dataset.cat === catId) return;
+        cat.querySelector('.cat-body').style.maxHeight = '0px';
+        cat.querySelector('.cat-chevron').style.transform = 'rotate(0deg)';
+        saved[cat.dataset.cat] = false;
+    });
+
+    if (isOpen) {
+        ul.style.maxHeight = '0px';
+        chevron.style.transform = 'rotate(0deg)';
+        saved[catId] = false;
+    } else {
+        ul.style.maxHeight = ul.scrollHeight + 'px';
+        chevron.style.transform = 'rotate(180deg)';
+        saved[catId] = true;
+    }
+
+    localStorage.setItem('padresCats', JSON.stringify(saved));
+}
+
+// Al cargar: abrir la categoría activa (o la guardada)
+document.addEventListener('DOMContentLoaded', function () {
+    var saved      = JSON.parse(localStorage.getItem('padresCats') || '{}');
+    var currentUrl = window.location.href;
+    var opened     = false;
+
+    document.querySelectorAll('.sidebar-cat').forEach(function (cat) {
+        var catId   = cat.dataset.cat;
+        var ul      = cat.querySelector('.cat-body');
+        var chevron = cat.querySelector('.cat-chevron');
+
+        var hasActive = Array.from(ul.querySelectorAll('a')).some(function (a) {
+            return currentUrl.startsWith(a.href) && a.href !== window.location.origin + '/';
+        });
+
+        var shouldOpen = hasActive || (!opened && saved[catId] === true);
+
+        if (shouldOpen && !opened) {
+            ul.style.maxHeight = ul.scrollHeight + 'px';
+            chevron.style.transform = 'rotate(180deg)';
+            opened = true;
+        }
+    });
+});
 </script>
 
 </body>

@@ -44,7 +44,7 @@
 </div>
 
 <div class="flex items-center justify-between mb-4">
-    <a href="{{ route('piar.anexo2.index') }}" class="text-blue-700 hover:underline text-sm">← Volver</a>
+    <a href="{{ $puedeObservar ? route('piar.informe') : route('piar.anexo2.index') }}" class="text-blue-700 hover:underline text-sm">← Volver</a>
     <div class="flex gap-3">
         @if($puedeObservar)
             @if($estadoEtapa !== 'finalizado')
@@ -58,12 +58,10 @@
                     class="bg-gray-600 hover:bg-gray-500 text-white text-sm font-semibold px-5 py-2 rounded-lg transition">
                     💾 Guardar borrador
                 </button>
-                @if($estadoActual !== 'aprobado')
                 <button type="submit" form="form-caract-dir" name="accion" value="entregar"
                     class="bg-green-700 hover:bg-green-600 text-white text-sm font-semibold px-5 py-2 rounded-lg transition">
-                    📤 Marcar como entregado
+                    📤 Guardar como entregado
                 </button>
-                @endif
             </div>
             @endif
         @elseif($docentePuede)
