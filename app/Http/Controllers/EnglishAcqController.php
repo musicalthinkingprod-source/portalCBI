@@ -209,6 +209,62 @@ class EnglishAcqController extends Controller
         return back()->with('success_acq', "Notas English Acquisition período {$periodo}/{$anio} subidas a NOTAS_2026 ({$procesados} estudiantes).");
     }
 
+    public function consultaPublica(Request $request)
+    {
+        $error     = null;
+        $notas     = null;
+        $detalle   = null;
+        $estudiante = null;
+
+        if ($request->isMethod('post')) {
+            $codigo = trim($request->input('codigo'));
+            $cc     = preg_replace('/\D/', '', trim($request->input('cc')));
+
+            // Buscar estudiante
+            $est = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->first();
+
+            if (!$est) {
+                $error = 'No se encontró ningún estudiante con ese código.';
+            } else {
+                // Verificar CC contra cualquier acudiente
+                $padres = DB::table('INFO_PADRES')->where('CODIGO', $codigo)->first();
+                $valido = false;
+                if ($padres) {
+                    foreach (['CC_MADRE', 'CC_PADRE', 'CC_ACUD'] as $campo) {
+                        $val = preg_replace('/\D/', '', (string)($padres->$campo ?? ''));
+                        if ($val !== '' && $val === $cc) { $valido = true; break; }
+                    }
+                }
+
+                if (!$valido) {
+                    $error = 'El número de documento no corresponde a ningún acudiente registrado para este estudiante.';
+                } else {
+                    $anio    = (int) date('Y');
+                    $notas   = [];
+                    $detalle = [];
+
+                    for ($p = 1; $p <= 4; $p++) {
+                        $registros = DB::table($this->tabla)
+                            ->where('CODIGO_ALUM', $codigo)
+                            ->where('PERIODO', $p)
+                            ->where('ANIO', $anio)
+                            ->orderBy('FECHA')
+                            ->get();
+
+                        $notas[$p] = max(0, 10 - ($registros->count() * 0.25));
+                        foreach ($registros as $r) {
+                            $detalle[] = ['periodo' => $p, 'fecha' => $r->FECHA];
+                        }
+                    }
+
+                    $estudiante = $est;
+                }
+            }
+        }
+
+        return view('english-acq.consulta-publica', compact('error', 'notas', 'detalle', 'estudiante'));
+    }
+
     public function informe(Request $request)
     {
         $anio        = $request->input('anio', date('Y'));

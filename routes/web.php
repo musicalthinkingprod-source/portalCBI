@@ -59,6 +59,9 @@ Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'ind
 
 Route::post('/verificar-padre', [PadreVerificacionController::class, 'verificar'])->name('padre.verificar');
 
+// Consulta pública temporal — English Acquisition (sin autenticación)
+Route::match(['get','post'], '/ingles', [EnglishAcqController::class, 'consultaPublica'])->name('ingles.consulta');
+
 Route::middleware('padre.verificado')->group(function () {
     Route::get('/padres/portal', [PadresController::class, 'portal'])->name('padres.portal');
     Route::get('/padres/estado-cuenta', [PadresController::class, 'estadoCuenta'])->name('padres.estado_cuenta');
