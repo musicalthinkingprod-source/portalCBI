@@ -154,6 +154,7 @@ Route::middleware(['auth'])->group(function () {
     // ── Control de Pagos: lectura + seguimiento cartera (Admin + Contab + SecC100) ────────────────
     Route::middleware('profile:SuperAd,Admin,Contab,SecC100')->group(function () {
         Route::get('/control/estudiante', [ControlEstudianteController::class, 'index'])->name('control.estudiante');
+        Route::post('/control/estudiante/observacion', [ControlEstudianteController::class, 'saveObservacion'])->name('control.estudiante.observacion.save');
         Route::get('/pagos', [PagosController::class, 'index'])->name('pagos.index');
         Route::get('/cartera', [CarteraController::class, 'index'])->name('cartera.index');
         Route::get('/cartera/deudores', [CarteraController::class, 'deudores'])->name('cartera.deudores');

@@ -7,6 +7,22 @@ use Illuminate\Support\Facades\DB;
 
 class ControlEstudianteController extends Controller
 {
+    public function saveObservacion(Request $request)
+    {
+        $request->validate([
+            'codigo_alumno' => 'required|integer',
+            'observacion'   => 'nullable|string',
+        ]);
+
+        DB::table('observaciones_contables')->updateOrInsert(
+            ['codigo_alumno' => $request->codigo_alumno],
+            ['observacion' => $request->observacion, 'updated_at' => now(), 'created_at' => now()]
+        );
+
+        return redirect()->route('control.estudiante', ['codigo' => $request->codigo_alumno])
+            ->with('ok', 'Observación guardada correctamente.');
+    }
+
     public function index(Request $request)
     {
         $estudiante   = null;

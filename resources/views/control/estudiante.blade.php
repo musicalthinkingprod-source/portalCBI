@@ -175,12 +175,45 @@
 
         {{-- Observaciones --}}
         <div class="bg-white rounded-xl shadow p-5">
-            <h3 class="font-bold text-blue-800 mb-3">Observaciones contables</h3>
-            @if(!empty($observacion->observacion))
-                <p class="text-sm text-gray-700 whitespace-pre-line">{{ $observacion->observacion }}</p>
-            @else
-                <p class="text-sm text-gray-400 italic">Sin observaciones.</p>
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-bold text-blue-800">Observaciones contables</h3>
+                <button type="button" onclick="document.getElementById('form-observacion').classList.toggle('hidden')"
+                    class="bg-blue-800 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                    {{ $observacion ? 'Editar observación' : 'Agregar observación' }}
+                </button>
+            </div>
+
+            @if(session('ok'))
+                <div class="bg-green-100 text-green-700 text-sm rounded-lg px-4 py-2 mb-3">
+                    {{ session('ok') }}
+                </div>
             @endif
+
+            @if(!empty($observacion->observacion))
+                <p class="text-sm text-gray-700 whitespace-pre-line mb-4">{{ $observacion->observacion }}</p>
+            @else
+                <p class="text-sm text-gray-400 italic mb-4">Sin observaciones.</p>
+            @endif
+
+            <div id="form-observacion" class="{{ $errors->any() ? '' : 'hidden' }}">
+                <form method="POST" action="{{ route('control.estudiante.observacion.save') }}">
+                    @csrf
+                    <input type="hidden" name="codigo_alumno" value="{{ $estudiante->CODIGO }}">
+                    <textarea name="observacion" rows="4"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                        placeholder="Escribe la observación contable...">{{ old('observacion', $observacion->observacion ?? '') }}</textarea>
+                    <div class="flex gap-2 mt-2">
+                        <button type="submit"
+                            class="bg-blue-800 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
+                            Guardar
+                        </button>
+                        <button type="button" onclick="document.getElementById('form-observacion').classList.add('hidden')"
+                            class="bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-semibold px-4 py-2 rounded-lg transition">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
 
     @endif
