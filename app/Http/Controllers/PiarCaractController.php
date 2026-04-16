@@ -20,7 +20,7 @@ class PiarCaractController extends Controller
 
     // ── ÍNDICE GENERAL – agrupado por estudiante ────────────────────────────
     // Materias excluidas del PIAR (no aplican caracterización ni ajustes)
-    private const MATS_EXCLUIDAS_PIAR = [24, 124, 153]; // Urbanidad y Cívica, Urbanidad y Cívica PE, Pensamiento Lógico
+    private const MATS_EXCLUIDAS_PIAR = [24, 35, 124, 135, 153]; // Urbanidad y Cívica, Cátedra de Paz, Urbanidad y Cívica PE, Cátedra de Paz PE, Pensamiento Lógico
 
     public function index()
     {

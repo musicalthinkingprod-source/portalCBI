@@ -46,6 +46,9 @@ class PiarMatController extends Controller
                 'e.GRADO', 'e.CURSO', 'a.CODIGO_MAT', 'm.NOMBRE_MAT', 'pd.DIAGNOSTICO'
             );
 
+        $matsExcluidas = [24, 35, 124, 135, 153]; // Urbanidad y Cívica, Cátedra de Paz, Urbanidad y Cívica PE, Cátedra de Paz PE, Pensamiento Lógico
+        $query->whereNotIn('a.CODIGO_MAT', $matsExcluidas);
+
         if ($esDocente) {
             $query->where('a.CODIGO_DOC', $codigoDoc);
         }

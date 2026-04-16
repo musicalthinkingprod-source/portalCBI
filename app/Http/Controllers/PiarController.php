@@ -195,7 +195,7 @@ class PiarController extends Controller
             ->select('pcd.CARACTERIZACION', 'pcd.CURSO', 'd.NOMBRE_DOC')
             ->first();
 
-        $matsExcluidas = [24, 124, 153]; // Urbanidad y Cívica, Urbanidad y Cívica PE, Pensamiento Lógico
+        $matsExcluidas = [24, 35, 124, 135, 153]; // Urbanidad y Cívica, Cátedra de Paz, Urbanidad y Cívica PE, Cátedra de Paz PE, Pensamiento Lógico
 
         $caractMats = DB::table('PIAR_CARACT_MAT as pc')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'pc.CODIGO_MAT')
@@ -400,7 +400,7 @@ class PiarController extends Controller
         $codigoAlums = $estudiantes->pluck('CODIGO')->toArray();
 
         // Materias excluidas del PIAR (no aplican caracterización ni ajustes)
-        $matsExcluidas = [24, 124, 153]; // Urbanidad y Cívica, Urbanidad y Cívica PE, Pensamiento Lógico
+        $matsExcluidas = [24, 35, 124, 135, 153]; // Urbanidad y Cívica, Cátedra de Paz, Urbanidad y Cívica PE, Cátedra de Paz PE, Pensamiento Lógico
 
         // Todas las materias asignadas a los cursos de esos estudiantes (deduplicadas por CURSO+CODIGO_MAT)
         $asignaciones = DB::table('ASIGNACION_PCM as a')
