@@ -46,7 +46,7 @@
                         <select name="grado" class="{{ $sel }}">
                             <option value="">Todos</option>
                             @foreach($grados as $g)
-                                <option value="{{ $g }}" {{ request('grado') == $g ? 'selected' : '' }}>{{ $gradosLabels[(int)$g] ?? $g }}</option>
+                                <option value="{{ $g }}" {{ (string) request('grado') === (string) $g ? 'selected' : '' }}>{{ $gradosLabels[(int)$g] ?? $g }}</option>
                             @endforeach
                         </select>
                     </div>
