@@ -417,7 +417,7 @@
             elseif (!$esDiaHabil) $itemClass .= ' nohabil';
             elseif ($tieneEvento) $itemClass .= ' con-evento';
 
-            $eventosJson = json_encode($eventosDelDia->values()->toArray());
+            $eventosJson = json_encode($eventosDelDia->values()->toArray(), JSON_HEX_QUOT | JSON_HEX_APOS);
         @endphp
         <div class="{{ $itemClass }}"
             @if($tieneEvento && !$esHoy) style="border-left-color:{{ $vc['border'] }}; background:{{ $vc['bg'] }};" @endif
@@ -507,7 +507,7 @@
                     $tieneEvento   = $eventosDelDia->isNotEmpty();
                     $primerEvento  = $tieneEvento ? $eventosDelDia->first() : null;
                     $vc            = $tieneEvento ? ($visColors[$primerEvento->visibilidad] ?? $visColors['interno']) : null;
-                    $eventosJson   = json_encode($eventosDelDia->values()->toArray());
+                    $eventosJson   = json_encode($eventosDelDia->values()->toArray(), JSON_HEX_QUOT | JSON_HEX_APOS);
 
                     $cellClass = 'cal-cell';
                     if ($esHoy) {
