@@ -417,12 +417,12 @@
             elseif (!$esDiaHabil) $itemClass .= ' nohabil';
             elseif ($tieneEvento) $itemClass .= ' con-evento';
 
-            $eventosJson = json_encode($eventosDelDia->values()->toArray(), JSON_HEX_QUOT | JSON_HEX_APOS);
+            $eventosJson = json_encode($eventosDelDia->values()->toArray());
         @endphp
         <div class="{{ $itemClass }}"
             @if($tieneEvento && !$esHoy) style="border-left-color:{{ $vc['border'] }}; background:{{ $vc['bg'] }};" @endif
             @if($puedeEditar)
-                onclick="abrirModal('{{ $fechaStr }}', {{ $d }}, {!! $eventosJson !!}, {{ $esDiaHabil ? 'true' : 'false' }})"
+                onclick="abrirModal('{{ $fechaStr }}', {{ $d }}, {{ $eventosJson }}, {{ $esDiaHabil ? 'true' : 'false' }})"
                 style="{{ ($tieneEvento && !$esHoy) ? 'border-left-color:'.$vc['border'].'; background:'.$vc['bg'].';' : '' }} cursor:pointer;"
             @endif
         >
@@ -457,7 +457,7 @@
 
             @if($puedeEditar)
             <button class="cli-edit-btn"
-                onclick="event.stopPropagation(); abrirModal('{{ $fechaStr }}', {{ $d }}, {!! $eventosJson !!}, {{ $esDiaHabil ? 'true' : 'false' }})">
+                onclick="event.stopPropagation(); abrirModal('{{ $fechaStr }}', {{ $d }}, {{ $eventosJson }}, {{ $esDiaHabil ? 'true' : 'false' }})">
                 ✏️
             </button>
             @endif
@@ -507,7 +507,7 @@
                     $tieneEvento   = $eventosDelDia->isNotEmpty();
                     $primerEvento  = $tieneEvento ? $eventosDelDia->first() : null;
                     $vc            = $tieneEvento ? ($visColors[$primerEvento->visibilidad] ?? $visColors['interno']) : null;
-                    $eventosJson   = json_encode($eventosDelDia->values()->toArray(), JSON_HEX_QUOT | JSON_HEX_APOS);
+                    $eventosJson   = json_encode($eventosDelDia->values()->toArray());
 
                     $cellClass = 'cal-cell';
                     if ($esHoy) {
@@ -524,7 +524,7 @@
                     <div class="{{ $cellClass }}"
                         @if($tieneEvento && !$esHoy) style="border-color:{{ $vc['border'] }}; background:{{ $vc['bg'] }};" @endif
                         @if($puedeEditar)
-                            onclick="abrirModal('{{ $fechaStr }}', {{ $d }}, {!! $eventosJson !!}, {{ $esDiaHabil ? 'true' : 'false' }})"
+                            onclick="abrirModal('{{ $fechaStr }}', {{ $d }}, {{ $eventosJson }}, {{ $esDiaHabil ? 'true' : 'false' }})"
                         @endif
                     >
                         <div class="cell-num">
