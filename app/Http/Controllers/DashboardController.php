@@ -55,6 +55,10 @@ class DashboardController extends Controller
             ->where('fecha', today()->toDateString())
             ->first();
 
+        $manana = DB::table('calendario_academico')
+            ->where('fecha', today()->addDay()->toDateString())
+            ->first();
+
         $proximosEventos = DB::table('calendario_academico')
             ->where('fecha', '>=', today()->toDateString())
             ->whereNotNull('evento')
@@ -84,7 +88,7 @@ class DashboardController extends Controller
         }
 
         return view('dashboard', compact(
-            'profile', 'isDoc', 'cartera', 'notas', 'hoy', 'proximosEventos', 'asistencia'
+            'profile', 'isDoc', 'cartera', 'notas', 'hoy', 'manana', 'proximosEventos', 'asistencia'
         ));
     }
 }

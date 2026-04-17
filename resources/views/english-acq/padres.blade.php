@@ -7,12 +7,16 @@
     {{-- Notas por período --}}
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         @foreach([1,2,3,4] as $p)
-        @php $nota = $notas[$p] ?? 10; $iniciado = in_array($p, $periodosIniciados); @endphp
+        @php
+            $nota = $notas[$p] ?? 10;
+            $notaRedondeada = round($nota, 1, PHP_ROUND_HALF_UP);
+            $iniciado = in_array($p, $periodosIniciados);
+        @endphp
         @if($iniciado)
         <div class="bg-white rounded-xl shadow p-4 text-center">
             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Período {{ $p }}</p>
-            <p class="text-3xl font-bold {{ $nota < 7 ? 'text-red-600' : ($nota < 8 ? 'text-yellow-500' : 'text-green-600') }}">
-                {{ number_format($nota, 2) }}
+            <p class="text-3xl font-bold {{ $notaRedondeada < 7 ? 'text-red-600' : ($notaRedondeada < 8 ? 'text-yellow-500' : 'text-green-600') }}">
+                {{ number_format($notaRedondeada, 1) }}
             </p>
             <p class="text-xs text-gray-400 mt-1">/10</p>
         </div>

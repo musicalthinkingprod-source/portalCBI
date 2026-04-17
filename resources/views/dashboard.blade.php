@@ -102,21 +102,21 @@
         </div>
         @endif
 
-        {{-- Calendario hoy --}}
+        {{-- Calendario hoy + mañana --}}
         <div class="bg-white rounded-xl shadow p-5 flex flex-col gap-3">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Hoy</span>
+                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Hoy / Mañana</span>
                 <span class="text-2xl">📆</span>
             </div>
             @if($hoy && $hoy->dia_ciclo > 0)
                 <div>
                     <div class="text-2xl font-bold text-blue-700">Día {{ $hoy->dia_ciclo }}</div>
-                    <div class="text-xs text-gray-500">{{ now()->isoFormat('dddd') }}</div>
+                    <div class="text-xs text-gray-500">Hoy · {{ now()->isoFormat('dddd') }}</div>
                 </div>
             @else
                 <div>
                     <div class="text-2xl font-bold text-gray-400">—</div>
-                    <div class="text-xs text-gray-400">Día no académico</div>
+                    <div class="text-xs text-gray-400">Hoy · Día no académico</div>
                 </div>
             @endif
             @if($hoy && $hoy->evento)
@@ -124,6 +124,26 @@
                     📌 {{ $hoy->evento }}
                 </div>
             @endif
+
+            <div class="border-t border-gray-100 pt-2">
+                @if($manana && $manana->dia_ciclo > 0)
+                    <div>
+                        <div class="text-lg font-bold text-indigo-600">Día {{ $manana->dia_ciclo }}</div>
+                        <div class="text-xs text-gray-500">Mañana · {{ now()->addDay()->isoFormat('dddd') }}</div>
+                    </div>
+                @else
+                    <div>
+                        <div class="text-lg font-bold text-gray-400">—</div>
+                        <div class="text-xs text-gray-400">Mañana · Día no académico</div>
+                    </div>
+                @endif
+                @if($manana && $manana->evento)
+                    <div class="text-xs bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 text-yellow-800 mt-2">
+                        📌 {{ $manana->evento }}
+                    </div>
+                @endif
+            </div>
+
             @php
                 $calRoute = str_starts_with($profile, 'DOC') ? route('calendario.docente') : route('calendario.index');
             @endphp

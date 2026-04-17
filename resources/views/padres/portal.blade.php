@@ -57,34 +57,28 @@
         @endif
     </div>
 
-    {{-- Próximo día académico --}}
+    {{-- Mañana --}}
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-        <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Próximo día académico</p>
-        @if($proxCal)
-            @php
-                $proxFecha = \Carbon\Carbon::parse($proxCal->fecha);
-                $proxDias  = (int) now()->startOfDay()->diffInDays($proxFecha->startOfDay(), false);
-            @endphp
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Mañana · {{ now()->addDay()->locale('es')->isoFormat('dddd D [de] MMMM') }}</p>
+        @if($diaCicloManana)
             <div class="flex items-center gap-3">
                 <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 text-xl font-bold shrink-0">
-                    {{ $proxCal->dia_ciclo }}
+                    {{ $diaCicloManana }}
                 </div>
                 <div>
-                    <p class="text-base font-bold text-gray-800">
-                        {{ $diasNombre[$proxCal->dia_ciclo] ?? 'Día '.$proxCal->dia_ciclo }}
-                    </p>
-                    <p class="text-xs text-gray-500">
-                        {{ $proxFecha->locale('es')->isoFormat('dddd D [de] MMMM') }}
-                        @if($proxDias === 1)
-                            <span class="ml-1 text-indigo-500 font-semibold">· mañana</span>
-                        @elseif($proxDias > 1)
-                            <span class="ml-1 text-gray-400">· en {{ $proxDias }} días</span>
-                        @endif
-                    </p>
+                    <p class="text-lg font-bold text-gray-800">{{ $diasNombre[$diaCicloManana] ?? 'Día '.$diaCicloManana }}</p>
+                    <p class="text-xs text-indigo-600 font-medium">Día académico</p>
                 </div>
             </div>
         @else
-            <p class="text-sm text-gray-400">Sin próximos días registrados</p>
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-gray-200 flex items-center justify-center text-gray-400 text-2xl shrink-0">
+                    🏠
+                </div>
+                <div>
+                    <p class="text-base font-semibold text-gray-500">Día no académico</p>
+                </div>
+            </div>
         @endif
     </div>
 
@@ -121,21 +115,42 @@
 
 </div>
 
-{{-- Fila 2: Horario de hoy --}}
-@if($diaCicloHoy)
+{{-- Fila 2: Horarios (hoy + mañana si aplica) --}}
+@php
+    $tarjetasHorario = [];
+    if ($diaCicloHoy) {
+        $tarjetasHorario[] = [
+            'titulo'      => 'Horario de hoy — ' . ($diasNombre[$diaCicloHoy] ?? 'Día '.$diaCicloHoy),
+            'fecha'       => now()->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY'),
+            'horario'     => $horarioHoy,
+            'icoColor'    => 'text-blue-600',
+            'horaBadge'   => 'bg-blue-50 text-blue-600',
+        ];
+    }
+    if ($diaCicloManana) {
+        $tarjetasHorario[] = [
+            'titulo'      => 'Horario de mañana — ' . ($diasNombre[$diaCicloManana] ?? 'Día '.$diaCicloManana),
+            'fecha'       => now()->addDay()->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY'),
+            'horario'     => $horarioManana,
+            'icoColor'    => 'text-indigo-600',
+            'horaBadge'   => 'bg-indigo-50 text-indigo-600',
+        ];
+    }
+@endphp
+@foreach($tarjetasHorario as $t)
 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 mb-4">
     <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-        <span class="text-blue-600 text-lg">📚</span>
+        <span class="{{ $t['icoColor'] }} text-lg">📚</span>
         <div>
-            <h3 class="font-semibold text-gray-800 text-sm">Horario de hoy — {{ $diasNombre[$diaCicloHoy] ?? 'Día '.$diaCicloHoy }}</h3>
-            <p class="text-xs text-gray-400">{{ now()->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY') }}</p>
+            <h3 class="font-semibold text-gray-800 text-sm">{{ $t['titulo'] }}</h3>
+            <p class="text-xs text-gray-400">{{ $t['fecha'] }}</p>
         </div>
     </div>
-    @if($horarioHoy->isNotEmpty())
+    @if($t['horario']->isNotEmpty())
         <div class="divide-y divide-gray-50">
-            @foreach($horarioHoy as $clase)
+            @foreach($t['horario'] as $clase)
                 <div class="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition">
-                    <div class="w-7 h-7 rounded-full bg-blue-50 text-blue-600 text-xs font-bold flex items-center justify-center shrink-0">
+                    <div class="w-7 h-7 rounded-full {{ $t['horaBadge'] }} text-xs font-bold flex items-center justify-center shrink-0">
                         {{ $clase->HORA }}
                     </div>
                     <div class="flex-1 min-w-0">
@@ -154,7 +169,7 @@
         </div>
     @endif
 </div>
-@endif
+@endforeach
 
 {{-- Horario completo (colapsable) --}}
 @if(!empty($gridCompleto))

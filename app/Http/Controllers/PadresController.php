@@ -41,9 +41,10 @@ class PadresController extends Controller
 
         if (!$estudiante) {
             return view('padres.portal', [
-                'diaCicloHoy' => null, 'proxCal' => null,
+                'diaCicloHoy' => null, 'calManana' => null, 'diaCicloManana' => null,
                 'periodo' => null, 'ciclo' => null,
-                'horarioHoy' => collect(), 'gridCompleto' => [], 'diasConDatos' => [], 'proximaFecha' => [],
+                'horarioHoy' => collect(), 'horarioManana' => collect(),
+                'gridCompleto' => [], 'diasConDatos' => [], 'proximaFecha' => [],
                 'saldo' => 0, 'bloqueado' => false, 'modulos' => [],
             ]);
         }
@@ -57,11 +58,10 @@ class PadresController extends Controller
         $calHoy      = DB::table('calendario_academico')->where('fecha', $hoy->toDateString())->first();
         $diaCicloHoy = $calHoy?->dia_ciclo;
 
-        // Próximo día académico
-        $proxCal = DB::table('calendario_academico')
-            ->where('fecha', '>', $hoy->toDateString())
-            ->orderBy('fecha')
-            ->first();
+        // Mañana (fecha específica, no "próximo día académico")
+        $manana         = $hoy->copy()->addDay();
+        $calManana      = DB::table('calendario_academico')->where('fecha', $manana->toDateString())->first();
+        $diaCicloManana = $calManana?->dia_ciclo;
 
         // Período y ciclo actuales: cada período tiene 7 ciclos (dia_ciclo=1 marca inicio de cada ciclo)
         $todosInicios = DB::table('calendario_academico')
@@ -87,10 +87,10 @@ class PadresController extends Controller
             $ciclo   = ($globalActual % 7) + 1;
         }
 
-        // Horario de hoy para el curso del estudiante
-        $horarioHoy = collect();
-        if ($diaCicloHoy && $curso) {
-            $horarioHoy = DB::table('HORARIOS as h')
+        // Horario de hoy y de mañana para el curso del estudiante
+        $horarioPorDia = function (?int $diaCiclo) use ($curso) {
+            if (!$diaCiclo || !$curso) return collect();
+            return DB::table('HORARIOS as h')
                 ->leftJoin('CODIGOSMAT as cm', 'cm.CODIGO_MAT', '=', 'h.CODIGO_MAT')
                 ->leftJoin('ASIGNACION_PCM as a', function ($join) use ($curso) {
                     $join->on('a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
@@ -98,11 +98,13 @@ class PadresController extends Controller
                 })
                 ->leftJoin('CODIGOS_DOC as cd', 'cd.CODIGO_DOC', '=', 'a.CODIGO_DOC')
                 ->where('h.CURSO', $curso)
-                ->where('h.DIA', $diaCicloHoy)
+                ->where('h.DIA', $diaCiclo)
                 ->select('h.HORA', 'cm.NOMBRE_MAT', 'cd.NOMBRE_DOC')
                 ->orderBy('h.HORA')
                 ->get();
-        }
+        };
+        $horarioHoy    = $horarioPorDia($diaCicloHoy);
+        $horarioManana = $horarioPorDia($diaCicloManana);
 
         // Horario completo del curso (todas las horas y días del ciclo)
         $gridCompleto  = [];
@@ -177,8 +179,10 @@ class PadresController extends Controller
         ];
 
         return view('padres.portal', compact(
-            'estudiante', 'diaCicloHoy', 'proxCal', 'periodo', 'ciclo',
-            'horarioHoy', 'gridCompleto', 'diasConDatos', 'proximaFecha',
+            'estudiante', 'diaCicloHoy', 'calManana', 'diaCicloManana',
+            'periodo', 'ciclo',
+            'horarioHoy', 'horarioManana',
+            'gridCompleto', 'diasConDatos', 'proximaFecha',
             'saldo', 'bloqueado', 'modulos'
         ));
     }

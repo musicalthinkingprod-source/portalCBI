@@ -4,6 +4,24 @@
 
 @section('slot')
 
+    {{-- Registro de inasistencias --}}
+    <div class="bg-amber-50 border border-amber-200 rounded-xl shadow-sm p-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex items-start gap-3">
+            <span class="text-2xl">📝</span>
+            <div>
+                <p class="text-sm font-bold text-amber-900">Registro de inasistencias</p>
+                <p class="text-xs text-amber-700 mt-0.5">
+                    Si tu hijo(a) presenta incapacidad o ausencia justificada, diligencia este formulario.
+                </p>
+            </div>
+        </div>
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSdva97eRI1jOpJiL5ZsG934Bn2PWBJxDQGu4nTcpd6q8KK3Nw/viewform"
+            target="_blank" rel="noopener noreferrer"
+            class="inline-flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-500 text-white font-semibold text-sm px-4 py-2 rounded-lg transition whitespace-nowrap">
+            Diligenciar formulario ↗
+        </a>
+    </div>
+
     {{-- Filtro de fechas --}}
     <div class="bg-white rounded-xl shadow p-5 mb-6">
         <form method="GET" action="{{ route('padres.asistencia') }}" class="flex flex-wrap gap-4 items-end">
