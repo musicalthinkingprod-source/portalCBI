@@ -14,20 +14,20 @@ class Controller extends BaseController
 
     /**
      * Materias con listado especial y la lógica de qué grupo usar:
-     *   - Materia 31 (Proyecto)   : GRUPO = CURSO tal cual (GP1, GP2…)
-     *   - Materia 25 (Música)     : GRUPO = CURSO . '-2'  (grado >= 6)
-     *   - Materia 26 (Artes)      : GRUPO = CURSO . '-1'  (grado >= 6)
-     *   - Resto / grado < 6       : ESTUDIANTES.CURSO normal
+     *   - Materia 31 (Proyecto)        : GRUPO = CURSO tal cual (GP1, GP2…)
+     *   - Materia 25 (Artes) / 26 (Música): si el CURSO ya viene en formato
+     *     de listado especial (p.ej. 7A-1, 11B-2), se usa tal cual como GRUPO.
+     *     En ASIGNACION_PCM, para grados 7+ el CURSO guarda directamente el
+     *     nombre del grupo especial: -1 = Artes, -2 = Música.
+     *   - Cualquier otro caso          : ESTUDIANTES.CURSO normal.
      */
     protected function grupoListado(int $codigoMat, string $curso): ?string
     {
         if ($codigoMat === 31) {
             return $curso; // GP1, GP2…
         }
-        $grado = (int) preg_replace('/[^0-9]/', '', $curso);
-        if ($grado >= 6) {
-            if ($codigoMat === 25) return $curso . '-2'; // Música
-            if ($codigoMat === 26) return $curso . '-1'; // Artes
+        if (in_array($codigoMat, [25, 26], true) && preg_match('/-[12]$/', $curso)) {
+            return $curso; // 7A-1, 11B-2, etc.
         }
         return null; // usar ESTUDIANTES normalmente
     }
