@@ -825,13 +825,15 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     // ── Cerrar panel al hacer click fuera ──
+    // Usa fase de CAPTURA con el target original para evitar falsos negativos
+    // si el target se desmonta antes del bubble (p. ej. al quitar un <li> leído).
     document.addEventListener('click', function (e) {
         const wrap = document.getElementById('notif-wrap');
         if (wrap && !wrap.contains(e.target) && panelAbierto) {
             panelAbierto = false;
             document.getElementById('notif-panel').classList.add('hidden');
         }
-    });
+    }, true);
 
     // ── Marcar todas como leídas ──
     window.marcarTodas = function () {
@@ -916,10 +918,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 else if (n.tipo.endsWith('_entreg')) { dotColor = 'bg-indigo-500'; prefijo = '📥 '; }
             }
 
-            const clickAction = destino
-                ? `marcarLeida(${n.id}); window.location.href=${JSON.stringify(destino)};`
-                : `marcarLeida(${n.id})`;
-            return `<li data-notif-id="${n.id}" class="px-4 py-3 hover:bg-blue-50 cursor-pointer group" onclick="${clickAction}">
+            const urlAttr = destino ? ` data-notif-url="${escHtml(destino)}"` : '';
+            return `<li data-notif-id="${n.id}"${urlAttr} class="px-4 py-3 hover:bg-blue-50 cursor-pointer group">
                 <div class="flex items-start gap-2">
                     <div class="mt-0.5 w-2 h-2 rounded-full ${dotColor} flex-shrink-0"></div>
                     <div class="flex-1 min-w-0">
@@ -931,6 +931,21 @@ document.addEventListener('DOMContentLoaded', function () {
             </li>`;
         }).join('');
     }
+
+    // ── Delegación: manejar click en cualquier notificación ──
+    (function () {
+        const lista = document.getElementById('notif-list');
+        if (!lista || lista.dataset.delegado === '1') return;
+        lista.dataset.delegado = '1';
+        lista.addEventListener('click', function (e) {
+            const li = e.target.closest('li[data-notif-id]');
+            if (!li) return;
+            const id  = li.getAttribute('data-notif-id');
+            const url = li.getAttribute('data-notif-url');
+            if (id) window.marcarLeida(parseInt(id, 10));
+            if (url) window.location.href = url;
+        });
+    })();
 
     function escHtml(str) {
         return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
