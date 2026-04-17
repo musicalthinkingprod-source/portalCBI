@@ -4,11 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Font;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use App\Helpers\SimpleXlsx;
 
 class WorldOfficeController extends Controller
 {
@@ -99,35 +95,19 @@ class WorldOfficeController extends Controller
         $iva        = (float) ($request->iva ?? 0);
 
         // ── Construir el libro Excel ────────────────────────────────────────────
-        $spreadsheet = new Spreadsheet();
-        $sheet       = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Facturacion');
+        $writer = new SimpleXlsx();
 
-        $columnas = [
+        $writer->addRow([
             'EMPRESA QUE FACTURA', 'TIPO', 'PREFIJO', 'NUMERO DE FACTURA',
             'FECHA FACTURACION',   'CEDULA FACTURADOR', 'DOCUMENTO ID',
             'ENCABEZADO FACTURA',  'FORMA DE PAGO',     'FECHA FACTURA',
             'CODIGO ALUMNO',       'NOMBRE',             'CODIGO CONCEPTO',
             'CANTIDAD',            'IVA',                'VALOR',
             'FECHA VENCIMIENTO',   'CENTRO DE COSTO',    'NOTA',
-        ];
-
-        // Encabezados con formato
-        $sheet->fromArray($columnas, null, 'A1');
-
-        $totalCols = count($columnas);
-        $lastCol   = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($totalCols);
-
-        $sheet->getStyle("A1:{$lastCol}1")->applyFromArray([
-            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '1E3A5F']],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
         ]);
 
-        // Filas de datos
-        $fila = 2;
         foreach ($filas as $f) {
-            $sheet->fromArray([
+            $writer->addRow([
                 $empresa,
                 $tipo,
                 $prefijo,
@@ -147,47 +127,18 @@ class WorldOfficeController extends Controller
                 $request->fecha_venc,
                 $f->centro_costos,
                 $request->nota,
-            ], null, "A{$fila}");
-
-            // Filas alternas con fondo suave
-            if ($fila % 2 === 0) {
-                $sheet->getStyle("A{$fila}:{$lastCol}{$fila}")
-                    ->getFill()
-                    ->setFillType(Fill::FILL_SOLID)
-                    ->getStartColor()->setRGB('F0F4FA');
-            }
-
-            $fila++;
+            ]);
         }
-
-        // Anchos fijos de columnas (evita cargar todo en memoria)
-        foreach ([1=>18,2=>6,3=>10,4=>18,5=>16,6=>18,7=>16,8=>30,9=>14,10=>14,
-                  11=>14,12=>32,13=>16,14=>10,15=>8,16=>14,17=>16,18=>16,19=>30] as $colIdx => $w) {
-            $sheet->getColumnDimensionByColumn($colIdx)->setWidth($w);
-        }
-
-        // Alinear columna VALOR (P = col 16) a la derecha
-        $sheet->getStyle("P2:P{$fila}")
-            ->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
-
-        // Formato numérico para VALOR
-        $sheet->getStyle("P2:P{$fila}")
-            ->getNumberFormat()->setFormatCode('#,##0.00');
 
         // ── Generar respuesta ───────────────────────────────────────────────────
+        $tmp    = storage_path('app') . DIRECTORY_SEPARATOR . 'wo_' . uniqid() . '.xlsx';
+        $writer->save($tmp);
+
         $nombre = 'world_office_' . $mes . '_' . date('Ymd') . '.xlsx';
 
-        $writer = new Xlsx($spreadsheet);
-
-        ob_start();
-        $writer->save('php://output');
-        $contenido = ob_get_clean();
-
-        return response($contenido, 200, [
-            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Content-Disposition' => 'attachment; filename="' . $nombre . '"',
-            'Cache-Control'       => 'max-age=0',
-        ]);
+        return response()->download($tmp, $nombre, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ])->deleteFileAfterSend(true);
     }
 
     private function sinTildes(string $s): string
