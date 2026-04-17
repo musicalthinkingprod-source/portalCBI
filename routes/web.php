@@ -317,6 +317,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/piar/aprobar/caract-mat/{codigo}/{codigoMat}', [PiarCaractController::class, 'aprobarMat'])->name('piar.aprobar.caract.mat');
         Route::post('/piar/aprobar/caract-dir/{codigo}',             [PiarCaractController::class, 'aprobarDir'])->name('piar.aprobar.caract.dir');
         Route::post('/piar/aprobar/ajustes/{codigo}/{codigoMat}',    [PiarMatController::class,    'aprobar'])   ->name('piar.aprobar.ajustes');
+        Route::post('/piar/aprobar/plan-casero/{codigo}/{codigoMat}',[PiarMatController::class,    'aprobarPlanCasero'])->name('piar.aprobar.plan_casero');
     });
 
     // ── Corrección de notas: SuperAd, Admin, DOC*, Ori* ─────────────────────

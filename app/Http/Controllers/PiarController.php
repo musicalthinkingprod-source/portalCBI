@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\ControlFechasController;
 
 class PiarController extends Controller
 {
@@ -437,6 +438,12 @@ class PiarController extends Controller
             ->get()
             ->groupBy('CODIGO_ALUM');
 
-        return view('piar.informe', compact('estudiantes', 'asignaciones', 'piarMats', 'caractMats', 'caractDirs', 'periodoActual'));
+        $estadosEtapa = [
+            'caract'      => ControlFechasController::estadoEtapa('caract'),
+            'ajustes'     => ControlFechasController::estadoEtapa('ajustes'),
+            'plan_casero' => ControlFechasController::estadoEtapa('plan_casero'),
+        ];
+
+        return view('piar.informe', compact('estudiantes', 'asignaciones', 'piarMats', 'caractMats', 'caractDirs', 'periodoActual', 'estadosEtapa'));
     }
 }

@@ -337,7 +337,36 @@ class PiarMatController extends Controller
         $esDocente   = $this->esDocente();
         $estadoEtapa = ControlFechasController::estadoEtapa('plan_casero');
 
-        if ($esDocente && $estadoEtapa !== 'abierto') {
+        $existingEstado = DB::table('PIAR_MAT')
+            ->where('CODIGO_ALUM', $codigo)->where('CODIGO_MAT', $codigoMat)
+            ->value('ESTADO_CASERO') ?? 'pendiente';
+
+        // Orientador envía observaciones → con_observaciones
+        if (!$esDocente && $request->input('accion') === 'observar') {
+            if ($estadoEtapa === 'finalizado') {
+                return back()->withErrors(['etapa' => 'La etapa está finalizada.']);
+            }
+            DB::table('PIAR_MAT')->updateOrInsert(
+                ['CODIGO_ALUM' => $codigo, 'CODIGO_MAT' => $codigoMat],
+                [
+                    'OBSERVACIONES_CASERO' => $request->OBSERVACIONES_CASERO,
+                    'ESTADO_CASERO'        => 'con_observaciones',
+                    'updated_at'           => now(),
+                ]
+            );
+
+            $materia  = $this->nombreMateria($codigoMat);
+            $etiqueta = $this->etiquetaEstudiante($codigo);
+            $url      = route('piar.plan_casero.form', [$codigo, $codigoMat]) . '#observaciones';
+            $mensaje  = "{$materia} — {$etiqueta}: hay observaciones pendientes en el Plan Casero.";
+            foreach ($this->docentesAsignados($codigo, $codigoMat) as $doc) {
+                NotificacionesController::crear($doc, 'piar_casero_observ', 'Observaciones en Plan Casero', $mensaje, $url);
+            }
+            return back()->with('saved', 'Observaciones enviadas al docente.');
+        }
+
+        $tieneObservaciones = $existingEstado === 'con_observaciones';
+        if ($esDocente && $estadoEtapa !== 'abierto' && !$tieneObservaciones) {
             $msg = match($estadoEtapa) {
                 'cerrado'    => 'La etapa de Plan Casero está cerrada. No se permiten cambios.',
                 'revision'   => 'La etapa está en revisión. El orientador está revisando tu trabajo.',
@@ -350,16 +379,59 @@ class PiarMatController extends Controller
             return back()->withErrors(['etapa' => 'La etapa está finalizada. No se permiten más cambios.']);
         }
 
+        $entregar    = $request->input('accion') === 'entregar';
+        $nuevoEstado = $entregar
+            ? 'revision'
+            : (in_array($existingEstado, ['aprobado', 'con_observaciones']) ? 'revision' : ($existingEstado ?? 'pendiente'));
+
+        $datos = [
+            'ESTRAG_CASERA' => $request->ESTRAG_CASERA,
+            'FREC_CASERA'   => $request->FREC_CASERA,
+            'ESTADO_CASERO' => $nuevoEstado,
+            'updated_at'    => now(),
+        ];
+        if (!$esDocente && $request->has('OBSERVACIONES_CASERO')) {
+            $datos['OBSERVACIONES_CASERO'] = $request->OBSERVACIONES_CASERO;
+        }
+
         DB::table('PIAR_MAT')->updateOrInsert(
             ['CODIGO_ALUM' => $codigo, 'CODIGO_MAT' => $codigoMat],
-            [
-                'ESTRAG_CASERA' => $request->ESTRAG_CASERA,
-                'FREC_CASERA'   => $request->FREC_CASERA,
-                'updated_at'    => now(),
-            ]
+            $datos
         );
 
-        return redirect()->route('piar.plan_casero.form', [$codigo, $codigoMat])->with('saved', 'Plan Casero guardado correctamente.');
+        if ($entregar) {
+            $materia  = $this->nombreMateria($codigoMat);
+            $etiqueta = $this->etiquetaEstudiante($codigo);
+            $nomDoc   = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $this->codigoDoc())->value('NOMBRE_DOC') ?? $this->codigoDoc();
+            $url      = route('piar.plan_casero.form', [$codigo, $codigoMat]) . '#observaciones';
+            $mensaje  = "{$nomDoc} entregó el Plan Casero de {$etiqueta} en {$materia}.";
+            NotificacionesController::crearParaRevisoresPiar('piar_casero_entreg', 'Plan Casero entregado para revisión', $mensaje, $url);
+        }
+
+        $msg = $entregar ? 'Plan Casero marcado como entregado para revisión.' : 'Plan Casero guardado correctamente.';
+        return redirect()->route('piar.plan_casero.form', [$codigo, $codigoMat])->with('saved', $msg);
+    }
+
+    // ── Aprobar Plan Casero (Ori / SuperAd) ──────────────────────────────────
+    public function aprobarPlanCasero(string $codigo, int $codigoMat)
+    {
+        DB::table('PIAR_MAT')
+            ->where('CODIGO_ALUM', $codigo)->where('CODIGO_MAT', $codigoMat)
+            ->update([
+                'ESTADO_CASERO'         => 'aprobado',
+                'APROBADO_CASERO_POR'   => auth()->user()->name ?? auth()->user()->PROFILE,
+                'FECHA_APROB_CASERO'    => today()->toDateString(),
+            ]);
+
+        $materia  = $this->nombreMateria($codigoMat);
+        $etiqueta = $this->etiquetaEstudiante($codigo);
+        $url      = route('piar.plan_casero.form', [$codigo, $codigoMat]) . '#observaciones';
+        $mensaje  = "{$materia} — {$etiqueta}: el Plan Casero fue aprobado.";
+        foreach ($this->docentesAsignados($codigo, $codigoMat) as $doc) {
+            NotificacionesController::crear($doc, 'piar_casero_aprob', 'Plan Casero aprobado', $mensaje, $url);
+        }
+
+        return back()->with('aprobado', 'Plan Casero aprobado.');
     }
 
     // ── Aprobar (Ori / SuperAd) ───────────────────────────────────────────────

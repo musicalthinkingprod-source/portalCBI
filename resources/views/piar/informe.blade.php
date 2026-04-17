@@ -14,15 +14,24 @@ if (!function_exists('estadoBadge')) {
             'aprobado'         => '<span class="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">✓ Aprobado</span>',
             'revision'         => '<span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">👁 En revisión</span>',
             'con_observaciones'=> '<span class="inline-flex items-center gap-1 bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">💬 Con observaciones</span>',
+            'cerrado'          => '<span class="inline-flex items-center gap-1 bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">🔒 Cerrado</span>',
             default            => '<span class="inline-flex items-center gap-1 bg-yellow-100 text-yellow-700 text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">Pendiente</span>',
         };
+    }
+}
+
+// ── Helper: estado efectivo (cerrado enmascara pendiente) ─────────────────
+if (!function_exists('estadoEfectivo')) {
+    function estadoEfectivo(string $estado, string $etapa): string {
+        if ($etapa === 'cerrado' && $estado === 'pendiente') return 'cerrado';
+        return $estado;
     }
 }
 
 // ── Totales resumen ───────────────────────────────────────────────────────
 $totalEstudiantes   = $estudiantes->count();
 $totalAnexo1Ok      = $estudiantes->where('ANEXO1_OK', 1)->count();
-$cuentaEstados = ['pendiente' => 0, 'revision' => 0, 'con_observaciones' => 0, 'aprobado' => 0];
+$cuentaEstados = ['pendiente' => 0, 'revision' => 0, 'con_observaciones' => 0, 'aprobado' => 0, 'cerrado' => 0];
 
 foreach ($estudiantes as $est) {
     $mats   = $asignaciones[$est->CURSO] ?? collect();
@@ -30,25 +39,29 @@ foreach ($estudiantes as $est) {
 
     // Estado caract. director
     $cDirReg   = $cDirs->first();
-    $dirEstado = $cDirReg ? ($cDirReg->ESTADO ?? 'pendiente') : 'pendiente';
+    $dirEstado = estadoEfectivo($cDirReg ? ($cDirReg->ESTADO ?? 'pendiente') : 'pendiente', $estadosEtapa['caract']);
     $cuentaEstados[$dirEstado]++;
 
     foreach ($mats as $mat) {
         $cmReg = ($caractMats[$est->CODIGO] ?? collect())[$mat->CODIGO_MAT] ?? null;
         $pmReg = ($piarMats[$est->CODIGO]   ?? collect())[$mat->CODIGO_MAT] ?? null;
 
-        $cmEstado = $cmReg ? ($cmReg->ESTADO ?? 'pendiente') : 'pendiente';
-        $pmEstado = $pmReg ? ($pmReg->ESTADO ?? 'pendiente') : 'pendiente';
+        $cmEstado = estadoEfectivo($cmReg ? ($cmReg->ESTADO ?? 'pendiente') : 'pendiente', $estadosEtapa['caract']);
+        $pmEstado = estadoEfectivo($pmReg ? ($pmReg->ESTADO ?? 'pendiente') : 'pendiente', $estadosEtapa['ajustes']);
+        $pcEstado = estadoEfectivo($pmReg ? ($pmReg->ESTADO_CASERO ?? 'pendiente') : 'pendiente', $estadosEtapa['plan_casero']);
 
         $cuentaEstados[$cmEstado]++;
         $cuentaEstados[$pmEstado]++;
+        $cuentaEstados[$pcEstado]++;
     }
 }
 
 $totalItems    = array_sum($cuentaEstados);
-$pctAprobado   = $totalItems > 0 ? round($cuentaEstados['aprobado']  / $totalItems * 100) : 0;
-$pctRevision   = $totalItems > 0 ? round(($cuentaEstados['revision'] + $cuentaEstados['con_observaciones']) / $totalItems * 100) : 0;
-$pctPendiente  = 100 - $pctAprobado - $pctRevision;
+// Progreso: solo cuenta los ítems de etapas abiertas (excluye los 'cerrado')
+$itemsActivos  = $totalItems - $cuentaEstados['cerrado'];
+$pctAprobado   = $itemsActivos > 0 ? round($cuentaEstados['aprobado']  / $itemsActivos * 100) : 0;
+$pctRevision   = $itemsActivos > 0 ? round(($cuentaEstados['revision'] + $cuentaEstados['con_observaciones']) / $itemsActivos * 100) : 0;
+$pctPendiente  = max(0, 100 - $pctAprobado - $pctRevision);
 @endphp
 
 <div class="max-w-7xl mx-auto space-y-4">
@@ -103,7 +116,12 @@ $pctPendiente  = 100 - $pctAprobado - $pctRevision;
 <div class="bg-white rounded-xl shadow px-5 py-4">
     <div class="flex items-center justify-between text-xs text-gray-500 mb-2">
         <span class="font-semibold uppercase tracking-wide">Progreso general de aprobación</span>
-        <span>{{ $cuentaEstados['aprobado'] }} / {{ $totalItems }} ítems aprobados</span>
+        <span>
+            {{ $cuentaEstados['aprobado'] }} / {{ $itemsActivos }} ítems aprobados
+            @if($cuentaEstados['cerrado'] > 0)
+                <span class="text-gray-400">· {{ $cuentaEstados['cerrado'] }} en etapas cerradas (excluidos)</span>
+            @endif
+        </span>
     </div>
     <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden flex">
         <div class="h-3 bg-green-500 transition-all" style="width: {{ $pctAprobado }}%"></div>
@@ -195,8 +213,9 @@ $pctPendiente  = 100 - $pctAprobado - $pctRevision;
             <tr class="text-xs text-gray-400 uppercase tracking-wide">
                 <th class="px-4 py-2 text-left">Módulo / Materia</th>
                 <th class="px-4 py-2 text-left">Docente</th>
-                <th class="px-4 py-2 text-center w-44">Caracterización</th>
-                <th class="px-4 py-2 text-center w-44">Ajustes + Evaluación</th>
+                <th class="px-4 py-2 text-center w-40">Caracterización</th>
+                <th class="px-4 py-2 text-center w-40">Ajustes + Evaluación</th>
+                <th class="px-4 py-2 text-center w-40">Plan Casero</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-50">
@@ -205,7 +224,7 @@ $pctPendiente  = 100 - $pctAprobado - $pctRevision;
         @php
             $cDir      = $cDirs->first();
             $dirTiene  = $cDir && !empty($cDir->CARACTERIZACION);
-            $dirEstado = $cDir ? ($cDir->ESTADO ?? 'pendiente') : 'pendiente';
+            $dirEstado = estadoEfectivo($cDir ? ($cDir->ESTADO ?? 'pendiente') : 'pendiente', $estadosEtapa['caract']);
         @endphp
         <tr class="bg-blue-50/50">
             <td class="px-4 py-3 font-semibold text-blue-800 text-sm">Dirección de grupo</td>
@@ -226,6 +245,7 @@ $pctPendiente  = 100 - $pctAprobado - $pctRevision;
             </td>
 
             <td class="px-4 py-3 text-center text-gray-300 text-xs">—</td>
+            <td class="px-4 py-3 text-center text-gray-300 text-xs">—</td>
         </tr>
 
         {{-- Filas por materia --}}
@@ -235,10 +255,12 @@ $pctPendiente  = 100 - $pctAprobado - $pctRevision;
             $pmReg    = $matsPiar[$mat->CODIGO_MAT] ?? null;
             $cmTiene  = $cmReg && !empty($cmReg->CARACTERIZACION);
             $pmTiene  = $pmReg && !empty($pmReg->BARRERAS);
-            $cmEstado = $cmReg ? ($cmReg->ESTADO ?? 'pendiente') : 'pendiente';
-            $pmEstado = $pmReg ? ($pmReg->ESTADO ?? 'pendiente') : 'pendiente';
-            $filaOk  = $cmEstado === 'aprobado' && $pmEstado === 'aprobado';
-            $filaMal = $cmEstado === 'pendiente' || $pmEstado === 'pendiente';
+            $cmEstado = estadoEfectivo($cmReg ? ($cmReg->ESTADO ?? 'pendiente') : 'pendiente', $estadosEtapa['caract']);
+            $pmEstado = estadoEfectivo($pmReg ? ($pmReg->ESTADO ?? 'pendiente') : 'pendiente', $estadosEtapa['ajustes']);
+            $pcEstado = estadoEfectivo($pmReg ? ($pmReg->ESTADO_CASERO ?? 'pendiente') : 'pendiente', $estadosEtapa['plan_casero']);
+            $pcTiene  = $pmReg && (!empty($pmReg->ESTRAG_CASERA) || !empty($pmReg->FREC_CASERA));
+            $filaOk  = $cmEstado === 'aprobado' && $pmEstado === 'aprobado' && $pcEstado === 'aprobado';
+            $filaMal = $cmEstado === 'pendiente' || $pmEstado === 'pendiente' || $pcEstado === 'pendiente';
         @endphp
         <tr class="{{ $filaOk ? 'bg-green-50/30' : ($filaMal ? 'bg-yellow-50/40' : '') }}">
             <td class="px-4 py-3 text-gray-800 font-medium">{{ $mat->NOMBRE_MAT }}</td>
@@ -272,10 +294,24 @@ $pctPendiente  = 100 - $pctAprobado - $pctRevision;
                 </div>
             </td>
 
+            {{-- Plan Casero --}}
+            <td class="px-4 py-3 text-center">
+                <div class="flex flex-col items-center gap-1">
+                    {!! estadoBadge($pcEstado) !!}
+                    @if($esOriSuperAd)
+                        <a href="{{ route('piar.plan_casero.form', [$est->CODIGO, $mat->CODIGO_MAT]) }}"
+                           class="text-xs font-semibold text-orange-600 hover:text-orange-800 hover:underline">👁 Revisar</a>
+                    @elseif($pcTiene)
+                        <a href="{{ route('piar.plan_casero.form', [$est->CODIGO, $mat->CODIGO_MAT]) }}"
+                           class="text-xs text-blue-500 hover:underline">Ver</a>
+                    @endif
+                </div>
+            </td>
+
         </tr>
         @empty
         <tr>
-            <td colspan="4" class="px-4 py-3 text-xs text-gray-400 italic">Sin materias asignadas en este curso.</td>
+            <td colspan="5" class="px-4 py-3 text-xs text-gray-400 italic">Sin materias asignadas en este curso.</td>
         </tr>
         @endforelse
 
