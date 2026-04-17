@@ -191,7 +191,7 @@ class AdminController extends Controller
         DB::table('PRINUSERS')->insert([
             'USER'     => $request->USER,
             'PASSWORD' => Hash::make($request->PASSWORD),
-            'PROFILE'  => strtoupper(trim($request->PROFILE)),
+            'PROFILE'  => trim($request->PROFILE),
         ]);
 
         return back()->with('success_usuario', 'Usuario creado correctamente.');

@@ -285,7 +285,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/asistencia/reporte', [AsistenciaController::class, 'reporte'])->name('asistencia.reporte');
 
     // ── PIAR Anexo 2 + Caracterizaciones ────────────────────────────────────
-    Route::middleware('profile:SuperAd,Ori,Admin,DOC*')->group(function () {
+    Route::middleware('profile:SuperAd,Ori,Admin,DOC*,Piar')->group(function () {
         // Índice unificado (Anexo 2 + Caracterizaciones)
         Route::get('/piar/anexo2',                              [PiarCaractController::class, 'index'])   ->name('piar.anexo2.index');
 
@@ -312,8 +312,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/piar/caracterizacion/dir/{codigo}', [PiarCaractController::class, 'guardarDir'])->name('piar.caract.dir.guardar');
     });
 
-    // ── PIAR: aprobación de etapas (Ori y SuperAd) ──────────────────────────
-    Route::middleware('profile:SuperAd,Ori')->group(function () {
+    // ── PIAR: aprobación de etapas (Ori, Piar y SuperAd) ─────────────────────
+    Route::middleware('profile:SuperAd,Ori,Piar')->group(function () {
         Route::post('/piar/aprobar/caract-mat/{codigo}/{codigoMat}', [PiarCaractController::class, 'aprobarMat'])->name('piar.aprobar.caract.mat');
         Route::post('/piar/aprobar/caract-dir/{codigo}',             [PiarCaractController::class, 'aprobarDir'])->name('piar.aprobar.caract.dir');
         Route::post('/piar/aprobar/ajustes/{codigo}/{codigoMat}',    [PiarMatController::class,    'aprobar'])   ->name('piar.aprobar.ajustes');
@@ -350,8 +350,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/vigilancias', [VigilanciaController::class, 'docente'])->name('vigilancias.docente');
     });
 
-    // ── PIAR: SuperAd y Ori ──────────────────────────────────────────────────
-    Route::middleware('profile:SuperAd,Ori')->group(function () {
+    // ── PIAR: SuperAd, Ori y Piar ────────────────────────────────────────────
+    Route::middleware('profile:SuperAd,Ori,Piar')->group(function () {
         // ── Control de etapas PIAR ───────────────────────────────────────────
         Route::get('/control/piar-etapas',  [ControlFechasController::class, 'index'])   ->name('control.piar_fechas');
         Route::post('/control/piar-etapas', [ControlFechasController::class, 'guardar']) ->name('control.piar_fechas.guardar');

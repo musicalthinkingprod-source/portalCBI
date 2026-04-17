@@ -54,7 +54,7 @@ class NotificacionesController extends Controller
             ->where('leida', false)
             ->orderByDesc('created_at')
             ->limit(20)
-            ->get(['id', 'tipo', 'titulo', 'mensaje', 'created_at']);
+            ->get(['id', 'tipo', 'titulo', 'mensaje', 'url', 'created_at']);
 
         return response()->json([
             'total'          => $notifs->count(),
@@ -90,5 +90,54 @@ class NotificacionesController extends Controller
             ->update(['leida' => true, 'updated_at' => now()]);
 
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Helper estático: inserta una notificación para un destinatario (PROFILE).
+     * Evita duplicar notificaciones no leídas con el mismo tipo + mensaje.
+     */
+    public static function crear(string $codigoDoc, string $tipo, string $titulo, string $mensaje, ?string $url = null): void
+    {
+        if ($codigoDoc === '') return;
+
+        $yaExiste = DB::table('notificaciones')
+            ->where('codigo_doc', $codigoDoc)
+            ->where('tipo', $tipo)
+            ->where('mensaje', $mensaje)
+            ->where('leida', false)
+            ->exists();
+
+        if ($yaExiste) return;
+
+        DB::table('notificaciones')->insert([
+            'codigo_doc' => $codigoDoc,
+            'tipo'       => $tipo,
+            'titulo'     => mb_substr($titulo, 0, 150),
+            'mensaje'    => mb_substr($mensaje, 0, 400),
+            'url'        => $url,
+            'leida'      => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    /**
+     * Helper estático: notifica a todos los perfiles revisores de PIAR
+     * (Piar y cualquier PROFILE que empiece con 'Ori').
+     */
+    public static function crearParaRevisoresPiar(string $tipo, string $titulo, string $mensaje, ?string $url = null): void
+    {
+        $perfiles = DB::table('PRINUSERS')
+            ->where(function ($q) {
+                $q->where('PROFILE', 'Piar')
+                  ->orWhere('PROFILE', 'like', 'Ori%');
+            })
+            ->whereNotNull('PROFILE')
+            ->pluck('PROFILE')
+            ->unique();
+
+        foreach ($perfiles as $profile) {
+            self::crear($profile, $tipo, $titulo, $mensaje, $url);
+        }
     }
 }

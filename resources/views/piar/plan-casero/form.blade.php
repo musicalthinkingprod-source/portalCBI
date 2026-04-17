@@ -5,7 +5,7 @@
 @section('slot')
 
 @php
-    $puedeObservar = in_array(auth()->user()->PROFILE, ['SuperAd', 'Ori']);
+    $puedeObservar = in_array(auth()->user()->PROFILE, ['SuperAd', 'Ori', 'Piar']);
     $docentePuede  = !$puedeObservar && $estadoEtapa === 'abierto';
 @endphp
 

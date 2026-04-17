@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ControlFechasController;
+use App\Http\Controllers\NotificacionesController;
 
 class PiarMatController extends Controller
 {
@@ -16,6 +17,35 @@ class PiarMatController extends Controller
     private function codigoDoc(): string
     {
         return auth()->user()->PROFILE;
+    }
+
+    // ── Utilidades para notificaciones PIAR (Anexo 2) ────────────────────────
+    private function etiquetaEstudiante(string $codigo): string
+    {
+        $e = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)
+            ->select('NOMBRE1','APELLIDO1','APELLIDO2')->first();
+        if (!$e) return $codigo;
+        $nombre = trim(($e->NOMBRE1 ?? '') . ' ' . ($e->APELLIDO1 ?? '') . ' ' . ($e->APELLIDO2 ?? ''));
+        return "{$nombre} ({$codigo})";
+    }
+
+    private function nombreMateria(int $codigoMat): string
+    {
+        return DB::table('CODIGOSMAT')->where('CODIGO_MAT', $codigoMat)->value('NOMBRE_MAT') ?? "Materia {$codigoMat}";
+    }
+
+    private function docentesAsignados(string $codigo, int $codigoMat): array
+    {
+        $curso = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->value('CURSO');
+        if (!$curso) return [];
+        return DB::table('ASIGNACION_PCM')
+            ->where('CURSO', $curso)
+            ->where('CODIGO_MAT', $codigoMat)
+            ->pluck('CODIGO_DOC')
+            ->unique()
+            ->filter()
+            ->values()
+            ->all();
     }
 
     // ── Lista de estudiantes con PIAR para este docente ──────────────────────
@@ -187,6 +217,14 @@ class PiarMatController extends Controller
                 ['CODIGO_ALUM' => $codigo, 'CODIGO_MAT' => $codigoMat],
                 ['OBSERVACIONES' => $request->OBSERVACIONES, 'ESTADO' => 'con_observaciones', 'updated_at' => now()]
             );
+
+            $materia    = $this->nombreMateria($codigoMat);
+            $etiqueta   = $this->etiquetaEstudiante($codigo);
+            $url        = route('piar.anexo2.form', [$codigo, $codigoMat]);
+            $mensaje    = "{$materia} — {$etiqueta}: hay observaciones pendientes en los ajustes razonables.";
+            foreach ($this->docentesAsignados($codigo, $codigoMat) as $doc) {
+                NotificacionesController::crear($doc, 'piar_observ', 'Observaciones en Anexo 2', $mensaje, $url);
+            }
             return back()->with('saved', 'Observaciones enviadas al docente.');
         }
 
@@ -236,6 +274,15 @@ class PiarMatController extends Controller
             ['CODIGO_ALUM' => $codigo, 'CODIGO_MAT' => $codigoMat],
             $datos
         );
+
+        if ($entregar) {
+            $materia  = $this->nombreMateria($codigoMat);
+            $etiqueta = $this->etiquetaEstudiante($codigo);
+            $nomDoc   = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $this->codigoDoc())->value('NOMBRE_DOC') ?? $this->codigoDoc();
+            $url      = route('piar.anexo2.form', [$codigo, $codigoMat]) . '#observaciones';
+            $mensaje  = "{$nomDoc} entregó los ajustes razonables de {$etiqueta} en {$materia}.";
+            NotificacionesController::crearParaRevisoresPiar('piar_entreg', 'Anexo 2 entregado para revisión', $mensaje, $url);
+        }
 
         $msg = $entregar ? 'Ajustes marcados como entregados para revisión.' : 'PIAR Anexo 2 guardado correctamente.';
         return redirect()->route('piar.anexo2.form', [$codigo, $codigoMat])->with('saved', $msg);
@@ -325,6 +372,14 @@ class PiarMatController extends Controller
                 'APROBADO_POR'     => auth()->user()->name ?? auth()->user()->PROFILE,
                 'FECHA_APROBACION' => today()->toDateString(),
             ]);
+
+        $materia  = $this->nombreMateria($codigoMat);
+        $etiqueta = $this->etiquetaEstudiante($codigo);
+        $url      = route('piar.anexo2.form', [$codigo, $codigoMat]) . '#observaciones';
+        $mensaje  = "{$materia} — {$etiqueta}: los ajustes razonables fueron aprobados.";
+        foreach ($this->docentesAsignados($codigo, $codigoMat) as $doc) {
+            NotificacionesController::crear($doc, 'piar_aprob', 'Anexo 2 aprobado', $mensaje, $url);
+        }
 
         return back()->with('aprobado', 'Ajustes aprobados.');
     }

@@ -5,7 +5,7 @@
 @section('slot')
 
 @php
-$esOriSuperAd = auth()->user()->PROFILE === 'SuperAd' || str_starts_with(auth()->user()->PROFILE, 'Ori');
+$esOriSuperAd = auth()->user()->PROFILE === 'SuperAd' || auth()->user()->PROFILE === 'Piar' || str_starts_with(auth()->user()->PROFILE, 'Ori');
 
 // ── Helper: badge de estado ───────────────────────────────────────────────
 if (!function_exists('estadoBadge')) {

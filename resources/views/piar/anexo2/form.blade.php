@@ -12,7 +12,7 @@
 @endif
 
 @php
-    $puedeObservar = in_array(auth()->user()->PROFILE, ['SuperAd', 'Ori']);
+    $puedeObservar = in_array(auth()->user()->PROFILE, ['SuperAd', 'Ori', 'Piar']);
     $estadoActual  = $piarMat->ESTADO ?? 'pendiente';
     $docentePuede  = !$puedeObservar && ($estadoEtapa === 'abierto' || $estadoActual === 'con_observaciones');
 @endphp
@@ -252,7 +252,7 @@
 
 
 {{-- Observaciones del orientador --}}
-<div class="bg-amber-50 border border-amber-200 rounded-xl shadow p-5">
+<div id="observaciones" class="bg-amber-50 border border-amber-200 rounded-xl shadow p-5" style="scroll-margin-top:96px;">
     <h3 class="text-sm font-bold text-amber-800 uppercase tracking-wide mb-1">📝 Observaciones del orientador</h3>
     <p class="text-xs text-amber-600 mb-3">
         @if($puedeObservar)

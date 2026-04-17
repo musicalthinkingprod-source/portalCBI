@@ -136,6 +136,7 @@
             $isSuperAd  = $profile === 'SuperAd';
             $isAdmin    = $profile === 'Admin';
             $isAdminLike = $isSuperAd || $isAdmin;
+            $isPiar     = $profile === 'Piar';
             // "Otros" = ConvCor*, Ori, SecC100, SecA, etc. → ven todo excepto Panel de Control
         @endphp
 
@@ -189,8 +190,8 @@
         </div>
         @endif
 
-        {{-- ── PIAR: SuperAd, Admin, Ori*, DOC* ── --}}
-        @if($isAdminLike || str_starts_with($profile, 'Ori') || $isDoc)
+        {{-- ── PIAR: SuperAd, Admin, Ori*, Piar, DOC* ── --}}
+        @if($isAdminLike || str_starts_with($profile, 'Ori') || $isPiar || $isDoc)
         @php $catId = 'piar'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -201,7 +202,7 @@
                 </svg>
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
-                @if($isAdminLike || str_starts_with($profile, 'Ori'))
+                @if($isAdminLike || str_starts_with($profile, 'Ori') || $isPiar)
                 {!! sidebarLink(route('piar.buscar'), '📋 Crear / Editar PIAR') !!}
                 @if(!$isSuperAd)
                 {!! sidebarLink(route('piar.informe'), '📊 Informe PIAR') !!}
@@ -265,8 +266,8 @@
         </div>
         @endif
 
-        {{-- ── Asistencia: todos excepto Contab ── --}}
-        @if(!$isContab)
+        {{-- ── Asistencia: todos excepto Contab y Piar ── --}}
+        @if(!$isContab && !$isPiar)
         @php $catId = 'asistencia'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -843,11 +844,42 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     // ── Marcar una como leída ──
+    // Envía el marcado con sendBeacon (sobrevive a la navegación) y
+    // si el usuario permanece en la página, refresca la lista.
     window.marcarLeida = function (id) {
-        fetch(urlLeer(id), {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
-        }).then(() => pollAhora());
+        const url = urlLeer(id);
+        let enviado = false;
+        try {
+            if (navigator.sendBeacon) {
+                const fd = new FormData();
+                fd.append('_token', csrfToken);
+                enviado = navigator.sendBeacon(url, fd);
+            }
+        } catch (e) { enviado = false; }
+
+        if (!enviado) {
+            fetch(url, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                keepalive: true
+            }).catch(() => {});
+        }
+
+        // UI optimista: quitar el li inmediatamente
+        const li = document.querySelector(`[data-notif-id="${id}"]`);
+        if (li) li.remove();
+        // Actualizar contador local
+        const badge = document.getElementById('notif-badge');
+        if (badge) {
+            const actual = parseInt(badge.textContent, 10) || 0;
+            const nuevo  = Math.max(0, actual - 1);
+            badge.textContent = nuevo > 9 ? '9+' : nuevo;
+            badge.classList.toggle('hidden', nuevo === 0);
+            if (nuevo === 0) {
+                const lista = document.getElementById('notif-list');
+                if (lista) lista.innerHTML = '<li class="px-4 py-6 text-center text-xs text-gray-400 italic" id="notif-empty">Sin notificaciones nuevas.</li>';
+            }
+        }
     };
 
     // ── Actualizar badge y lista ──
@@ -869,16 +901,29 @@ document.addEventListener('DOMContentLoaded', function () {
             const fecha = new Date(n.created_at).toLocaleString('es-CO', {
                 day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
             });
-            const esBackup   = n.tipo === 'backup';
-            const dotColor   = esBackup ? 'bg-amber-500' : 'bg-blue-500';
-            const clickAction = esBackup
-                ? `marcarLeida(${n.id}); window.location.href='${urlBackup}';`
+            const esBackup = n.tipo === 'backup';
+            const esPiar   = typeof n.tipo === 'string' && n.tipo.startsWith('piar_');
+            const destino  = esBackup ? urlBackup : (n.url || null);
+
+            let dotColor = 'bg-blue-500';
+            let prefijo  = '';
+            if (esBackup) {
+                dotColor = 'bg-amber-500';
+                prefijo  = '💾 ';
+            } else if (esPiar) {
+                if (n.tipo.endsWith('_aprob'))       { dotColor = 'bg-green-500';  prefijo = '✅ '; }
+                else if (n.tipo.endsWith('_observ')) { dotColor = 'bg-orange-500'; prefijo = '💬 '; }
+                else if (n.tipo.endsWith('_entreg')) { dotColor = 'bg-indigo-500'; prefijo = '📥 '; }
+            }
+
+            const clickAction = destino
+                ? `marcarLeida(${n.id}); window.location.href=${JSON.stringify(destino)};`
                 : `marcarLeida(${n.id})`;
-            return `<li class="px-4 py-3 hover:bg-blue-50 cursor-pointer group" onclick="${clickAction}">
+            return `<li data-notif-id="${n.id}" class="px-4 py-3 hover:bg-blue-50 cursor-pointer group" onclick="${clickAction}">
                 <div class="flex items-start gap-2">
                     <div class="mt-0.5 w-2 h-2 rounded-full ${dotColor} flex-shrink-0"></div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-xs font-semibold text-gray-800 truncate">${esBackup ? '💾 ' : ''}${escHtml(n.titulo)}</p>
+                        <p class="text-xs font-semibold text-gray-800 truncate">${prefijo}${escHtml(n.titulo)}</p>
                         <p class="text-xs text-gray-500 mt-0.5 leading-snug">${escHtml(n.mensaje)}</p>
                         <p class="text-[10px] text-gray-400 mt-1">${fecha}</p>
                     </div>

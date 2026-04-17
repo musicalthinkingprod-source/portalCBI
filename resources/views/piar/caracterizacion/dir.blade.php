@@ -5,7 +5,7 @@
 @section('slot')
 
 @php
-    $puedeObservar = auth()->user()->PROFILE === 'SuperAd' || str_starts_with(auth()->user()->PROFILE, 'Ori');
+    $puedeObservar = auth()->user()->PROFILE === 'SuperAd' || auth()->user()->PROFILE === 'Piar' || str_starts_with(auth()->user()->PROFILE, 'Ori');
     $estadoActual  = $caract->ESTADO ?? 'pendiente';
     $docentePuede  = !$puedeObservar && ($estadoEtapa === 'abierto' || $estadoActual === 'con_observaciones');
 @endphp
@@ -152,7 +152,7 @@
 
     {{-- Panel de observaciones (1/3) --}}
     <div class="lg:col-span-1">
-        <div class="bg-amber-50 border border-amber-200 rounded-xl shadow p-5 sticky top-4">
+        <div id="observaciones" class="bg-amber-50 border border-amber-200 rounded-xl shadow p-5 sticky top-4" style="scroll-margin-top:96px;">
             <h3 class="text-sm font-bold text-amber-800 uppercase tracking-wide mb-1">
                 📝 Observaciones del orientador
             </h3>

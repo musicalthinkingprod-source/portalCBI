@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ControlFechasController;
+use App\Http\Controllers\NotificacionesController;
 
 class PiarCaractController extends Controller
 {
@@ -16,6 +17,26 @@ class PiarCaractController extends Controller
     private function esDocente(): bool
     {
         return str_starts_with(auth()->user()->PROFILE, 'DOC');
+    }
+
+    // ── Utilidades para notificaciones PIAR (Caracterización) ───────────────
+    private function etiquetaEstudiante(string $codigo): string
+    {
+        $e = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)
+            ->select('NOMBRE1','APELLIDO1','APELLIDO2')->first();
+        if (!$e) return $codigo;
+        $nombre = trim(($e->NOMBRE1 ?? '') . ' ' . ($e->APELLIDO1 ?? '') . ' ' . ($e->APELLIDO2 ?? ''));
+        return "{$nombre} ({$codigo})";
+    }
+
+    private function nombreMateria(int $codigoMat): string
+    {
+        return DB::table('CODIGOSMAT')->where('CODIGO_MAT', $codigoMat)->value('NOMBRE_MAT') ?? "Materia {$codigoMat}";
+    }
+
+    private function nombreDocente(string $codigoDoc): string
+    {
+        return DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $codigoDoc)->value('NOMBRE_DOC') ?? $codigoDoc;
     }
 
     // ── ÍNDICE GENERAL – agrupado por estudiante ────────────────────────────
@@ -35,7 +56,8 @@ class PiarCaractController extends Controller
             ->first();
         $esDirector = (bool) $dirInfo;
 
-        $esOriSuperAd = auth()->user()->PROFILE === 'SuperAd' || str_starts_with(auth()->user()->PROFILE, 'Ori');
+        $perfilActual = auth()->user()->PROFILE;
+        $esOriSuperAd = $perfilActual === 'SuperAd' || $perfilActual === 'Piar' || str_starts_with($perfilActual, 'Ori');
 
         // Filas: un registro por (estudiante × materia) con estados de caract. y ajustes
         $filasRaw = DB::table('ESTUDIANTES as e')
@@ -119,7 +141,7 @@ class PiarCaractController extends Controller
             ->toArray();
 
         $etapasControl = ControlFechasController::etapasDelAnio((int) date('Y'));
-        $puedeAprobar  = in_array(auth()->user()->PROFILE, ['SuperAd', 'Ori']);
+        $puedeAprobar  = in_array(auth()->user()->PROFILE, ['SuperAd', 'Ori', 'Piar']);
 
         return view('piar.anexo2.index', compact(
             'filas', 'esDocente', 'esDirector', 'dirInfo', 'caractDirGuardadas', 'etapasControl', 'puedeAprobar'
@@ -195,6 +217,12 @@ class PiarCaractController extends Controller
                 ['CODIGO_ALUM' => $codigo, 'CODIGO_MAT' => $codigoMat],
                 ['CODIGO_DOC' => $codigoDocReal, 'OBSERVACIONES' => $request->OBSERVACIONES, 'ESTADO' => 'con_observaciones', 'updated_at' => now()]
             );
+
+            $materia  = $this->nombreMateria($codigoMat);
+            $etiqueta = $this->etiquetaEstudiante($codigo);
+            $url      = route('piar.caract.mat.form', [$codigo, $codigoMat]) . '#observaciones';
+            $mensaje  = "{$materia} — {$etiqueta}: hay observaciones pendientes en la caracterización.";
+            NotificacionesController::crear($codigoDocReal, 'piar_caract_observ', 'Observaciones en caracterización', $mensaje, $url);
             return back()->with('saved', 'Observaciones enviadas al docente.');
         }
 
@@ -230,6 +258,15 @@ class PiarCaractController extends Controller
             $datos
         );
 
+        if ($entregar) {
+            $materia  = $this->nombreMateria($codigoMat);
+            $etiqueta = $this->etiquetaEstudiante($codigo);
+            $nomDoc   = $this->nombreDocente($this->codigoDoc());
+            $url      = route('piar.caract.mat.form', [$codigo, $codigoMat]) . '#observaciones';
+            $mensaje  = "{$nomDoc} entregó la caracterización de {$etiqueta} en {$materia}.";
+            NotificacionesController::crearParaRevisoresPiar('piar_caract_entreg', 'Caracterización entregada para revisión', $mensaje, $url);
+        }
+
         $msg = $entregar ? 'Caracterización marcada como entregada para revisión.' : 'Caracterización guardada correctamente.';
         return redirect()->route('piar.caract.mat.form', [$codigo, $codigoMat])->with('saved', $msg);
     }
@@ -247,6 +284,17 @@ class PiarCaractController extends Controller
                 'APROBADO_POR'     => auth()->user()->name ?? auth()->user()->PROFILE,
                 'FECHA_APROBACION' => today()->toDateString(),
             ]);
+
+        $codigoDocReal = DB::table('PIAR_CARACT_MAT')
+            ->where('CODIGO_ALUM', $codigo)->where('CODIGO_MAT', $codigoMat)
+            ->value('CODIGO_DOC');
+        if ($codigoDocReal) {
+            $materia  = $this->nombreMateria($codigoMat);
+            $etiqueta = $this->etiquetaEstudiante($codigo);
+            $url      = route('piar.caract.mat.form', [$codigo, $codigoMat]) . '#observaciones';
+            $mensaje  = "{$materia} — {$etiqueta}: la caracterización fue aprobada.";
+            NotificacionesController::crear($codigoDocReal, 'piar_caract_aprob', 'Caracterización aprobada', $mensaje, $url);
+        }
 
         return back()->with('aprobado', 'Caracterización aprobada.');
     }
@@ -317,6 +365,11 @@ class PiarCaractController extends Controller
                 ['CODIGO_ALUM' => $codigo, 'CODIGO_DOC' => $codigoDocDir],
                 ['OBSERVACIONES' => $request->OBSERVACIONES, 'ESTADO' => 'con_observaciones', 'updated_at' => now()]
             );
+
+            $etiqueta = $this->etiquetaEstudiante($codigo);
+            $url      = route('piar.caract.dir.form', $codigo) . '#observaciones';
+            $mensaje  = "Dirección de grupo — {$etiqueta}: hay observaciones pendientes en la caracterización.";
+            NotificacionesController::crear($codigoDocDir, 'piar_caract_dir_observ', 'Observaciones en caracterización (dir)', $mensaje, $url);
             return back()->with('saved', 'Observaciones enviadas al docente.');
         }
 
@@ -352,6 +405,14 @@ class PiarCaractController extends Controller
             $datos
         );
 
+        if ($entregar) {
+            $etiqueta = $this->etiquetaEstudiante($codigo);
+            $nomDoc   = $this->nombreDocente($this->codigoDoc());
+            $url      = route('piar.caract.dir.form', $codigo) . '#observaciones';
+            $mensaje  = "{$nomDoc} (dir. grupo) entregó la caracterización de {$etiqueta}.";
+            NotificacionesController::crearParaRevisoresPiar('piar_caract_dir_entreg', 'Caracterización (dir) entregada para revisión', $mensaje, $url);
+        }
+
         $msg = $entregar ? 'Caracterización marcada como entregada para revisión.' : 'Caracterización guardada correctamente.';
         return redirect()->route('piar.caract.dir.form', $codigo)->with('saved', $msg);
     }
@@ -372,6 +433,14 @@ class PiarCaractController extends Controller
                 'APROBADO_POR'     => auth()->user()->name ?? auth()->user()->PROFILE,
                 'FECHA_APROBACION' => today()->toDateString(),
             ]);
+
+        $codigoDocDir = DB::table('PIAR_CARACT_DIR')->where('CODIGO_ALUM', $codigo)->value('CODIGO_DOC');
+        if ($codigoDocDir) {
+            $etiqueta = $this->etiquetaEstudiante($codigo);
+            $url      = route('piar.caract.dir.form', $codigo) . '#observaciones';
+            $mensaje  = "Dirección de grupo — {$etiqueta}: la caracterización fue aprobada.";
+            NotificacionesController::crear($codigoDocDir, 'piar_caract_dir_aprob', 'Caracterización (dir) aprobada', $mensaje, $url);
+        }
 
         return back()->with('aprobado', 'Caracterización de dirección aprobada.');
     }

@@ -52,6 +52,7 @@
                         <option value="SuperAd">SuperAd</option>
                         <option value="Admin">Admin</option>
                         <option value="Ori">Ori</option>
+                        <option value="Piar">Piar</option>
                         <option value="SecA">SecA</option>
                         <option value="SecB">SecB</option>
                         <option value="SecC">SecC</option>
