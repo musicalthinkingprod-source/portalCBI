@@ -65,11 +65,11 @@
             </div>
             @endif
         @elseif($docentePuede)
+            @if($estadoActual !== 'aprobado')
             <button type="submit" form="form-caract-dir" name="accion" value="guardar"
                 class="bg-gray-600 hover:bg-gray-500 text-white text-sm font-semibold px-5 py-2 rounded-lg transition">
                 💾 Guardar borrador
             </button>
-            @if($estadoActual !== 'aprobado')
             <button type="submit" form="form-caract-dir" name="accion" value="entregar"
                 class="bg-green-700 hover:bg-green-600 text-white text-sm font-semibold px-5 py-2 rounded-lg transition">
                 📤 Marcar como entregado
@@ -133,18 +133,16 @@
                     {{ $puedeObservar ? 'bg-gray-50 border-gray-200 text-gray-600 cursor-default' : 'border-gray-300 text-gray-800 focus:border-blue-400' }}">{{ $caract->CARACTERIZACION ?? '' }}</textarea>
         </div>
 
-        @if($docentePuede)
+        @if($docentePuede && $estadoActual !== 'aprobado')
         <div class="flex justify-end gap-3 pb-6">
             <button type="submit" name="accion" value="guardar"
                 class="bg-gray-600 hover:bg-gray-500 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition">
                 💾 Guardar borrador
             </button>
-            @if($estadoActual !== 'aprobado')
             <button type="submit" name="accion" value="entregar"
                 class="bg-green-700 hover:bg-green-600 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition">
                 📤 Marcar como entregado
             </button>
-            @endif
         </div>
         @endif
 

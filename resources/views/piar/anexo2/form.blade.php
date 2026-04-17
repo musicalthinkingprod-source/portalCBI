@@ -70,11 +70,11 @@
                 🖨️ Imprimir Anexo 2
             </a>
         @elseif($docentePuede)
+            @if($estadoActual !== 'aprobado')
             <button type="submit" form="form-anexo2" name="accion" value="guardar"
                 class="bg-gray-600 hover:bg-gray-500 text-white text-sm font-semibold px-5 py-2 rounded-lg transition">
                 💾 Guardar borrador
             </button>
-            @if($estadoActual !== 'aprobado')
             <button type="submit" form="form-anexo2" name="accion" value="entregar"
                 class="bg-green-700 hover:bg-green-600 text-white text-sm font-semibold px-5 py-2 rounded-lg transition">
                 📤 Marcar como entregado
@@ -322,18 +322,16 @@
     </button>
     @endif
 </div>
-@elseif($docentePuede)
+@elseif($docentePuede && $estadoActual !== 'aprobado')
 <div class="flex justify-end gap-3 pb-6">
     <button type="submit" name="accion" value="guardar"
         class="bg-gray-600 hover:bg-gray-500 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition">
         💾 Guardar borrador
     </button>
-    @if($estadoActual !== 'aprobado')
     <button type="submit" name="accion" value="entregar"
         class="bg-green-700 hover:bg-green-600 text-white text-sm font-semibold px-6 py-2.5 rounded-lg transition">
         📤 Marcar como entregado
     </button>
-    @endif
 </div>
 @endif
 
