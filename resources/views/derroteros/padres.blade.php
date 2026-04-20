@@ -62,6 +62,8 @@
                         <td class="px-4 py-3 text-xs">
                             @if($m->elegible)
                                 <span class="text-green-600 font-semibold">✅ Sí</span>
+                            @elseif($bloqueado)
+                                <span class="text-red-500 font-semibold">❌ No</span>
                             @else
                                 <span class="text-red-500">❌ {{ $m->razon }}</span>
                             @endif

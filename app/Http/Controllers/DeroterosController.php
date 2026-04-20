@@ -95,7 +95,11 @@ class DeroterosController extends Controller
                     ->whereIn('CODIGO_ALUM', $codigosAlum)
                     ->whereIn('CODIGO_MAT', $codigosMat)
                     ->where('PERIODO', '<', $periodo)
-                    ->where('NOTA', '<', 7)
+                    ->where(function ($q) {
+                        // Pérdida original: sigue < 7 o fue recuperada (TIPODENOTA='R')
+                        $q->where('NOTA', '<', 7)
+                          ->orWhere('TIPODENOTA', 'R');
+                    })
                     ->select('CODIGO_ALUM', 'CODIGO_MAT', DB::raw('COUNT(*) as veces'))
                     ->groupBy('CODIGO_ALUM', 'CODIGO_MAT')
                     ->get()
@@ -391,7 +395,11 @@ class DeroterosController extends Controller
                     ->where('CODIGO_ALUM', $codigo)
                     ->whereIn('CODIGO_MAT', $fallos->pluck('CODIGO_MAT')->toArray())
                     ->where('PERIODO', '<', $periodo)
-                    ->where('NOTA', '<', 7)
+                    ->where(function ($q) {
+                        // Pérdida original: sigue < 7 o fue recuperada (TIPODENOTA='R')
+                        $q->where('NOTA', '<', 7)
+                          ->orWhere('TIPODENOTA', 'R');
+                    })
                     ->select('CODIGO_MAT', DB::raw('COUNT(*) as veces'))
                     ->groupBy('CODIGO_MAT')
                     ->pluck('veces', 'CODIGO_MAT');
