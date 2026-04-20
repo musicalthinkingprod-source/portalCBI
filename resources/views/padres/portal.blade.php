@@ -137,39 +137,43 @@
         ];
     }
 @endphp
-@foreach($tarjetasHorario as $t)
-<div class="bg-white rounded-2xl shadow-sm border border-gray-100 mb-4">
-    <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
-        <span class="{{ $t['icoColor'] }} text-lg">📚</span>
-        <div>
-            <h3 class="font-semibold text-gray-800 text-sm">{{ $t['titulo'] }}</h3>
-            <p class="text-xs text-gray-400">{{ $t['fecha'] }}</p>
+@if(!empty($tarjetasHorario))
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+    @foreach($tarjetasHorario as $t)
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100">
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+            <span class="{{ $t['icoColor'] }} text-lg">📚</span>
+            <div>
+                <h3 class="font-semibold text-gray-800 text-sm">{{ $t['titulo'] }}</h3>
+                <p class="text-xs text-gray-400">{{ $t['fecha'] }}</p>
+            </div>
         </div>
+        @if($t['horario']->isNotEmpty())
+            <div class="divide-y divide-gray-50">
+                @foreach($t['horario'] as $clase)
+                    <div class="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition">
+                        <div class="w-7 h-7 rounded-full {{ $t['horaBadge'] }} text-xs font-bold flex items-center justify-center shrink-0">
+                            {{ $clase->HORA }}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-800 truncate">{{ $clase->NOMBRE_MAT ?? '—' }}</p>
+                            @if($clase->NOMBRE_DOC)
+                                <p class="text-xs text-gray-400 truncate">{{ $clase->NOMBRE_DOC }}</p>
+                            @endif
+                        </div>
+                        <span class="text-xs text-gray-300">Hora {{ $clase->HORA }}</span>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="px-5 py-6 text-center text-sm text-gray-400">
+                Sin clases registradas en el horario para este día
+            </div>
+        @endif
     </div>
-    @if($t['horario']->isNotEmpty())
-        <div class="divide-y divide-gray-50">
-            @foreach($t['horario'] as $clase)
-                <div class="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition">
-                    <div class="w-7 h-7 rounded-full {{ $t['horaBadge'] }} text-xs font-bold flex items-center justify-center shrink-0">
-                        {{ $clase->HORA }}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-gray-800 truncate">{{ $clase->NOMBRE_MAT ?? '—' }}</p>
-                        @if($clase->NOMBRE_DOC)
-                            <p class="text-xs text-gray-400 truncate">{{ $clase->NOMBRE_DOC }}</p>
-                        @endif
-                    </div>
-                    <span class="text-xs text-gray-300">Hora {{ $clase->HORA }}</span>
-                </div>
-            @endforeach
-        </div>
-    @else
-        <div class="px-5 py-6 text-center text-sm text-gray-400">
-            Sin clases registradas en el horario para este día
-        </div>
-    @endif
+    @endforeach
 </div>
-@endforeach
+@endif
 
 {{-- Horario completo (colapsable) --}}
 @if(!empty($gridCompleto))
