@@ -74,7 +74,7 @@
             </div>
             <div class="text-xs text-gray-500">
                 <span class="font-semibold text-gray-700">{{ $notas['con_notas'] }}</span> de
-                <span class="font-semibold text-gray-700">{{ $notas['total'] }}</span> asignaciones con notas
+                <span class="font-semibold text-gray-700">{{ $notas['total'] }}</span> asignaciones con nota final
             </div>
             <a href="{{ route('notas.reporte') }}" class="text-xs text-blue-600 hover:underline mt-auto">Ver más →</a>
         </div>
@@ -151,6 +151,54 @@
         </div>
 
     </div>
+
+    {{-- ── Fila: Notas por ciclo (planilla ponderada) ── --}}
+    @if($ciclosNotas && count($ciclosNotas['ciclos']) > 0)
+    <div class="bg-white rounded-xl shadow p-5">
+        <div class="flex items-center justify-between mb-3">
+            <div>
+                <h3 class="text-sm font-bold text-gray-700">Notas por ciclo · Período {{ $ciclosNotas['periodo'] }}</h3>
+                <p class="text-xs text-gray-500 mt-0.5">
+                    Notas registradas en planilla ponderada ·
+                    <span class="font-semibold text-gray-700">{{ number_format($ciclosNotas['totalP']) }}</span> en el período
+                </p>
+            </div>
+            <a href="{{ route('control.planilla', ['periodo' => $ciclosNotas['periodo']]) }}"
+               class="text-xs text-blue-600 hover:underline">Ver detalle →</a>
+        </div>
+
+        <div class="grid grid-cols-7 gap-2">
+            @foreach($ciclosNotas['ciclos'] as $c)
+            @php
+                $max = max($ciclosNotas['max'], 1);
+                $altura = $c['futuro'] ? 0 : round(($c['total'] / $max) * 100);
+                $color = $c['futuro']
+                    ? 'bg-gray-200'
+                    : ($c['total'] === 0
+                        ? 'bg-red-300'
+                        : ($c['activo'] ? 'bg-blue-500' : 'bg-green-500'));
+                $inicioFmt = \Carbon\Carbon::parse($c['inicio'])->isoFormat('D MMM');
+            @endphp
+            <div class="flex flex-col items-center gap-1">
+                <div class="text-xs font-bold {{ $c['futuro'] ? 'text-gray-400' : 'text-gray-700' }}">
+                    {{ $c['total'] > 0 ? number_format($c['total']) : ($c['futuro'] ? '—' : '0') }}
+                </div>
+                <div class="w-full h-20 bg-gray-50 rounded flex items-end overflow-hidden"
+                     title="Ciclo {{ $c['numero'] }} · desde {{ $inicioFmt }}">
+                    <div class="{{ $color }} w-full transition-all"
+                         style="height: {{ max($altura, $c['futuro'] ? 0 : 4) }}%"></div>
+                </div>
+                <div class="text-xs text-gray-500">C{{ $c['numero'] }}</div>
+                @if($c['activo'])
+                    <div class="text-[10px] font-semibold text-blue-600">● en curso</div>
+                @elseif($c['futuro'])
+                    <div class="text-[10px] text-gray-300">futuro</div>
+                @endif
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
 
     {{-- ── Fila inferior: Digitación detalle + Próximos eventos ── --}}
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">

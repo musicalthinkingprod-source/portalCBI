@@ -25,28 +25,128 @@ class DashboardController extends Controller
             ];
         }
 
-        // ── Digitación de notas (SuperAd, Admin) ──────────────────────────
+        // ── Digitación de notas finales (SuperAd, Admin) ──────────────────
         $notas = null;
+        $ciclosNotas = null;
         if (in_array($profile, ['SuperAd', 'Admin'])) {
-            // Período actual: el mayor período con columnas de planilla registradas
-            $periodoActual = DB::table('planilla_columnas')
-                ->orderByDesc('periodo')
-                ->value('periodo') ?? 1;
+            $anio      = (int) date('Y');
+            $tablaNotas = 'NOTAS_' . $anio;
 
-            // Total de asignaciones activas
-            $totalAsignaciones = DB::table('ASIGNACION_PCM')->count();
-
-            // Combinaciones (doc, mat, curso) que tienen al menos 1 columna en el período actual
-            $conNotas = DB::table('planilla_columnas')
-                ->where('periodo', $periodoActual)
+            // Período actual según calendario académico: cada 7 inicios de ciclo
+            // (dia_ciclo=1) marcan un período. El período activo es el del ciclo
+            // cuyo inicio ya llegó y el siguiente aún no.
+            $todosInicios = DB::table('calendario_academico')
+                ->where('anio', $anio)
+                ->where('dia_ciclo', 1)
+                ->orderBy('fecha')
                 ->distinct()
-                ->count(DB::raw('CONCAT(codigo_doc, codigo_mat, curso)'));
+                ->pluck('fecha')
+                ->values();
+
+            $hoyStr = today()->toDateString();
+            $ciclosPasados = $todosInicios->filter(fn($d) => $d <= $hoyStr)->count();
+            $periodoActual = $ciclosPasados > 0
+                ? max(1, min(4, (int) ceil($ciclosPasados / 7)))
+                : 1;
+
+            // Período de referencia para la tarjeta de digitación:
+            // el más reciente con notas registradas; si no hay, el actual del calendario
+            try {
+                $periodoDigitacion = (int) (DB::table($tablaNotas)->max('PERIODO') ?? $periodoActual);
+            } catch (\Exception $e) {
+                $periodoDigitacion = $periodoActual;
+            }
+
+            // Total de asignaciones calificables
+            $totalAsignaciones = DB::table('ASIGNACION_PCM')
+                ->where('calificable', 1)
+                ->count();
+
+            // Asignaciones (doc, mat, curso) con al menos 1 nota real en el período,
+            // respetando las 4 formas de mapear CURSO según la materia:
+            //   - Normal (no 25/26/31): ASIGNACION.CURSO = ESTUDIANTES.CURSO
+            //   - Proyecto (31):        ASIGNACION.CURSO = LISTADOS_ESPECIALES.GRUPO
+            //   - Artes/Música 7°+:     ASIGNACION.CURSO (con -1/-2) = LISTADOS_ESPECIALES.GRUPO
+            //   - Artes/Música base:    ASIGNACION.CURSO = ESTUDIANTES.CURSO
+            $conNotas = 0;
+            try {
+                $conNotas = (int) DB::table('ASIGNACION_PCM as a')
+                    ->join($tablaNotas . ' as n', function ($j) use ($periodoDigitacion) {
+                        $j->on('n.CODIGO_DOC', '=', 'a.CODIGO_DOC')
+                          ->on('n.CODIGO_MAT', '=', 'a.CODIGO_MAT')
+                          ->where('n.PERIODO', '=', $periodoDigitacion);
+                    })
+                    ->join('ESTUDIANTES as e', function ($j) {
+                        $j->on('e.CODIGO', '=', 'n.CODIGO_ALUM')
+                          ->where('e.ESTADO', '=', 'MATRICULADO');
+                    })
+                    ->leftJoin('LISTADOS_ESPECIALES as le', 'le.CODIGO_ALUM', '=', 'n.CODIGO_ALUM')
+                    ->where('a.calificable', 1)
+                    ->whereRaw("(
+                        (a.CODIGO_MAT NOT IN (25,26,31) AND a.CURSO = e.CURSO) OR
+                        (a.CODIGO_MAT = 31 AND le.GRUPO = a.CURSO) OR
+                        (a.CODIGO_MAT IN (25,26) AND a.CURSO REGEXP '-[12]\$' AND le.GRUPO = a.CURSO) OR
+                        (a.CODIGO_MAT IN (25,26) AND a.CURSO NOT REGEXP '-[12]\$' AND a.CURSO = e.CURSO)
+                    )")
+                    ->distinct()
+                    ->count(DB::raw("CONCAT_WS('|', a.CODIGO_DOC, a.CODIGO_MAT, a.CURSO)"));
+            } catch (\Exception $e) {
+                // tabla del año podría no existir
+            }
 
             $notas = [
-                'periodo'   => $periodoActual,
+                'periodo'   => $periodoDigitacion,
                 'con_notas' => $conNotas,
                 'total'     => $totalAsignaciones,
                 'pct'       => $totalAsignaciones > 0 ? round(($conNotas / $totalAsignaciones) * 100) : 0,
+            ];
+
+            // ── Notas por ciclo (planilla ponderada) del período actual ───
+            $offset       = ($periodoActual - 1) * 7;
+            $iniciosCiclo = $todosInicios->slice($offset, 7)->values();
+
+            $ciclos = [];
+            foreach ($iniciosCiclo as $i => $inicio) {
+                $fin = $iniciosCiclo[$i + 1] ?? null; // siguiente inicio marca el fin (exclusivo)
+                $ciclos[] = [
+                    'numero' => $i + 1,
+                    'inicio' => $inicio,
+                    'fin'    => $fin,
+                    'activo' => $hoyStr >= $inicio && ($fin === null || $hoyStr < $fin),
+                    'futuro' => $hoyStr < $inicio,
+                    'total'  => 0,
+                ];
+            }
+
+            if (!empty($ciclos)) {
+                $rangoInicio = $ciclos[0]['inicio'];
+                $rangoFin    = end($ciclos)['fin'] ?? '9999-12-31';
+
+                $conteosPorFecha = DB::table('planilla_notas as pn')
+                    ->join('planilla_columnas as pc', 'pc.id', '=', 'pn.columna_id')
+                    ->where('pc.anio', $anio)
+                    ->where('pc.periodo', $periodoActual)
+                    ->whereNotNull('pn.nota')
+                    ->whereBetween(DB::raw('DATE(pn.updated_at)'), [$rangoInicio, $rangoFin])
+                    ->select(DB::raw('DATE(pn.updated_at) as fecha'), DB::raw('COUNT(*) as total'))
+                    ->groupBy(DB::raw('DATE(pn.updated_at)'))
+                    ->pluck('total', 'fecha');
+
+                foreach ($conteosPorFecha as $fecha => $total) {
+                    foreach ($ciclos as $idx => $c) {
+                        if ($fecha >= $c['inicio'] && ($c['fin'] === null || $fecha < $c['fin'])) {
+                            $ciclos[$idx]['total'] += (int) $total;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            $ciclosNotas = [
+                'periodo' => $periodoActual,
+                'ciclos'  => $ciclos,
+                'max'     => collect($ciclos)->max('total') ?: 0,
+                'totalP'  => collect($ciclos)->sum('total'),
             ];
         }
 
@@ -88,7 +188,8 @@ class DashboardController extends Controller
         }
 
         return view('dashboard', compact(
-            'profile', 'isDoc', 'cartera', 'notas', 'hoy', 'manana', 'proximosEventos', 'asistencia'
+            'profile', 'isDoc', 'cartera', 'notas', 'ciclosNotas',
+            'hoy', 'manana', 'proximosEventos', 'asistencia'
         ));
     }
 }

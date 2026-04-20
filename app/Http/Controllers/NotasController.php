@@ -89,21 +89,19 @@ class NotasController extends Controller
                 $notasConteo[$r->CODIGO_DOC][$r->CODIGO_MAT][$r->CURSO][$r->PERIODO] = $r->total;
             }
 
-            // Notas de Música (25) y Artes (26) grado 6+: join vía LISTADOS_ESPECIALES
-            // Música → le.GRUPO = a.CURSO + '-2' ; Artes → le.GRUPO = a.CURSO + '-1'
+            // Música (26) y Artes (25) con listado especial: a.CURSO ya trae sufijo -1/-2
+            // y coincide directamente con le.GRUPO (ej. 7A-1, 11B-2)
             $rowsMusArt = DB::table($tabla . ' as n')
                 ->join('ESTUDIANTES as e', fn($j) =>
                     $j->on('e.CODIGO', '=', 'n.CODIGO_ALUM')->where('e.ESTADO', 'MATRICULADO'))
                 ->join('LISTADOS_ESPECIALES as le', 'le.CODIGO_ALUM', '=', 'n.CODIGO_ALUM')
                 ->join('ASIGNACION_PCM as a', fn($j) =>
                     $j->on('a.CODIGO_DOC', '=', 'n.CODIGO_DOC')
-                      ->on('a.CODIGO_MAT', '=', 'n.CODIGO_MAT'))
+                      ->on('a.CODIGO_MAT', '=', 'n.CODIGO_MAT')
+                      ->on('a.CURSO',      '=', 'le.GRUPO'))
                 ->where('a.calificable', 1)
                 ->whereIn('n.CODIGO_MAT', [25, 26])
-                ->whereRaw("(
-                    (n.CODIGO_MAT = 25 AND le.GRUPO = CONCAT(a.CURSO, '-2')) OR
-                    (n.CODIGO_MAT = 26 AND le.GRUPO = CONCAT(a.CURSO, '-1'))
-                )")
+                ->whereRaw("a.CURSO REGEXP '-[12]$'")
                 ->select('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO',
                          DB::raw('COUNT(DISTINCT n.CODIGO_ALUM) as total'))
                 ->groupBy('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO')
@@ -113,7 +111,7 @@ class NotasController extends Controller
                 $notasConteo[$r->CODIGO_DOC][$r->CODIGO_MAT][$r->CURSO][$r->PERIODO] = $r->total;
             }
 
-            // Música/Artes grados 1-5 (sin listado especial): join normal CURSO = e.CURSO
+            // Música/Artes en cursos base sin dividir (grados 1-5 y 6° cuando no se divide)
             $rowsMusArtBajos = DB::table($tabla . ' as n')
                 ->join('ESTUDIANTES as e', fn($j) =>
                     $j->on('e.CODIGO', '=', 'n.CODIGO_ALUM')->where('e.ESTADO', 'MATRICULADO'))
@@ -123,7 +121,7 @@ class NotasController extends Controller
                       ->on('a.CURSO',      '=', 'e.CURSO'))
                 ->where('a.calificable', 1)
                 ->whereIn('n.CODIGO_MAT', [25, 26])
-                ->whereRaw("CAST(REGEXP_REPLACE(a.CURSO, '[^0-9]', '') AS UNSIGNED) < 6")
+                ->whereRaw("a.CURSO NOT REGEXP '-[12]$'")
                 ->select('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO',
                          DB::raw('COUNT(DISTINCT n.CODIGO_ALUM) as total'))
                 ->groupBy('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO')
