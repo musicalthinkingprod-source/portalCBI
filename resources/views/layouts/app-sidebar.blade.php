@@ -386,6 +386,7 @@
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
                 {!! sidebarLink(route('horarios.index'), '🗓️ Horarios') !!}
+                {!! sidebarLink(route('calendario.index'), '📆 Calendario académico') !!}
             </ul>
         </div>
         @endif
