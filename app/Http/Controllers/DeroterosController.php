@@ -204,6 +204,7 @@ class DeroterosController extends Controller
         $matSelec     = $request->input('materia') ? (int) $request->input('materia') : null;
         $cursoSelec   = $request->input('curso');
         $periodoSelec = (int) $request->input('periodo', 1);
+        $ordenSelec   = $request->input('orden', 'apellido');
         $anio         = (int) date('Y');
 
         $cursosDisponibles = $matSelec
@@ -222,27 +223,54 @@ class DeroterosController extends Controller
             ? ($materias->firstWhere('CODIGO_MAT', $matSelec)->NOMBRE_MAT ?? '')
             : '';
 
+        // Ventana de sustentación de recuperaciones (del calendario académico).
+        // SuperAd/Admin se saltan el bloqueo.
+        $recupFecha   = FechasController::fechaRecuperacion($periodoSelec, $anio);
+        $recupAbierto = $esSuperior || FechasController::recuperacionAbierta($periodoSelec, $anio);
+
         // Derroteros de la materia/curso seleccionada (agrupados por alumno)
         $derroteros = collect();
         if ($matSelec && $cursoSelec) {
             $derroteros = $this->calcularDerroteros($periodoSelec, $anio, $cursoSelec, null, $matSelec);
+
+            $derroteros = match ($ordenSelec) {
+                'codigo'   => $derroteros->sortKeys(),
+                'perdidas' => $derroteros->sortByDesc(fn($ms) => ($ms->first()->previas_periodos ?? 0) + 1),
+                default    => $derroteros->sortBy(fn($ms) => strtolower(
+                    ($ms->first()->APELLIDO1 ?? '') . ' ' .
+                    ($ms->first()->APELLIDO2 ?? '') . ' ' .
+                    ($ms->first()->NOMBRE1   ?? '')
+                )),
+            };
         }
 
         return view('derroteros.docente', compact(
             'materias', 'cursosDisponibles', 'matSelec', 'cursoSelec',
-            'periodoSelec', 'anio', 'mapaMateriasCursos', 'materiaNombre', 'derroteros'
+            'periodoSelec', 'anio', 'mapaMateriasCursos', 'materiaNombre',
+            'derroteros', 'ordenSelec', 'recupAbierto', 'recupFecha', 'esSuperior'
         ));
     }
 
     public function resolver(Request $request)
     {
         $profile      = auth()->user()->PROFILE;
+        $esSuperior   = in_array($profile, ['SuperAd', 'Admin']);
         $codigoAlum   = (int) $request->input('CODIGO_ALUM');
         $codigoMat    = (int) $request->input('CODIGO_MAT');
         $periodo      = (int) $request->input('periodo');
         $anio         = (int) date('Y');
         $resolucion   = $request->input('resolucion'); // RECUPERO | NO_RECUPERO | INTERMEDIO | NO_ASISTIO
         $notaIngresada = $request->input('nota_recuperacion');
+
+        // Bloqueo por fecha: la ventana se toma del calendario académico
+        // (evento "Sustentación de Recuperaciones/Derroteros") y va de 06:30 a 16:30.
+        if (!$esSuperior && !FechasController::recuperacionAbierta($periodo, $anio)) {
+            $fecha = FechasController::fechaRecuperacion($periodo, $anio);
+            $msg   = $fecha
+                ? "Solo puedes resolver recuperaciones el " . \Carbon\Carbon::parse($fecha)->isoFormat('dddd D [de] MMMM') . " entre 6:30 a. m. y 4:30 p. m."
+                : "No hay fecha de sustentación configurada en el calendario para el período {$periodo}.";
+            return back()->withErrors(['resolucion' => $msg]);
+        }
 
         // Obtener nota original
         $notaOriginal = DB::table($this->tablaNotas($anio))

@@ -12,7 +12,7 @@
     {{-- Filtros --}}
     <div class="bg-white rounded-xl shadow p-5 mb-6">
         <form method="GET" action="{{ route('derroteros.docente') }}" id="form-filtros">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 items-end">
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Período</label>
                     <select name="periodo" id="sel-periodo"
@@ -45,11 +45,50 @@
                         @endforeach
                     </select>
                 </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Ordenar por</label>
+                    <select name="orden" id="sel-orden"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="apellido" {{ $ordenSelec == 'apellido' ? 'selected' : '' }}>Apellido (A–Z)</option>
+                        <option value="codigo"   {{ $ordenSelec == 'codigo'   ? 'selected' : '' }}>Código</option>
+                        <option value="perdidas" {{ $ordenSelec == 'perdidas' ? 'selected' : '' }}>Más pérdidas</option>
+                    </select>
+                </div>
             </div>
         </form>
     </div>
 
     @if($matSelec && $cursoSelec)
+        @php
+            $fechaRecupHumano = $recupFecha
+                ? \Carbon\Carbon::parse($recupFecha)->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY')
+                : null;
+        @endphp
+
+        @if(!$recupAbierto)
+            <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl text-sm">
+                @if($recupFecha)
+                    🔒 Las resoluciones del período {{ $periodoSelec }} solo se pueden guardar el
+                    <strong>{{ $fechaRecupHumano }}</strong> entre <strong>6:30 a. m.</strong> y <strong>4:30 p. m.</strong>
+                    (fecha tomada del calendario académico). Por ahora puedes consultar el listado.
+                @else
+                    🔒 No hay fecha de <em>Sustentación de Recuperaciones</em> registrada en el calendario académico para el período {{ $periodoSelec }}.
+                    Pídele al administrador que la agregue.
+                @endif
+            </div>
+        @elseif($esSuperior)
+            <div class="mb-4 p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-xl text-sm">
+                🛡️ Modo administrador: puedes resolver derroteros aunque la ventana no esté abierta.
+                @if($recupFecha)
+                    La ventana para docentes es el <strong>{{ $fechaRecupHumano }}</strong> de 6:30 a. m. a 4:30 p. m.
+                @endif
+            </div>
+        @else
+            <div class="mb-4 p-3 bg-green-50 border border-green-200 text-green-800 rounded-xl text-sm">
+                ✅ Ventana de sustentación abierta hoy hasta las <strong>4:30 p. m.</strong>
+            </div>
+        @endif
+
         @if($derroteros->isEmpty())
             <div class="bg-green-50 border border-green-200 text-green-700 rounded-xl p-4 text-sm">
                 ✅ Ningún estudiante del curso <strong>{{ $cursoSelec }}</strong> tiene derrotero en <strong>{{ $materiaNombre }}</strong> para el período {{ $periodoSelec }}.
@@ -67,6 +106,7 @@
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <p class="font-semibold text-gray-800">
+                            <span class="font-mono text-xs text-gray-500 mr-2">{{ $m->CODIGO_ALUM }}</span>
                             {{ $m->APELLIDO1 }} {{ $m->APELLIDO2 }} {{ $m->NOMBRE1 }} {{ $m->NOMBRE2 }}
                         </p>
                         <div class="flex items-center gap-3 mt-1 text-xs text-gray-500">
@@ -104,7 +144,7 @@
                     @endif
                 </div>
 
-                @if($m->elegible)
+                @if($m->elegible && $recupAbierto)
                 <form method="POST" action="{{ route('derroteros.resolver') }}" class="mt-3 flex flex-wrap items-end gap-3">
                     @csrf
                     <input type="hidden" name="CODIGO_ALUM" value="{{ $m->CODIGO_ALUM }}">
@@ -170,6 +210,7 @@
     const selMateria   = document.getElementById('sel-materia');
     const selCurso     = document.getElementById('sel-curso');
     const selPeriodo   = document.getElementById('sel-periodo');
+    const selOrden     = document.getElementById('sel-orden');
     const form         = document.getElementById('form-filtros');
 
     function actualizarCursos() {
@@ -187,6 +228,7 @@
     selPeriodo.addEventListener('change', () => form.submit());
     selMateria.addEventListener('change', () => { actualizarCursos(); selCurso.value = ''; form.submit(); });
     selCurso.addEventListener('change',   () => { if (selCurso.value) form.submit(); });
+    selOrden.addEventListener('change',   () => form.submit());
 
     function validarIntermedia(btn, notaOriginal, nombre) {
         const form   = btn.closest('form');

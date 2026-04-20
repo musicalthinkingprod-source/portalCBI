@@ -4,20 +4,64 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class FechasController extends Controller
 {
+    // Horario fijo para la ventana de sustentación de recuperaciones.
+    const RECUP_HORA_INICIO = '06:30:00';
+    const RECUP_HORA_FIN    = '16:30:00';
+
     // Grupos de códigos con sus etiquetas
     public static function grupos(): array
     {
         return [
-            'N' => ['label' => 'Ingreso de Notas por Docentes',   'icon' => '📝'],
-            'V' => ['label' => 'Subir Salvavidas (Docentes)',     'icon' => '⬆️'],
-            'D' => ['label' => 'Consulta de Derroteros',          'icon' => '🗺️'],
-            'S' => ['label' => 'Consulta de Salvavidas',          'icon' => '🏊'],
-            'B' => ['label' => 'Consulta de Boletines',           'icon' => '📋'],
-            'F' => ['label' => 'Consulta de Notas Finales',       'icon' => '🎓'],
+            'N' => ['label' => 'Ingreso de Notas por Docentes',    'icon' => '📝'],
+            'V' => ['label' => 'Subir Salvavidas (Docentes)',      'icon' => '⬆️'],
+            'D' => ['label' => 'Consulta de Derroteros',           'icon' => '🗺️'],
+            'S' => ['label' => 'Consulta de Salvavidas',           'icon' => '🏊'],
+            'B' => ['label' => 'Consulta de Boletines',            'icon' => '📋'],
+            'F' => ['label' => 'Consulta de Notas Finales',        'icon' => '🎓'],
         ];
+    }
+
+    /**
+     * Fecha (YYYY-MM-DD) de la sustentación de recuperaciones del período dado,
+     * tomada del calendario académico. Se busca por evento que contenga
+     * "SUSTENTACIÓN ... RECUPERACIONES" o "SUSTENTACIÓN ... DERROTERO" y se asigna
+     * por orden cronológico al período correspondiente.
+     */
+    public static function fechaRecuperacion(int $periodo, ?int $anio = null): ?string
+    {
+        $anio ??= (int) date('Y');
+
+        $fechas = DB::table('calendario_eventos')
+            ->whereYear('fecha', $anio)
+            ->where(function ($q) {
+                $q->where('evento', 'like', '%SUSTENTACI%RECUPERACI%')
+                  ->orWhere('evento', 'like', '%SUSTENTACI%DERROTERO%');
+            })
+            ->orderBy('fecha')
+            ->pluck('fecha')
+            ->unique()
+            ->values();
+
+        return $fechas[$periodo - 1] ?? null;
+    }
+
+    /**
+     * Ventana activa de sustentación (06:30–16:30 del día del evento).
+     */
+    public static function recuperacionAbierta(int $periodo, ?int $anio = null): bool
+    {
+        $fecha = self::fechaRecuperacion($periodo, $anio);
+        if (!$fecha) return false;
+
+        $inicio = Carbon::parse($fecha . ' ' . self::RECUP_HORA_INICIO);
+        $fin    = Carbon::parse($fecha . ' ' . self::RECUP_HORA_FIN);
+        $now    = now();
+
+        return $now >= $inicio && $now <= $fin;
     }
 
     // Verifica si un código está activo ahora mismo
