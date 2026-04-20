@@ -58,4 +58,20 @@ class Controller extends BaseController
             ->orderBy('NOMBRE1')->orderBy('NOMBRE2')
             ->get();
     }
+
+    /**
+     * Cursos contra los que se debe emparejar ASIGNACION_PCM.CURSO para un estudiante:
+     * su curso base + todos los GRUPO de LISTADOS_ESPECIALES a los que pertenezca
+     * (Artes/Música divididos -1/-2, Proyectos GP*, etc.).
+     */
+    protected function cursosAplicables(string $codigoAlum, ?string $cursoBase): array
+    {
+        $gruposLE = DB::table('LISTADOS_ESPECIALES')
+            ->where('CODIGO_ALUM', $codigoAlum)
+            ->pluck('GRUPO')
+            ->all();
+
+        $cursos = array_merge($cursoBase !== null ? [$cursoBase] : [], $gruposLE);
+        return array_values(array_unique(array_filter($cursos, fn($c) => $c !== null && $c !== '')));
+    }
 }

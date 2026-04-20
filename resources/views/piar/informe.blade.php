@@ -34,7 +34,7 @@ $totalAnexo1Ok      = $estudiantes->where('ANEXO1_OK', 1)->count();
 $cuentaEstados = ['pendiente' => 0, 'revision' => 0, 'con_observaciones' => 0, 'aprobado' => 0, 'cerrado' => 0];
 
 foreach ($estudiantes as $est) {
-    $mats   = $asignaciones[$est->CURSO] ?? collect();
+    $mats   = $asignaciones[$est->CODIGO] ?? collect();
     $cDirs  = $caractDirs[$est->CODIGO] ?? collect();
 
     // Estado caract. director
@@ -149,7 +149,7 @@ $pctPendiente  = max(0, 100 - $pctAprobado - $pctRevision);
 
 @foreach($estudiantes as $est)
 @php
-    $materias = $asignaciones[$est->CURSO] ?? collect();
+    $materias = $asignaciones[$est->CODIGO] ?? collect();
     $matsPiar = $piarMats[$est->CODIGO]    ?? collect();
     $cMats    = $caractMats[$est->CODIGO]  ?? collect();
     $cDirs    = $caractDirs[$est->CODIGO]  ?? collect();

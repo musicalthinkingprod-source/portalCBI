@@ -196,7 +196,7 @@ class PiarController extends Controller
             ->select('pcd.CARACTERIZACION', 'pcd.CURSO', 'd.NOMBRE_DOC')
             ->first();
 
-        $matsExcluidas = [24, 35, 124, 135, 153]; // Urbanidad y Cívica, Cátedra de Paz, Urbanidad y Cívica PE, Cátedra de Paz PE, Pensamiento Lógico
+        $matsExcluidas = [24, 31, 35, 124, 135, 153]; // Urbanidad y Cívica, Proyectos, Cátedra de Paz, Urbanidad y Cívica PE, Cátedra de Paz PE, Pensamiento Lógico
 
         $caractMats = DB::table('PIAR_CARACT_MAT as pc')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'pc.CODIGO_MAT')
@@ -207,10 +207,12 @@ class PiarController extends Controller
             ->orderBy('m.NOMBRE_MAT')
             ->get();
 
+        $cursosEst = $this->cursosAplicables($codigo, $estudiante->CURSO);
+
         $ajustes = DB::table('PIAR_MAT as pm')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'pm.CODIGO_MAT')
-            ->join(DB::raw('(SELECT CODIGO_MAT, CURSO, MIN(CODIGO_DOC) AS CODIGO_DOC FROM ASIGNACION_PCM GROUP BY CODIGO_MAT, CURSO) as a'), function ($j) use ($estudiante) {
-                $j->on('a.CODIGO_MAT', '=', 'pm.CODIGO_MAT')->where('a.CURSO', '=', $estudiante->CURSO);
+            ->join(DB::raw('(SELECT CODIGO_MAT, CURSO, MIN(CODIGO_DOC) AS CODIGO_DOC FROM ASIGNACION_PCM GROUP BY CODIGO_MAT, CURSO) as a'), function ($j) use ($cursosEst) {
+                $j->on('a.CODIGO_MAT', '=', 'pm.CODIGO_MAT')->whereIn('a.CURSO', $cursosEst);
             })
             ->join('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'a.CODIGO_DOC')
             ->where('pm.CODIGO_ALUM', $codigo)
@@ -401,10 +403,10 @@ class PiarController extends Controller
         $codigoAlums = $estudiantes->pluck('CODIGO')->toArray();
 
         // Materias excluidas del PIAR (no aplican caracterización ni ajustes)
-        $matsExcluidas = [24, 35, 124, 135, 153]; // Urbanidad y Cívica, Cátedra de Paz, Urbanidad y Cívica PE, Cátedra de Paz PE, Pensamiento Lógico
+        $matsExcluidas = [24, 31, 35, 124, 135, 153]; // Urbanidad y Cívica, Proyectos, Cátedra de Paz, Urbanidad y Cívica PE, Cátedra de Paz PE, Pensamiento Lógico
 
-        // Todas las materias asignadas a los cursos de esos estudiantes (deduplicadas por CURSO+CODIGO_MAT)
-        $asignaciones = DB::table('ASIGNACION_PCM as a')
+        // Todas las materias asignadas (deduplicadas por CURSO+CODIGO_MAT), agrupadas por CURSO
+        $asignacionesPorCurso = DB::table('ASIGNACION_PCM as a')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'a.CODIGO_MAT')
             ->join(DB::raw('(SELECT CODIGO_MAT, CURSO, MIN(CODIGO_DOC) AS CODIGO_DOC FROM ASIGNACION_PCM GROUP BY CODIGO_MAT, CURSO) as au'),
                 function ($j) { $j->on('au.CODIGO_MAT','=','a.CODIGO_MAT')->on('au.CURSO','=','a.CURSO')->on('au.CODIGO_DOC','=','a.CODIGO_DOC'); })
@@ -414,6 +416,29 @@ class PiarController extends Controller
             ->orderBy('m.NOMBRE_MAT')
             ->get()
             ->groupBy('CURSO');
+
+        // Grupos de LISTADOS_ESPECIALES por estudiante (Artes/Música -1/-2, Proyectos)
+        $lePorAlumno = DB::table('LISTADOS_ESPECIALES')
+            ->whereIn('CODIGO_ALUM', $codigoAlums)
+            ->get()
+            ->groupBy('CODIGO_ALUM')
+            ->map(fn($rows) => $rows->pluck('GRUPO')->unique()->values()->all());
+
+        // Materias aplicables por estudiante: unión de su curso base + sus grupos especiales
+        $asignaciones = [];
+        foreach ($estudiantes as $est) {
+            $cursos = array_values(array_unique(array_filter(array_merge(
+                [$est->CURSO],
+                $lePorAlumno[$est->CODIGO] ?? []
+            ))));
+            $materias = collect();
+            foreach ($cursos as $c) {
+                if (isset($asignacionesPorCurso[$c])) {
+                    $materias = $materias->concat($asignacionesPorCurso[$c]);
+                }
+            }
+            $asignaciones[$est->CODIGO] = $materias->unique('CODIGO_MAT')->values();
+        }
 
         // Registros PIAR_MAT existentes
         $piarMats = DB::table('PIAR_MAT')

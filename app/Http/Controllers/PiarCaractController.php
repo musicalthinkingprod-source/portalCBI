@@ -41,7 +41,7 @@ class PiarCaractController extends Controller
 
     // ── ÍNDICE GENERAL – agrupado por estudiante ────────────────────────────
     // Materias excluidas del PIAR (no aplican caracterización ni ajustes)
-    private const MATS_EXCLUIDAS_PIAR = [24, 35, 124, 135, 153]; // Urbanidad y Cívica, Cátedra de Paz, Urbanidad y Cívica PE, Cátedra de Paz PE, Pensamiento Lógico
+    private const MATS_EXCLUIDAS_PIAR = [24, 31, 35, 124, 135, 153]; // Urbanidad y Cívica, Proyectos, Cátedra de Paz, Urbanidad y Cívica PE, Cátedra de Paz PE, Pensamiento Lógico
 
     public function index()
     {
@@ -60,9 +60,14 @@ class PiarCaractController extends Controller
         $esOriSuperAd = $perfilActual === 'SuperAd' || $perfilActual === 'Piar' || str_starts_with($perfilActual, 'Ori');
 
         // Filas: un registro por (estudiante × materia) con estados de caract. y ajustes
+        // Empareja ASIGNACION_PCM por curso base del estudiante O por grupos de
+        // LISTADOS_ESPECIALES (Artes/Música 7°+ con -1/-2, Proyectos).
         $filasRaw = DB::table('ESTUDIANTES as e')
             ->join('PIAR_DIAG as pd', 'pd.CODIGO_ALUM', '=', 'e.CODIGO')
-            ->join(DB::raw('(SELECT DISTINCT CODIGO_DOC, CODIGO_MAT, CURSO FROM ASIGNACION_PCM) as a'), 'a.CURSO', '=', 'e.CURSO')
+            ->leftJoin('LISTADOS_ESPECIALES as le', 'le.CODIGO_ALUM', '=', 'e.CODIGO')
+            ->join(DB::raw('(SELECT DISTINCT CODIGO_DOC, CODIGO_MAT, CURSO FROM ASIGNACION_PCM) as a'), function ($j) {
+                $j->whereRaw('(a.CURSO = e.CURSO OR a.CURSO = le.GRUPO)');
+            })
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'a.CODIGO_MAT')
             ->leftJoin('PIAR_CARACT_MAT as pc', function ($j) {
                 $j->on('pc.CODIGO_ALUM', '=', 'e.CODIGO')
@@ -156,10 +161,11 @@ class PiarCaractController extends Controller
 
         if ($esDocente) {
             $estudiante = DB::table('ESTUDIANTES as e')
+                ->leftJoin('LISTADOS_ESPECIALES as le', 'le.CODIGO_ALUM', '=', 'e.CODIGO')
                 ->join('ASIGNACION_PCM as a', function ($j) use ($codigoDoc, $codigoMat) {
-                    $j->on('a.CURSO', '=', 'e.CURSO')
-                      ->where('a.CODIGO_DOC', $codigoDoc)
-                      ->where('a.CODIGO_MAT', $codigoMat);
+                    $j->where('a.CODIGO_DOC', $codigoDoc)
+                      ->where('a.CODIGO_MAT', $codigoMat)
+                      ->whereRaw('(a.CURSO = e.CURSO OR a.CURSO = le.GRUPO)');
                 })
                 ->where('e.CODIGO', $codigo)
                 ->select('e.*')->first();
@@ -203,10 +209,11 @@ class PiarCaractController extends Controller
             ->value('CODIGO_DOC');
 
         if (!$codigoDocReal) {
-            $curso = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->value('CURSO');
+            $curso  = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->value('CURSO');
+            $cursos = $this->cursosAplicables($codigo, $curso);
             $codigoDocReal = DB::table('ASIGNACION_PCM')
                 ->where('CODIGO_MAT', $codigoMat)
-                ->where('CURSO', $curso)
+                ->whereIn('CURSO', $cursos)
                 ->value('CODIGO_DOC') ?? $this->codigoDoc();
         }
 
@@ -470,11 +477,13 @@ class PiarCaractController extends Controller
             ->get();
 
         // Ajustes por materia (un docente por materia para evitar duplicados)
+        $cursosEst = $this->cursosAplicables($codigo, $estudiante->CURSO);
+
         $ajustes = DB::table('PIAR_MAT as pm')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'pm.CODIGO_MAT')
-            ->join(DB::raw('(SELECT CODIGO_MAT, CURSO, MIN(CODIGO_DOC) AS CODIGO_DOC FROM ASIGNACION_PCM GROUP BY CODIGO_MAT, CURSO) as a'), function ($j) use ($estudiante) {
+            ->join(DB::raw('(SELECT CODIGO_MAT, CURSO, MIN(CODIGO_DOC) AS CODIGO_DOC FROM ASIGNACION_PCM GROUP BY CODIGO_MAT, CURSO) as a'), function ($j) use ($cursosEst) {
                 $j->on('a.CODIGO_MAT', '=', 'pm.CODIGO_MAT')
-                  ->where('a.CURSO', '=', $estudiante->CURSO);
+                  ->whereIn('a.CURSO', $cursosEst);
             })
             ->join('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'a.CODIGO_DOC')
             ->where('pm.CODIGO_ALUM', $codigo)

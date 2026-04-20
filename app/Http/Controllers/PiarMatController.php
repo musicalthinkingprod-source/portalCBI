@@ -38,8 +38,9 @@ class PiarMatController extends Controller
     {
         $curso = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->value('CURSO');
         if (!$curso) return [];
+        $cursos = $this->cursosAplicables($codigo, $curso);
         return DB::table('ASIGNACION_PCM')
-            ->where('CURSO', $curso)
+            ->whereIn('CURSO', $cursos)
             ->where('CODIGO_MAT', $codigoMat)
             ->pluck('CODIGO_DOC')
             ->unique()
@@ -55,9 +56,14 @@ class PiarMatController extends Controller
         $esDocente = $this->esDocente();
 
         // Estudiantes con PIAR + materias asignadas al docente
+        // El join con ASIGNACION_PCM empareja por curso base del estudiante O por grupos
+        // de LISTADOS_ESPECIALES (Artes/Música 7°+ con -1/-2, Proyectos).
         $query = DB::table('ESTUDIANTES as e')
             ->join('PIAR_DIAG as pd', 'pd.CODIGO_ALUM', '=', 'e.CODIGO')
-            ->join(DB::raw('(SELECT DISTINCT CODIGO_DOC, CODIGO_MAT, CURSO FROM ASIGNACION_PCM) as a'), 'a.CURSO', '=', 'e.CURSO')
+            ->leftJoin('LISTADOS_ESPECIALES as le', 'le.CODIGO_ALUM', '=', 'e.CODIGO')
+            ->join(DB::raw('(SELECT DISTINCT CODIGO_DOC, CODIGO_MAT, CURSO FROM ASIGNACION_PCM) as a'), function ($j) {
+                $j->whereRaw('(a.CURSO = e.CURSO OR a.CURSO = le.GRUPO)');
+            })
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'a.CODIGO_MAT')
             ->leftJoin('PIAR_MAT as pm', function ($j) {
                 $j->on('pm.CODIGO_ALUM', '=', 'e.CODIGO')
@@ -76,7 +82,7 @@ class PiarMatController extends Controller
                 'e.GRADO', 'e.CURSO', 'a.CODIGO_MAT', 'm.NOMBRE_MAT', 'pd.DIAGNOSTICO'
             );
 
-        $matsExcluidas = [24, 35, 124, 135, 153]; // Urbanidad y Cívica, Cátedra de Paz, Urbanidad y Cívica PE, Cátedra de Paz PE, Pensamiento Lógico
+        $matsExcluidas = [24, 31, 35, 124, 135, 153]; // Urbanidad y Cívica, Proyectos, Cátedra de Paz, Urbanidad y Cívica PE, Cátedra de Paz PE, Pensamiento Lógico
         $query->whereNotIn('a.CODIGO_MAT', $matsExcluidas);
 
         if ($esDocente) {
@@ -100,10 +106,11 @@ class PiarMatController extends Controller
         // Validar que el docente tenga acceso a esta combinación
         if ($esDocente) {
             $estudiante = DB::table('ESTUDIANTES as e')
+                ->leftJoin('LISTADOS_ESPECIALES as le', 'le.CODIGO_ALUM', '=', 'e.CODIGO')
                 ->join('ASIGNACION_PCM as a', function ($j) use ($codigoDoc, $codigoMat) {
-                    $j->on('a.CURSO', '=', 'e.CURSO')
-                      ->where('a.CODIGO_DOC', $codigoDoc)
-                      ->where('a.CODIGO_MAT', $codigoMat);
+                    $j->where('a.CODIGO_DOC', $codigoDoc)
+                      ->where('a.CODIGO_MAT', $codigoMat)
+                      ->whereRaw('(a.CURSO = e.CURSO OR a.CURSO = le.GRUPO)');
                 })
                 ->where('e.CODIGO', $codigo)
                 ->select('e.*')
@@ -157,10 +164,11 @@ class PiarMatController extends Controller
 
         if ($esDocente) {
             $estudiante = DB::table('ESTUDIANTES as e')
+                ->leftJoin('LISTADOS_ESPECIALES as le', 'le.CODIGO_ALUM', '=', 'e.CODIGO')
                 ->join('ASIGNACION_PCM as a', function ($j) use ($codigoDoc, $codigoMat) {
-                    $j->on('a.CURSO', '=', 'e.CURSO')
-                      ->where('a.CODIGO_DOC', $codigoDoc)
-                      ->where('a.CODIGO_MAT', $codigoMat);
+                    $j->where('a.CODIGO_DOC', $codigoDoc)
+                      ->where('a.CODIGO_MAT', $codigoMat)
+                      ->whereRaw('(a.CURSO = e.CURSO OR a.CURSO = le.GRUPO)');
                 })
                 ->where('e.CODIGO', $codigo)
                 ->select('e.*')
@@ -296,10 +304,11 @@ class PiarMatController extends Controller
 
         if ($esDocente) {
             $estudiante = DB::table('ESTUDIANTES as e')
+                ->leftJoin('LISTADOS_ESPECIALES as le', 'le.CODIGO_ALUM', '=', 'e.CODIGO')
                 ->join('ASIGNACION_PCM as a', function ($j) use ($codigoDoc, $codigoMat) {
-                    $j->on('a.CURSO', '=', 'e.CURSO')
-                      ->where('a.CODIGO_DOC', $codigoDoc)
-                      ->where('a.CODIGO_MAT', $codigoMat);
+                    $j->where('a.CODIGO_DOC', $codigoDoc)
+                      ->where('a.CODIGO_MAT', $codigoMat)
+                      ->whereRaw('(a.CURSO = e.CURSO OR a.CURSO = le.GRUPO)');
                 })
                 ->where('e.CODIGO', $codigo)
                 ->select('e.*')
