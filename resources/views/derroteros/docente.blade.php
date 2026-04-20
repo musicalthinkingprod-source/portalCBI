@@ -51,7 +51,6 @@
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="apellido" {{ $ordenSelec == 'apellido' ? 'selected' : '' }}>Apellido (A–Z)</option>
                         <option value="codigo"   {{ $ordenSelec == 'codigo'   ? 'selected' : '' }}>Código</option>
-                        <option value="perdidas" {{ $ordenSelec == 'perdidas' ? 'selected' : '' }}>Más pérdidas</option>
                     </select>
                 </div>
             </div>
@@ -70,7 +69,7 @@
                 @if($recupFecha)
                     🔒 Las resoluciones del período {{ $periodoSelec }} solo se pueden guardar el
                     <strong>{{ $fechaRecupHumano }}</strong> entre <strong>6:30 a. m.</strong> y <strong>4:30 p. m.</strong>
-                    (fecha tomada del calendario académico). Por ahora puedes consultar el listado.
+                    Por ahora puedes consultar el listado.
                 @else
                     🔒 No hay fecha de <em>Sustentación de Recuperaciones</em> registrada en el calendario académico para el período {{ $periodoSelec }}.
                     Pídele al administrador que la agregue.

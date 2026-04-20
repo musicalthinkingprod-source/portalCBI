@@ -169,15 +169,26 @@ class DeroterosController extends Controller
         $periodo     = (int) $request->input('periodo', 1);
         $cursoFiltro = $request->input('curso');
         $busqueda    = $request->input('busqueda');
+        $ordenSelec  = $request->input('orden', 'apellido');
 
         $derroteros = $this->calcularDerroteros($periodo, $anio, $cursoFiltro, $busqueda, null, true);
+
+        $derroteros = match ($ordenSelec) {
+            'codigo'   => $derroteros->sortKeys(),
+            'perdidas' => $derroteros->sortByDesc(fn($ms) => $ms->count()),
+            default    => $derroteros->sortBy(fn($ms) => strtolower(
+                ($ms->first()->APELLIDO1 ?? '') . ' ' .
+                ($ms->first()->APELLIDO2 ?? '') . ' ' .
+                ($ms->first()->NOMBRE1   ?? '')
+            )),
+        };
 
         $cursos = DB::table('ESTUDIANTES')
             ->where('ESTADO', 'MATRICULADO')
             ->distinct()->orderBy('CURSO')->pluck('CURSO');
 
         return view('derroteros.index', compact(
-            'derroteros', 'anio', 'periodo', 'cursoFiltro', 'busqueda', 'cursos'
+            'derroteros', 'anio', 'periodo', 'cursoFiltro', 'busqueda', 'cursos', 'ordenSelec'
         ));
     }
 
@@ -234,9 +245,8 @@ class DeroterosController extends Controller
             $derroteros = $this->calcularDerroteros($periodoSelec, $anio, $cursoSelec, null, $matSelec);
 
             $derroteros = match ($ordenSelec) {
-                'codigo'   => $derroteros->sortKeys(),
-                'perdidas' => $derroteros->sortByDesc(fn($ms) => ($ms->first()->previas_periodos ?? 0) + 1),
-                default    => $derroteros->sortBy(fn($ms) => strtolower(
+                'codigo' => $derroteros->sortKeys(),
+                default  => $derroteros->sortBy(fn($ms) => strtolower(
                     ($ms->first()->APELLIDO1 ?? '') . ' ' .
                     ($ms->first()->APELLIDO2 ?? '') . ' ' .
                     ($ms->first()->NOMBRE1   ?? '')

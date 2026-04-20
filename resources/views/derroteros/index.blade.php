@@ -5,7 +5,7 @@
     {{-- Filtros --}}
     <div class="bg-white rounded-xl shadow p-5 mb-6">
         <form method="GET" action="{{ route('derroteros.index') }}">
-            <div class="grid grid-cols-1 sm:grid-cols-5 gap-4 items-end">
+            <div class="grid grid-cols-1 sm:grid-cols-6 gap-4 items-end">
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Año</label>
                     <input type="number" name="anio" value="{{ $anio }}" min="2024" max="2030"
@@ -26,6 +26,14 @@
                         @foreach($cursos as $c)
                             <option value="{{ $c }}" {{ $cursoFiltro == $c ? 'selected' : '' }}>{{ $c }}</option>
                         @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Ordenar por</label>
+                    <select name="orden" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="apellido" {{ $ordenSelec == 'apellido' ? 'selected' : '' }}>Apellido (A–Z)</option>
+                        <option value="codigo"   {{ $ordenSelec == 'codigo'   ? 'selected' : '' }}>Código</option>
+                        <option value="perdidas" {{ $ordenSelec == 'perdidas' ? 'selected' : '' }}>Más pérdidas</option>
                     </select>
                 </div>
                 <div class="sm:col-span-2">
@@ -54,6 +62,7 @@
         <div class="bg-white rounded-xl shadow overflow-hidden mb-4">
             <div class="px-5 py-3 bg-gray-700 text-white flex items-center justify-between">
                 <div>
+                    <span class="font-mono text-xs text-gray-300 mr-2">{{ $codigoAlum }}</span>
                     <span class="font-bold text-sm">{{ $est->APELLIDO1 }} {{ $est->APELLIDO2 }} {{ $est->NOMBRE1 }} {{ $est->NOMBRE2 }}</span>
                     <span class="text-gray-300 text-xs ml-2">Curso {{ $est->CURSO }}</span>
                 </div>
