@@ -2,13 +2,6 @@
 @section('header', 'Derroteros')
 @section('slot')
 
-    @if(!empty($horariosPendientes))
-    <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-3 text-sm">
-        <span class="text-xl shrink-0">🕒</span>
-        <p class="text-blue-800">Los horarios de las recuperaciones <strong>aún no han sido publicados</strong>. Por favor vuelve a consultar más tarde.</p>
-    </div>
-    @endif
-
     {{-- Selector de período --}}
         <div class="flex gap-2 mb-5 flex-wrap">
             @foreach([1,2,3,4] as $p)

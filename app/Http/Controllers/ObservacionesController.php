@@ -11,6 +11,7 @@ class ObservacionesController extends Controller
     {
         $profile    = auth()->user()->PROFILE;
         $esSuperior = in_array($profile, ['SuperAd', 'Admin']);
+        $sinBloqueo = $esSuperior || app()->environment('local');
 
         // Cualquier perfil puede ser director de grupo si tiene DIR_GRUPO en CODIGOS_DOC
         $docInfo     = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $profile)->first();
@@ -25,8 +26,8 @@ class ObservacionesController extends Controller
 
         $periodo = max(1, min(4, (int) $request->input('periodo', 1)));
 
-        // Períodos abiertos según FECHAS (SuperAd/Admin siempre pueden editar)
-        $periodosAbiertos = $esSuperior ? [1, 2, 3, 4] : array_values(array_filter(
+        // Períodos abiertos según FECHAS (SuperAd/Admin y local siempre pueden editar)
+        $periodosAbiertos = $sinBloqueo ? [1, 2, 3, 4] : array_values(array_filter(
             [1, 2, 3, 4],
             fn($p) => FechasController::estaActivo('O' . $p)
         ));
@@ -74,10 +75,11 @@ class ObservacionesController extends Controller
     {
         $profile    = auth()->user()->PROFILE;
         $esSuperior = in_array($profile, ['SuperAd', 'Admin']);
+        $sinBloqueo = $esSuperior || app()->environment('local');
         $periodo    = max(1, min(4, (int) $request->input('periodo')));
         $curso      = $request->input('curso');
 
-        if (!$esSuperior && !FechasController::estaActivo('O' . $periodo)) {
+        if (!$sinBloqueo && !FechasController::estaActivo('O' . $periodo)) {
             return back()->with('error', 'El período ' . $periodo . ' está cerrado y no permite guardar observaciones.');
         }
 
