@@ -323,13 +323,19 @@ class PadresController extends Controller
             $proximaFecha[$diaCiclo] = $prox;
         }
 
+        // Correo institucional derivado del nombre: primer_nombre_primer_apellido@cbi.edu.co
+        $correosDocente = $slots->pluck('NOMBRE_DOC', 'codigo_doc')
+            ->unique()
+            ->map(fn($n) => $this->correoInstitucionalDocente($n));
+
         // Agrupar slots por docente, separando los del curso del estudiante
-        $docentes = $slots->groupBy('codigo_doc')->map(function ($items, $codigoDoc) use ($materiasDocente) {
+        $docentes = $slots->groupBy('codigo_doc')->map(function ($items, $codigoDoc) use ($materiasDocente, $correosDocente) {
             return [
                 'codigo_doc'  => $codigoDoc,
                 'nombre'      => $items->first()->NOMBRE_DOC,
                 'materias'    => $materiasDocente->get($codigoDoc, collect()),
                 'es_propio'   => $materiasDocente->has($codigoDoc),
+                'correo'      => $correosDocente->get($codigoDoc),
                 'slots'       => $items->map(fn($s) => ['dia' => $s->DIA, 'hora' => $s->HORA]),
             ];
         })->sortByDesc('es_propio')->values();
@@ -363,6 +369,24 @@ class PadresController extends Controller
         return view('padres.atencion-docentes', compact(
             'estudiante', 'docentes', 'proximaFecha', 'horaInicio', 'horaFin', 'directivos'
         ));
+    }
+
+    /**
+     * Correo institucional del docente: primer_nombre_primer_apellido@cbi.edu.co
+     * Asume orden "NOMBRE1 [NOMBRE2] APELLIDO1 [APELLIDO2]". Con 4+ palabras toma
+     * índices 0 y 2; con 3 o 2, toma 0 y 1.
+     */
+    private function correoInstitucionalDocente(?string $nombre): ?string
+    {
+        if (!$nombre) return null;
+        $ascii = \Illuminate\Support\Str::ascii($nombre);
+        $partes = preg_split('/\s+/', trim(strtolower($ascii)));
+        $partes = array_values(array_filter($partes, fn($p) => $p !== ''));
+        $n = count($partes);
+        if ($n < 2) return null;
+        $primerNombre   = $partes[0];
+        $primerApellido = $n >= 4 ? $partes[2] : $partes[1];
+        return "{$primerNombre}_{$primerApellido}@cbi.edu.co";
     }
 
     public function conductoRegular()
