@@ -16,7 +16,25 @@ class DashboardController extends Controller
         if (in_array($profile, ['SuperAd', 'Admin', 'Contab'])) {
             $facturado = (float) DB::table('facturacion')->sum('valor');
             $recaudado = (float) DB::table('registro_pagos')->sum('valor');
-            $pendiente = $facturado - $recaudado;
+
+            // Pendiente = suma de saldos positivos por alumno (igual que control de pagos).
+            // Los anticipos (saldo < 0) no descuentan la deuda de otros.
+            $facturaPorAlumno = DB::table('facturacion')
+                ->select('codigo_alumno', DB::raw('SUM(valor) as total_facturado'))
+                ->groupBy('codigo_alumno');
+
+            $pendiente = (float) DB::query()
+                ->fromSub($facturaPorAlumno, 'f')
+                ->leftJoinSub(
+                    DB::table('registro_pagos')
+                        ->select('codigo_alumno', DB::raw('SUM(valor) as total_pagado'))
+                        ->groupBy('codigo_alumno'),
+                    'p',
+                    'f.codigo_alumno', '=', 'p.codigo_alumno'
+                )
+                ->whereRaw('f.total_facturado - COALESCE(p.total_pagado, 0) > 0')
+                ->sum(DB::raw('f.total_facturado - COALESCE(p.total_pagado, 0)'));
+
             $cartera = [
                 'facturado' => $facturado,
                 'recaudado' => $recaudado,

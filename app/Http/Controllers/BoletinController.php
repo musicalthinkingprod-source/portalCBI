@@ -168,10 +168,22 @@ class BoletinController extends Controller
 
         $puedeImprimir = !$esDocente;
 
-        return view('informes.boletin', compact('estudiantes', 'q', 'esDocente', 'esOrientador', 'cursoDir', 'puedeImprimir'));
+        // Período seleccionado (por defecto, el que tiene ventana B abierta; si ninguna, P1)
+        $periodoSel = (int) $request->input('periodo', 0);
+        if (!in_array($periodoSel, [1,2,3,4])) {
+            $ventanaActiva = DB::table('FECHAS')
+                ->where('CODIGO_FECHA', 'like', 'B%')
+                ->where('INICIO', '<=', now())
+                ->where('FIN',    '>=', now())
+                ->orderBy('CODIGO_FECHA')
+                ->value('CODIGO_FECHA');
+            $periodoSel = $ventanaActiva ? (int) substr($ventanaActiva, 1) : 1;
+        }
+
+        return view('informes.boletin', compact('estudiantes', 'q', 'esDocente', 'esOrientador', 'cursoDir', 'puedeImprimir', 'periodoSel'));
     }
 
-    public function ver(int $codigo)
+    public function ver(int $codigo, Request $request)
     {
         $profile      = auth()->user()->PROFILE;
         $user         = auth()->user()->USER;
@@ -193,7 +205,21 @@ class BoletinController extends Controller
             if (!$enPiar) abort(403, 'Este estudiante no tiene PIAR registrado.');
         }
 
-        $datos = self::datos($codigo);
+        // Período: toma ?periodo=N si viene en la URL; si no, el período cuya ventana B está activa.
+        $periodo = $request->input('periodo');
+        $periodo = in_array((int) $periodo, [1,2,3,4]) ? (int) $periodo : null;
+
+        if ($periodo === null) {
+            $ventanaActiva = DB::table('FECHAS')
+                ->where('CODIGO_FECHA', 'like', 'B%')
+                ->where('INICIO', '<=', now())
+                ->where('FIN',    '>=', now())
+                ->orderBy('CODIGO_FECHA')
+                ->value('CODIGO_FECHA');
+            $periodo = $ventanaActiva ? (int) substr($ventanaActiva, 1) : null;
+        }
+
+        $datos = self::datos($codigo, $periodo);
         if (empty($datos)) abort(404);
 
         $origen        = 'interno';

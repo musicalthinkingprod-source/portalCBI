@@ -10,13 +10,33 @@
     <style>
         body { font-family: 'Figtree', sans-serif; }
 
+        /* Marca de agua (escudo). Posición fija → se repite en cada página impresa. */
+        .marca-agua {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0.05;
+            z-index: 0;
+        }
+        .marca-agua img { width: 50%; max-width: 420px; height: auto; }
+
         @media print {
             .no-print { display: none !important; }
             body { background: white !important; margin: 0; }
-            .pagina { box-shadow: none !important; margin: 0 !important; padding: 16px !important; }
+            .pagina {
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 16px !important;
+                background: transparent !important;
+            }
             table { page-break-inside: auto; }
             tr { page-break-inside: avoid; }
             .area-header { page-break-after: avoid; }
+            /* Forzar impresión de la marca de agua */
+            .marca-agua { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
 
         @page {
@@ -26,6 +46,11 @@
     </style>
 </head>
 <body class="bg-gray-200 min-h-screen py-6 print:bg-white print:py-0">
+
+{{-- Marca de agua (fija, se repite en cada página al imprimir) --}}
+<div class="marca-agua" aria-hidden="true">
+    <img src="{{ asset('images/escudoCBI.png') }}" alt="">
+</div>
 
 {{-- Barra de acciones (solo pantalla) --}}
 <div class="no-print max-w-4xl mx-auto mb-4 flex justify-between items-center px-2">
@@ -51,7 +76,7 @@
 </div>
 
 {{-- Página del boletín --}}
-<div class="pagina max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 print:shadow-none print:rounded-none">
+<div class="pagina relative z-10 max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 print:shadow-none print:rounded-none">
 
     {{-- ══════════════════ ENCABEZADO ══════════════════ --}}
     <div class="flex items-center gap-5 pb-4 mb-4 border-b-2 border-blue-900">
@@ -63,26 +88,28 @@
             <p class="text-sm text-gray-500 mt-0.5">Bogotá D.C. — Colombia</p>
         </div>
         <div class="text-right">
+            @php
+                $ordinal = [1 => 'Primer', 2 => 'Segundo', 3 => 'Tercer', 4 => 'Cuarto'][$periodoFiltro ?? 0] ?? null;
+            @endphp
             <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest">Informe Académico</p>
             <p class="text-3xl font-bold text-blue-900">{{ $anio }}</p>
+            @if($ordinal)
+                <p class="text-sm font-semibold text-blue-800 mt-0.5">{{ $ordinal }} Periodo</p>
+            @endif
         </div>
     </div>
 
     {{-- ══════════════════ DATOS DEL ESTUDIANTE ══════════════════ --}}
-    <div class="grid grid-cols-2 gap-x-8 gap-y-1.5 mb-5 p-4 bg-gray-50 rounded-lg border border-gray-200 text-sm">
+    <div class="mb-5 p-4 bg-gray-50 rounded-lg border border-gray-200 text-sm grid grid-cols-2 gap-x-8 gap-y-1.5">
         <div class="flex gap-2">
             <span class="text-gray-500 w-32 shrink-0">Estudiante:</span>
-            <span class="font-semibold text-gray-900">
-                {{ $estudiante->APELLIDO1 }} {{ $estudiante->APELLIDO2 }}, {{ $estudiante->NOMBRE1 }} {{ $estudiante->NOMBRE2 }}
+            <span class="font-semibold text-gray-900 whitespace-nowrap">
+                {{ \Str::title(mb_strtolower(trim("{$estudiante->NOMBRE1} {$estudiante->NOMBRE2} {$estudiante->APELLIDO1} {$estudiante->APELLIDO2}"))) }}
             </span>
         </div>
         <div class="flex gap-2">
-            <span class="text-gray-500 w-32 shrink-0">Documento:</span>
-            <span class="font-semibold text-gray-900">{{ $estudiante->TAR_ID ?? '—' }}</span>
-        </div>
-        <div class="flex gap-2">
-            <span class="text-gray-500 w-32 shrink-0">Curso:</span>
-            <span class="font-semibold text-gray-900">{{ $estudiante->CURSO ?? '—' }}</span>
+            <span class="text-gray-500 w-20 shrink-0">Código:</span>
+            <span class="font-semibold text-gray-900">{{ $estudiante->CODIGO }}</span>
         </div>
         <div class="flex gap-2">
             <span class="text-gray-500 w-32 shrink-0">Director de grupo:</span>
@@ -91,12 +118,8 @@
             </span>
         </div>
         <div class="flex gap-2">
-            <span class="text-gray-500 w-32 shrink-0">Año lectivo:</span>
-            <span class="font-semibold text-gray-900">{{ $anio }}</span>
-        </div>
-        <div class="flex gap-2">
-            <span class="text-gray-500 w-32 shrink-0">Código:</span>
-            <span class="font-semibold text-gray-900">{{ $estudiante->CODIGO }}</span>
+            <span class="text-gray-500 w-20 shrink-0">Curso:</span>
+            <span class="font-semibold text-gray-900">{{ $estudiante->CURSO ?? '—' }}</span>
         </div>
     </div>
 
@@ -109,8 +132,37 @@
         $promsArea        = [];   // promedio ponderado de cada área → para el promedio general
         $periodosVisibles = isset($periodoFiltro) && $periodoFiltro ? [$periodoFiltro] : [1,2,3,4];
         $colN             = count($periodosVisibles);
-        $colspan          = 3 + $colN;
+        $colspan          = 2 + $colN;
         $nivelPond        = $nivel ?? \App\Helpers\PonderacionArea::nivel($estudiante->CURSO ?? null);
+
+        // Pre-cálculo de medias de materias y promedio por área (para mostrar
+        // el promedio del área en la misma fila del nombre del área).
+        $areasCalc = [];
+        foreach ($areas as $areaId => $area) {
+            $mediasArea    = [];
+            $materiasCalc  = [];
+            foreach ($area['materias'] as $matId => $materia) {
+                $notasPeriodo = $materia['periodos'];
+                $vals  = array_filter(array_map(fn($p) => $notasPeriodo[$p]['nota'] ?? null, $periodosVisibles), fn($v) => $v !== null);
+                $media = count($vals) > 0 ? round(array_sum($vals) / count($vals), 1) : null;
+                $pesoMat = \App\Helpers\PonderacionArea::peso((int)$matId, $nivelPond);
+                if ($media !== null && $pesoMat > 0) {
+                    $mediasArea[] = ['media' => $media, 'peso' => $pesoMat];
+                }
+                $materiasCalc[$matId] = ['data' => $materia, 'media' => $media];
+            }
+            $_sumP = array_sum(array_column($mediasArea, 'peso'));
+            $promedioArea = $_sumP > 0
+                ? round(array_sum(array_map(fn($m) => $m['media'] * $m['peso'], $mediasArea)) / $_sumP, 1)
+                : null;
+            if ($promedioArea !== null) $promsArea[] = $promedioArea;
+            $areasCalc[$areaId] = [
+                'nombre'   => $area['nombre'],
+                'materias' => $materiasCalc,
+                'promedio' => $promedioArea,
+            ];
+        }
+        $promGeneral = count($promsArea) > 0 ? round(array_sum($promsArea) / count($promsArea), 1) : null;
     @endphp
 
     <table class="w-full text-sm border-collapse mb-5">
@@ -118,39 +170,51 @@
             <tr class="bg-blue-900 text-white">
                 <th class="px-3 py-2 text-left font-semibold text-xs uppercase tracking-wide border border-blue-800">Área / Asignatura</th>
                 @foreach($periodosVisibles as $p)
-                <th class="px-2 py-2 text-center font-semibold text-xs uppercase tracking-wide border border-blue-800 w-14">P{{ $p }}</th>
+                <th class="px-2 py-2 text-center font-semibold text-xs uppercase tracking-wide border border-blue-800 w-16">{{ $colN === 1 ? 'Nota' : 'P'.$p }}</th>
                 @endforeach
-                <th class="px-2 py-2 text-center font-semibold text-xs uppercase tracking-wide border border-blue-800 w-20">Promedio</th>
                 <th class="px-2 py-2 text-center font-semibold text-xs uppercase tracking-wide border border-blue-800 w-24">Desempeño</th>
             </tr>
         </thead>
         <tbody>
-        @foreach($areas as $areaId => $area)
+        @foreach($areasCalc as $areaId => $area)
 
-            {{-- Fila de área --}}
+            @php
+                $pa = $area['promedio'];
+                $desArea = match(true) {
+                    $pa === null => null,
+                    $pa > 9.0    => ['label' => 'Superior', 'color' => 'text-blue-700'],
+                    $pa > 8.0    => ['label' => 'Alto',     'color' => 'text-green-700'],
+                    $pa >= 7.0   => ['label' => 'Básico',   'color' => 'text-yellow-600'],
+                    default      => ['label' => 'Bajo',     'color' => 'text-red-600 font-bold'],
+                };
+            @endphp
+            {{-- Fila de área (con promedio del área en la misma fila) --}}
             <tr class="area-header bg-blue-50">
-                <td colspan="{{ $colspan }}" class="px-3 py-1.5 font-bold text-blue-900 text-xs uppercase tracking-wide border border-blue-200">
-                    {{ $area['nombre'] }}
+                <td class="px-3 py-1.5 border border-blue-200">
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="font-bold text-blue-900 text-xs uppercase tracking-wide">{{ $area['nombre'] }}</span>
+                        <span class="text-[10px] uppercase tracking-wide text-blue-700 font-semibold italic shrink-0">Prom. área</span>
+                    </div>
+                </td>
+                <td colspan="{{ $colN }}" class="px-2 py-1.5 text-center font-bold text-blue-900 text-sm border border-blue-200">
+                    {{ $pa !== null ? number_format($pa, 1) : '—' }}
+                </td>
+                <td class="px-2 py-1.5 text-center text-xs font-semibold border border-blue-200 {{ $desArea['color'] ?? 'text-gray-400' }}">
+                    {{ $desArea['label'] ?? '—' }}
                 </td>
             </tr>
 
-            @php $mediasArea = []; @endphp {{-- cada entrada: ['media'=>float, 'peso'=>float] --}}
-
-            @foreach($area['materias'] as $matId => $materia)
+            @foreach($area['materias'] as $matId => $matCalc)
             @php
+                $materia      = $matCalc['data'];
+                $media        = $matCalc['media'];
                 $notasPeriodo = $materia['periodos'];
-                $vals = array_filter(array_map(fn($p) => $notasPeriodo[$p]['nota'] ?? null, $periodosVisibles), fn($v) => $v !== null);
-                $media   = count($vals) > 0 ? round(array_sum($vals) / count($vals), 1) : null;
-                $pesoMat = \App\Helpers\PonderacionArea::peso((int)$matId, $nivelPond);
-                if ($media !== null && $pesoMat > 0) {
-                    $mediasArea[] = ['media' => $media, 'peso' => $pesoMat];
-                }
                 $desempeno = match(true) {
-                    $media === null      => null,
-                    $media >= 9.0        => ['label' => 'Superior',  'color' => 'text-blue-700'],
-                    $media >= 8.0        => ['label' => 'Alto',       'color' => 'text-green-700'],
-                    $media >= 6.0        => ['label' => 'Básico',     'color' => 'text-yellow-600'],
-                    default              => ['label' => 'Bajo',       'color' => 'text-red-600 font-bold'],
+                    $media === null => null,
+                    $media > 9.0    => ['label' => 'Superior', 'color' => 'text-blue-700'],
+                    $media > 8.0    => ['label' => 'Alto',     'color' => 'text-green-700'],
+                    $media >= 7.0   => ['label' => 'Básico',   'color' => 'text-yellow-600'],
+                    default         => ['label' => 'Bajo',     'color' => 'text-red-600 font-bold'],
                 };
             @endphp
             <tr class="hover:bg-gray-50 border-b border-gray-100">
@@ -169,7 +233,7 @@
                 @endphp
                 <td class="px-1 py-1.5 text-center border border-gray-200">
                     @if($nota !== null)
-                        <span class="{{ $nota < 6 ? 'text-red-600 font-bold' : 'text-gray-800' }}">
+                        <span class="{{ $nota < 7 ? 'text-red-600 font-bold' : 'text-gray-800' }}">
                             {{ number_format($nota, 1) }}
                         </span>
                         @if($tipo === 'R')
@@ -181,9 +245,6 @@
                 </td>
                 @endforeach
 
-                <td class="px-2 py-1.5 text-center border border-gray-200 font-semibold {{ $media !== null && $media < 6 ? 'text-red-600' : 'text-gray-900' }}">
-                    {{ $media !== null ? number_format($media, 1) : '—' }}
-                </td>
                 <td class="px-2 py-1.5 text-center border border-gray-200 text-xs font-semibold {{ $desempeno['color'] ?? 'text-gray-400' }}">
                     {{ $desempeno['label'] ?? '—' }}
                 </td>
@@ -212,40 +273,27 @@
             @endif
             @endforeach
 
-            {{-- Promedio del área (ponderado según tabla de pesos) --}}
-            @php
-                $_sumP = array_sum(array_column($mediasArea, 'peso'));
-                $promedioArea = $_sumP > 0
-                    ? round(array_sum(array_map(fn($m) => $m['media'] * $m['peso'], $mediasArea)) / $_sumP, 1)
-                    : null;
-                if ($promedioArea !== null) $promsArea[] = $promedioArea;
-            @endphp
-            <tr class="bg-gray-100">
-                <td class="px-3 py-1 text-xs font-bold text-gray-600 uppercase tracking-wide border border-gray-200 pl-6 italic">
-                    Promedio del área
-                </td>
-                <td colspan="{{ $colN }}" class="border border-gray-200"></td>
-                <td class="px-2 py-1 text-center border border-gray-200 font-bold text-blue-900">
-                    {{ $promedioArea !== null ? number_format($promedioArea, 1) : '—' }}
-                </td>
-                <td class="border border-gray-200"></td>
-            </tr>
-
         @endforeach
 
         {{-- Promedio general = media simple de los promedios ponderados de cada área --}}
-        @php $promGeneral = count($promsArea) > 0 ? round(array_sum($promsArea) / count($promsArea), 1) : null; @endphp
+        @php
+            $desGeneral = match(true) {
+                $promGeneral === null => null,
+                $promGeneral > 9.0    => 'Superior',
+                $promGeneral > 8.0    => 'Alto',
+                $promGeneral >= 7.0   => 'Básico',
+                default               => 'Bajo',
+            };
+        @endphp
         <tr class="bg-blue-900 text-white">
-            <td class="px-3 py-2 font-bold text-sm uppercase tracking-wide border border-blue-800" colspan="{{ 1 + $colN }}">
+            <td class="px-3 py-2 font-bold text-sm uppercase tracking-wide border border-blue-800">
                 Promedio General
             </td>
-            <td class="px-2 py-2 text-center font-bold text-lg border border-blue-800">
+            <td colspan="{{ $colN }}" class="px-2 py-2 text-center font-bold text-lg border border-blue-800">
                 {{ $promGeneral !== null ? number_format($promGeneral, 1) : '—' }}
             </td>
-            <td class="px-2 py-2 text-center font-bold text-sm border border-blue-800">
-                @if($promGeneral !== null)
-                    {{ $promGeneral >= 9 ? 'Superior' : ($promGeneral >= 8 ? 'Alto' : ($promGeneral >= 6 ? 'Básico' : 'Bajo')) }}
-                @endif
+            <td class="px-2 py-2 text-center text-xs font-semibold border border-blue-800">
+                {{ $desGeneral ?? '—' }}
             </td>
         </tr>
         </tbody>
@@ -253,48 +301,48 @@
 
     {{-- ══════════════════ ESCALA DE VALORACIÓN ══════════════════ --}}
     <div class="flex gap-3 mb-5 text-xs">
-        <span class="px-3 py-1 rounded bg-blue-100 text-blue-800 font-semibold">Superior: 9.0 – 10.0</span>
-        <span class="px-3 py-1 rounded bg-green-100 text-green-800 font-semibold">Alto: 8.0 – 8.9</span>
-        <span class="px-3 py-1 rounded bg-yellow-100 text-yellow-800 font-semibold">Básico: 6.0 – 7.9</span>
-        <span class="px-3 py-1 rounded bg-red-100 text-red-800 font-semibold">Bajo: 0.0 – 5.9</span>
-        <span class="px-3 py-1 rounded bg-blue-50 text-blue-600 font-semibold"><sup>R</sup> Recuperada en derrotero</span>
+        <span class="px-3 py-1 rounded bg-blue-100 text-blue-800 font-semibold">Superior: 9.1 – 10.0</span>
+        <span class="px-3 py-1 rounded bg-green-100 text-green-800 font-semibold">Alto: 8.1 – 9.0</span>
+        <span class="px-3 py-1 rounded bg-yellow-100 text-yellow-800 font-semibold">Básico: 7.0 – 8.0</span>
+        <span class="px-3 py-1 rounded bg-red-100 text-red-800 font-semibold">Bajo: 1.0 – 6.9</span>
+        <span class="px-3 py-1 rounded bg-blue-50 text-blue-600 font-semibold"><sup>R</sup> Recuperada</span>
     </div>
 
     @endif
 
     {{-- ══════════════════ OBSERVACIONES ══════════════════ --}}
-    @if($observaciones->isNotEmpty())
-    <div class="mb-6">
+    @php
+        $obsVisibles = isset($periodoFiltro) && $periodoFiltro
+            ? $observaciones->filter(fn($o, $p) => (int) $p === (int) $periodoFiltro)
+            : $observaciones;
+    @endphp
+    @if($obsVisibles->isNotEmpty())
+    <div class="pb-4 border-b border-gray-300">
         <h3 class="text-xs font-bold text-gray-600 uppercase tracking-widest mb-2 border-b border-gray-200 pb-1">
             Observaciones del Director de Grupo
         </h3>
         <div class="space-y-2">
-            @foreach($observaciones as $periodo => $obs)
-            <div class="flex gap-3 text-sm">
-                <span class="shrink-0 font-semibold text-blue-800 w-16">Período {{ $periodo }}:</span>
-                <span class="text-gray-700 italic">{{ $obs->OBSERVACION }}</span>
-            </div>
+            @foreach($obsVisibles as $periodo => $obs)
+            <p class="text-sm text-gray-700 italic">{{ $obs->OBSERVACION }}</p>
             @endforeach
         </div>
     </div>
     @endif
 
     {{-- ══════════════════ FIRMAS ══════════════════ --}}
-    <div class="mt-10 pt-4 border-t border-gray-300 grid grid-cols-3 gap-8 text-center text-xs text-gray-600">
-        <div>
-            <div class="border-b border-gray-400 mb-2 pb-8"></div>
-            <p class="font-semibold">{{ $director ? \Str::title(strtolower($director)) : '________________________' }}</p>
-            <p class="text-gray-500">Director(a) de Grupo</p>
-        </div>
-        <div>
-            <div class="border-b border-gray-400 mb-2 pb-8"></div>
-            <p class="font-semibold">Acudiente / Padre de Familia</p>
-            <p class="text-gray-500">Firma y C.C.</p>
-        </div>
-        <div>
-            <div class="border-b border-gray-400 mb-2 pb-8"></div>
-            <p class="font-semibold">Rector(a)</p>
-            <p class="text-gray-500">Colegio Bilingüe Integral</p>
+    <div>
+        <div class="h-28"></div>
+        <div class="grid grid-cols-2 gap-8 text-center text-xs text-gray-600">
+            <div>
+                <div class="border-b border-gray-400 mb-2"></div>
+                <p class="font-semibold">{{ $director ? \Str::title(strtolower($director)) : '________________________' }}</p>
+                <p class="text-gray-500">Director(a) de Grupo</p>
+            </div>
+            <div>
+                <div class="border-b border-gray-400 mb-2"></div>
+                <p class="font-semibold">Rector(a)</p>
+                <p class="text-gray-500">Colegio Bilingüe Integral</p>
+            </div>
         </div>
     </div>
 

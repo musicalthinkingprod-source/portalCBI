@@ -107,6 +107,38 @@
         $colspanPeriodos = 4;
         $colspanTotal    = 1 + $colspanPeriodos + 2;
         $nivelPond       = $nivel ?? \App\Helpers\PonderacionArea::nivel($estudiante->CURSO ?? null);
+
+        // Pre-cálculo de medias y promedio por área (para mostrar el promedio
+        // del área en la misma fila del nombre del área).
+        $areasCalc = [];
+        foreach ($areas as $areaId => $area) {
+            $mediasArea   = [];
+            $materiasCalc = [];
+            foreach ($area['materias'] as $matId => $materia) {
+                $notasPeriodo = $materia['periodos'];
+                $vals = array_filter(
+                    array_map(fn($p) => in_array($p, $visibles) ? ($notasPeriodo[$p]['nota'] ?? null) : null, [1,2,3,4]),
+                    fn($v) => $v !== null
+                );
+                $media   = count($vals) > 0 ? round(array_sum($vals) / count($vals), 1) : null;
+                $pesoMat = \App\Helpers\PonderacionArea::peso((int)$matId, $nivelPond);
+                if ($media !== null && $pesoMat > 0) {
+                    $mediasArea[] = ['media' => $media, 'peso' => $pesoMat];
+                }
+                $materiasCalc[$matId] = ['data' => $materia, 'media' => $media];
+            }
+            $_sumP = array_sum(array_column($mediasArea, 'peso'));
+            $promedioArea = $_sumP > 0
+                ? round(array_sum(array_map(fn($m) => $m['media'] * $m['peso'], $mediasArea)) / $_sumP, 1)
+                : null;
+            if ($promedioArea !== null) $promsArea[] = $promedioArea;
+            $areasCalc[$areaId] = [
+                'nombre'   => $area['nombre'],
+                'materias' => $materiasCalc,
+                'promedio' => $promedioArea,
+            ];
+        }
+        $promGeneral = count($promsArea) > 0 ? round(array_sum($promsArea) / count($promsArea), 1) : null;
     @endphp
 
     <table class="w-full text-sm border-collapse mb-5">
@@ -126,34 +158,44 @@
             </tr>
         </thead>
         <tbody>
-        @foreach($areas as $areaId => $area)
+        @foreach($areasCalc as $areaId => $area)
 
-            {{-- Fila de área --}}
+            @php
+                $pa = $area['promedio'];
+                $desArea = match(true) {
+                    $pa === null => null,
+                    $pa > 9.0    => ['label' => 'Superior', 'color' => 'text-blue-700'],
+                    $pa > 8.0    => ['label' => 'Alto',     'color' => 'text-green-700'],
+                    $pa >= 7.0   => ['label' => 'Básico',   'color' => 'text-yellow-600'],
+                    default      => ['label' => 'Bajo',     'color' => 'text-red-600 font-bold'],
+                };
+            @endphp
+            {{-- Fila de área (con promedio del área en la misma fila) --}}
             <tr class="area-header bg-blue-50">
-                <td colspan="{{ $colspanTotal }}" class="px-3 py-1.5 font-bold text-blue-900 text-xs uppercase tracking-wide border border-blue-200">
-                    {{ $area['nombre'] }}
+                <td colspan="{{ 1 + $colspanPeriodos }}" class="px-3 py-1.5 border border-blue-200">
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="font-bold text-blue-900 text-xs uppercase tracking-wide">{{ $area['nombre'] }}</span>
+                        <span class="text-[10px] uppercase tracking-wide text-blue-700 font-semibold italic shrink-0">Prom. área</span>
+                    </div>
+                </td>
+                <td class="px-2 py-1.5 text-center font-bold text-blue-900 text-sm border border-blue-200">
+                    {{ $pa !== null ? number_format($pa, 1) : '—' }}
+                </td>
+                <td class="px-2 py-1.5 text-center text-xs font-semibold border border-blue-200 {{ $desArea['color'] ?? 'text-gray-400' }}">
+                    {{ $desArea['label'] ?? '—' }}
                 </td>
             </tr>
 
-            @php $mediasArea = []; @endphp {{-- cada entrada: ['media'=>float, 'peso'=>float] --}}
-
-            @foreach($area['materias'] as $matId => $materia)
+            @foreach($area['materias'] as $matId => $matCalc)
             @php
+                $materia      = $matCalc['data'];
+                $media        = $matCalc['media'];
                 $notasPeriodo = $materia['periodos'];
-                $vals = array_filter(
-                    array_map(fn($p) => in_array($p, $visibles) ? ($notasPeriodo[$p]['nota'] ?? null) : null, [1,2,3,4]),
-                    fn($v) => $v !== null
-                );
-                $media   = count($vals) > 0 ? round(array_sum($vals) / count($vals), 1) : null;
-                $pesoMat = \App\Helpers\PonderacionArea::peso((int)$matId, $nivelPond);
-                if ($media !== null && $pesoMat > 0) {
-                    $mediasArea[] = ['media' => $media, 'peso' => $pesoMat];
-                }
                 $desempeno = match(true) {
                     $media === null => null,
-                    $media >= 9.0   => ['label' => 'Superior', 'color' => 'text-blue-700'],
-                    $media >= 8.0   => ['label' => 'Alto',     'color' => 'text-green-700'],
-                    $media >= 6.0   => ['label' => 'Básico',   'color' => 'text-yellow-600'],
+                    $media > 9.0    => ['label' => 'Superior', 'color' => 'text-blue-700'],
+                    $media > 8.0    => ['label' => 'Alto',     'color' => 'text-green-700'],
+                    $media >= 7.0   => ['label' => 'Básico',   'color' => 'text-yellow-600'],
                     default         => ['label' => 'Bajo',     'color' => 'text-red-600 font-bold'],
                 };
             @endphp
@@ -176,7 +218,7 @@
                     @if($esPendiente)
                         <span class="text-gray-300 text-xs">—</span>
                     @elseif($nota !== null)
-                        <span class="{{ $nota < 6 ? 'text-red-600 font-bold' : 'text-gray-800' }}">
+                        <span class="{{ $nota < 7 ? 'text-red-600 font-bold' : 'text-gray-800' }}">
                             {{ number_format($nota, 1) }}
                         </span>
                         @if($tipo === 'R')
@@ -188,7 +230,7 @@
                 </td>
                 @endforeach
 
-                <td class="px-2 py-1.5 text-center border border-gray-200 font-semibold {{ $media !== null && $media < 6 ? 'text-red-600' : 'text-gray-900' }}">
+                <td class="px-2 py-1.5 text-center border border-gray-200 font-semibold {{ $media !== null && $media < 7 ? 'text-red-600' : 'text-gray-900' }}">
                     {{ $media !== null ? number_format($media, 1) : '—' }}
                 </td>
                 <td class="px-2 py-1.5 text-center border border-gray-200 text-xs font-semibold {{ $desempeno['color'] ?? 'text-gray-400' }}">
@@ -197,29 +239,9 @@
             </tr>
             @endforeach
 
-            {{-- Promedio del área (ponderado según tabla de pesos) --}}
-            @php
-                $_sumP = array_sum(array_column($mediasArea, 'peso'));
-                $promedioArea = $_sumP > 0
-                    ? round(array_sum(array_map(fn($m) => $m['media'] * $m['peso'], $mediasArea)) / $_sumP, 1)
-                    : null;
-                if ($promedioArea !== null) $promsArea[] = $promedioArea;
-            @endphp
-            <tr class="bg-gray-100">
-                <td class="px-3 py-1 text-xs font-bold text-gray-600 uppercase tracking-wide border border-gray-200 pl-6 italic">
-                    Promedio del área
-                </td>
-                <td colspan="{{ $colspanPeriodos }}" class="border border-gray-200"></td>
-                <td class="px-2 py-1 text-center border border-gray-200 font-bold text-blue-900">
-                    {{ $promedioArea !== null ? number_format($promedioArea, 1) : '—' }}
-                </td>
-                <td class="border border-gray-200"></td>
-            </tr>
-
         @endforeach
 
         {{-- Promedio general = media simple de los promedios ponderados de cada área --}}
-        @php $promGeneral = count($promsArea) > 0 ? round(array_sum($promsArea) / count($promsArea), 1) : null; @endphp
         <tr class="bg-blue-900 text-white">
             <td class="px-3 py-2 font-bold text-sm uppercase tracking-wide border border-blue-800" colspan="{{ 1 + $colspanPeriodos }}">
                 Promedio General
@@ -229,7 +251,7 @@
             </td>
             <td class="px-2 py-2 text-center font-bold text-sm border border-blue-800">
                 @if($promGeneral !== null)
-                    {{ $promGeneral >= 9 ? 'Superior' : ($promGeneral >= 8 ? 'Alto' : ($promGeneral >= 6 ? 'Básico' : 'Bajo')) }}
+                    {{ $promGeneral > 9 ? 'Superior' : ($promGeneral > 8 ? 'Alto' : ($promGeneral >= 7 ? 'Básico' : 'Bajo')) }}
                 @endif
             </td>
         </tr>
@@ -238,11 +260,11 @@
 
     {{-- ══════════════════ ESCALA DE VALORACIÓN ══════════════════ --}}
     <div class="flex gap-3 mb-5 text-xs flex-wrap">
-        <span class="px-3 py-1 rounded bg-blue-100 text-blue-800 font-semibold">Superior: 9.0 – 10.0</span>
-        <span class="px-3 py-1 rounded bg-green-100 text-green-800 font-semibold">Alto: 8.0 – 8.9</span>
-        <span class="px-3 py-1 rounded bg-yellow-100 text-yellow-800 font-semibold">Básico: 6.0 – 7.9</span>
-        <span class="px-3 py-1 rounded bg-red-100 text-red-800 font-semibold">Bajo: 0.0 – 5.9</span>
-        <span class="px-3 py-1 rounded bg-blue-50 text-blue-600 font-semibold"><sup>R</sup> Recuperada en derrotero</span>
+        <span class="px-3 py-1 rounded bg-blue-100 text-blue-800 font-semibold">Superior: 9.1 – 10.0</span>
+        <span class="px-3 py-1 rounded bg-green-100 text-green-800 font-semibold">Alto: 8.1 – 9.0</span>
+        <span class="px-3 py-1 rounded bg-yellow-100 text-yellow-800 font-semibold">Básico: 7.0 – 8.0</span>
+        <span class="px-3 py-1 rounded bg-red-100 text-red-800 font-semibold">Bajo: 1.0 – 6.9</span>
+        <span class="px-3 py-1 rounded bg-blue-50 text-blue-600 font-semibold"><sup>R</sup> Recuperada</span>
     </div>
 
     @if(count($visibles) < 4)

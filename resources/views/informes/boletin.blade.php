@@ -6,6 +6,26 @@
 
 <div class="max-w-2xl">
 
+    {{-- Selector de período --}}
+    <div class="flex gap-1 mb-5">
+        @foreach([1,2,3,4] as $p)
+        @php
+            $labelOrd = [1=>'Primer',2=>'Segundo',3=>'Tercer',4=>'Cuarto'][$p];
+            $params   = array_filter([
+                'q'       => $q ?: null,
+                'periodo' => $p,
+            ]);
+        @endphp
+        <a href="{{ route('informes.boletin', $params) }}"
+           class="px-4 py-2 rounded-lg text-sm font-semibold transition
+                  {{ $periodoSel === $p
+                     ? 'bg-blue-800 text-white shadow'
+                     : 'bg-white text-gray-600 border border-gray-200 hover:bg-blue-50 hover:text-blue-700' }}">
+            {{ $labelOrd }} Periodo
+        </a>
+        @endforeach
+    </div>
+
     @if($esDocente)
     {{-- Vista del docente: muestra su curso directo --}}
     <div class="bg-blue-50 border border-blue-200 rounded-xl px-5 py-3 mb-5 text-sm text-blue-800">
@@ -21,6 +41,7 @@
     <div class="bg-white rounded-xl shadow p-5 mb-6">
         <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Buscar estudiante</p>
         <form method="GET" action="{{ route('informes.boletin') }}" class="flex gap-3">
+            <input type="hidden" name="periodo" value="{{ $periodoSel }}">
             <input type="text" name="q" value="{{ $q }}"
                 placeholder="Nombre, apellido o código..."
                 autofocus
@@ -64,7 +85,7 @@
                         📊 Promedios
                     </a>
                     @if(!$esDocente)
-                    <a href="{{ route('boletines.ver', $est->CODIGO) }}"
+                    <a href="{{ route('boletines.ver', ['codigo' => $est->CODIGO, 'periodo' => $periodoSel]) }}"
                         target="_blank"
                         class="text-xs font-semibold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition whitespace-nowrap">
                         📋 Boletín
