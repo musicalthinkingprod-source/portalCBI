@@ -422,7 +422,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/horarios/curso', [HorariosController::class, 'porCurso'])->name('horarios.por_curso');
     Route::get('/horarios/docente', [HorariosController::class, 'porDocente'])->name('horarios.por_docente');
     Route::get('/horarios/disponibilidad', [HorariosController::class, 'disponibilidad'])->name('horarios.disponibilidad');
-    Route::middleware('profile:SuperAd,Ori')->group(function () {
+    Route::middleware('profile:SuperAd')->group(function () {
         Route::get('/horarios/conflictos', [HorariosController::class, 'conflictos'])->name('horarios.conflictos');
     });
 

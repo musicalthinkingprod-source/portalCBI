@@ -186,6 +186,7 @@
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
                 {!! sidebarLink(route('orientacion.directores'), '🏫 Directores de grupo') !!}
+                {!! sidebarLink(route('horarios.index'), '🗓️ Horarios') !!}
             </ul>
         </div>
         @endif
@@ -404,6 +405,7 @@
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
                 {!! sidebarLink(route('vigilancias.control'), '🔍 Control de vigilancias') !!}
+                {!! sidebarLink(route('horarios.index'), '🗓️ Horarios') !!}
             </ul>
         </div>
         @endif

@@ -43,7 +43,7 @@
 
     </div>
 
-    @if(in_array(auth()->user()->PROFILE, ['SuperAd', 'Ori']))
+    @if(auth()->user()->PROFILE === 'SuperAd')
     <div class="mt-6 bg-white rounded-xl shadow p-6">
         <h2 class="text-lg font-semibold text-gray-700 mb-2">🔍 Diagnóstico de conflictos</h2>
         <p class="text-sm text-gray-500 mb-4">Detecta docentes asignados a más de un curso en el mismo slot (día + hora).</p>
