@@ -444,12 +444,13 @@ class DeroterosController extends Controller
             } catch (\Exception $e) {}
         }
 
-        // Resoluciones
+        // Resoluciones (incluye HORARIO)
         $resoluciones = DB::table('Derroteros')
             ->where('CODIGO_ALUM', $codigo)
             ->where('PERIODO', $periodo)
             ->where('ANIO', $anio)
-            ->pluck('RESOLUCION', 'CODIGO_MAT');
+            ->get()
+            ->keyBy('CODIGO_MAT');
 
         // Aplicar elegibilidad
         $fallos = $fallos->map(function ($f) use ($fallasPrevias, $resoluciones) {
@@ -459,7 +460,9 @@ class DeroterosController extends Controller
             elseif ($previas >= 2)  { $f->elegible = false; $f->razon = "Perdida {$previas} veces antes"; }
             else                    { $f->elegible = true;  $f->razon = null; }
 
-            $f->resolucion = $resoluciones[$f->CODIGO_MAT] ?? 'PENDIENTE';
+            $res = $resoluciones[$f->CODIGO_MAT] ?? null;
+            $f->resolucion = $res->RESOLUCION ?? 'PENDIENTE';
+            $f->horario    = $res->HORARIO    ?? null;
             return $f;
         });
 
@@ -473,11 +476,14 @@ class DeroterosController extends Controller
 
         $derroteros = $noElegibles->concat($elegibles)->sortBy('NOMBRE_MAT')->values();
 
+        // Banner: horarios aún no subidos (ninguna materia tiene horario asignado)
+        $horariosPendientes = $derroteros->isNotEmpty() && $derroteros->every(fn($m) => empty($m->horario));
+
         $curso = $estudiante->CURSO ?? '';
         $urlsSite = $derroteros->pluck('CODIGO_MAT')->unique()
             ->mapWithKeys(fn($cm) => [$cm => \App\Http\Controllers\PadresController::urlSite((int)$cm, $curso)])
             ->toArray();
 
-        return view('derroteros.padres', compact('derroteros', 'anio', 'periodo', 'bloqueado', 'urlsSite'));
+        return view('derroteros.padres', compact('derroteros', 'anio', 'periodo', 'bloqueado', 'urlsSite', 'horariosPendientes'));
     }
 }

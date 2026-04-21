@@ -2,16 +2,14 @@
 @section('header', 'Derroteros')
 @section('slot')
 
-    @if($bloqueado)
-    <div class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 text-sm">
-        <span class="text-xl shrink-0">🔒</span>
-        <p class="text-amber-800">Tienes un saldo pendiente de pago. Puedes ver las materias con derrotero, pero <strong>la nota está oculta</strong> hasta regularizar tu situación.</p>
+    @if(!empty($horariosPendientes))
+    <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-3 text-sm">
+        <span class="text-xl shrink-0">🕒</span>
+        <p class="text-blue-800">Los horarios de las recuperaciones <strong>aún no han sido publicados</strong>. Por favor vuelve a consultar más tarde.</p>
     </div>
     @endif
 
-    @if(true)
-
-        {{-- Selector de período --}}
+    {{-- Selector de período --}}
         <div class="flex gap-2 mb-5 flex-wrap">
             @foreach([1,2,3,4] as $p)
             <a href="{{ route('padres.derroteros', ['periodo' => $p]) }}"
@@ -38,8 +36,6 @@
                 <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
                     <tr>
                         <th class="px-4 py-3 text-left">Materia</th>
-                        <th class="px-4 py-3 text-center w-20">Nota</th>
-                        <th class="px-4 py-3 text-left w-40">¿Puede recuperar?</th>
                         <th class="px-4 py-3 text-center w-32">Estado</th>
                         <th class="px-4 py-3 text-left">Horario</th>
                         <th class="px-4 py-3"></th>
@@ -49,25 +45,6 @@
                     @foreach($derroteros as $m)
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 font-medium">{{ $m->NOMBRE_MAT }}</td>
-                        <td class="px-4 py-3 text-center font-bold">
-                            @if($bloqueado)
-                                <span class="inline-flex items-center gap-1 text-gray-400 text-xs font-semibold">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                                    —
-                                </span>
-                            @else
-                                <span class="text-red-600">{{ number_format($m->NOTA, 1) }}</span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-3 text-xs">
-                            @if($m->elegible)
-                                <span class="text-green-600 font-semibold">✅ Sí</span>
-                            @elseif($bloqueado)
-                                <span class="text-red-500 font-semibold">❌ No</span>
-                            @else
-                                <span class="text-red-500">❌ {{ $m->razon }}</span>
-                            @endif
-                        </td>
                         <td class="px-4 py-3 text-center">
                             @php
                                 $badge = match($m->resolucion) {
@@ -101,7 +78,5 @@
             </table>
         </div>
         @endif
-
-    @endif
 
 @endsection
