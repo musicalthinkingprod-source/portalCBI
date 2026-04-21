@@ -17,6 +17,7 @@ class FechasController extends Controller
     {
         return [
             'N' => ['label' => 'Ingreso de Notas por Docentes',    'icon' => '📝'],
+            'O' => ['label' => 'Ingreso de Observaciones (Dir. Grupo)', 'icon' => '🗒️'],
             'V' => ['label' => 'Subir Salvavidas (Docentes)',      'icon' => '⬆️'],
             'D' => ['label' => 'Consulta de Derroteros',           'icon' => '🗺️'],
             'S' => ['label' => 'Consulta de Salvavidas',           'icon' => '🏊'],

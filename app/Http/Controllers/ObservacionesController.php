@@ -28,7 +28,7 @@ class ObservacionesController extends Controller
         // Períodos abiertos según FECHAS (SuperAd/Admin siempre pueden editar)
         $periodosAbiertos = $esSuperior ? [1, 2, 3, 4] : array_values(array_filter(
             [1, 2, 3, 4],
-            fn($p) => FechasController::estaActivo('N' . $p)
+            fn($p) => FechasController::estaActivo('O' . $p)
         ));
         $periodoAbierto = in_array($periodo, $periodosAbiertos);
 
@@ -77,7 +77,7 @@ class ObservacionesController extends Controller
         $periodo    = max(1, min(4, (int) $request->input('periodo')));
         $curso      = $request->input('curso');
 
-        if (!$esSuperior && !FechasController::estaActivo('N' . $periodo)) {
+        if (!$esSuperior && !FechasController::estaActivo('O' . $periodo)) {
             return back()->with('error', 'El período ' . $periodo . ' está cerrado y no permite guardar observaciones.');
         }
 
@@ -114,7 +114,7 @@ class ObservacionesController extends Controller
             } else {
                 DB::table($tabla)->updateOrInsert(
                     ['CODIGO_ALUM' => (int) $codigoAlum, 'PERIODO' => $periodo],
-                    ['OBSERVACION' => mb_substr($texto, 0, 512)]
+                    ['OBSERVACION' => mb_substr($texto, 0, 4096)]
                 );
             }
         }
