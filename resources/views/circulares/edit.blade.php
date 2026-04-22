@@ -139,6 +139,34 @@
             <div class="bg-white rounded-xl shadow p-5">
                 <h2 class="text-sm font-semibold text-gray-700 border-b pb-2 mb-3">Contenido de la circular <span class="text-xs font-normal text-gray-400">(opcional si hay enlace a Drive)</span></h2>
 
+                <details class="mb-3 text-xs text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <summary class="cursor-pointer font-semibold text-blue-800">¿Cómo insertar una imagen o documento?</summary>
+                    <div class="mt-2 space-y-2">
+                        <p>Por espacio en servidor, <b>no se pueden subir imágenes</b> directamente. Usa una de estas opciones:</p>
+                        <ol class="list-decimal ml-5 space-y-2">
+                            <li>
+                                <b>Imagen desde Google Drive (recomendado):</b>
+                                <ol class="list-[lower-alpha] ml-5 mt-1 space-y-0.5">
+                                    <li>Sube la imagen a Drive y compártela como <i>"Cualquier persona con el enlace"</i>.</li>
+                                    <li>Copia el ID del archivo (la parte larga entre <code>/d/</code> y <code>/view</code> del link).<br>
+                                        Ej. si el link es <code>drive.google.com/file/d/<b>1aBcDeFgHiJk</b>/view</code>, el ID es <code>1aBcDeFgHiJk</code>.
+                                    </li>
+                                    <li>En el editor, usa el botón <b>Insertar HTML</b> (&lt;/&gt;) y pega:
+                                        <pre class="bg-white border border-blue-100 rounded p-2 mt-1 text-[11px] overflow-x-auto">&lt;img src="https://lh3.googleusercontent.com/d/ID_ARCHIVO" style="max-width:100%"&gt;</pre>
+                                    </li>
+                                </ol>
+                                <p class="mt-1 text-[11px] text-blue-800">✅ Esta opción se ve en el portal <u>y en el PDF</u>. Importante: el archivo debe estar compartido <b>públicamente</b> en Drive.</p>
+                            </li>
+                            <li>
+                                <b>Documento (PDF, Word, etc.) desde Drive:</b> usa <b>Insertar HTML</b> con:
+                                <pre class="bg-white border border-blue-100 rounded p-2 mt-1 text-[11px] overflow-x-auto">&lt;iframe src="https://drive.google.com/file/d/ID_ARCHIVO/preview" width="640" height="480"&gt;&lt;/iframe&gt;</pre>
+                                <p class="mt-1 text-[11px] text-amber-700">⚠️ Los iframes solo se ven en el portal; en el PDF aparecen como un enlace "Ver en Drive".</p>
+                            </li>
+                            <li><b>Video de YouTube/Vimeo:</b> usa el botón <b>Insertar medio</b> y pega la URL del video. (También solo se ve en portal, no en PDF.)</li>
+                        </ol>
+                    </div>
+                </details>
+
                 @error('contenido') <p class="text-red-500 text-xs mb-2">{{ $message }}</p> @enderror
 
                 <div id="editor" style="min-height: 420px;">{!! old('contenido', $circular->contenido) !!}</div>
@@ -149,25 +177,80 @@
     </div>
 </form>
 
-<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
+<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/super-build/ckeditor.js"></script>
+<style>
+    #editor { min-height: 420px; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px; }
+    .ck-editor__editable { min-height: 420px !important; }
+    .ck-content { font-family: Arial, Helvetica, sans-serif; font-size: 13.5px; line-height: 1.7; }
+    .ck-content img { max-width: 100%; height: auto; }
+    .ck-content table { border-collapse: collapse; }
+    .ck-content table td, .ck-content table th { border: 1px solid #ccc; padding: 6px 10px; }
+</style>
 <script>
     let ckEditor;
-    ClassicEditor.create(document.querySelector('#editor'), {
+    const EditorClass = (window.CKEDITOR && window.CKEDITOR.ClassicEditor) || window.ClassicEditor;
+    if (!EditorClass) {
+        document.getElementById('editor').innerHTML =
+            '<div style="color:#b91c1c;padding:12px;">No se pudo cargar el editor CKEditor. Revisa tu conexión a internet.</div>';
+    } else {
+    EditorClass.create(document.querySelector('#editor'), {
         language: 'es',
-        toolbar: [
-            'heading', '|',
-            'bold', 'italic', 'underline', '|',
-            'alignment:left', 'alignment:center', 'alignment:right', 'alignment:justify', '|',
-            'bulletedList', 'numberedList', '|',
-            'insertTable', '|',
-            'undo', 'redo'
+        removePlugins: [
+            // Premium / licencia
+            'RealTimeCollaborativeComments', 'RealTimeCollaborativeTrackChanges',
+            'RealTimeCollaborativeRevisionHistory', 'PresenceList',
+            'Comments', 'TrackChanges', 'TrackChangesData', 'RevisionHistory',
+            'Pagination', 'WProofreader', 'MathType',
+            'SlashCommand', 'Template', 'DocumentOutline', 'FormatPainter',
+            'TableOfContents', 'PasteFromOfficeEnhanced', 'CaseChange',
+            'ExportPdf', 'ExportWord', 'AIAssistant', 'MultiLevelList',
+            // CKBox / CKFinder / EasyImage (primero estos, dependen de Image/PictureEditing)
+            'CKBox', 'CKBoxEditing', 'CKBoxUI', 'CKBoxImageEdit',
+            'CKBoxImageEditEditing', 'CKBoxImageEditUI',
+            'CKFinder', 'CKFinderEditing', 'CKFinderUploadAdapter',
+            'EasyImage', 'CloudServices',
+            // Adaptadores de upload
+            'Base64UploadAdapter', 'SimpleUploadAdapter', 'CloudServicesUploadAdapter',
+            // Imágenes — desactivadas para no saturar espacio. Usar iframe (htmlEmbed) o mediaEmbed.
+            'PictureEditing', 'AutoImage', 'LinkImage',
+            'ImageUpload', 'ImageUploadEditing', 'ImageUploadUI', 'ImageUploadProgress',
+            'ImageInsert', 'ImageInsertViaUrl', 'ImageInsertUI',
+            'ImageResize', 'ImageResizeEditing', 'ImageResizeHandles', 'ImageResizeButtons',
+            'ImageStyle', 'ImageTextAlternative', 'ImageToolbar', 'ImageCaption',
+            'ImageBlock', 'ImageInline', 'Image',
         ],
+        toolbar: {
+            items: [
+                'undo', 'redo', '|',
+                'heading', 'style', '|',
+                'fontFamily', 'fontSize', 'fontColor', 'fontBackgroundColor', '|',
+                'bold', 'italic', 'underline', 'strikethrough', 'subscript', 'superscript', 'removeFormat', '|',
+                'link', 'insertTable', 'mediaEmbed', 'htmlEmbed',
+                'blockQuote', 'codeBlock', 'horizontalLine', 'pageBreak', 'specialCharacters', '|',
+                'alignment', '|',
+                'bulletedList', 'numberedList', 'todoList', 'outdent', 'indent', '|',
+                'findAndReplace', 'sourceEditing',
+            ],
+            shouldNotGroupWhenFull: true,
+        },
+        mediaEmbed: { previewsInData: true },
         table: {
-            contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells']
+            contentToolbar: [
+                'tableColumn', 'tableRow', 'mergeTableCells',
+                'tableProperties', 'tableCellProperties'
+            ]
+        },
+        htmlSupport: {
+            allow: [{ name: /.*/, attributes: true, classes: true, styles: true }]
         },
     }).then(editor => {
         ckEditor = editor;
-    }).catch(console.error);
+    }).catch(err => {
+        console.error('Error inicializando CKEditor:', err);
+        document.getElementById('editor').innerHTML =
+            '<div style="color:#b91c1c;padding:12px;">Error inicializando el editor: ' + (err && err.message ? err.message : err) + '</div>';
+    });
+    }
 
     document.querySelector('form').addEventListener('submit', function () {
         document.getElementById('contenido-input').value = ckEditor ? ckEditor.getData() : '';

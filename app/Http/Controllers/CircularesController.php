@@ -113,9 +113,60 @@ class CircularesController extends Controller
 
     public function pdf(Circular $circular)
     {
-        $pdf = Pdf::loadView('circulares.pdf', compact('circular'))
-            ->setPaper('letter', 'portrait');
+        // Reemplaza iframes por un recuadro con enlace (DomPDF no ejecuta iframes).
+        $contenidoPdf = $this->transformarIframesParaPdf($circular->contenido ?? '');
+
+        // Se pasa una copia "aplanada" para el PDF sin mutar el modelo.
+        $circularPdf = clone $circular;
+        $circularPdf->contenido = $contenidoPdf;
+
+        $pdf = Pdf::loadView('circulares.pdf', ['circular' => $circularPdf])
+            ->setPaper('letter', 'portrait')
+            ->setOptions([
+                'isRemoteEnabled'       => true,  // permite cargar imágenes de Google Drive
+                'isHtml5ParserEnabled'  => true,
+                'defaultFont'           => 'Arial',
+            ]);
 
         return $pdf->stream("{$circular->numero}.pdf");
+    }
+
+    /**
+     * Reemplaza <iframe> por un bloque con enlace legible en PDF.
+     * Para iframes de Google Drive de tipo "preview", extrae el ID y apunta al viewer.
+     */
+    private function transformarIframesParaPdf(string $html): string
+    {
+        if ($html === '' || stripos($html, '<iframe') === false) {
+            return $html;
+        }
+
+        return preg_replace_callback(
+            '#<iframe\b[^>]*\bsrc\s*=\s*["\']([^"\']+)["\'][^>]*>.*?</iframe>#is',
+            function ($m) {
+                $src = $m[1];
+                $url = $src;
+                $etiqueta = 'Abrir contenido embebido';
+
+                // Drive preview → URL del visor
+                if (preg_match('#drive\.google\.com/file/d/([^/]+)/preview#', $src, $d)) {
+                    $url = 'https://drive.google.com/file/d/' . $d[1] . '/view';
+                    $etiqueta = 'Ver documento en Google Drive';
+                } elseif (preg_match('#youtube\.com/embed/([^?/]+)#', $src, $y)) {
+                    $url = 'https://www.youtube.com/watch?v=' . $y[1];
+                    $etiqueta = 'Ver video en YouTube';
+                } elseif (preg_match('#player\.vimeo\.com/video/(\d+)#', $src, $v)) {
+                    $url = 'https://vimeo.com/' . $v[1];
+                    $etiqueta = 'Ver video en Vimeo';
+                }
+
+                $urlSafe = htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
+                return '<div style="margin:12px 0; padding:14px; border:1px dashed #94a3b8; background:#f8fafc; text-align:center; font-size:12px;">'
+                     . '<b>📎 ' . htmlspecialchars($etiqueta, ENT_QUOTES, 'UTF-8') . '</b><br>'
+                     . '<a href="' . $urlSafe . '" style="color:#1e3a8a; word-break:break-all;">' . $urlSafe . '</a>'
+                     . '</div>';
+            },
+            $html
+        );
     }
 }
