@@ -75,6 +75,29 @@
     @endif
 </div>
 
+{{-- Selector de período (solo portal de padres). Muestra P1–P4, los no habilitados quedan bloqueados. --}}
+@if(($origen ?? null) === 'padres')
+<div class="no-print max-w-4xl mx-auto mb-4 px-2">
+    <div class="flex items-center gap-2 bg-white rounded-lg shadow px-4 py-2 flex-wrap">
+        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide shrink-0">Período:</span>
+        @foreach([1,2,3,4] as $p)
+            @php $habilitado = in_array($p, $periodosDisponibles ?? [], true); @endphp
+            @if($habilitado)
+                <a href="{{ route('padres.boletines', ['periodo' => $p]) }}"
+                   class="text-xs font-semibold px-3 py-1 rounded transition {{ (int)($periodoSel ?? 0) === $p ? 'bg-blue-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    P{{ $p }}
+                </a>
+            @else
+                <span class="text-xs font-semibold px-3 py-1 rounded bg-gray-50 text-gray-400 cursor-not-allowed inline-flex items-center gap-1"
+                      title="Aún no habilitado">
+                    🔒 P{{ $p }}
+                </span>
+            @endif
+        @endforeach
+    </div>
+</div>
+@endif
+
 {{-- Página del boletín --}}
 <div class="pagina relative z-10 max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 print:shadow-none print:rounded-none">
 
@@ -134,6 +157,25 @@
         $colN             = count($periodosVisibles);
         $colspan          = 2 + $colN;
         $nivelPond        = $nivel ?? \App\Helpers\PonderacionArea::nivel($estudiante->CURSO ?? null);
+        $esPreescolar     = $nivelPond === 'PE';
+
+        $escalaPreescolar = [
+            1  => ['texto' => '¡No entiendo!',            'color' => '#B084A6'],
+            2  => ['texto' => '¡No sé qué hacer!',         'color' => '#D19C9E'],
+            3  => ['texto' => '¡No sé por dónde empezar!', 'color' => '#E8B7AE'],
+            4  => ['texto' => '¡Esto está difícil!',       'color' => '#F2CDA8'],
+            5  => ['texto' => '¡Me cuesta un poco!',       'color' => '#F5E3A6'],
+            6  => ['texto' => '¡Esto es un reto!',         'color' => '#DDE8CB'],
+            7  => ['texto' => '¡Lo estoy logrando!',       'color' => '#D3DCF0'],
+            8  => ['texto' => '¡Estoy mejorando!',         'color' => '#BAC7E8'],
+            9  => ['texto' => '¡Lo logré!',                'color' => '#89A5AA'],
+            10 => ['texto' => '¡Misión cumplida!',         'color' => '#7FA6D6'],
+        ];
+        $fraseDe = function ($nota) use ($escalaPreescolar) {
+            if ($nota === null || $nota === '') return null;
+            $idx = max(1, min(10, (int) ceil((float) $nota)));
+            return $escalaPreescolar[$idx];
+        };
 
         // Pre-cálculo de medias de materias y promedio por área (para mostrar
         // el promedio del área en la misma fila del nombre del área).
@@ -165,6 +207,127 @@
         $promGeneral = count($promsArea) > 0 ? round(array_sum($promsArea) / count($promsArea), 1) : null;
     @endphp
 
+    @if($esPreescolar)
+    {{-- ══════════════════ BOLETÍN PREESCOLAR (PJ / J / T) ══════════════════ --}}
+    <table class="w-full text-sm border-collapse mb-5">
+        <thead>
+            <tr class="bg-blue-900 text-white">
+                <th class="px-3 py-2 text-left font-semibold text-xs uppercase tracking-wide border border-blue-800">Dimensión</th>
+                @foreach($periodosVisibles as $p)
+                <th class="px-2 py-2 text-center font-semibold text-xs uppercase tracking-wide border border-blue-800 w-36">{{ $colN === 1 ? 'Valoración' : 'P'.$p }}</th>
+                @endforeach
+            </tr>
+        </thead>
+        <tbody>
+        @foreach($areas as $areaId => $area)
+            @php
+                // En preescolar se omiten English Acquisition (11) y Proyecto (31/131).
+                $matsVisibles = array_filter(
+                    $area['materias'],
+                    fn($_m, $mid) => !in_array((int) $mid, [11, 31, 131], true),
+                    ARRAY_FILTER_USE_BOTH
+                );
+                if (empty($matsVisibles)) continue;
+
+                $promDim  = $areasCalc[$areaId]['promedio'] ?? null;
+                $fraseDim = $fraseDe($promDim);
+            @endphp
+            <tr class="area-header bg-blue-50">
+                <td class="px-3 py-1.5 border border-blue-200">
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="font-bold text-blue-900 text-xs uppercase tracking-wide">{{ $area['nombre'] }}</span>
+                        <span class="text-[10px] uppercase tracking-wide text-blue-700 font-semibold italic shrink-0">Prom. dimensión</span>
+                    </div>
+                </td>
+                <td colspan="{{ $colN }}" class="px-2 py-1.5 text-center text-xs font-bold border border-blue-200 text-gray-900 leading-tight"
+                    @if($fraseDim) style="background-color: {{ $fraseDim['color'] }}; -webkit-print-color-adjust: exact; print-color-adjust: exact;" @endif>
+                    {{ $fraseDim['texto'] ?? '—' }}
+                </td>
+            </tr>
+            @foreach($area['materias'] as $matId => $materia)
+            @php
+                // En preescolar no se muestran English Acquisition (11) ni Proyecto (31/131),
+                // aunque tengan nota cargada.
+                if (in_array((int) $matId, [11, 31, 131], true)) continue;
+            @endphp
+            <tr class="border-b border-gray-100">
+                <td class="px-3 py-1.5 text-gray-800 border-l border-r border-gray-200 pl-6">
+                    {{ $materia['nombre'] }}
+                    @if($materia['docente'])
+                        <div class="text-xs text-gray-400 italic mt-0.5">{{ \Str::title(strtolower($materia['docente'])) }}</div>
+                    @endif
+                </td>
+                @foreach($periodosVisibles as $p)
+                    @php
+                        $reg   = $materia['periodos'][$p] ?? null;
+                        $frase = $fraseDe($reg['nota'] ?? null);
+                    @endphp
+                    <td class="px-2 py-1.5 text-center text-xs font-bold border border-gray-200 text-gray-900 leading-tight"
+                        @if($frase) style="background-color: {{ $frase['color'] }}; -webkit-print-color-adjust: exact; print-color-adjust: exact;" @endif>
+                        {{ $frase['texto'] ?? '—' }}
+                    </td>
+                @endforeach
+            </tr>
+            @php
+                $logrosData = [];
+                foreach ($periodosVisibles as $lp) {
+                    $txt = $materia['periodos'][$lp]['logro'] ?? null;
+                    if ($txt) $logrosData[$lp] = $txt;
+                }
+                $textosSinDup = array_unique(array_values($logrosData));
+            @endphp
+            @if(!empty($logrosData))
+            <tr class="border-b border-gray-100">
+                <td colspan="{{ 1 + $colN }}" class="px-6 py-2 text-xs text-gray-600 italic leading-snug bg-gray-50 border-l border-r border-gray-200">
+                    @if(count($textosSinDup) === 1)
+                        {{ $textosSinDup[0] }}
+                    @else
+                        @foreach($logrosData as $lp => $ltxt)
+                            <span class="font-semibold not-italic text-gray-500">P{{ $lp }}:</span> {{ $ltxt }}<br>
+                        @endforeach
+                    @endif
+                </td>
+            </tr>
+            @endif
+            @endforeach
+        @endforeach
+        </tbody>
+    </table>
+
+    {{-- ══════════════════ ESCALA DE VALORACIÓN (PREESCOLAR) ══════════════════ --}}
+    <div class="mb-5">
+        <p class="text-xs font-bold text-gray-600 uppercase tracking-widest mb-1">Escala de Valoración</p>
+        <div class="flex justify-between items-baseline mb-1.5 text-[10px] text-gray-500 italic font-semibold">
+            <span>← Menor desempeño</span>
+            <span>Mayor desempeño →</span>
+        </div>
+
+        {{-- Fila superior: posiciones impares (1, 3, 5, 7, 9) --}}
+        <div class="grid gap-1 mb-1" style="grid-template-columns: repeat(11, minmax(0, 1fr));">
+            @foreach($escalaPreescolar as $ix => $info)
+                @if($ix % 2 === 1)
+                    <div class="flex items-center justify-center min-w-0 h-10 px-1.5 py-1 text-gray-900 font-bold text-[10px] text-center rounded border border-gray-300 leading-tight break-words"
+                         style="grid-column: {{ $ix }} / span 2; background-color: {{ $info['color'] }}; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                        <span>{{ $info['texto'] }}</span>
+                    </div>
+                @endif
+            @endforeach
+        </div>
+
+        {{-- Fila inferior: posiciones pares (2, 4, 6, 8, 10), desfasadas media columna --}}
+        <div class="grid gap-1" style="grid-template-columns: repeat(11, minmax(0, 1fr));">
+            @foreach($escalaPreescolar as $ix => $info)
+                @if($ix % 2 === 0)
+                    <div class="flex items-center justify-center min-w-0 h-10 px-1.5 py-1 text-gray-900 font-bold text-[10px] text-center rounded border border-gray-300 leading-tight break-words"
+                         style="grid-column: {{ $ix }} / span 2; background-color: {{ $info['color'] }}; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                        <span>{{ $info['texto'] }}</span>
+                    </div>
+                @endif
+            @endforeach
+        </div>
+    </div>
+
+    @else
     <table class="w-full text-sm border-collapse mb-5">
         <thead>
             <tr class="bg-blue-900 text-white">
@@ -307,6 +470,7 @@
         <span class="px-3 py-1 rounded bg-red-100 text-red-800 font-semibold">Bajo: 1.0 – 6.9</span>
         <span class="px-3 py-1 rounded bg-blue-50 text-blue-600 font-semibold"><sup>R</sup> Recuperada</span>
     </div>
+    @endif
 
     @endif
 
@@ -329,7 +493,8 @@
     </div>
     @endif
 
-    {{-- ══════════════════ FIRMAS ══════════════════ --}}
+    {{-- ══════════════════ FIRMAS (solo versión interna; nunca en portal de padres) ══════════════════ --}}
+    @if(($origen ?? null) !== 'padres')
     <div>
         <div class="h-28"></div>
         <div class="grid grid-cols-2 gap-8 text-center text-xs text-gray-600">
@@ -345,6 +510,11 @@
             </div>
         </div>
     </div>
+    @else
+    <p class="mt-6 text-center text-[10px] text-gray-400 italic">
+        Documento de consulta para padres de familia. Los boletines firmados son emitidos por la institución únicamente bajo solicitud.
+    </p>
+    @endif
 
     {{-- Pie de página --}}
     <p class="mt-6 text-center text-xs text-gray-400">

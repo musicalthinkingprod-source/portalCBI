@@ -1,5 +1,5 @@
 @extends('layouts.padres')
-@section('header', 'Derroteros')
+@section('header', 'Recuperaciones')
 @section('slot')
 
     {{-- Selector de período --}}
@@ -16,14 +16,14 @@
         @if($derroteros->isEmpty())
             <div class="bg-white rounded-xl shadow p-8 text-center">
                 <p class="text-4xl mb-3">✅</p>
-                <p class="font-semibold text-gray-700">Sin derroteros en el período {{ $periodo }}</p>
+                <p class="font-semibold text-gray-700">Sin recuperaciones en el período {{ $periodo }}</p>
                 <p class="text-sm text-gray-400 mt-1">Tu hijo/a no perdió ninguna materia este período.</p>
             </div>
         @else
         <div class="bg-white rounded-xl shadow overflow-hidden">
             <div class="px-5 py-3 bg-red-700 text-white">
                 <h3 class="font-bold text-sm uppercase tracking-wide">Período {{ $periodo }} — {{ $anio }}</h3>
-                <p class="text-red-200 text-xs mt-0.5">{{ $derroteros->count() }} {{ $derroteros->count() == 1 ? 'materia con derrotero' : 'materias con derrotero' }}</p>
+                <p class="text-red-200 text-xs mt-0.5">{{ $derroteros->count() }} {{ $derroteros->count() == 1 ? 'materia con recuperación' : 'materias con recuperación' }}</p>
             </div>
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 text-gray-500 uppercase text-xs">

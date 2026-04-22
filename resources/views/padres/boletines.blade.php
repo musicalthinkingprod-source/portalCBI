@@ -59,7 +59,7 @@
             @endforeach
         </tbody>
     </table>
-    <p class="px-5 py-2 text-xs text-gray-400 border-t">R = Nota recuperada en derrotero</p>
+    <p class="px-5 py-2 text-xs text-gray-400 border-t">R = Nota recuperada en recuperación</p>
 </div>
 @endif
 

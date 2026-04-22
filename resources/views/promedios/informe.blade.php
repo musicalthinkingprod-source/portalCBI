@@ -10,13 +10,33 @@
     <style>
         body { font-family: 'Figtree', sans-serif; }
 
+        /* Marca de agua (escudo). Posición fija → se repite en cada página impresa. */
+        .marca-agua {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0.05;
+            z-index: 0;
+        }
+        .marca-agua img { width: 50%; max-width: 420px; height: auto; }
+
         @media print {
             .no-print { display: none !important; }
             body { background: white !important; margin: 0; }
-            .pagina { box-shadow: none !important; margin: 0 !important; padding: 16px !important; }
+            .pagina {
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 16px !important;
+                background: transparent !important;
+            }
             table { page-break-inside: auto; }
             tr { page-break-inside: avoid; }
             .area-header { page-break-after: avoid; }
+            /* Forzar impresión de la marca de agua */
+            .marca-agua { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
 
         @page {
@@ -26,6 +46,11 @@
     </style>
 </head>
 <body class="bg-gray-200 min-h-screen py-6 print:bg-white print:py-0">
+
+{{-- Marca de agua (fija, se repite en cada página al imprimir) --}}
+<div class="marca-agua" aria-hidden="true">
+    <img src="{{ asset('images/escudoCBI.png') }}" alt="">
+</div>
 
 {{-- Barra de acciones (solo pantalla) --}}
 <div class="no-print max-w-4xl mx-auto mb-4 flex justify-between items-center px-2">
@@ -47,7 +72,7 @@
 </div>
 
 {{-- Página del informe --}}
-<div class="pagina max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 print:shadow-none print:rounded-none">
+<div class="pagina relative z-10 max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 print:shadow-none print:rounded-none">
 
     {{-- ══════════════════ ENCABEZADO ══════════════════ --}}
     <div class="flex items-center gap-5 pb-4 mb-4 border-b-2 border-blue-900">
@@ -65,20 +90,16 @@
     </div>
 
     {{-- ══════════════════ DATOS DEL ESTUDIANTE ══════════════════ --}}
-    <div class="grid grid-cols-2 gap-x-8 gap-y-1.5 mb-5 p-4 bg-gray-50 rounded-lg border border-gray-200 text-sm">
+    <div class="mb-5 p-4 bg-gray-50 rounded-lg border border-gray-200 text-sm grid grid-cols-2 gap-x-8 gap-y-1.5">
         <div class="flex gap-2">
             <span class="text-gray-500 w-32 shrink-0">Estudiante:</span>
-            <span class="font-semibold text-gray-900">
-                {{ $estudiante->APELLIDO1 }} {{ $estudiante->APELLIDO2 }}, {{ $estudiante->NOMBRE1 }} {{ $estudiante->NOMBRE2 }}
+            <span class="font-semibold text-gray-900 whitespace-nowrap">
+                {{ \Str::title(mb_strtolower(trim("{$estudiante->NOMBRE1} {$estudiante->NOMBRE2} {$estudiante->APELLIDO1} {$estudiante->APELLIDO2}"))) }}
             </span>
         </div>
         <div class="flex gap-2">
-            <span class="text-gray-500 w-32 shrink-0">Documento:</span>
-            <span class="font-semibold text-gray-900">{{ $estudiante->TAR_ID ?? '—' }}</span>
-        </div>
-        <div class="flex gap-2">
-            <span class="text-gray-500 w-32 shrink-0">Curso:</span>
-            <span class="font-semibold text-gray-900">{{ $estudiante->CURSO ?? '—' }}</span>
+            <span class="text-gray-500 w-20 shrink-0">Código:</span>
+            <span class="font-semibold text-gray-900">{{ $estudiante->CODIGO }}</span>
         </div>
         <div class="flex gap-2">
             <span class="text-gray-500 w-32 shrink-0">Director de grupo:</span>
@@ -87,12 +108,8 @@
             </span>
         </div>
         <div class="flex gap-2">
-            <span class="text-gray-500 w-32 shrink-0">Año lectivo:</span>
-            <span class="font-semibold text-gray-900">{{ $anio }}</span>
-        </div>
-        <div class="flex gap-2">
-            <span class="text-gray-500 w-32 shrink-0">Código:</span>
-            <span class="font-semibold text-gray-900">{{ $estudiante->CODIGO }}</span>
+            <span class="text-gray-500 w-20 shrink-0">Curso:</span>
+            <span class="font-semibold text-gray-900">{{ $estudiante->CURSO ?? '—' }}</span>
         </div>
     </div>
 
@@ -107,6 +124,25 @@
         $colspanPeriodos = 4;
         $colspanTotal    = 1 + $colspanPeriodos + 2;
         $nivelPond       = $nivel ?? \App\Helpers\PonderacionArea::nivel($estudiante->CURSO ?? null);
+        $esPreescolar    = $nivelPond === 'PE';
+
+        $escalaPreescolar = [
+            1  => ['texto' => '¡No entiendo!',            'color' => '#B084A6'],
+            2  => ['texto' => '¡No sé qué hacer!',         'color' => '#D19C9E'],
+            3  => ['texto' => '¡No sé por dónde empezar!', 'color' => '#E8B7AE'],
+            4  => ['texto' => '¡Esto está difícil!',       'color' => '#F2CDA8'],
+            5  => ['texto' => '¡Me cuesta un poco!',       'color' => '#F5E3A6'],
+            6  => ['texto' => '¡Esto es un reto!',         'color' => '#DDE8CB'],
+            7  => ['texto' => '¡Lo estoy logrando!',       'color' => '#D3DCF0'],
+            8  => ['texto' => '¡Estoy mejorando!',         'color' => '#BAC7E8'],
+            9  => ['texto' => '¡Lo logré!',                'color' => '#89A5AA'],
+            10 => ['texto' => '¡Misión cumplida!',         'color' => '#7FA6D6'],
+        ];
+        $fraseDe = function ($nota) use ($escalaPreescolar) {
+            if ($nota === null || $nota === '') return null;
+            $idx = max(1, min(10, (int) ceil((float) $nota)));
+            return $escalaPreescolar[$idx];
+        };
 
         // Pre-cálculo de medias y promedio por área (para mostrar el promedio
         // del área en la misma fila del nombre del área).
@@ -141,6 +177,109 @@
         $promGeneral = count($promsArea) > 0 ? round(array_sum($promsArea) / count($promsArea), 1) : null;
     @endphp
 
+    @if($esPreescolar)
+    {{-- ══════════════════ PROMEDIOS PREESCOLAR (PJ / J / T) ══════════════════ --}}
+    <table class="w-full text-sm border-collapse mb-5">
+        <thead>
+            <tr class="bg-blue-900 text-white">
+                <th class="px-3 py-2 text-left font-semibold text-xs uppercase tracking-wide border border-blue-800">Dimensión</th>
+                @foreach([1,2,3,4] as $p)
+                <th class="px-2 py-2 text-center font-semibold text-xs uppercase tracking-wide border border-blue-800 w-36">
+                    P{{ $p }}
+                    @if(!in_array($p, $visibles))
+                        <span class="block text-blue-300 font-normal normal-case" style="font-size:9px">pendiente</span>
+                    @endif
+                </th>
+                @endforeach
+            </tr>
+        </thead>
+        <tbody>
+        @foreach($areas as $areaId => $area)
+            @php
+                // En preescolar se omiten English Acquisition (11) y Proyecto (31/131).
+                $matsVisibles = array_filter(
+                    $area['materias'],
+                    fn($_m, $mid) => !in_array((int) $mid, [11, 31, 131], true),
+                    ARRAY_FILTER_USE_BOTH
+                );
+                if (empty($matsVisibles)) continue;
+
+                $promDim  = $areasCalc[$areaId]['promedio'] ?? null;
+                $fraseDim = $fraseDe($promDim);
+            @endphp
+            <tr class="area-header bg-blue-50">
+                <td class="px-3 py-1.5 border border-blue-200">
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="font-bold text-blue-900 text-xs uppercase tracking-wide">{{ $area['nombre'] }}</span>
+                        <span class="text-[10px] uppercase tracking-wide text-blue-700 font-semibold italic shrink-0">Prom. dimensión</span>
+                    </div>
+                </td>
+                <td colspan="{{ $colspanPeriodos }}" class="px-2 py-1.5 text-center text-xs font-bold border border-blue-200 text-gray-900 leading-tight"
+                    @if($fraseDim) style="background-color: {{ $fraseDim['color'] }}; -webkit-print-color-adjust: exact; print-color-adjust: exact;" @endif>
+                    {{ $fraseDim['texto'] ?? '—' }}
+                </td>
+            </tr>
+            @foreach($area['materias'] as $matId => $materia)
+            @php
+                if (in_array((int) $matId, [11, 31, 131], true)) continue;
+                $notasPeriodo = $materia['periodos'];
+            @endphp
+            <tr class="border-b border-gray-100">
+                <td class="px-3 py-1.5 text-gray-800 border-l border-r border-gray-200 pl-6">
+                    {{ $materia['nombre'] }}
+                    @if($materia['docente'])
+                        <div class="text-xs text-gray-400 italic mt-0.5">{{ \Str::title(strtolower($materia['docente'])) }}</div>
+                    @endif
+                </td>
+                @foreach([1,2,3,4] as $p)
+                    @php
+                        $reg         = $notasPeriodo[$p] ?? null;
+                        $esPendiente = !in_array($p, $visibles);
+                        $frase       = $esPendiente ? null : $fraseDe($reg['nota'] ?? null);
+                    @endphp
+                    <td class="px-2 py-1.5 text-center text-xs font-bold border border-gray-200 text-gray-900 leading-tight {{ $esPendiente ? 'bg-gray-50' : '' }}"
+                        @if($frase) style="background-color: {{ $frase['color'] }}; -webkit-print-color-adjust: exact; print-color-adjust: exact;" @endif>
+                        {{ $frase['texto'] ?? '—' }}
+                    </td>
+                @endforeach
+            </tr>
+            @endforeach
+        @endforeach
+        </tbody>
+    </table>
+
+    {{-- ══════════════════ ESCALA DE VALORACIÓN (PREESCOLAR) ══════════════════ --}}
+    <div class="mb-5">
+        <p class="text-xs font-bold text-gray-600 uppercase tracking-widest mb-1">Escala de Valoración</p>
+        <div class="flex justify-between items-baseline mb-1.5 text-[10px] text-gray-500 italic font-semibold">
+            <span>← Menor desempeño</span>
+            <span>Mayor desempeño →</span>
+        </div>
+        {{-- Fila superior: posiciones impares (1, 3, 5, 7, 9) --}}
+        <div class="grid gap-1 mb-1" style="grid-template-columns: repeat(11, minmax(0, 1fr));">
+            @foreach($escalaPreescolar as $ix => $info)
+                @if($ix % 2 === 1)
+                    <div class="flex items-center justify-center min-w-0 h-10 px-1.5 py-1 text-gray-900 font-bold text-[10px] text-center rounded border border-gray-300 leading-tight break-words"
+                         style="grid-column: {{ $ix }} / span 2; background-color: {{ $info['color'] }}; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                        <span>{{ $info['texto'] }}</span>
+                    </div>
+                @endif
+            @endforeach
+        </div>
+        {{-- Fila inferior: posiciones pares (2, 4, 6, 8, 10), desfasadas media columna --}}
+        <div class="grid gap-1" style="grid-template-columns: repeat(11, minmax(0, 1fr));">
+            @foreach($escalaPreescolar as $ix => $info)
+                @if($ix % 2 === 0)
+                    <div class="flex items-center justify-center min-w-0 h-10 px-1.5 py-1 text-gray-900 font-bold text-[10px] text-center rounded border border-gray-300 leading-tight break-words"
+                         style="grid-column: {{ $ix }} / span 2; background-color: {{ $info['color'] }}; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                        <span>{{ $info['texto'] }}</span>
+                    </div>
+                @endif
+            @endforeach
+        </div>
+    </div>
+
+    @else
     <table class="w-full text-sm border-collapse mb-5">
         <thead>
             <tr class="bg-blue-900 text-white">
@@ -266,6 +405,7 @@
         <span class="px-3 py-1 rounded bg-red-100 text-red-800 font-semibold">Bajo: 1.0 – 6.9</span>
         <span class="px-3 py-1 rounded bg-blue-50 text-blue-600 font-semibold"><sup>R</sup> Recuperada</span>
     </div>
+    @endif
 
     @if(count($visibles) < 4)
     <div class="mb-5 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">

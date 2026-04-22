@@ -13,6 +13,9 @@ class PadresController extends Controller
     /** URL base de los sites de Google donde los docentes publican su material. */
     const SITES_BASE = 'https://sites.google.com/cbi.edu.co/';
 
+    /** TEMP: bypass de bloqueos por fecha en el portal de padres (grabación local). Volver a false antes de producción. */
+    const BYPASS_FECHAS = false;
+
     /**
      * Genera la URL del Google Site para una materia y curso dado.
      * Usa solo el grado (ej: "7") si todos los cursos del mismo grado tienen el mismo docente,
@@ -147,14 +150,14 @@ class PadresController extends Controller
 
         // Módulos con estado activo/inactivo
         $now = now();
-        $abierto = fn(string $prefix) => DB::table('FECHAS')
+        $abierto = fn(string $prefix) => self::BYPASS_FECHAS || DB::table('FECHAS')
             ->where('CODIGO_FECHA', 'like', $prefix.'%')
             ->where('INICIO', '<=', $now)
             ->where('FIN', '>=', $now)
             ->exists();
 
         // Promedios: visible desde que empiece la 1ª entrega de boletines (B1)
-        $algunBoletinIniciado = DB::table('FECHAS')
+        $algunBoletinIniciado = self::BYPASS_FECHAS || DB::table('FECHAS')
             ->where('CODIGO_FECHA', 'like', 'B%')
             ->where('INICIO', '<=', $now)
             ->exists();
@@ -164,7 +167,7 @@ class PadresController extends Controller
             ['seccion' => 'Académico', 'label' => 'Consultar promedios',  'icon' => '📋', 'route' => 'padres.notas',            'activo' => !$bloqueado && $algunBoletinIniciado, 'requiere_pago' => true],
             ['seccion' => 'Académico', 'label' => 'Boletines',            'icon' => '📝', 'route' => 'padres.boletines',         'activo' => !$bloqueado && $abierto('B'),          'requiere_pago' => true],
             ['seccion' => 'Académico', 'label' => 'Salvavidas',           'icon' => '🏊', 'route' => 'padres.salvavidas',        'activo' => $abierto('S'),                        'requiere_pago' => false],
-            ['seccion' => 'Académico', 'label' => 'Derroteros',           'icon' => '📌', 'route' => 'padres.derroteros',        'activo' => $abierto('D'),                        'requiere_pago' => false],
+            ['seccion' => 'Académico', 'label' => 'Recuperaciones',       'icon' => '📌', 'route' => 'padres.derroteros',        'activo' => $abierto('D'),                        'requiere_pago' => false],
             ['seccion' => 'Académico', 'label' => 'Asistencia',           'icon' => '📅', 'route' => 'padres.asistencia',        'activo' => true,                                 'requiere_pago' => false],
             ['seccion' => 'Académico', 'label' => 'English Acquisition',  'icon' => '🇬🇧', 'route' => 'padres.english_acq',     'activo' => true,                                 'requiere_pago' => false],
             ['seccion' => 'Académico', 'label' => 'Calendario académico', 'icon' => '📆', 'route' => 'padres.calendario',        'activo' => true,                                 'requiere_pago' => false],
@@ -200,8 +203,10 @@ class PadresController extends Controller
             if (($facturado - $pagado) > 100000) return 'deuda';
         }
 
-        $abierto = collect([1,2,3,4])->contains(fn($p) => FechasController::estaActivo($tipoCodigo.$p));
-        if (!$abierto) return 'fechas';
+        if (!self::BYPASS_FECHAS) {
+            $abierto = collect([1,2,3,4])->contains(fn($p) => FechasController::estaActivo($tipoCodigo.$p));
+            if (!$abierto) return 'fechas';
+        }
 
         return null;
     }
@@ -223,12 +228,14 @@ class PadresController extends Controller
         }
 
         // Cerrado hasta que empiece la 1ª entrega de boletines
-        $algunBoletinIniciado = DB::table('FECHAS')
-            ->where('CODIGO_FECHA', 'like', 'B%')
-            ->where('INICIO', '<=', now())
-            ->exists();
-        if (!$algunBoletinIniciado) {
-            return redirect()->route('padres.portal')->with('aviso', 'La consulta de promedios estará disponible a partir de la primera entrega de boletines.');
+        if (!self::BYPASS_FECHAS) {
+            $algunBoletinIniciado = DB::table('FECHAS')
+                ->where('CODIGO_FECHA', 'like', 'B%')
+                ->where('INICIO', '<=', now())
+                ->exists();
+            if (!$algunBoletinIniciado) {
+                return redirect()->route('padres.portal')->with('aviso', 'La consulta de promedios estará disponible a partir de la primera entrega de boletines.');
+            }
         }
 
         $estudiante = session('padre_estudiante');
@@ -236,9 +243,11 @@ class PadresController extends Controller
         $codigo     = $estudiante->CODIGO;
 
         // Solo mostrar períodos cuyo boletín ya fue publicado alguna vez (B1, B2... con INICIO <= ahora)
-        $periodosVisibles = collect([1,2,3,4])->filter(fn($p) =>
-            DB::table('FECHAS')->where('CODIGO_FECHA', 'B'.$p)->where('INICIO', '<=', now())->exists()
-        )->values()->toArray();
+        $periodosVisibles = self::BYPASS_FECHAS
+            ? [1, 2, 3, 4]
+            : collect([1,2,3,4])->filter(fn($p) =>
+                DB::table('FECHAS')->where('CODIGO_FECHA', 'B'.$p)->where('INICIO', '<=', now())->exists()
+            )->values()->toArray();
 
         $datos = BoletinController::datos($codigo);
         if (empty($datos)) abort(404);
@@ -247,30 +256,47 @@ class PadresController extends Controller
         return view('promedios.informe', array_merge($datos, compact('origen', 'periodosVisibles')));
     }
 
-    public function boletines()
+    public function boletines(Request $request)
     {
         $bloqueo = $this->verificarAcceso('B');
         if ($bloqueo === 'sin_sesion') return redirect()->route('padres.portal');
         if ($bloqueo === 'deuda')      return redirect()->route('padres.portal')->with('aviso', 'No puedes consultar los boletines mientras tengas un saldo pendiente.');
         if ($bloqueo === 'fechas')     return redirect()->route('padres.portal')->with('aviso', 'La institución aún no ha publicado los boletines.');
 
-        // Detectar qué período está activo según la ventana B1-B4
         $now = now();
-        $ventanaActiva = DB::table('FECHAS')
-            ->where('CODIGO_FECHA', 'like', 'B%')
-            ->where('INICIO', '<=', $now)
-            ->where('FIN',    '>=', $now)
-            ->orderBy('CODIGO_FECHA')
-            ->value('CODIGO_FECHA');
 
-        $periodoActivo = $ventanaActiva ? (int) substr($ventanaActiva, 1) : null;
+        // Períodos cuyos boletines ya están habilitados (B1..B4 con INICIO ya pasada).
+        // TEMP: con BYPASS_FECHAS solo habilitamos P1 para la grabación; P2-P4 aparecen bloqueados.
+        $periodosDisponibles = self::BYPASS_FECHAS
+            ? [1]
+            : collect([1,2,3,4])->filter(fn($p) =>
+                DB::table('FECHAS')->where('CODIGO_FECHA', 'B'.$p)->where('INICIO', '<=', $now)->exists()
+            )->values()->toArray();
+
+        // Período solicitado: ?periodo=N si está entre los disponibles.
+        // Por defecto: el período cuya ventana B está activa; si ninguna, el más reciente disponible.
+        // (La vista "todos los períodos" queda reservada para Promedios.)
+        $periodoReq = (int) $request->input('periodo', 0);
+        if (in_array($periodoReq, $periodosDisponibles, true)) {
+            $periodoSel = $periodoReq;
+        } else {
+            $ventanaActiva = DB::table('FECHAS')
+                ->where('CODIGO_FECHA', 'like', 'B%')
+                ->where('INICIO', '<=', $now)
+                ->where('FIN',    '>=', $now)
+                ->orderBy('CODIGO_FECHA')
+                ->value('CODIGO_FECHA');
+            $periodoSel = $ventanaActiva
+                ? (int) substr($ventanaActiva, 1)
+                : (!empty($periodosDisponibles) ? (int) end($periodosDisponibles) : null);
+        }
 
         $estudiante = session('padre_estudiante');
-        $datos = \App\Http\Controllers\BoletinController::datos((int) $estudiante->CODIGO, $periodoActivo);
+        $datos = \App\Http\Controllers\BoletinController::datos((int) $estudiante->CODIGO, $periodoSel);
         if (empty($datos)) abort(404);
 
         $origen = 'padres';
-        return view('boletines.ver', array_merge($datos, compact('origen')));
+        return view('boletines.ver', array_merge($datos, compact('origen', 'periodosDisponibles', 'periodoSel')));
     }
 
     public function atencionDocentes()
@@ -433,6 +459,7 @@ class PadresController extends Controller
     public function estadoCuenta()
     {
         $estudiante = session('padre_estudiante');
+        if (!$estudiante) return redirect()->route('padres.portal');
         $codigo     = $estudiante->CODIGO;
 
         $facturacion  = DB::table('facturacion')->where('codigo_alumno', $codigo)->orderBy('fecha')->get();

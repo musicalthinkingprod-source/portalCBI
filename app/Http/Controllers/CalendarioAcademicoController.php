@@ -254,6 +254,9 @@ class CalendarioAcademicoController extends Controller
      */
     public function padres(Request $request)
     {
+        $estudiante = session('padre_estudiante');
+        if (!$estudiante) return redirect()->route('padres.portal');
+
         $visibles = ['todos', 'padres'];
 
         $mes  = (int) $request->input('mes',  now()->month);

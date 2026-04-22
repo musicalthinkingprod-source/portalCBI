@@ -115,10 +115,10 @@
 
                     @if(!$abiertoDerrotero)
                         <li class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
-                            <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Derroteros</div>
+                            <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Recuperaciones</div>
                         </li>
                     @else
-                        <li><a href="{{ route('padres.derroteros') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">📌 Derroteros</a></li>
+                        <li><a href="{{ route('padres.derroteros') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">📌 Recuperaciones</a></li>
                     @endif
 
                     <li><a href="{{ route('padres.asistencia') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">📅 Asistencia</a></li>
