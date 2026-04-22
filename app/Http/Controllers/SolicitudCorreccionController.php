@@ -116,11 +116,23 @@ class SolicitudCorreccionController extends Controller
         } else {
             $estudiantes = collect();
             if ($matSelec && $cursoSelec) {
-                $estudiantes = DB::table('ESTUDIANTES')
-                    ->where('CURSO', $cursoSelec)
-                    ->where('ESTADO', 'MATRICULADO')
-                    ->orderBy('APELLIDO1')->orderBy('NOMBRE1')
-                    ->get();
+                $esListadoEspecial = (bool) preg_match('/^(GP\d+|\d+[A-Z]?-\d)$/', $cursoSelec);
+
+                if ($esListadoEspecial) {
+                    $estudiantes = DB::table('LISTADOS_ESPECIALES as le')
+                        ->join('ESTUDIANTES as e', 'le.CODIGO_ALUM', '=', 'e.CODIGO')
+                        ->where('le.GRUPO', $cursoSelec)
+                        ->where('e.ESTADO', 'MATRICULADO')
+                        ->select('e.*')
+                        ->orderBy('e.APELLIDO1')->orderBy('e.NOMBRE1')
+                        ->get();
+                } else {
+                    $estudiantes = DB::table('ESTUDIANTES')
+                        ->where('CURSO', $cursoSelec)
+                        ->where('ESTADO', 'MATRICULADO')
+                        ->orderBy('APELLIDO1')->orderBy('NOMBRE1')
+                        ->get();
+                }
             }
         }
 
