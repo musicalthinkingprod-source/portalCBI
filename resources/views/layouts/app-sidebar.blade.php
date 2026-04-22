@@ -138,6 +138,10 @@
             $isAdminLike = $isSuperAd || $isAdmin;
             $isPiar     = $profile === 'Piar';
             // "Otros" = ConvCor*, Ori, SecC100, SecA, etc. → ven todo excepto Panel de Control
+
+            $correccionesPendientes = $isSuperAd
+                ? \Illuminate\Support\Facades\DB::table('solicitudes_correccion')->where('estado', 'PENDIENTE')->count()
+                : 0;
         @endphp
 
         @php
@@ -254,7 +258,28 @@
                 </svg>
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
-                {!! sidebarLink(route('correcciones.index'), '🔧 Corrección de notas') !!}
+                @if($isSuperAd && $correccionesPendientes > 0)
+                    @php
+                        $href = route('correcciones.index');
+                        $active = request()->is(ltrim(parse_url($href, PHP_URL_PATH), '/') . '*');
+                        $cls = $active
+                            ? 'flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-blue-700 text-white text-sm font-semibold'
+                            : 'flex items-center justify-between gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm';
+                    @endphp
+                    <li>
+                        <a href="{{ $href }}" class="{{ $cls }}">
+                            <span>🔧 Corrección de notas</span>
+                            <span class="relative flex items-center justify-center">
+                                <span class="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping"></span>
+                                <span class="relative inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-[10px] font-bold text-white bg-red-600 rounded-full">
+                                    {{ $correccionesPendientes }}
+                                </span>
+                            </span>
+                        </a>
+                    </li>
+                @else
+                    {!! sidebarLink(route('correcciones.index'), '🔧 Corrección de notas') !!}
+                @endif
                 @if($isDoc)
                 {!! sidebarLink(route('vigilancias.docente'), '🗺️ Vigilancias') !!}
                 @endif

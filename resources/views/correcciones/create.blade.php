@@ -45,12 +45,9 @@
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                             {{ !$matSelec ? 'disabled' : '' }}>
                             <option value="">— Selecciona —</option>
-                            @foreach($estudiantes->pluck('CURSO')->unique() as $c)
+                            @foreach(($mapaMateriasCursos[$matSelec] ?? []) as $c)
                                 <option value="{{ $c }}" {{ $cursoSelec == $c ? 'selected' : '' }}>{{ $c }}</option>
                             @endforeach
-                            @if($cursoSelec && $estudiantes->isEmpty())
-                                <option value="{{ $cursoSelec }}" selected>{{ $cursoSelec }}</option>
-                            @endif
                         </select>
                     </div>
                     @endif
@@ -148,22 +145,21 @@
         selMateria.addEventListener('change', () => {
             if (esOrientador) {
                 formSelector.submit();
-            } else {
-                selCurso.innerHTML = '<option value="">— Selecciona —</option>';
-                const mat = selMateria.value;
-                if (mat && mapaMaterias[mat]) {
-                    mapaMaterias[mat].forEach(c => {
-                        const opt = document.createElement('option');
-                        opt.value = c; opt.textContent = c;
-                        selCurso.appendChild(opt);
-                    });
-                    selCurso.disabled = false;
-                } else {
-                    selCurso.disabled = true;
-                }
-                selCurso.value = '';
-                formSelector.submit();
+                return;
             }
+            selCurso.innerHTML = '<option value="">— Selecciona —</option>';
+            const mat = selMateria.value;
+            if (mat && mapaMaterias[mat]) {
+                mapaMaterias[mat].forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c; opt.textContent = c;
+                    selCurso.appendChild(opt);
+                });
+                selCurso.disabled = false;
+            } else {
+                selCurso.disabled = true;
+            }
+            selCurso.value = '';
         });
     }
 
