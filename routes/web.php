@@ -371,6 +371,14 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/derroteros/horarios', [DeroterosController::class, 'guardarHorario'])->name('derroteros.horario.guardar');
     });
 
+    // ── Tablero de franjas (drag & drop): SuperAd, Admin ────────────────────
+    Route::middleware('profile:SuperAd,Admin')->group(function () {
+        Route::get('/derroteros/tablero', [DeroterosController::class, 'tablero'])->name('derroteros.tablero');
+        Route::post('/derroteros/tablero/guardar', [DeroterosController::class, 'tableroGuardar'])->name('derroteros.tablero.guardar');
+        Route::post('/derroteros/tablero/autoasignar', [DeroterosController::class, 'tableroAutoAsignar'])->name('derroteros.tablero.autoasignar');
+        Route::post('/derroteros/tablero/confirmar', [DeroterosController::class, 'tableroConfirmar'])->name('derroteros.tablero.confirmar');
+    });
+
     // ── Boletines: SuperAd, Admin, Sec*, DOC*, Ori* ──────────────────────────
     Route::middleware('profile:SuperAd,Admin,Sec*,DOC*,Ori*')->group(function () {
         Route::get('/informes/boletin', [BoletinController::class, 'buscar'])->name('informes.boletin');

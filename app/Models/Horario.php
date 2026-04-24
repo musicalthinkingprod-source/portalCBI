@@ -35,6 +35,18 @@ class Horario extends Model
         8 => '8ª hora',
     ];
 
+    // Rangos horarios reales de cada bloque (fuente única para horarios y recuperaciones).
+    public static array $horasRangos = [
+        1 => '7:00 – 7:45',
+        2 => '7:45 – 8:30',
+        3 => '8:50 – 9:35',
+        4 => '9:35 – 10:20',
+        5 => '10:20 – 11:05',
+        6 => '11:05 – 11:50',
+        7 => '12:15 – 1:00',
+        8 => '1:00 – 1:45',
+    ];
+
     /**
      * Grilla de horario para un curso.
      * Retorna array[hora][dia] = ['materia' => ..., 'docente' => ...]

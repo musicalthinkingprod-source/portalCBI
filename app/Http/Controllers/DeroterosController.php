@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Horario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -9,6 +10,12 @@ class DeroterosController extends Controller
 {
     // Materias que no aplican para recuperación/derroteros
     const SIN_RECUPERACION = [11, 30, 31, 131]; // English Acquisition, Gestión Empresarial, Proyecto, Proyecto PE
+
+    // Franjas horarias: fuente única en el modelo Horario (mismo bloque 1..8 que el horario regular).
+    private static function franjas(): array
+    {
+        return Horario::$horasRangos;
+    }
 
     private function tablaNotas(int $anio): string
     {
@@ -138,6 +145,7 @@ class DeroterosController extends Controller
             $f->nota_recuperacion = $res->NOTA_RECUPERACION ?? null;
             $f->nota_original     = $res->NOTA_ORIGINAL     ?? $f->NOTA;
             $f->horario           = $res->HORARIO           ?? null;
+            $f->franja            = $res->FRANJA            ?? null;
             $f->derrotero_id      = $res->id                ?? null;
             $f->nota_intermedia   = round(($f->nota_original + 7) / 2, 1);
 
@@ -245,7 +253,12 @@ class DeroterosController extends Controller
             $derroteros = $this->calcularDerroteros($periodoSelec, $anio, $cursoSelec, null, $matSelec);
 
             $derroteros = match ($ordenSelec) {
-                'codigo' => $derroteros->sortKeys(),
+                'codigo'  => $derroteros->sortKeys(),
+                // Franjas asignadas primero (1..8), sin asignar al final.
+                'horario' => $derroteros->sortBy(function ($ms) {
+                    $f = $ms->first()->franja ?? null;
+                    return $f === null ? 999 : (int) $f;
+                }),
                 default  => $derroteros->sortBy(fn($ms) => strtolower(
                     ($ms->first()->APELLIDO1 ?? '') . ' ' .
                     ($ms->first()->APELLIDO2 ?? '') . ' ' .
@@ -384,6 +397,389 @@ class DeroterosController extends Controller
             ->update(['HORARIO' => $request->input('horario')]);
 
         return back()->with('success', 'Horario actualizado.');
+    }
+
+    // ─── Tablero de franjas (drag & drop) ────────────────────────────────────
+
+    /**
+     * Arma la lista de tarjetas (alumno, materia) pendientes de recuperación,
+     * cada una con su docente (desde ASIGNACION_PCM) y franja actual si la hay.
+     */
+    private function cargarTarjetasTablero(int $periodo, int $anio): array
+    {
+        $grupos = $this->calcularDerroteros($periodo, $anio, null, null, null, false);
+
+        $items = collect();
+        foreach ($grupos as $materias) {
+            foreach ($materias as $m) {
+                if (!$m->elegible) continue;
+                if ($m->resolucion !== 'PENDIENTE') continue;
+                $items->push($m);
+            }
+        }
+
+        if ($items->isEmpty()) {
+            return ['cards' => collect(), 'docentes' => collect()];
+        }
+
+        $codigosAlum = $items->pluck('CODIGO_ALUM')->unique()->toArray();
+        $codigosMat  = $items->pluck('CODIGO_MAT')->unique()->toArray();
+
+        // FRANJA e id actuales (si ya se persistió)
+        $derrRows = DB::table('Derroteros')
+            ->whereIn('CODIGO_ALUM', $codigosAlum)
+            ->whereIn('CODIGO_MAT', $codigosMat)
+            ->where('PERIODO', $periodo)
+            ->where('ANIO', $anio)
+            ->get()
+            ->keyBy(fn($r) => $r->CODIGO_ALUM . '_' . $r->CODIGO_MAT);
+
+        // Docente por (curso base, materia) desde ASIGNACION_PCM
+        $asig = DB::table('ASIGNACION_PCM')
+            ->whereIn('CODIGO_MAT', $codigosMat)
+            ->where('calificable', 1)
+            ->get()
+            ->groupBy(fn($a) => (explode('-', (string) $a->CURSO)[0] ?? '') . '_' . $a->CODIGO_MAT);
+
+        $docCodigos = $asig->flatten()->pluck('CODIGO_DOC')->unique()->filter()->toArray();
+        $docentesMap = DB::table('CODIGOS_DOC')
+            ->whereIn('CODIGO_DOC', $docCodigos)
+            ->pluck('NOMBRE_DOC', 'CODIGO_DOC');
+
+        $cards = $items->map(function ($m) use ($derrRows, $asig, $docentesMap) {
+            $key     = $m->CODIGO_ALUM . '_' . $m->CODIGO_MAT;
+            $d       = $derrRows[$key] ?? null;
+            $asigKey = $m->CURSO . '_' . $m->CODIGO_MAT;
+            $aRow    = isset($asig[$asigKey]) ? $asig[$asigKey]->first() : null;
+            $docCod  = $aRow->CODIGO_DOC ?? null;
+            $grado   = preg_match('/^(\d+)/', (string) $m->CURSO, $gm) ? $gm[1] : (string) $m->CURSO;
+
+            return (object) [
+                'id'          => $d->id ?? null,
+                'codigo_alum' => (int) $m->CODIGO_ALUM,
+                'codigo_mat'  => (int) $m->CODIGO_MAT,
+                'nombre'      => trim("{$m->APELLIDO1} {$m->APELLIDO2} {$m->NOMBRE1} {$m->NOMBRE2}"),
+                'curso'       => $m->CURSO,
+                'grado'       => $grado,
+                'materia'     => $m->NOMBRE_MAT,
+                'franja'      => $d->FRANJA ?? null,
+                'docente_cod' => $docCod,
+                'docente_nom' => $docCod ? ($docentesMap[$docCod] ?? $docCod) : 'Sin docente asignado',
+            ];
+        })->values();
+
+        // Filas del tablero: un docente por fila (solo los que tienen tarjetas)
+        $docentes = $cards->groupBy('docente_cod')->map(function ($tarjetas, $codDoc) use ($docentesMap) {
+            return (object) [
+                'codigo' => $codDoc,
+                'nombre' => $codDoc ? ($docentesMap[$codDoc] ?? $codDoc) : 'Sin docente',
+            ];
+        })->sortBy(fn($d) => $d->nombre)->values();
+
+        return ['cards' => $cards, 'docentes' => $docentes];
+    }
+
+    public function tablero(Request $request)
+    {
+        $anio    = (int) $request->input('anio', date('Y'));
+        $periodo = (int) $request->input('periodo', 1);
+
+        // La fecha es solo etiqueta: se usa al publicar el texto HORARIO.
+        // Si el usuario no la envía, sugerimos la del calendario académico.
+        $fechaSel = $request->input('fecha')
+            ?: FechasController::fechaRecuperacion($periodo, $anio);
+
+        $data = $this->cargarTarjetasTablero($periodo, $anio);
+
+        return view('derroteros.tablero', [
+            'cards'    => $data['cards'],
+            'docentes' => $data['docentes'],
+            'franjas'  => self::franjas(),
+            'anio'     => $anio,
+            'periodo'  => $periodo,
+            'fechaSel' => $fechaSel,
+        ]);
+    }
+
+    /**
+     * Autoguardado silencioso del tablero. Persiste únicamente FRANJA y
+     * deja HORARIO en NULL (el horario visible para padres y docentes se
+     * publica solo cuando el usuario presiona "Confirmar asignación").
+     */
+    public function tableroGuardar(Request $request)
+    {
+        $anio    = (int) $request->input('anio', date('Y'));
+        $periodo = (int) $request->input('periodo', 1);
+        $items   = $request->input('items', []);
+
+        if (!is_array($items)) {
+            return response()->json(['ok' => false, 'msg' => 'Datos inválidos.'], 422);
+        }
+
+        foreach ($items as $it) {
+            $codAlum = (int) ($it['codigo_alum'] ?? 0);
+            $codMat  = (int) ($it['codigo_mat']  ?? 0);
+            $franja  = isset($it['franja']) && $it['franja'] !== null && $it['franja'] !== ''
+                ? (int) $it['franja'] : null;
+
+            if (!$codAlum || !$codMat) continue;
+
+            $existe = DB::table('Derroteros')
+                ->where('CODIGO_ALUM', $codAlum)
+                ->where('CODIGO_MAT', $codMat)
+                ->where('PERIODO', $periodo)
+                ->where('ANIO', $anio)
+                ->exists();
+
+            // HORARIO se invalida (NULL) en cada autoguardado: cualquier
+            // cambio obliga a volver a confirmar para volver a publicar.
+            if ($existe) {
+                DB::table('Derroteros')
+                    ->where('CODIGO_ALUM', $codAlum)->where('CODIGO_MAT', $codMat)
+                    ->where('PERIODO', $periodo)->where('ANIO', $anio)
+                    ->update(['FRANJA' => $franja, 'HORARIO' => null]);
+            } else {
+                DB::table('Derroteros')->insert([
+                    'CODIGO_ALUM' => $codAlum,
+                    'CODIGO_MAT'  => $codMat,
+                    'PERIODO'     => $periodo,
+                    'ANIO'        => $anio,
+                    'RESOLUCION'  => 'PENDIENTE',
+                    'FRANJA'      => $franja,
+                    'HORARIO'     => null,
+                ]);
+            }
+        }
+
+        return response()->json(['ok' => true, 'guardados' => count($items)]);
+    }
+
+    /**
+     * Publica los horarios: recompone el texto HORARIO desde FRANJA para
+     * todas las filas del período/año. Solo después de confirmar el horario
+     * queda visible para padres y docentes.
+     */
+    public function tableroConfirmar(Request $request)
+    {
+        $anio    = (int) $request->input('anio', date('Y'));
+        $periodo = (int) $request->input('periodo', 1);
+
+        // Fecha elegida por el usuario en el tablero; fallback al calendario.
+        $fecha = $request->input('fecha')
+            ?: FechasController::fechaRecuperacion($periodo, $anio);
+        $fechaTxt = $fecha
+            ? \Carbon\Carbon::parse($fecha)->locale('es')->isoFormat('dddd D [de] MMMM')
+            : null;
+
+        $filas = DB::table('Derroteros')
+            ->where('PERIODO', $periodo)
+            ->where('ANIO', $anio)
+            ->get();
+
+        if ($filas->isEmpty()) {
+            return response()->json(['ok' => true, 'publicados' => 0, 'sin_franja' => 0]);
+        }
+
+        $codigosMat  = $filas->pluck('CODIGO_MAT')->unique()->filter()->toArray();
+        $codigosAlum = $filas->pluck('CODIGO_ALUM')->unique()->filter()->toArray();
+        $cursosAlum  = DB::table('ESTUDIANTES')
+            ->whereIn('CODIGO', $codigosAlum)
+            ->pluck('CURSO', 'CODIGO');
+        $asig = DB::table('ASIGNACION_PCM')
+            ->whereIn('CODIGO_MAT', $codigosMat)
+            ->where('calificable', 1)
+            ->get()
+            ->groupBy(fn($a) => (explode('-', (string) $a->CURSO)[0] ?? '') . '_' . $a->CODIGO_MAT);
+        $docCodigos = $asig->flatten()->pluck('CODIGO_DOC')->unique()->filter()->toArray();
+        $docNombres = DB::table('CODIGOS_DOC')
+            ->whereIn('CODIGO_DOC', $docCodigos)
+            ->pluck('NOMBRE_DOC', 'CODIGO_DOC');
+
+        $publicados = 0;
+        $sinFranja  = 0;
+        $franjasMap = self::franjas();
+        foreach ($filas as $r) {
+            $franja = $r->FRANJA !== null ? (int) $r->FRANJA : null;
+            if (!$franja || !isset($franjasMap[$franja])) { $sinFranja++; continue; }
+
+            $curso = $cursosAlum[$r->CODIGO_ALUM] ?? '';
+            $base  = explode('-', (string) $curso)[0] ?? '';
+            $aRow  = isset($asig[$base . '_' . $r->CODIGO_MAT]) ? $asig[$base . '_' . $r->CODIGO_MAT]->first() : null;
+            $docTx = $aRow ? ($docNombres[$aRow->CODIGO_DOC] ?? $aRow->CODIGO_DOC) : '';
+            $partes = array_filter([
+                $fechaTxt,
+                $franjasMap[$franja],
+                $docTx ? 'Prof. ' . $docTx : null,
+            ]);
+            $horarioTxt = implode(' · ', $partes);
+
+            DB::table('Derroteros')->where('id', $r->id)->update(['HORARIO' => $horarioTxt]);
+            $publicados++;
+        }
+
+        return response()->json([
+            'ok'          => true,
+            'publicados'  => $publicados,
+            'sin_franja'  => $sinFranja,
+        ]);
+    }
+
+    /**
+     * Autoasignador greedy por sesión (curso + materia + docente): todos los
+     * estudiantes de la misma sesión caen en la misma franja. Prioriza las
+     * sesiones con estudiantes que tienen más materias (ellos restringen
+     * más el horario). Respeta fijadas y evita choques de estudiante.
+     */
+    public function tableroAutoAsignar(Request $request)
+    {
+        $anio    = (int) $request->input('anio', date('Y'));
+        $periodo = (int) $request->input('periodo', 1);
+        $fijadas = $request->input('fijadas', []);
+
+        $data  = $this->cargarTarjetasTablero($periodo, $anio);
+        $cards = $data['cards'];
+
+        // fijadas por (alum,mat)
+        $fijMap = [];
+        foreach ($fijadas as $f) {
+            $k = ($f['codigo_alum'] ?? '') . '_' . ($f['codigo_mat'] ?? '');
+            if (!empty($f['franja'])) $fijMap[$k] = (int) $f['franja'];
+        }
+
+        // Conteo de materias por alumno (para priorizar sesiones donde caen los "difíciles")
+        $conteoPorAlum = $cards->groupBy('codigo_alum')->map->count();
+
+        // Agrupar por sesión: misma (materia, grado, docente).
+        // Cursos del mismo grado con el mismo docente quedan juntos para
+        // evitar filtraciones del examen entre secciones del mismo grado.
+        $sesiones = $cards->groupBy(fn($c) => $c->codigo_mat . '|' . $c->grado . '|' . ($c->docente_cod ?? ''));
+
+        $infoSes = [];
+        foreach ($sesiones as $key => $tarjetas) {
+            $franjaLock = null;
+            foreach ($tarjetas as $c) {
+                $kk = $c->codigo_alum . '_' . $c->codigo_mat;
+                if (isset($fijMap[$kk]) && $franjaLock === null) {
+                    $franjaLock = $fijMap[$kk];
+                }
+            }
+            $first = $tarjetas->first();
+            $infoSes[$key] = [
+                'tarjetas' => $tarjetas,
+                'franja'   => $franjaLock,
+                'score'    => $tarjetas->sum(fn($c) => $conteoPorAlum[$c->codigo_alum] ?? 1),
+                'docente'  => $first->docente_cod,
+                'grado'    => $first->grado,
+                'mat'      => (int) $first->codigo_mat,
+            ];
+        }
+
+        $ocupadoAlum   = [];  // "alum_franja" => true
+        $gradosDocFr   = [];  // "doc_franja" => [grado => count]
+        $materiasDocFr = [];  // "doc_franja" => [mat => count]
+        $resultado     = [];
+        $sinCupo       = [];
+
+        $asignarSesion = function(array $info, int $franja, bool $fijada) use (&$ocupadoAlum, &$gradosDocFr, &$materiasDocFr, &$resultado, &$sinCupo) {
+            foreach ($info['tarjetas'] as $c) {
+                $ak = $c->codigo_alum . '_' . $franja;
+                if (isset($ocupadoAlum[$ak])) {
+                    $sinCupo[] = [
+                        'nombre'  => $c->nombre,
+                        'materia' => $c->materia,
+                        'razon'   => 'Choque en franja fijada con otra materia del mismo estudiante',
+                    ];
+                    continue;
+                }
+                $ocupadoAlum[$ak] = true;
+                $gradosDocFr[$info['docente'] . '_' . $franja][$info['grado']]
+                    = ($gradosDocFr[$info['docente'] . '_' . $franja][$info['grado']] ?? 0) + 1;
+                $materiasDocFr[$info['docente'] . '_' . $franja][$info['mat']]
+                    = ($materiasDocFr[$info['docente'] . '_' . $franja][$info['mat']] ?? 0) + 1;
+                $resultado[] = [
+                    'codigo_alum' => $c->codigo_alum,
+                    'codigo_mat'  => $c->codigo_mat,
+                    'franja'      => $franja,
+                    'fijada'      => $fijada,
+                ];
+            }
+        };
+
+        // Procesar primero las sesiones con franja fijada
+        foreach ($infoSes as $key => $info) {
+            if ($info['franja'] !== null) {
+                $asignarSesion($info, $info['franja'], true);
+                $infoSes[$key]['procesada'] = true;
+            }
+        }
+
+        // Sesiones pendientes, ordenadas por score desc (sesiones con estudiantes difíciles primero)
+        $pendientes = collect($infoSes)
+            ->filter(fn($s) => empty($s['procesada']))
+            ->sortByDesc('score');
+
+        $franjasLista = array_keys(self::franjas());
+
+        foreach ($pendientes as $key => $info) {
+            // Franjas donde ningún estudiante de la sesión tenga choque
+            $viables = [];
+            foreach ($franjasLista as $f) {
+                $choque = false;
+                foreach ($info['tarjetas'] as $c) {
+                    if (isset($ocupadoAlum[$c->codigo_alum . '_' . $f])) { $choque = true; break; }
+                }
+                if (!$choque) $viables[] = $f;
+            }
+
+            if (empty($viables)) {
+                foreach ($info['tarjetas'] as $c) {
+                    $sinCupo[] = [
+                        'nombre'  => $c->nombre,
+                        'materia' => $c->materia,
+                        'razon'   => 'Choque con otras materias del mismo estudiante',
+                    ];
+                }
+                continue;
+            }
+
+            // Elegir mejor franja para la sesión. Con la sesión ya agrupada
+            // por (materia, grado, docente), los cursos del mismo grado
+            // siempre quedan juntos. El scoring penaliza mezclar grados
+            // distintos del mismo docente en la misma franja.
+            //   A) misma materia + mismo grado → continúa la sesión  (+200)
+            //   C) docente libre (franja limpia)                     (+150)
+            //   B) misma materia + grado distinto (último recurso)   (+40)
+            //   D) docente con OTRA materia → casi prohibido         (−500)
+            $mejor = null;
+            $mejorScore = PHP_INT_MIN;
+            foreach ($viables as $f) {
+                $grados    = $gradosDocFr[$info['docente']   . '_' . $f] ?? [];
+                $mats      = $materiasDocFr[$info['docente'] . '_' . $f] ?? [];
+                $mismoGr   = $grados[$info['grado']] ?? 0;
+                $otroGr    = array_sum($grados) - $mismoGr;
+                $mismaMat  = $mats[$info['mat']] ?? 0;
+                $otraMat   = array_sum($mats) - $mismaMat;
+                $total     = array_sum($grados);
+
+                $score = 0;
+                if ($otraMat > 0)                         $score -= 500;  // D
+                if ($mismaMat > 0 && $mismoGr > 0)        $score += 200;  // A
+                elseif ($total === 0)                     $score += 150;  // C
+                elseif ($mismaMat > 0 && $mismoGr === 0)  $score += 40;   // B
+                $score -= $otroGr * 5;    // penaliza mezclar grados distintos
+                $score -= $total;
+
+                if ($score > $mejorScore) { $mejor = $f; $mejorScore = $score; }
+            }
+
+            $asignarSesion($info, $mejor, false);
+        }
+
+        return response()->json([
+            'ok'        => true,
+            'asignadas' => $resultado,
+            'sin_cupo'  => $sinCupo,
+        ]);
     }
 
     // ─── Padres ──────────────────────────────────────────────────────────────

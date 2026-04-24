@@ -51,6 +51,7 @@
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="apellido" {{ $ordenSelec == 'apellido' ? 'selected' : '' }}>Apellido (A–Z)</option>
                         <option value="codigo"   {{ $ordenSelec == 'codigo'   ? 'selected' : '' }}>Código</option>
+                        <option value="horario"  {{ $ordenSelec == 'horario'  ? 'selected' : '' }}>Horario (F1 → F8)</option>
                     </select>
                 </div>
             </div>
@@ -108,13 +109,26 @@
                             <span class="font-mono text-xs text-gray-500 mr-2">{{ $m->CODIGO_ALUM }}</span>
                             {{ $m->APELLIDO1 }} {{ $m->APELLIDO2 }} {{ $m->NOMBRE1 }} {{ $m->NOMBRE2 }}
                         </p>
-                        <div class="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                        <div class="flex items-center flex-wrap gap-3 mt-1 text-xs text-gray-500">
                             <span>Nota: <strong class="text-red-600 text-sm">{{ number_format($m->NOTA, 1) }}</strong></span>
                             <span>Fallas previas: {{ $m->previas_periodos }}</span>
                             @if($m->elegible)
                                 <span class="text-green-600 font-semibold">✅ Puede recuperar</span>
                             @else
                                 <span class="text-red-500 font-semibold">❌ No puede recuperar · {{ $m->razon_no_elegible }}</span>
+                            @endif
+                            @if($m->horario)
+                                <span class="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full">
+                                    🕒 {{ $m->horario }}
+                                </span>
+                            @elseif($m->franja)
+                                <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">
+                                    ⏳ Franja F{{ $m->franja }} · sin publicar
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-500 border border-gray-200 px-2 py-0.5 rounded-full">
+                                    Sin horario asignado
+                                </span>
                             @endif
                         </div>
                     </div>
