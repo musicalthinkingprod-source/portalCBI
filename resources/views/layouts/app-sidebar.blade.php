@@ -287,7 +287,7 @@
                 {!! sidebarLink(route('horarios.index'), '🗓️ Horarios') !!}
                 {!! sidebarLink(route('horarios.disponibilidad'), '🟢 Disponibilidad docentes') !!}
                 {!! sidebarLink(route('asistencia-personal.reemplazos'), '🔄 Reemplazos') !!}
-                {!! sidebarLink(route('derroteros.tablero'), '📅 Tablero de recuperaciones') !!}
+                {!! sidebarLink(route('derroteros.tablero'), '📅 Tablero recuperaciones') !!}
                 @endif
             </ul>
         </div>
@@ -396,7 +396,7 @@
                 {!! sidebarLink(route('salvavidas.reporte'), '📊 Reporte salvavidas') !!}
                 @endif
                 @if($isAdmin)
-                {!! sidebarLink(route('derroteros.tablero'), '📅 Tablero de recuperaciones') !!}
+                {!! sidebarLink(route('derroteros.tablero'), '📅 Tablero recuperaciones') !!}
                 @endif
                 {!! sidebarLink(route('informes.boletin'), '📋 Boletines') !!}
             </ul>
