@@ -26,6 +26,7 @@ class SolicitudCorreccionController extends Controller
             ->select(
                 's.*',
                 'm.NOMBRE_MAT',
+                'e.CURSO as curso_alumno',
                 DB::raw("TRIM(CONCAT(COALESCE(e.APELLIDO1,''),' ',COALESCE(e.APELLIDO2,''),' ',COALESCE(e.NOMBRE1,''))) as nombre_alumno"),
                 'd.NOMBRE_DOC'
             )
@@ -167,11 +168,7 @@ class SolicitudCorreccionController extends Controller
             $notaReal = null;
         }
 
-        if ($notaReal === null) {
-            return back()->withErrors(['nota_propuesta' => 'No se encontró una nota registrada para este estudiante en ese período.'])->withInput();
-        }
-
-        if ((float) $notaReal === (float) $request->nota_propuesta) {
+        if ($notaReal !== null && (float) $notaReal === (float) $request->nota_propuesta) {
             return back()->withErrors(['nota_propuesta' => 'La nota propuesta es igual a la nota actual.'])->withInput();
         }
 
@@ -220,12 +217,28 @@ class SolicitudCorreccionController extends Controller
         $revisor = auth()->user()->PROFILE;
         $tabla   = $this->tablaNotas($sol->anio);
 
-        // Aplicar la corrección en la tabla de notas
-        DB::table($tabla)
+        $existeNota = DB::table($tabla)
             ->where('CODIGO_ALUM', $sol->codigo_alum)
             ->where('CODIGO_MAT',  $sol->codigo_mat)
             ->where('PERIODO',     $sol->periodo)
-            ->update(['NOTA' => $sol->nota_propuesta, 'TIPODENOTA' => 'N']);
+            ->exists();
+
+        if ($existeNota) {
+            DB::table($tabla)
+                ->where('CODIGO_ALUM', $sol->codigo_alum)
+                ->where('CODIGO_MAT',  $sol->codigo_mat)
+                ->where('PERIODO',     $sol->periodo)
+                ->update(['NOTA' => $sol->nota_propuesta, 'TIPODENOTA' => 'N']);
+        } else {
+            DB::table($tabla)->insert([
+                'CODIGO_ALUM' => $sol->codigo_alum,
+                'CODIGO_MAT'  => $sol->codigo_mat,
+                'PERIODO'     => $sol->periodo,
+                'NOTA'        => $sol->nota_propuesta,
+                'TIPODENOTA'  => 'N',
+                'CODIGO_DOC'  => $sol->codigo_doc,
+            ]);
+        }
 
         DB::table('solicitudes_correccion')->where('id', $id)->update([
             'estado'       => 'APROBADA',

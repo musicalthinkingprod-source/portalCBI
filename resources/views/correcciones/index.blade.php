@@ -77,7 +77,12 @@
                     <div>
                         <p class="text-xs text-gray-400 uppercase tracking-wide">Estudiante</p>
                         <p class="text-sm font-semibold text-gray-800">{{ trim($s->nombre_alumno) ?: 'Cód. '.$s->codigo_alum }}</p>
-                        <p class="text-xs text-gray-400">Código: {{ $s->codigo_alum }}</p>
+                        <p class="text-xs text-gray-400">
+                            Código: {{ $s->codigo_alum }}
+                            @if(!empty($s->curso_alumno))
+                                · Curso: <span class="font-semibold text-gray-600">{{ $s->curso_alumno }}</span>
+                            @endif
+                        </p>
                     </div>
                     <div>
                         <p class="text-xs text-gray-400 uppercase tracking-wide">Materia / Período</p>
