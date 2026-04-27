@@ -100,8 +100,11 @@
                         </td>
                         <td class="px-4 py-2 text-xs">
                             @if($m->horario)
+                                @php
+                                    $horarioTxt = preg_replace('/\s*·\s*Prof\.?[^·]*$/u', '', $m->horario);
+                                @endphp
                                 <span class="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full">
-                                    🕒 {{ $m->horario }}
+                                    🕒 {{ $horarioTxt }}
                                 </span>
                             @elseif($m->franja)
                                 <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">
