@@ -72,9 +72,11 @@
                 <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
                     <tr>
                         <th class="px-4 py-2 text-left">Materia</th>
+                        <th class="px-4 py-2 text-left w-44">Docente</th>
                         <th class="px-4 py-2 text-center w-20">Nota</th>
                         <th class="px-4 py-2 text-center w-20">P. ant.</th>
                         <th class="px-4 py-2 text-left w-52">Elegibilidad</th>
+                        <th class="px-4 py-2 text-left w-44">Horario</th>
                         <th class="px-4 py-2 text-center w-32">Asistencia</th>
                         <th class="px-4 py-2 text-center w-36">Resolución</th>
                         <th class="px-4 py-2 text-center w-20">Nota final</th>
@@ -84,6 +86,9 @@
                     @foreach($materias as $m)
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-2 font-medium">{{ $m->NOMBRE_MAT }}</td>
+                        <td class="px-4 py-2 text-xs text-gray-600">
+                            {{ $m->docente_nom ?? '—' }}
+                        </td>
                         <td class="px-4 py-2 text-center font-bold text-red-600">{{ number_format($m->NOTA, 1) }}</td>
                         <td class="px-4 py-2 text-center text-gray-500 text-xs">{{ $m->previas_periodos }}</td>
                         <td class="px-4 py-2">
@@ -91,6 +96,19 @@
                                 <span class="text-green-600 text-xs font-semibold">✅ Puede recuperar</span>
                             @else
                                 <span class="text-red-500 text-xs">❌ {{ $m->razon_no_elegible }}</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-2 text-xs">
+                            @if($m->horario)
+                                <span class="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full">
+                                    🕒 {{ $m->horario }}
+                                </span>
+                            @elseif($m->franja)
+                                <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">
+                                    ⏳ F{{ $m->franja }} · sin publicar
+                                </span>
+                            @else
+                                <span class="text-gray-400">— Sin asignar</span>
                             @endif
                         </td>
                         <td class="px-4 py-2 text-center">

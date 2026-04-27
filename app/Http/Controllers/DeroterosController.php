@@ -123,8 +123,19 @@ class DeroterosController extends Controller
             ->get()
             ->keyBy(fn($r) => $r->CODIGO_ALUM . '_' . $r->CODIGO_MAT);
 
+        // ── 4b. Docentes por (curso base, materia) ─────────────────────────────
+        $asigDoc = DB::table('ASIGNACION_PCM')
+            ->whereIn('CODIGO_MAT', $codigosMat)
+            ->where('calificable', 1)
+            ->get()
+            ->groupBy(fn($a) => (explode('-', (string) $a->CURSO)[0] ?? '') . '_' . $a->CODIGO_MAT);
+        $docCodigos = $asigDoc->flatten()->pluck('CODIGO_DOC')->unique()->filter()->toArray();
+        $docNombres = $docCodigos
+            ? DB::table('CODIGOS_DOC')->whereIn('CODIGO_DOC', $docCodigos)->pluck('NOMBRE_DOC', 'CODIGO_DOC')
+            : collect();
+
         // ── 5. Mapear reglas ───────────────────────────────────────────────────
-        $fallos = $fallos->map(function ($f) use ($fallasPrevias, $resoluciones) {
+        $fallos = $fallos->map(function ($f) use ($fallasPrevias, $resoluciones, $asigDoc, $docNombres) {
             $key     = $f->CODIGO_ALUM . '_' . $f->CODIGO_MAT;
             $previas = $fallasPrevias[$key]->veces ?? 0;
             $res     = $resoluciones[$key] ?? null;
@@ -149,6 +160,11 @@ class DeroterosController extends Controller
             $f->franja            = $res->FRANJA            ?? null;
             $f->derrotero_id      = $res->id                ?? null;
             $f->nota_intermedia   = round(($f->nota_original + 7) / 2, 1);
+
+            $base    = explode('-', (string) $f->CURSO)[0] ?? '';
+            $aRow    = isset($asigDoc[$base . '_' . $f->CODIGO_MAT]) ? $asigDoc[$base . '_' . $f->CODIGO_MAT]->first() : null;
+            $f->docente_cod = $aRow->CODIGO_DOC ?? null;
+            $f->docente_nom = $f->docente_cod ? ($docNombres[$f->docente_cod] ?? $f->docente_cod) : null;
 
             // Normalización: la resolución vieja 'NO_ASISTIO' equivale ahora a
             // ASISTENCIA = 'NO_PRESENTO' sin nota. Para datos legacy, no la
