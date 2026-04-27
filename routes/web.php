@@ -379,6 +379,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/derroteros/tablero/confirmar', [DeroterosController::class, 'tableroConfirmar'])->name('derroteros.tablero.confirmar');
     });
 
+    // ── Estadísticas de derroteros: solo SuperAd ─────────────────────────────
+    Route::middleware('profile:SuperAd')->group(function () {
+        Route::get('/derroteros/estadisticas', [DeroterosController::class, 'estadisticas'])->name('derroteros.estadisticas');
+    });
+
     // ── Boletines: SuperAd, Admin, Sec*, DOC*, Ori* ──────────────────────────
     Route::middleware('profile:SuperAd,Admin,Sec*,DOC*,Ori*')->group(function () {
         Route::get('/informes/boletin', [BoletinController::class, 'buscar'])->name('informes.boletin');

@@ -395,6 +395,9 @@
                 {!! sidebarLink(route('derroteros.index'), '📊 Informe derroteros') !!}
                 {!! sidebarLink(route('salvavidas.reporte'), '📊 Reporte salvavidas') !!}
                 @endif
+                @if($isSuperAd)
+                {!! sidebarLink(route('derroteros.estadisticas'), '📈 Estadísticas recuperaciones') !!}
+                @endif
                 @if($isAdmin)
                 {!! sidebarLink(route('derroteros.tablero'), '📅 Tablero recuperaciones') !!}
                 @endif

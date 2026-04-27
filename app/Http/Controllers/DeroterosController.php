@@ -498,6 +498,74 @@ class DeroterosController extends Controller
         return back()->with('success', 'Nota de recuperación guardada correctamente.');
     }
 
+    // ─── Estadísticas (SuperAd) ──────────────────────────────────────────────
+
+    public function estadisticas(Request $request)
+    {
+        $anio    = (int) $request->input('anio', date('Y'));
+        $periodo = (int) $request->input('periodo', 1);
+
+        $grupos = $this->calcularDerroteros($periodo, $anio, null, null, null, true);
+
+        $todas = collect();
+        foreach ($grupos as $materias) {
+            foreach ($materias as $m) $todas->push($m);
+        }
+
+        $total       = $todas->count();
+        $elegibles   = $todas->where('elegible', true);
+        $noElegibles = $todas->where('elegible', false);
+
+        // Asistencia (solo sobre elegibles, los no elegibles no presentan)
+        $presento    = $elegibles->where('asistencia', 'PRESENTO')->count();
+        $noPresento  = $elegibles->where('asistencia', 'NO_PRESENTO')->count();
+        $sinAsist    = $elegibles->whereNull('asistencia')->count();
+
+        // Resolución (solo sobre elegibles)
+        $recupero    = $elegibles->where('resolucion', 'RECUPERO')->count();
+        $noRecupero  = $elegibles->where('resolucion', 'NO_RECUPERO')->count();
+        $intermedio  = $elegibles->where('resolucion', 'INTERMEDIO')->count();
+        $pendiente   = $elegibles->where('resolucion', 'PENDIENTE')->count();
+
+        // Programación
+        $conFranja   = $todas->filter(fn($m) => $m->franja !== null && $m->franja !== '')->count();
+        $sinFranja   = $total - $conFranja;
+
+        $franjasMap  = self::franjas();
+        $porFranja   = collect($franjasMap)->mapWithKeys(function ($rango, $f) use ($todas, $elegibles) {
+            $items     = $todas->filter(fn($m) => (int) ($m->franja ?? 0) === (int) $f);
+            $itemsEleg = $elegibles->filter(fn($m) => (int) ($m->franja ?? 0) === (int) $f);
+            return [$f => (object) [
+                'rango'       => $rango,
+                'total'       => $items->count(),
+                'presento'    => $itemsEleg->where('asistencia', 'PRESENTO')->count(),
+                'no_presento' => $itemsEleg->where('asistencia', 'NO_PRESENTO')->count(),
+                'sin_marcar'  => $itemsEleg->whereNull('asistencia')->count(),
+                'recupero'    => $itemsEleg->where('resolucion', 'RECUPERO')->count(),
+                'no_recupero' => $itemsEleg->where('resolucion', 'NO_RECUPERO')->count(),
+                'intermedio'  => $itemsEleg->where('resolucion', 'INTERMEDIO')->count(),
+                'pendiente'   => $itemsEleg->where('resolucion', 'PENDIENTE')->count(),
+            ]];
+        });
+
+        $resumen = (object) [
+            'total'        => $total,
+            'elegibles'    => $elegibles->count(),
+            'no_elegibles' => $noElegibles->count(),
+            'con_franja'   => $conFranja,
+            'sin_franja'   => $sinFranja,
+            'presento'     => $presento,
+            'no_presento'  => $noPresento,
+            'sin_asist'    => $sinAsist,
+            'recupero'     => $recupero,
+            'no_recupero'  => $noRecupero,
+            'intermedio'   => $intermedio,
+            'pendiente'    => $pendiente,
+        ];
+
+        return view('derroteros.estadisticas', compact('resumen', 'porFranja', 'anio', 'periodo'));
+    }
+
     // ─── Horarios ────────────────────────────────────────────────────────────
 
     public function horarios(Request $request)
