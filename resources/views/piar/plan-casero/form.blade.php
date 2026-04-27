@@ -189,29 +189,49 @@
                 Estrategias y actividades que el estudiante debe trabajar en casa para fortalecer su proceso de aprendizaje.
             </p>
 
+            @php
+                $limEstrag = 16777215; // MEDIUMTEXT (~16 MB)
+                $limFrec   = 255;      // VARCHAR(255)
+            @endphp
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">
-                        Estrategias / Actividades para el hogar
-                    </label>
+                    <div class="flex items-baseline justify-between mb-1">
+                        <label class="block text-xs font-semibold text-gray-500 uppercase">
+                            Estrategias / Actividades para el hogar
+                        </label>
+                        <span class="text-[11px] text-gray-400">
+                            <span data-counter-for="ESTRAG_CASERA">{{ strlen($piarMat->ESTRAG_CASERA ?? '') }}</span>
+                            / {{ number_format($limEstrag) }} caracteres
+                        </span>
+                    </div>
                     <textarea name="ESTRAG_CASERA" rows="6"
+                        maxlength="{{ $limEstrag }}"
+                        data-limit="{{ $limEstrag }}"
                         placeholder="Describe las estrategias y actividades que el estudiante debe realizar en casa..."
                         {{ $puedeObservar || $soloLectura ? 'readonly' : '' }}
-                        class="campo-docente w-full border rounded-lg p-3 text-sm focus:outline-none resize-none transition
+                        class="campo-docente campo-con-limite w-full border rounded-lg p-3 text-sm focus:outline-none resize-none transition
                             {{ $puedeObservar || $soloLectura
                                 ? 'bg-gray-50 border-gray-200 text-gray-600 cursor-default'
                                 : 'border-gray-300 text-gray-800 focus:border-indigo-400' }}">{{ $piarMat->ESTRAG_CASERA ?? '' }}</textarea>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">
-                        Frecuencia
-                    </label>
+                    <div class="flex items-baseline justify-between mb-1">
+                        <label class="block text-xs font-semibold text-gray-500 uppercase">
+                            Frecuencia
+                        </label>
+                        <span class="text-[11px] text-gray-400">
+                            <span data-counter-for="FREC_CASERA">{{ strlen($piarMat->FREC_CASERA ?? '') }}</span>
+                            / {{ $limFrec }} caracteres
+                        </span>
+                    </div>
                     <input type="text" name="FREC_CASERA"
+                        maxlength="{{ $limFrec }}"
+                        data-limit="{{ $limFrec }}"
                         value="{{ $piarMat->FREC_CASERA ?? '' }}"
                         placeholder="Ej: Diaria, 3 veces por semana, Semanal..."
                         {{ $puedeObservar || $soloLectura ? 'readonly' : '' }}
-                        class="campo-docente w-full border rounded-lg px-3 py-2 text-sm focus:outline-none transition
+                        class="campo-docente campo-con-limite w-full border rounded-lg px-3 py-2 text-sm focus:outline-none transition
                             {{ $puedeObservar || $soloLectura
                                 ? 'bg-gray-50 border-gray-200 text-gray-600 cursor-default'
                                 : 'border-gray-300 text-gray-800 focus:border-indigo-400' }}">
@@ -248,9 +268,18 @@
                 @endif
             </p>
             @if($puedeObservar)
+                @php $limObs = 16777215; @endphp
+                <div class="flex items-baseline justify-end mb-1">
+                    <span class="text-[11px] text-amber-700/70">
+                        <span data-counter-for="OBSERVACIONES_CASERO">{{ strlen($piarMat->OBSERVACIONES_CASERO ?? '') }}</span>
+                        / {{ number_format($limObs) }} caracteres
+                    </span>
+                </div>
                 <textarea name="OBSERVACIONES_CASERO" rows="10"
+                    maxlength="{{ $limObs }}"
+                    data-limit="{{ $limObs }}"
                     placeholder="Escribe aquí las observaciones para el docente..."
-                    class="w-full border border-amber-300 bg-white rounded-lg p-3 text-sm text-gray-800 focus:outline-none focus:border-amber-500 resize-none">{{ $piarMat->OBSERVACIONES_CASERO ?? '' }}</textarea>
+                    class="campo-con-limite w-full border border-amber-300 bg-white rounded-lg p-3 text-sm text-gray-800 focus:outline-none focus:border-amber-500 resize-none">{{ $piarMat->OBSERVACIONES_CASERO ?? '' }}</textarea>
 
                 <div class="mt-3 space-y-2">
                     @if($estadoActual === 'revision' || $estadoActual === 'con_observaciones')
@@ -312,5 +341,23 @@ function activarEdicion() {
 }
 </script>
 @endif
+
+<script>
+document.querySelectorAll('.campo-con-limite').forEach(el => {
+    const limite   = parseInt(el.dataset.limit, 10);
+    const contador = document.querySelector('[data-counter-for="' + el.name + '"]');
+    if (!contador) return;
+    const refrescar = () => {
+        const n = el.value.length;
+        contador.textContent = n.toLocaleString('es-CO');
+        const cont = contador.parentElement;
+        cont.classList.remove('text-red-600', 'text-amber-600', 'font-semibold');
+        if (n >= limite)               cont.classList.add('text-red-600', 'font-semibold');
+        else if (n >= limite * 0.9)    cont.classList.add('text-amber-600', 'font-semibold');
+    };
+    el.addEventListener('input', refrescar);
+    refrescar();
+});
+</script>
 
 @endsection
