@@ -395,9 +395,6 @@
                 {!! sidebarLink(route('derroteros.index'), '📊 Informe derroteros') !!}
                 {!! sidebarLink(route('salvavidas.reporte'), '📊 Reporte salvavidas') !!}
                 @endif
-                @if($isSuperAd)
-                {!! sidebarLink(route('derroteros.estadisticas'), '📈 Estadísticas recuperaciones') !!}
-                @endif
                 @if($isAdmin)
                 {!! sidebarLink(route('derroteros.tablero'), '📅 Tablero recuperaciones') !!}
                 @endif
@@ -515,6 +512,7 @@
                 {!! sidebarLink(route('notas.reporte'), '📊 Informe de digitación') !!}
                 {!! sidebarLink(route('english-acq.informe'), '📊 Informe English ACQ') !!}
                 {!! sidebarLink(route('derroteros.index'), '📊 Informe derroteros') !!}
+                {!! sidebarLink(route('derroteros.estadisticas'), '📈 Estadísticas recuperaciones') !!}
                 {!! sidebarLink(route('salvavidas.reporte'), '📊 Reporte salvavidas') !!}
                 {!! sidebarLink(route('asistencia.reporte'), '📋 Reporte de asistencia') !!}
                 {!! sidebarLink(route('llamadas.reporte'), '📊 Reporte de llamadas') !!}
