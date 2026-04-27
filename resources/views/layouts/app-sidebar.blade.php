@@ -512,7 +512,7 @@
                 {!! sidebarLink(route('notas.reporte'), '📊 Informe de digitación') !!}
                 {!! sidebarLink(route('english-acq.informe'), '📊 Informe English ACQ') !!}
                 {!! sidebarLink(route('derroteros.index'), '📊 Informe derroteros') !!}
-                {!! sidebarLink(route('derroteros.estadisticas'), '📈 Estadísticas recuperaciones') !!}
+                {!! sidebarLink(route('derroteros.estadisticas'), '📈 Stats recuperaciones') !!}
                 {!! sidebarLink(route('salvavidas.reporte'), '📊 Reporte salvavidas') !!}
                 {!! sidebarLink(route('asistencia.reporte'), '📋 Reporte de asistencia') !!}
                 {!! sidebarLink(route('llamadas.reporte'), '📊 Reporte de llamadas') !!}
