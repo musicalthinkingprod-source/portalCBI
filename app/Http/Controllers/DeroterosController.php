@@ -142,12 +142,21 @@ class DeroterosController extends Controller
 
             $f->previas_periodos  = $previas;
             $f->resolucion        = $res->RESOLUCION        ?? 'PENDIENTE';
+            $f->asistencia        = $res->ASISTENCIA        ?? null;
             $f->nota_recuperacion = $res->NOTA_RECUPERACION ?? null;
             $f->nota_original     = $res->NOTA_ORIGINAL     ?? $f->NOTA;
             $f->horario           = $res->HORARIO           ?? null;
             $f->franja            = $res->FRANJA            ?? null;
             $f->derrotero_id      = $res->id                ?? null;
             $f->nota_intermedia   = round(($f->nota_original + 7) / 2, 1);
+
+            // Normalización: la resolución vieja 'NO_ASISTIO' equivale ahora a
+            // ASISTENCIA = 'NO_PRESENTO' sin nota. Para datos legacy, no la
+            // mostramos como resolución; se exhibe a través de asistencia.
+            if ($f->resolucion === 'NO_ASISTIO') {
+                if ($f->asistencia === null) $f->asistencia = 'NO_PRESENTO';
+                $f->resolucion = 'PENDIENTE';
+            }
 
             return $f;
         });
@@ -247,6 +256,12 @@ class DeroterosController extends Controller
         $recupFecha   = FechasController::fechaRecuperacion($periodoSelec, $anio);
         $recupAbierto = $esSuperior || FechasController::recuperacionAbierta($periodoSelec, $anio);
 
+        // Vista logística: todas las recuperaciones del docente con franja
+        // asignada, agrupadas por bloque para saber de un vistazo qué
+        // estudiantes debían presentarse en cada franja del día.
+        $programadasPorBloque = $this->cargarProgramadasPorBloque($profile, $esSuperior, $periodoSelec, $anio);
+        $franjasMap           = self::franjas();
+
         // Derroteros de la materia/curso seleccionada (agrupados por alumno)
         $derroteros = collect();
         if ($matSelec && $cursoSelec) {
@@ -270,23 +285,74 @@ class DeroterosController extends Controller
         return view('derroteros.docente', compact(
             'materias', 'cursosDisponibles', 'matSelec', 'cursoSelec',
             'periodoSelec', 'anio', 'mapaMateriasCursos', 'materiaNombre',
-            'derroteros', 'ordenSelec', 'recupAbierto', 'recupFecha', 'esSuperior'
+            'derroteros', 'ordenSelec', 'recupAbierto', 'recupFecha', 'esSuperior',
+            'programadasPorBloque', 'franjasMap'
         ));
+    }
+
+    /**
+     * Lista de recuperaciones con FRANJA asignada para el período/año,
+     * filtrada por las asignaciones del docente (SuperAd/Admin ven todas).
+     * Reutiliza calcularDerroteros() para arrastrar elegibilidad, fallas
+     * previas y nota intermedia sugerida (necesarias para resolver desde
+     * la vista por bloque). Agrupada por FRANJA y ordenada por apellido.
+     */
+    private function cargarProgramadasPorBloque(string $profile, bool $esSuperior, int $periodo, int $anio): \Illuminate\Support\Collection
+    {
+        $grupos = $this->calcularDerroteros($periodo, $anio, null, null, null, true);
+
+        $items = collect();
+        foreach ($grupos as $materias) {
+            foreach ($materias as $m) {
+                if ($m->franja === null || $m->franja === '') continue;
+                $items->push($m);
+            }
+        }
+
+        if ($items->isEmpty()) {
+            return collect();
+        }
+
+        if (!$esSuperior) {
+            $codigosMat = $items->pluck('CODIGO_MAT')->unique()->toArray();
+            $asigDoc    = DB::table('ASIGNACION_PCM')
+                ->where('CODIGO_DOC', $profile)
+                ->where('calificable', 1)
+                ->whereIn('CODIGO_MAT', $codigosMat)
+                ->get(['CODIGO_MAT', 'CURSO']);
+
+            $matCursoBase = $asigDoc->map(function ($a) {
+                $base = explode('-', (string) $a->CURSO)[0];
+                return $a->CODIGO_MAT . '_' . $base;
+            })->unique()->values()->toArray();
+
+            $items = $items->filter(function ($r) use ($matCursoBase) {
+                $base = explode('-', (string) $r->CURSO)[0];
+                return in_array($r->CODIGO_MAT . '_' . $base, $matCursoBase, true);
+            })->values();
+        }
+
+        return $items
+            ->sortBy(fn($r) => strtolower(
+                ($r->APELLIDO1 ?? '') . ' ' . ($r->APELLIDO2 ?? '') . ' ' . ($r->NOMBRE1 ?? '')
+            ))
+            ->groupBy(fn($r) => (int) $r->franja)
+            ->sortKeys();
     }
 
     public function resolver(Request $request)
     {
-        $profile      = auth()->user()->PROFILE;
-        $esSuperior   = in_array($profile, ['SuperAd', 'Admin']);
-        $codigoAlum   = (int) $request->input('CODIGO_ALUM');
-        $codigoMat    = (int) $request->input('CODIGO_MAT');
-        $periodo      = (int) $request->input('periodo');
-        $anio         = (int) date('Y');
-        $resolucion   = $request->input('resolucion'); // RECUPERO | NO_RECUPERO | INTERMEDIO | NO_ASISTIO
+        $profile       = auth()->user()->PROFILE;
+        $esSuperior    = in_array($profile, ['SuperAd', 'Admin']);
+        $codigoAlum    = (int) $request->input('CODIGO_ALUM');
+        $codigoMat     = (int) $request->input('CODIGO_MAT');
+        $periodo       = (int) $request->input('periodo');
+        $anio          = (int) date('Y');
+        $accion        = $request->input('accion'); // 'asistencia' | 'nota'
+        $asistencia    = $request->input('asistencia');   // PRESENTO | NO_PRESENTO
+        $resolucion    = $request->input('resolucion');   // RECUPERO | NO_RECUPERO | INTERMEDIO
         $notaIngresada = $request->input('nota_recuperacion');
 
-        // Bloqueo por fecha: la ventana se toma del calendario académico
-        // (evento "Sustentación de Recuperaciones/Derroteros") y va de 06:30 a 16:30.
         if (!$esSuperior && !FechasController::recuperacionAbierta($periodo, $anio)) {
             $fecha = FechasController::fechaRecuperacion($periodo, $anio);
             $msg   = $fecha
@@ -295,36 +361,67 @@ class DeroterosController extends Controller
             return back()->withErrors(['resolucion' => $msg]);
         }
 
-        // Obtener nota original
         $notaOriginal = DB::table($this->tablaNotas($anio))
             ->where('CODIGO_ALUM', $codigoAlum)
             ->where('CODIGO_MAT', $codigoMat)
             ->where('PERIODO', $periodo)
             ->value('NOTA');
 
-        // Calcular nota final según resolución
-        $notaFinal = match($resolucion) {
-            'RECUPERO'    => 7.0,
-            'NO_RECUPERO' => $notaOriginal,
-            'NO_ASISTIO'  => $notaOriginal,
-            'INTERMEDIO'  => (float) $notaIngresada,
-            default       => $notaOriginal,
-        };
-
-        // Validar nota intermedia
-        if ($resolucion === 'INTERMEDIO') {
-            if ($notaFinal <= $notaOriginal || $notaFinal > 7) {
-                return back()->withErrors(['resolucion' => "La nota intermedia debe ser mayor a {$notaOriginal} y no mayor a 7."]);
-            }
-        }
-
-        // Guardar / actualizar resolución en Derroteros
         $existe = DB::table('Derroteros')
             ->where('CODIGO_ALUM', $codigoAlum)
             ->where('CODIGO_MAT', $codigoMat)
             ->where('PERIODO', $periodo)
             ->where('ANIO', $anio)
             ->exists();
+
+        // Acción 1: registrar/cambiar asistencia (sin tocar la nota)
+        if ($accion === 'asistencia') {
+            if (!in_array($asistencia, ['PRESENTO', 'NO_PRESENTO'])) {
+                return back()->withErrors(['resolucion' => 'Asistencia inválida.']);
+            }
+
+            $datos = [
+                'ASISTENCIA'    => $asistencia,
+                'NOTA_ORIGINAL' => $notaOriginal,
+                'CODIGO_DOC'    => $profile,
+            ];
+
+            if ($existe) {
+                DB::table('Derroteros')
+                    ->where('CODIGO_ALUM', $codigoAlum)->where('CODIGO_MAT', $codigoMat)
+                    ->where('PERIODO', $periodo)->where('ANIO', $anio)
+                    ->update($datos);
+            } else {
+                DB::table('Derroteros')->insert(array_merge($datos, [
+                    'CODIGO_ALUM' => $codigoAlum,
+                    'CODIGO_MAT'  => $codigoMat,
+                    'PERIODO'     => $periodo,
+                    'ANIO'        => $anio,
+                    'RESOLUCION'  => 'PENDIENTE',
+                ]));
+            }
+
+            return back()->with('success', $asistencia === 'PRESENTO'
+                ? 'Se registró que el estudiante presentó la recuperación.'
+                : 'Se registró que el estudiante no presentó la recuperación.');
+        }
+
+        // Acción 2: registrar nota (independiente de la asistencia)
+        if (!in_array($resolucion, ['RECUPERO', 'NO_RECUPERO', 'INTERMEDIO'])) {
+            return back()->withErrors(['resolucion' => 'Resolución inválida.']);
+        }
+
+        $notaFinal = match($resolucion) {
+            'RECUPERO'    => 7.0,
+            'NO_RECUPERO' => $notaOriginal,
+            'INTERMEDIO'  => (float) $notaIngresada,
+        };
+
+        if ($resolucion === 'INTERMEDIO') {
+            if ($notaFinal <= $notaOriginal || $notaFinal > 7) {
+                return back()->withErrors(['resolucion' => "La nota intermedia debe ser mayor a {$notaOriginal} y no mayor a 7."]);
+            }
+        }
 
         $datos = [
             'RESOLUCION'        => $resolucion,
@@ -347,8 +444,7 @@ class DeroterosController extends Controller
             ]));
         }
 
-        // Actualizar nota en NOTAS si aplica
-        $tipoNota = in_array($resolucion, ['NO_RECUPERO', 'NO_ASISTIO']) ? 'N' : 'R';
+        $tipoNota = $resolucion === 'NO_RECUPERO' ? 'N' : 'R';
 
         DB::table($this->tablaNotas($anio))
             ->where('CODIGO_ALUM', $codigoAlum)
@@ -356,7 +452,7 @@ class DeroterosController extends Controller
             ->where('PERIODO', $periodo)
             ->update(['NOTA' => $notaFinal, 'TIPODENOTA' => $tipoNota]);
 
-        return back()->with('success', 'Resolución guardada correctamente.');
+        return back()->with('success', 'Nota de recuperación guardada correctamente.');
     }
 
     // ─── Horarios ────────────────────────────────────────────────────────────
