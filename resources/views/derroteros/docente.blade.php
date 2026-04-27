@@ -58,6 +58,156 @@
         </form>
     </div>
 
+    {{-- Vista logística: recuperaciones programadas agrupadas por bloque --}}
+    @if($programadasPorBloque->isNotEmpty())
+        <div class="bg-white rounded-xl shadow overflow-hidden mb-6">
+            <div class="px-5 py-3 bg-indigo-700 text-white">
+                <h3 class="font-bold text-sm uppercase tracking-wide">
+                    Mis recuperaciones programadas — Período {{ $periodoSelec }}
+                </h3>
+                <p class="text-indigo-100 text-xs mt-0.5">
+                    Estudiantes citados, agrupados por bloque. Puedes resolver desde aquí mismo.
+                </p>
+            </div>
+            @foreach($programadasPorBloque as $franja => $items)
+                <div class="border-b border-gray-100 last:border-b-0">
+                    <div class="px-5 py-2 bg-indigo-50 text-indigo-800 flex flex-wrap items-center gap-3">
+                        <span class="font-bold text-sm">Bloque F{{ $franja }}</span>
+                        @if(!empty($franjasMap[$franja]))
+                            <span class="text-xs text-indigo-600">{{ $franjasMap[$franja] }}</span>
+                        @endif
+                        <span class="ml-auto text-xs bg-white border border-indigo-200 text-indigo-700 px-2 py-0.5 rounded-full">
+                            {{ $items->count() }} {{ $items->count() === 1 ? 'estudiante' : 'estudiantes' }}
+                        </span>
+                    </div>
+                    <ul class="divide-y divide-gray-50">
+                        @foreach($items as $r)
+                            @php
+                                $resBadge = match($r->resolucion) {
+                                    'RECUPERO'    => ['bg-green-100 text-green-700', 'Recuperó → 7.0'],
+                                    'NO_RECUPERO' => ['bg-red-100 text-red-700',     'No recuperó → ' . number_format($r->NOTA, 1)],
+                                    'INTERMEDIO'  => ['bg-blue-100 text-blue-700',   'Intermedia → ' . number_format((float)($r->nota_recuperacion ?? 0), 1)],
+                                    default       => null,
+                                };
+                                $asisBadge = match($r->asistencia) {
+                                    'PRESENTO'    => ['bg-emerald-100 text-emerald-700', '✅ Presentó'],
+                                    'NO_PRESENTO' => ['bg-orange-100 text-orange-700',   '🚫 No presentó'],
+                                    default       => null,
+                                };
+                            @endphp
+                            <li class="px-5 py-3">
+                                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                                    <span class="font-mono text-xs text-gray-500 w-16 shrink-0">{{ $r->CODIGO_ALUM }}</span>
+                                    <span class="font-medium text-gray-800">
+                                        {{ $r->APELLIDO1 }} {{ $r->APELLIDO2 }} {{ $r->NOMBRE1 }} {{ $r->NOMBRE2 }}
+                                    </span>
+                                    <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                                        {{ $r->CURSO }}
+                                    </span>
+                                    <span class="text-xs text-gray-600">{{ $r->NOMBRE_MAT }}</span>
+                                    <span class="text-xs text-gray-500">
+                                        Nota: <strong class="text-red-600">{{ number_format($r->NOTA, 1) }}</strong>
+                                    </span>
+                                    @if(!$r->elegible)
+                                        <span class="text-xs text-red-500 font-semibold">❌ {{ $r->razon_no_elegible }}</span>
+                                    @endif
+                                    @if(empty($r->horario))
+                                        <span class="text-xs bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">
+                                            Sin publicar
+                                        </span>
+                                    @endif
+                                    <span class="ml-auto flex flex-wrap items-center gap-1.5 justify-end">
+                                        @if($asisBadge)
+                                            <span class="text-xs font-semibold {{ $asisBadge[0] }} px-2 py-0.5 rounded-full whitespace-nowrap">
+                                                {{ $asisBadge[1] }}
+                                            </span>
+                                        @endif
+                                        @if($resBadge)
+                                            <span class="text-xs font-semibold {{ $resBadge[0] }} px-2 py-0.5 rounded-full whitespace-nowrap">
+                                                {{ $resBadge[1] }}
+                                            </span>
+                                        @endif
+                                        @if(!$asisBadge && !$resBadge)
+                                            <span class="text-xs font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full whitespace-nowrap">
+                                                Pendiente
+                                            </span>
+                                        @endif
+                                    </span>
+                                </div>
+
+                                @if($r->elegible && $recupAbierto)
+                                    <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        {{-- Paso 1: Asistencia --}}
+                                        <form method="POST" action="{{ route('derroteros.resolver') }}"
+                                            class="bg-emerald-50/50 border border-emerald-200 rounded-lg p-3">
+                                            @csrf
+                                            <input type="hidden" name="accion"      value="asistencia">
+                                            <input type="hidden" name="CODIGO_ALUM" value="{{ $r->CODIGO_ALUM }}">
+                                            <input type="hidden" name="CODIGO_MAT"  value="{{ $r->CODIGO_MAT }}">
+                                            <input type="hidden" name="periodo"     value="{{ $periodoSelec }}">
+                                            <p class="text-xs font-semibold text-emerald-800 uppercase tracking-wide mb-2">1. Asistencia</p>
+                                            <div class="flex gap-2 flex-wrap">
+                                                <button type="submit" name="asistencia" value="PRESENTO"
+                                                    class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                                                    ✅ Presentó
+                                                </button>
+                                                <button type="submit" name="asistencia" value="NO_PRESENTO"
+                                                    onclick="return confirm('¿Confirmar que {{ $r->NOMBRE1 }} {{ $r->APELLIDO1 }} no presentó la recuperación?')"
+                                                    class="bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                                                    🚫 No presentó
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                        {{-- Paso 2: Calificación --}}
+                                        <form method="POST" action="{{ route('derroteros.resolver') }}"
+                                            class="bg-blue-50/40 border border-blue-200 rounded-lg p-3">
+                                            @csrf
+                                            <input type="hidden" name="accion"      value="nota">
+                                            <input type="hidden" name="CODIGO_ALUM" value="{{ $r->CODIGO_ALUM }}">
+                                            <input type="hidden" name="CODIGO_MAT"  value="{{ $r->CODIGO_MAT }}">
+                                            <input type="hidden" name="periodo"     value="{{ $periodoSelec }}">
+                                            <p class="text-xs font-semibold text-blue-800 uppercase tracking-wide mb-2">2. Calificación (opcional)</p>
+                                            <div class="flex flex-wrap items-end gap-2">
+                                                <button type="submit" name="resolucion" value="RECUPERO"
+                                                    onclick="return confirm('¿Confirmar que {{ $r->NOMBRE1 }} {{ $r->APELLIDO1 }} recuperó? La nota quedará en 7.0')"
+                                                    class="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                                                    ✅ Recuperó (7.0)
+                                                </button>
+                                                <button type="submit" name="resolucion" value="NO_RECUPERO"
+                                                    onclick="return confirm('¿Confirmar que no recuperó? La nota quedará en {{ number_format($r->NOTA, 1) }}')"
+                                                    class="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                                                    ❌ No recuperó
+                                                </button>
+                                                <div class="flex items-end gap-2">
+                                                    <div>
+                                                        <label class="block text-xs text-gray-500 mb-1">
+                                                            Intermedia ({{ number_format($r->NOTA, 1) }} &lt; x ≤ 7.0)
+                                                        </label>
+                                                        <input type="number"
+                                                            name="nota_recuperacion"
+                                                            min="{{ $r->NOTA + 0.1 }}" max="7" step="0.1"
+                                                            placeholder="{{ $r->nota_intermedia }}"
+                                                            class="w-24 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                                    </div>
+                                                    <button type="submit" name="resolucion" value="INTERMEDIO"
+                                                        onclick="return validarIntermedia(this, {{ $r->NOTA }}, '{{ $r->NOMBRE1 }} {{ $r->APELLIDO1 }}')"
+                                                        class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                                                        💙 Guardar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endforeach
+        </div>
+    @endif
+
     @if($matSelec && $cursoSelec)
         @php
             $fechaRecupHumano = $recupFecha
@@ -133,76 +283,104 @@
                         </div>
                     </div>
 
-                    {{-- Resolución actual --}}
-                    @if($m->resolucion !== 'PENDIENTE')
-                    @php
-                        $badge = match($m->resolucion) {
-                            'RECUPERO'    => 'bg-green-100 text-green-700',
-                            'NO_RECUPERO' => 'bg-red-100 text-red-700',
-                            'INTERMEDIO'  => 'bg-blue-100 text-blue-700',
-                            'NO_ASISTIO'  => 'bg-orange-100 text-orange-700',
-                            default       => 'bg-gray-100 text-gray-500',
-                        };
-                        $label = match($m->resolucion) {
-                            'RECUPERO'    => 'Recuperó → 7.0',
-                            'NO_RECUPERO' => 'No recuperó → ' . number_format($m->NOTA, 1),
-                            'INTERMEDIO'  => 'Intermedia → ' . number_format($m->nota_recuperacion, 1),
-                            'NO_ASISTIO'  => 'No asistió → ' . number_format($m->NOTA, 1),
-                            default       => '',
-                        };
-                    @endphp
-                    <span class="inline-block {{ $badge }} text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
-                        {{ $label }}
-                    </span>
-                    @endif
+                    {{-- Estado actual: asistencia + resolución --}}
+                    <div class="flex flex-col items-end gap-1">
+                        @if($m->asistencia === 'PRESENTO')
+                            <span class="inline-block bg-emerald-100 text-emerald-700 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                                ✅ Presentó
+                            </span>
+                        @elseif($m->asistencia === 'NO_PRESENTO')
+                            <span class="inline-block bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                                🚫 No presentó
+                            </span>
+                        @endif
+
+                        @if($m->resolucion !== 'PENDIENTE')
+                        @php
+                            $badge = match($m->resolucion) {
+                                'RECUPERO'    => 'bg-green-100 text-green-700',
+                                'NO_RECUPERO' => 'bg-red-100 text-red-700',
+                                'INTERMEDIO'  => 'bg-blue-100 text-blue-700',
+                                default       => 'bg-gray-100 text-gray-500',
+                            };
+                            $label = match($m->resolucion) {
+                                'RECUPERO'    => 'Recuperó → 7.0',
+                                'NO_RECUPERO' => 'No recuperó → ' . number_format($m->NOTA, 1),
+                                'INTERMEDIO'  => 'Intermedia → ' . number_format($m->nota_recuperacion, 1),
+                                default       => '',
+                            };
+                        @endphp
+                        <span class="inline-block {{ $badge }} text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                            {{ $label }}
+                        </span>
+                        @endif
+                    </div>
                 </div>
 
                 @if($m->elegible && $recupAbierto)
-                <form method="POST" action="{{ route('derroteros.resolver') }}" class="mt-3 flex flex-wrap items-end gap-3">
-                    @csrf
-                    <input type="hidden" name="CODIGO_ALUM" value="{{ $m->CODIGO_ALUM }}">
-                    <input type="hidden" name="CODIGO_MAT"  value="{{ $m->CODIGO_MAT }}">
-                    <input type="hidden" name="periodo"     value="{{ $periodoSelec }}">
-
-                    {{-- Opciones --}}
-                    <div class="flex gap-2 flex-wrap">
-                        <button type="submit" name="resolucion" value="RECUPERO"
-                            onclick="return confirm('¿Confirmar que {{ $m->NOMBRE1 }} {{ $m->APELLIDO1 }} recuperó? La nota quedará en 7.0')"
-                            class="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
-                            ✅ Recuperó (7.0)
-                        </button>
-                        <button type="submit" name="resolucion" value="NO_RECUPERO"
-                            onclick="return confirm('¿Confirmar que no recuperó? La nota quedará en {{ number_format($m->NOTA, 1) }}')"
-                            class="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
-                            ❌ No recuperó
-                        </button>
-                        <button type="submit" name="resolucion" value="NO_ASISTIO"
-                            onclick="return confirm('¿Confirmar que {{ $m->NOMBRE1 }} {{ $m->APELLIDO1 }} no asistió a la recuperación? La nota quedará en {{ number_format($m->NOTA, 1) }}')"
-                            class="bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
-                            🚫 No asistió
-                        </button>
-                    </div>
-
-                    {{-- Nota intermedia --}}
-                    <div class="flex items-end gap-2" id="form-intermedio-{{ $m->CODIGO_ALUM }}">
-                        <div>
-                            <label class="block text-xs text-gray-500 mb-1">
-                                Nota intermedia ({{ number_format($m->NOTA, 1) }} &lt; x ≤ 7.0)
-                            </label>
-                            <input type="number"
-                                name="nota_recuperacion"
-                                id="nota-intermedia-{{ $m->CODIGO_ALUM }}"
-                                min="{{ $m->NOTA + 0.1 }}" max="7" step="0.1"
-                                placeholder="{{ $m->nota_intermedia }}"
-                                class="w-24 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {{-- Paso 1: Asistencia --}}
+                    <form method="POST" action="{{ route('derroteros.resolver') }}"
+                        class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        @csrf
+                        <input type="hidden" name="accion"      value="asistencia">
+                        <input type="hidden" name="CODIGO_ALUM" value="{{ $m->CODIGO_ALUM }}">
+                        <input type="hidden" name="CODIGO_MAT"  value="{{ $m->CODIGO_MAT }}">
+                        <input type="hidden" name="periodo"     value="{{ $periodoSelec }}">
+                        <p class="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">1. Asistencia</p>
+                        <div class="flex gap-2 flex-wrap">
+                            <button type="submit" name="asistencia" value="PRESENTO"
+                                class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                                ✅ Presentó
+                            </button>
+                            <button type="submit" name="asistencia" value="NO_PRESENTO"
+                                onclick="return confirm('¿Confirmar que {{ $m->NOMBRE1 }} {{ $m->APELLIDO1 }} no presentó la recuperación?')"
+                                class="bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                                🚫 No presentó
+                            </button>
                         </div>
-                        <button type="submit" name="resolucion" value="INTERMEDIO"
-                            onclick="return validarIntermedia(this, {{ $m->NOTA }}, '{{ $m->NOMBRE1 }} {{ $m->APELLIDO1 }}')"
-                            class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
-                            💙 Guardar intermedia
-                        </button>
-                    </div>
-                </form>
+                    </form>
+
+                    {{-- Paso 2: Nota (opcional, puede registrarse después) --}}
+                    <form method="POST" action="{{ route('derroteros.resolver') }}"
+                        class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        @csrf
+                        <input type="hidden" name="accion"      value="nota">
+                        <input type="hidden" name="CODIGO_ALUM" value="{{ $m->CODIGO_ALUM }}">
+                        <input type="hidden" name="CODIGO_MAT"  value="{{ $m->CODIGO_MAT }}">
+                        <input type="hidden" name="periodo"     value="{{ $periodoSelec }}">
+                        <p class="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">2. Nota (opcional)</p>
+                        <div class="flex flex-wrap items-end gap-2">
+                            <button type="submit" name="resolucion" value="RECUPERO"
+                                onclick="return confirm('¿Confirmar que {{ $m->NOMBRE1 }} {{ $m->APELLIDO1 }} recuperó? La nota quedará en 7.0')"
+                                class="bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                                ✅ Recuperó (7.0)
+                            </button>
+                            <button type="submit" name="resolucion" value="NO_RECUPERO"
+                                onclick="return confirm('¿Confirmar que no recuperó? La nota quedará en {{ number_format($m->NOTA, 1) }}')"
+                                class="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                                ❌ No recuperó
+                            </button>
+                            <div class="flex items-end gap-2">
+                                <div>
+                                    <label class="block text-xs text-gray-500 mb-1">
+                                        Intermedia ({{ number_format($m->NOTA, 1) }} &lt; x ≤ 7.0)
+                                    </label>
+                                    <input type="number"
+                                        name="nota_recuperacion"
+                                        min="{{ $m->NOTA + 0.1 }}" max="7" step="0.1"
+                                        placeholder="{{ $m->nota_intermedia }}"
+                                        class="w-24 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                </div>
+                                <button type="submit" name="resolucion" value="INTERMEDIO"
+                                    onclick="return validarIntermedia(this, {{ $m->NOTA }}, '{{ $m->NOMBRE1 }} {{ $m->APELLIDO1 }}')"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                                    💙 Guardar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
                 @endif
             </div>
             @endforeach
