@@ -64,6 +64,9 @@
             <div class="px-5 py-3 bg-indigo-700 text-white">
                 <h3 class="font-bold text-sm uppercase tracking-wide">
                     Mis recuperaciones programadas — Período {{ $periodoSelec }}
+                    @if($matSelec || $cursoSelec)
+                        <span class="ml-2 text-xs font-normal bg-indigo-500/40 px-2 py-0.5 rounded-full">filtrado</span>
+                    @endif
                 </h3>
                 <p class="text-indigo-100 text-xs mt-0.5">
                     Estudiantes citados, agrupados por bloque. Puedes resolver desde aquí mismo.
@@ -241,13 +244,13 @@
 
         @if($derroteros->isEmpty())
             <div class="bg-green-50 border border-green-200 text-green-700 rounded-xl p-4 text-sm">
-                ✅ Ningún estudiante del curso <strong>{{ $cursoSelec }}</strong> tiene derrotero en <strong>{{ $materiaNombre }}</strong> para el período {{ $periodoSelec }}.
+                ✅ Todos los derroteros de <strong>{{ $materiaNombre }}</strong> en el curso <strong>{{ $cursoSelec }}</strong> ya están programados en una franja (ver arriba) o no hay registros pendientes.
             </div>
         @else
         <div class="bg-white rounded-xl shadow overflow-hidden">
             <div class="px-5 py-3 bg-red-800 text-white">
                 <h3 class="font-bold text-sm uppercase tracking-wide">{{ $materiaNombre }} — Curso {{ $cursoSelec }} — Período {{ $periodoSelec }}</h3>
-                <p class="text-red-200 text-xs mt-0.5">Estudiantes con nota menor a 7.0</p>
+                <p class="text-red-200 text-xs mt-0.5">Pendientes de programar (sin franja asignada)</p>
             </div>
 
             @foreach($derroteros as $codigoAlum => $materias)

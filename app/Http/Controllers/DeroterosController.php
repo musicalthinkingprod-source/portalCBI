@@ -286,14 +286,23 @@ class DeroterosController extends Controller
 
         // Vista logística: todas las recuperaciones del docente con franja
         // asignada, agrupadas por bloque para saber de un vistazo qué
-        // estudiantes debían presentarse en cada franja del día.
-        $programadasPorBloque = $this->cargarProgramadasPorBloque($profile, $esSuperior, $periodoSelec, $anio);
+        // estudiantes debían presentarse en cada franja del día. Si hay
+        // filtro activo de materia/curso, se filtran también aquí.
+        $programadasPorBloque = $this->cargarProgramadasPorBloque(
+            $profile, $esSuperior, $periodoSelec, $anio, $matSelec, $cursoSelec
+        );
         $franjasMap           = self::franjas();
 
-        // Derroteros de la materia/curso seleccionada (agrupados por alumno)
+        // Derroteros de la materia/curso seleccionada (agrupados por alumno).
+        // Solo se muestran los estudiantes SIN franja asignada para evitar
+        // duplicarlos con la sección de bloques de arriba.
         $derroteros = collect();
         if ($matSelec && $cursoSelec) {
             $derroteros = $this->calcularDerroteros($periodoSelec, $anio, $cursoSelec, null, $matSelec);
+
+            $derroteros = $derroteros->map(function ($materias) {
+                return $materias->filter(fn($m) => $m->franja === null || $m->franja === '')->values();
+            })->filter(fn($materias) => $materias->isNotEmpty());
 
             $derroteros = match ($ordenSelec) {
                 'codigo'  => $derroteros->sortKeys(),
@@ -325,7 +334,7 @@ class DeroterosController extends Controller
      * previas y nota intermedia sugerida (necesarias para resolver desde
      * la vista por bloque). Agrupada por FRANJA y ordenada por apellido.
      */
-    private function cargarProgramadasPorBloque(string $profile, bool $esSuperior, int $periodo, int $anio): \Illuminate\Support\Collection
+    private function cargarProgramadasPorBloque(string $profile, bool $esSuperior, int $periodo, int $anio, ?int $matSelec = null, ?string $cursoSelec = null): \Illuminate\Support\Collection
     {
         $grupos = $this->calcularDerroteros($periodo, $anio, null, null, null, true);
 
@@ -333,6 +342,8 @@ class DeroterosController extends Controller
         foreach ($grupos as $materias) {
             foreach ($materias as $m) {
                 if ($m->franja === null || $m->franja === '') continue;
+                if ($matSelec   && (int) $m->CODIGO_MAT !== (int) $matSelec) continue;
+                if ($cursoSelec && (string) $m->CURSO    !== (string) $cursoSelec) continue;
                 $items->push($m);
             }
         }
