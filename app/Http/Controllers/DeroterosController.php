@@ -389,18 +389,22 @@ class DeroterosController extends Controller
             return back()->withErrors(['resolucion' => $msg]);
         }
 
-        $notaOriginal = DB::table($this->tablaNotas($anio))
-            ->where('CODIGO_ALUM', $codigoAlum)
-            ->where('CODIGO_MAT', $codigoMat)
-            ->where('PERIODO', $periodo)
-            ->value('NOTA');
-
-        $existe = DB::table('Derroteros')
+        $derroteroPrev = DB::table('Derroteros')
             ->where('CODIGO_ALUM', $codigoAlum)
             ->where('CODIGO_MAT', $codigoMat)
             ->where('PERIODO', $periodo)
             ->where('ANIO', $anio)
-            ->exists();
+            ->first();
+        $existe = (bool) $derroteroPrev;
+
+        // NOTA_ORIGINAL siempre es la nota antes de cualquier recuperación.
+        // Si ya hay un registro previo con NOTA_ORIGINAL, lo conservamos
+        // (la NOTAS de la tabla ya fue sobreescrita por la primera resolución).
+        $notaOriginal = $derroteroPrev->NOTA_ORIGINAL ?? DB::table($this->tablaNotas($anio))
+            ->where('CODIGO_ALUM', $codigoAlum)
+            ->where('CODIGO_MAT', $codigoMat)
+            ->where('PERIODO', $periodo)
+            ->value('NOTA');
 
         // Acción 1: registrar/cambiar asistencia (sin tocar la nota)
         if ($accion === 'asistencia') {
