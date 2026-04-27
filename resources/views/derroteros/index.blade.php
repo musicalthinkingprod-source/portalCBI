@@ -75,6 +75,7 @@
                         <th class="px-4 py-2 text-center w-20">Nota</th>
                         <th class="px-4 py-2 text-center w-20">P. ant.</th>
                         <th class="px-4 py-2 text-left w-52">Elegibilidad</th>
+                        <th class="px-4 py-2 text-center w-32">Asistencia</th>
                         <th class="px-4 py-2 text-center w-36">Resolución</th>
                         <th class="px-4 py-2 text-center w-20">Nota final</th>
                     </tr>
@@ -94,11 +95,23 @@
                         </td>
                         <td class="px-4 py-2 text-center">
                             @php
+                                $asistBadge = match($m->asistencia ?? null) {
+                                    'PRESENTO'    => ['bg-emerald-100 text-emerald-700', '✅ Presentó'],
+                                    'NO_PRESENTO' => ['bg-orange-100 text-orange-700', '🚫 No presentó'],
+                                    default       => ['bg-gray-100 text-gray-400', '— Sin marcar'],
+                                };
+                            @endphp
+                            <span class="inline-block {{ $asistBadge[0] }} text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap">
+                                {{ $asistBadge[1] }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-2 text-center">
+                            @php
                                 $badge = match($m->resolucion) {
                                     'RECUPERO'    => ['bg-green-100 text-green-700', 'Recuperó'],
                                     'NO_RECUPERO' => ['bg-red-100 text-red-700', 'No recuperó'],
                                     'INTERMEDIO'  => ['bg-blue-100 text-blue-700', 'Intermedia'],
-                                    default       => ['bg-yellow-100 text-yellow-700', 'Pendiente'],
+                                    default       => ['bg-yellow-100 text-yellow-700', 'Sin calificar'],
                                 };
                             @endphp
                             <span class="inline-block {{ $badge[0] }} text-xs font-semibold px-2 py-0.5 rounded-full">
