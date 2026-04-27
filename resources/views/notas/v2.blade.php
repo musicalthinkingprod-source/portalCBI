@@ -123,10 +123,14 @@
                 <input type="hidden" name="categoria"  value="{{ $cat }}">
                 <div class="flex gap-2 items-end">
                     <div class="flex-1">
-                        <label class="block text-xs text-gray-500 mb-1">Nombre de la actividad</label>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs text-gray-500">Nombre de la actividad</label>
+                            <span class="contador-chars text-xs text-gray-400" data-max="100">0/100</span>
+                        </div>
                         <input type="text" name="nombre_actividad" required
+                            data-validar-largo="100"
                             placeholder="Ej: Taller #1, Quiz, Exposición…"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 {{ $cfg['ring'] }}">
+                            class="input-nombre-actividad w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 {{ $cfg['ring'] }}">
                     </div>
                     <div class="w-20">
                         <label class="block text-xs text-gray-500 mb-1" title="Peso relativo. Dejar vacío = igual peso que las demás">
@@ -215,7 +219,13 @@
                                 <th class="px-2 py-2 text-center font-semibold text-gray-600 min-w-[90px] border-r border-gray-200">
                                     <div class="flex flex-col items-center gap-1">
                                         <span class="{{ $cfg['badge'] }} px-1.5 py-0.5 rounded text-xs font-bold">{{ $cat }}</span>
-                                        <span class="text-xs text-gray-700 max-w-[100px] leading-tight text-center">{{ $col->nombre_actividad }}</span>
+                                        <div class="flex flex-col items-center gap-0.5">
+                                            <span class="nombre-actividad-display text-xs text-gray-700 max-w-[100px] leading-tight text-center" data-col-id="{{ $col->id }}">{{ $col->nombre_actividad }}</span>
+                                            <button type="button"
+                                                onclick="editarNombreActividad({{ $col->id }})"
+                                                class="nombre-actividad-edit text-gray-400 hover:text-blue-600 text-xs leading-none"
+                                                title="Editar nombre">✏️</button>
+                                        </div>
                                         {{-- Peso editable --}}
                                         <div class="flex items-center gap-1 mt-0.5" title="Peso ponderado (1 = igual, 2 = doble, etc.)">
                                             <span class="text-gray-400 text-xs">×</span>
@@ -394,6 +404,13 @@
     <input id="peso-input-hidden" name="peso">
 </form>
 
+<form id="form-update-nombre" method="POST" style="display:none">
+    @csrf
+    @method('PATCH')
+    <input id="nombre-input-hidden" name="nombre_actividad">
+</form>
+
+
 @push('scripts')
 <script>
     // ── Eliminar columna ─────────────────────────────────────────────────────
@@ -405,6 +422,88 @@
         form.action = baseUrlColumna + '/' + id;
         form.submit();
     }
+
+    // ── Editar nombre de actividad (inline) ──────────────────────────────────
+    function editarNombreActividad(id) {
+        const span = document.querySelector(`.nombre-actividad-display[data-col-id="${id}"]`);
+        if (!span || span.dataset.editing === '1') return;
+        const actual = span.textContent.trim();
+        span.dataset.editing = '1';
+
+        const input = document.createElement('textarea');
+        input.value = actual;
+        input.rows = 2;
+        input.maxLength = 100;
+        input.className = 'w-[100px] text-xs text-gray-800 leading-tight text-center border border-blue-400 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-400 resize-none';
+        span.replaceWith(input);
+        input.focus();
+        input.select();
+
+        let cancelado = false;
+        function restaurar(texto) {
+            const nuevoSpan = document.createElement('span');
+            nuevoSpan.className = 'nombre-actividad-display text-xs text-gray-700 max-w-[100px] leading-tight text-center';
+            nuevoSpan.dataset.colId = id;
+            nuevoSpan.textContent = texto;
+            input.replaceWith(nuevoSpan);
+        }
+
+        function guardar() {
+            if (cancelado) return;
+            const limpio = input.value.trim();
+            if (limpio === '') { alert('El nombre no puede estar vacío.'); input.focus(); return; }
+            if (limpio.length > 100) {
+                alert(`El nombre tiene ${limpio.length} caracteres y el máximo permitido es 100. Acórtalo antes de guardar.`);
+                input.focus();
+                return;
+            }
+            if (limpio === actual) { restaurar(actual); return; }
+            const form = document.getElementById('form-update-nombre');
+            form.action = baseUrlColumna + '/' + id + '/nombre';
+            document.getElementById('nombre-input-hidden').value = limpio;
+            form.submit();
+        }
+
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); guardar(); }
+            else if (e.key === 'Escape')          { cancelado = true; restaurar(actual); }
+        });
+        input.addEventListener('blur', guardar);
+    }
+
+    // ── Contador y validación de caracteres en nombre_actividad ─────────────
+    document.querySelectorAll('.input-nombre-actividad').forEach(input => {
+        const max     = parseInt(input.dataset.validarLargo || '100', 10);
+        const wrapper = input.closest('.flex-1');
+        const contador = wrapper ? wrapper.querySelector('.contador-chars') : null;
+        function actualizar() {
+            const len = input.value.length;
+            if (contador) contador.textContent = `${len}/${max}`;
+            const excede = len > max;
+            input.classList.toggle('border-red-500', excede);
+            input.classList.toggle('text-red-700', excede);
+            input.classList.toggle('bg-red-50', excede);
+            if (contador) {
+                contador.classList.toggle('text-red-600', excede);
+                contador.classList.toggle('font-semibold', excede);
+                contador.classList.toggle('text-gray-400', !excede);
+            }
+        }
+        input.addEventListener('input', actualizar);
+        input.addEventListener('paste', () => setTimeout(actualizar, 0));
+        actualizar();
+
+        const form = input.closest('form');
+        if (form) {
+            form.addEventListener('submit', e => {
+                if (input.value.length > max) {
+                    e.preventDefault();
+                    alert(`El nombre de la actividad tiene ${input.value.length} caracteres y el máximo permitido es ${max}. Acórtalo antes de guardar.`);
+                    input.focus();
+                }
+            });
+        }
+    });
 
     // ── Actualizar peso de columna ───────────────────────────────────────────
     document.querySelectorAll('.peso-col-input').forEach(input => {

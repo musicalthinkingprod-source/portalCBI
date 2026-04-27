@@ -224,6 +224,44 @@ class NotasV2Controller extends Controller
         return redirect()->back()->with('success', 'Columna eliminada.');
     }
 
+    public function actualizarNombre(Request $request, $id)
+    {
+        $request->validate([
+            'nombre_actividad' => 'required|string|max:100',
+        ]);
+
+        $col = DB::table('planilla_columnas')->where('id', $id)->first();
+        if (!$col) {
+            return back()->with('error', 'Actividad no encontrada.');
+        }
+
+        $nuevo  = trim($request->nombre_actividad);
+        $previo = $col->nombre_actividad;
+
+        if ($nuevo === $previo) {
+            return back();
+        }
+
+        DB::transaction(function () use ($id, $col, $nuevo, $previo) {
+            DB::table('planilla_columnas_historial')->insert([
+                'columna_id'       => $id,
+                'nombre_anterior'  => $previo,
+                'nombre_nuevo'     => $nuevo,
+                'codigo_doc'       => auth()->user()->PROFILE,
+                'created_at'       => now(),
+            ]);
+
+            DB::table('planilla_columnas')
+                ->where('id', $id)
+                ->update([
+                    'nombre_actividad' => $nuevo,
+                    'updated_at'       => now(),
+                ]);
+        });
+
+        return back()->with('success', 'Nombre de actividad actualizado.');
+    }
+
     public function entregar(Request $request)
     {
         $request->validate([

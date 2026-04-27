@@ -339,6 +339,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/notas-v2/columna', [NotasV2Controller::class, 'agregarColumna'])->name('notas.v2.columna.store');
         Route::delete('/notas-v2/columna/{id}', [NotasV2Controller::class, 'eliminarColumna'])->name('notas.v2.columna.destroy');
         Route::patch('/notas-v2/columna/{id}/peso', [NotasV2Controller::class, 'actualizarPeso'])->name('notas.v2.columna.peso');
+        Route::patch('/notas-v2/columna/{id}/nombre', [NotasV2Controller::class, 'actualizarNombre'])->name('notas.v2.columna.nombre');
         Route::post('/notas-v2/guardar', [NotasV2Controller::class, 'guardar'])->name('notas.v2.guardar');
         Route::post('/notas-v2/entregar', [NotasV2Controller::class, 'entregar'])->name('notas.v2.entregar');
         Route::get('/english-acq', [EnglishAcqController::class, 'docente'])->name('english-acq.docente');
