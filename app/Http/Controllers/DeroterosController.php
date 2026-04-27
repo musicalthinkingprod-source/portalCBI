@@ -44,8 +44,11 @@ class DeroterosController extends Controller
                          'e.APELLIDO1', 'e.APELLIDO2', 'e.NOMBRE1', 'e.NOMBRE2', 'e.CURSO',
                          'm.NOMBRE_MAT');
 
-            if ($curso)     $queryPendientes->where('e.CURSO', $curso);
-            if ($codigoMat) $queryPendientes->where('n.CODIGO_MAT', $codigoMat);
+            if ($curso) $queryPendientes->where('e.CURSO', $curso);
+            // Nota: NO filtramos por $codigoMat aquí. La regla de "máximo 4
+            // materias recuperables" debe ver todas las materias perdidas del
+            // estudiante; si filtramos antes, la regla nunca dispara para los
+            // docentes y muestra elegibilidad incorrecta.
             if ($busqueda) {
                 $queryPendientes->where(function ($q) use ($busqueda) {
                     $q->where('e.APELLIDO1', 'like', "%$busqueda%")
@@ -75,8 +78,8 @@ class DeroterosController extends Controller
                              'e.APELLIDO1', 'e.APELLIDO2', 'e.NOMBRE1', 'e.NOMBRE2', 'e.CURSO',
                              'm.NOMBRE_MAT');
 
-                if ($curso)     $queryResueltos->where('e.CURSO', $curso);
-                if ($codigoMat) $queryResueltos->where('d.CODIGO_MAT', $codigoMat);
+                if ($curso) $queryResueltos->where('e.CURSO', $curso);
+                // Mismo motivo que arriba: no filtramos por $codigoMat aquí.
                 if ($busqueda) {
                     $queryResueltos->where(function ($q) use ($busqueda) {
                         $q->where('e.APELLIDO1', 'like', "%$busqueda%")
@@ -178,7 +181,7 @@ class DeroterosController extends Controller
         });
 
         // ── 6. Regla máximo 4 materias ─────────────────────────────────────────
-        return $fallos->groupBy('CODIGO_ALUM')->map(function ($materias) {
+        $resultado = $fallos->groupBy('CODIGO_ALUM')->map(function ($materias) {
             $elegibles   = $materias->filter(fn($m) => $m->elegible)->sortBy('NOTA')->values();
             $noElegibles = $materias->filter(fn($m) => !$m->elegible)->values();
 
@@ -192,6 +195,15 @@ class DeroterosController extends Controller
 
             return $noElegibles->concat($elegibles)->sortBy('NOMBRE_MAT')->values();
         });
+
+        // ── 7. Filtrar por materia (después de aplicar reglas globales) ────────
+        if ($codigoMat) {
+            $resultado = $resultado->map(function ($materias) use ($codigoMat) {
+                return $materias->filter(fn($m) => (int) $m->CODIGO_MAT === (int) $codigoMat)->values();
+            })->filter(fn($materias) => $materias->isNotEmpty());
+        }
+
+        return $resultado;
     }
 
     // ─── Visualizador general ────────────────────────────────────────────────
