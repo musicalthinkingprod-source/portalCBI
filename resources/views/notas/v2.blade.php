@@ -261,7 +261,7 @@
                         <tr class="hover:bg-gray-50" data-codigo="{{ $est->CODIGO }}">
                             <td class="px-4 py-2 font-medium text-gray-800 sticky left-0 bg-white border-r border-gray-200 z-10 whitespace-nowrap">
                                 <span class="text-gray-400 font-mono text-xs mr-1">{{ $est->CODIGO }}</span>
-                                {{ $est->APELLIDO1 }} {{ $est->APELLIDO2 }} {{ $est->NOMBRE1 }}
+                                {{ $est->APELLIDO1 }} {{ $est->APELLIDO2 }} {{ $est->NOMBRE1 }} {{ $est->NOMBRE2 }}
                             </td>
 
                             @foreach($categorias as $cat => $cfg)
