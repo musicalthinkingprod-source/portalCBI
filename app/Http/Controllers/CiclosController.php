@@ -84,11 +84,53 @@ class CiclosController extends Controller
         $anio    = (int) $request->input('anio', date('Y'));
         $periodo = (int) $request->input('periodo', 1);
 
-        $ciclos = DB::table('ciclos_academicos')
+        // ── Inicios de ciclo (dia_ciclo=1) del año, recortados al período ──
+        $todosInicios = DB::table('calendario_academico')
             ->where('anio', $anio)
-            ->orderBy('numero')
-            ->get();
+            ->where('dia_ciclo', 1)
+            ->orderBy('fecha')
+            ->distinct()
+            ->pluck('fecha')
+            ->values();
 
+        $offsetPeriodo = ($periodo - 1) * 7;
+        $iniciosCiclo  = $todosInicios->slice($offsetPeriodo, 7)->values();
+
+        // ── Días académicos del período (1–6 por ciclo, en orden cronológico) ──
+        $diasGrid = collect(); // [{fecha, dia_ciclo, ciclo_num, evento}]
+        $rangoFin = null;
+
+        if ($iniciosCiclo->isNotEmpty()) {
+            $primeroPeriodo = $iniciosCiclo->first();
+
+            // Fin del período = día anterior al siguiente inicio global, o último del año
+            $siguienteInicio = $todosInicios->slice($offsetPeriodo + 7, 1)->first();
+            $rangoFin = $siguienteInicio
+                ? \Carbon\Carbon::parse($siguienteInicio)->subDay()->toDateString()
+                : ($anio . '-12-31');
+
+            $diasGrid = DB::table('calendario_academico')
+                ->where('anio', $anio)
+                ->whereBetween('fecha', [$primeroPeriodo, $rangoFin])
+                ->whereBetween('dia_ciclo', [1, 6])
+                ->orderBy('fecha')
+                ->select('fecha', 'dia_ciclo', 'evento')
+                ->get();
+
+            // Asignar número de ciclo (1–7) a cada día
+            $iniciosArr = $iniciosCiclo->all();
+            $diasGrid = $diasGrid->map(function ($d) use ($iniciosArr) {
+                $num = 0;
+                foreach ($iniciosArr as $i => $ini) {
+                    if ($d->fecha >= $ini) $num = $i + 1;
+                    else break;
+                }
+                $d->ciclo_num = $num ?: null;
+                return $d;
+            })->filter(fn($d) => $d->ciclo_num !== null)->values();
+        }
+
+        // ── Asignaciones calificables ─────────────────────────────────────
         $asignaciones = DB::table('ASIGNACION_PCM as a')
             ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
             ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_DOC', '=', 'd.CODIGO_DOC')
@@ -98,36 +140,41 @@ class CiclosController extends Controller
             ->orderBy('d.NOMBRE_DOC')->orderBy('m.NOMBRE_MAT')->orderBy('a.CURSO')
             ->get();
 
-        // Para cada ciclo: cuántas notas registró cada combinación doc+mat+curso
-        $conteos = []; // [ciclo_id][doc|mat|curso] = int
+        // ── Conteos por día × (docente, materia, curso) ────────────────────
+        $conteos = []; // [fecha][doc|mat|curso] = int
 
-        foreach ($ciclos as $ciclo) {
+        if ($diasGrid->isNotEmpty()) {
             $filas = DB::table('planilla_notas as pn')
                 ->join('planilla_columnas as pc', 'pc.id', '=', 'pn.columna_id')
                 ->where('pc.anio', $anio)
                 ->where('pc.periodo', $periodo)
-                ->whereBetween('pn.updated_at', [
-                    $ciclo->fecha_inicio . ' 00:00:00',
-                    $ciclo->fecha_fin    . ' 23:59:59',
+                ->whereBetween(DB::raw('DATE(pn.updated_at)'), [
+                    $diasGrid->first()->fecha,
+                    $diasGrid->last()->fecha,
                 ])
                 ->whereNotNull('pn.nota')
                 ->select(
                     'pc.codigo_doc',
                     'pc.codigo_mat',
                     'pc.curso',
+                    DB::raw('DATE(pn.updated_at) as fecha'),
                     DB::raw('COUNT(*) as total')
                 )
-                ->groupBy('pc.codigo_doc', 'pc.codigo_mat', 'pc.curso')
+                ->groupBy('pc.codigo_doc', 'pc.codigo_mat', 'pc.curso', DB::raw('DATE(pn.updated_at)'))
                 ->get();
 
             foreach ($filas as $f) {
                 $key = $f->codigo_doc . '|' . $f->codigo_mat . '|' . $f->curso;
-                $conteos[$ciclo->id][$key] = (int) $f->total;
+                $conteos[$f->fecha][$key] = (int) $f->total;
             }
         }
 
+        // Agrupar días por ciclo para el colspan del encabezado
+        $ciclosAgrupados = $diasGrid->groupBy('ciclo_num');
+
         return view('ciclos.informe', compact(
-            'ciclos', 'asignaciones', 'conteos', 'anio', 'periodo'
+            'asignaciones', 'conteos', 'anio', 'periodo',
+            'diasGrid', 'ciclosAgrupados'
         ));
     }
 

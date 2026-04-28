@@ -14,20 +14,27 @@ class ControlPlanillaController extends Controller
         $curso   = $request->input('curso', '');
         $materia = $request->input('materia', '');
 
-        // Opciones de filtro (solo las que existen con notas reales)
+        $esSuperior = in_array(auth()->user()->PROFILE ?? '', ['SuperAd', 'Admin']);
+
+        // Atención a Padres es una materia ficticia (sólo horarios), no aplica aquí.
+        $matExcluidas = [200];
+
+        // Filtros disponibles (basados en planillas con notas)
         $cursosDisponibles = DB::table('planilla_columnas')
             ->where('anio', $anio)
             ->where('periodo', $periodo)
+            ->whereNotIn('codigo_mat', $matExcluidas)
             ->select('curso')->distinct()->orderBy('curso')->pluck('curso');
 
         $materiasDisponibles = DB::table('planilla_columnas')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'planilla_columnas.codigo_mat')
             ->where('planilla_columnas.anio', $anio)
             ->where('planilla_columnas.periodo', $periodo)
+            ->whereNotIn('planilla_columnas.codigo_mat', $matExcluidas)
             ->select('planilla_columnas.codigo_mat', 'm.NOMBRE_MAT')
             ->distinct()->orderBy('m.NOMBRE_MAT')->get();
 
-        // Fechas únicas de inicio de ciclo (dia_ciclo=1), sin duplicados por múltiples eventos
+        // ── Inicios de ciclo (dia_ciclo=1), recortados al período ──
         $todosInicios = DB::table('calendario_academico')
             ->where('anio', $anio)
             ->where('dia_ciclo', 1)
@@ -36,92 +43,107 @@ class ControlPlanillaController extends Controller
             ->pluck('fecha')
             ->values();
 
-        // Los ciclos se reinician cada 7 por período: período 2 empieza en el ciclo 8 global, etc.
-        // Tomamos solo los 7 inicios que corresponden al período seleccionado
-        $offsetPeriodo  = ($periodo - 1) * 7;
-        $iniciosCiclo   = $todosInicios->slice($offsetPeriodo, 7)->values();
+        $offsetPeriodo = ($periodo - 1) * 7;
+        $iniciosCiclo  = $todosInicios->slice($offsetPeriodo, 7)->values();
 
-        // Consulta principal: notas agrupadas por docente + actividad + fecha
-        $query = DB::table('planilla_notas as pn')
-            ->join('planilla_columnas as pc', 'pc.id', '=', 'pn.columna_id')
-            ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'pc.codigo_mat')
-            ->join('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'pc.codigo_doc')
-            ->where('pc.anio', $anio)
-            ->where('pc.periodo', $periodo)
-            ->whereNotNull('pn.nota');
+        // ── Días académicos del período (1-6 por ciclo) ──
+        $diasGrid = collect();
+        if ($iniciosCiclo->isNotEmpty()) {
+            $primeroPeriodo  = $iniciosCiclo->first();
+            $siguienteInicio = $todosInicios->slice($offsetPeriodo + 7, 1)->first();
+            $rangoFin = $siguienteInicio
+                ? \Carbon\Carbon::parse($siguienteInicio)->subDay()->toDateString()
+                : ($anio . '-12-31');
 
-        if ($curso)   $query->where('pc.curso', $curso);
-        if ($materia) $query->where('pc.codigo_mat', $materia);
+            $diasGrid = DB::table('calendario_academico')
+                ->where('anio', $anio)
+                ->whereBetween('fecha', [$primeroPeriodo, $rangoFin])
+                ->whereBetween('dia_ciclo', [1, 6])
+                ->orderBy('fecha')
+                ->select('fecha', 'dia_ciclo', 'evento')
+                ->get();
 
-        $filas = $query->select(
-                'pc.codigo_doc',
-                'd.NOMBRE_DOC',
-                'pc.id as columna_id',
-                'pc.nombre_actividad',
-                'pc.categoria',
-                'pc.codigo_mat',
-                'm.NOMBRE_MAT',
-                'pc.curso',
-                DB::raw('DATE(pn.updated_at) as fecha'),
-                DB::raw('COUNT(pn.id) as cantidad'),
-                DB::raw('MAX(pn.updated_at) as ultima')
-            )
-            ->groupBy(
-                'pc.codigo_doc', 'd.NOMBRE_DOC',
-                'pc.id', 'pc.nombre_actividad', 'pc.categoria',
-                'pc.codigo_mat', 'm.NOMBRE_MAT', 'pc.curso',
-                DB::raw('DATE(pn.updated_at)')
-            )
-            ->orderBy('pc.codigo_doc')
-            ->orderByDesc(DB::raw('DATE(pn.updated_at)'))
-            ->orderBy('pc.id')
-            ->get();
-
-        // Calcula el número de ciclo de una fecha contando fechas únicas de inicio ≤ esa fecha
-        $numeroCiclo = function (string $fecha) use ($iniciosCiclo): ?int {
-            if ($iniciosCiclo->isEmpty()) return null;
-            $num = $iniciosCiclo->filter(fn($d) => $d <= $fecha)->count();
-            return $num ?: null;
-        };
-
-        // Organizar: [codigo_doc => [ciclo_num => [fecha => [actividades]]]]
-        $porDocente = [];
-        foreach ($filas as $fila) {
-            $doc   = $fila->codigo_doc;
-            $fecha = $fila->fecha;
-            $ciclo = $numeroCiclo($fecha);
-
-            if (!isset($porDocente[$doc])) {
-                $porDocente[$doc] = [
-                    'nombre' => $fila->NOMBRE_DOC,
-                    'ciclos' => [],
-                ];
-            }
-
-            $clave = $ciclo ?? 'sin-ciclo';
-
-            if (!isset($porDocente[$doc]['ciclos'][$clave])) {
-                $porDocente[$doc]['ciclos'][$clave] = [
-                    'numero' => $ciclo,
-                    'fechas' => [],
-                ];
-            }
-
-            if (!isset($porDocente[$doc]['ciclos'][$clave]['fechas'][$fecha])) {
-                $porDocente[$doc]['ciclos'][$clave]['fechas'][$fecha] = [];
-            }
-
-            $porDocente[$doc]['ciclos'][$clave]['fechas'][$fecha][] = $fila;
+            $iniciosArr = $iniciosCiclo->all();
+            $diasGrid = $diasGrid->map(function ($d) use ($iniciosArr) {
+                $num = 0;
+                foreach ($iniciosArr as $i => $ini) {
+                    if ($d->fecha >= $ini) $num = $i + 1;
+                    else break;
+                }
+                $d->ciclo_num = $num ?: null;
+                return $d;
+            })->filter(fn($d) => $d->ciclo_num !== null)->values();
         }
 
-        // Ordenar ciclos descendente dentro de cada docente
-        foreach ($porDocente as &$data) {
-            krsort($data['ciclos']);
+        // ── Asignaciones calificables (excluyendo materias ficticias) ──
+        $asigQuery = DB::table('ASIGNACION_PCM as a')
+            ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
+            ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_DOC', '=', 'd.CODIGO_DOC')
+            ->where('a.calificable', 1)
+            ->whereNotIn('a.CODIGO_MAT', $matExcluidas)
+            ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO',
+                     'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
+            ->orderBy('d.NOMBRE_DOC')->orderBy('m.NOMBRE_MAT')->orderBy('a.CURSO');
+
+        if ($curso)   $asigQuery->where('a.CURSO', $curso);
+        if ($materia) $asigQuery->where('a.CODIGO_MAT', $materia);
+
+        $asignaciones = $asigQuery->get();
+
+        // Agrupar asignaciones por docente para colapsar/expandir
+        $porDocente = $asignaciones->groupBy('CODIGO_DOC');
+
+        // ── Conteos por día × (doc|mat|curso) × categoría ──
+        $conteosCat = []; // [fecha][key]['P'|'C'|'A'] = int
+        $detalles   = []; // [fecha][key][categoria] = [{actividad, cantidad}]
+
+        if ($diasGrid->isNotEmpty()) {
+            $q = DB::table('planilla_notas as pn')
+                ->join('planilla_columnas as pc', 'pc.id', '=', 'pn.columna_id')
+                ->where('pc.anio', $anio)
+                ->where('pc.periodo', $periodo)
+                ->whereNotIn('pc.codigo_mat', $matExcluidas)
+                ->whereBetween(DB::raw('DATE(pn.updated_at)'), [
+                    $diasGrid->first()->fecha,
+                    $diasGrid->last()->fecha,
+                ])
+                ->whereNotNull('pn.nota');
+
+            if ($curso)   $q->where('pc.curso', $curso);
+            if ($materia) $q->where('pc.codigo_mat', $materia);
+
+            $filas = $q->select(
+                    'pc.codigo_doc',
+                    'pc.codigo_mat',
+                    'pc.curso',
+                    'pc.nombre_actividad',
+                    'pc.categoria',
+                    DB::raw('DATE(pn.updated_at) as fecha'),
+                    DB::raw('COUNT(*) as total')
+                )
+                ->groupBy('pc.codigo_doc', 'pc.codigo_mat', 'pc.curso',
+                          'pc.nombre_actividad', 'pc.categoria',
+                          DB::raw('DATE(pn.updated_at)'))
+                ->get();
+
+            foreach ($filas as $f) {
+                $key = $f->codigo_doc . '|' . $f->codigo_mat . '|' . $f->curso;
+                $cat = $f->categoria;
+                $conteosCat[$f->fecha][$key][$cat] = ($conteosCat[$f->fecha][$key][$cat] ?? 0) + (int) $f->total;
+                $detalles[$f->fecha][$key][$cat][] = [
+                    'actividad' => $f->nombre_actividad,
+                    'cantidad'  => (int) $f->total,
+                ];
+            }
         }
+
+        $ciclosAgrupados = $diasGrid->groupBy('ciclo_num');
 
         return view('control.planilla', compact(
-            'porDocente', 'anio', 'periodo', 'curso', 'materia',
-            'cursosDisponibles', 'materiasDisponibles'
+            'anio', 'periodo', 'curso', 'materia',
+            'cursosDisponibles', 'materiasDisponibles',
+            'asignaciones', 'porDocente', 'diasGrid', 'ciclosAgrupados',
+            'conteosCat', 'detalles', 'esSuperior'
         ));
     }
 }
