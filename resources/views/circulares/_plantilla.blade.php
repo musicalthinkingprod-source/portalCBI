@@ -3,6 +3,13 @@
     Se usa desde show.blade.php (dentro del layout) y desde pdf.blade.php (standalone).
     La variable $circular debe estar disponible en el contexto.
 --}}
+@php
+    // Imágenes embebidas como base64 para que funcionen tanto en navegador (show) como en PDF (DomPDF).
+    $logoFile = public_path('images/escudoCBI.png');
+    $logoSrc  = file_exists($logoFile)
+        ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoFile))
+        : null;
+@endphp
 
 <div style="font-family: Arial, Helvetica, sans-serif; color: #1a1a1a; max-width: 740px; margin: 0 auto; padding: 40px 48px;">
 
@@ -14,10 +21,9 @@
             {{-- Logo (rowspan 3) --}}
             <td rowspan="3"
                 style="width:90px; border-right:1.5px solid #374151; text-align:center; vertical-align:middle; padding:10px;">
-                <img src="{{ public_path('images/escudoCBI.png') }}"
-                     alt="Logo CBI"
-                     style="height:72px; width:auto;"
-                     onerror="this.style.display='none'">
+                @if($logoSrc)
+                    <img src="{{ $logoSrc }}" alt="Logo CBI" style="height:72px; width:auto;">
+                @endif
             </td>
             {{-- Fila 1 centro: "FORMATO" --}}
             <td style="border-right:1.5px solid #374151; border-bottom:1px solid #374151;
@@ -124,9 +130,14 @@
          ═══════════════════ --}}
     <div style="margin-top:52px;">
         {{-- Imagen de firma --}}
-        @php $firmaPath = public_path('images/firma.png'); @endphp
-        @if(file_exists($firmaPath))
-            <img src="{{ $firmaPath }}" alt="Firma"
+        @php
+            $firmaPath = public_path('images/firma.png');
+            $firmaSrc  = file_exists($firmaPath)
+                ? 'data:image/png;base64,' . base64_encode(file_get_contents($firmaPath))
+                : null;
+        @endphp
+        @if($firmaSrc)
+            <img src="{{ $firmaSrc }}" alt="Firma"
                  style="height:72px; width:auto; display:block; margin-bottom:4px;">
         @else
             <div style="height:72px; margin-bottom:4px;"></div>

@@ -39,11 +39,13 @@ class CircularesController extends Controller
             'dirigido_a'  => 'required|string|max:255',
             'emitido_por' => 'required|string|max:255',
             'cargo'       => 'nullable|string|max:255',
-            'contenido'   => 'nullable|string',
+            'contenido'   => 'nullable|string|max:2100000',
             'estado'      => 'required|in:borrador,publicada',
             'link'        => 'nullable|url|max:500',
             'grados'      => 'nullable|array',
             'grados.*'    => 'string|in:PJ,J,T,1,2,3,4,5,6,7,8,9,10,11',
+        ], [
+            'contenido.max' => 'El contenido supera los 2 MB. Reduce o elimina imágenes.',
         ]);
 
         $data['grados'] = !empty($data['grados']) ? $data['grados'] : null;
@@ -80,11 +82,13 @@ class CircularesController extends Controller
             'dirigido_a'  => 'required|string|max:255',
             'emitido_por' => 'required|string|max:255',
             'cargo'       => 'nullable|string|max:255',
-            'contenido'   => 'nullable|string',
+            'contenido'   => 'nullable|string|max:2100000',
             'estado'      => 'required|in:borrador,publicada',
             'link'        => 'nullable|url|max:500',
             'grados'      => 'nullable|array',
             'grados.*'    => 'string|in:PJ,J,T,1,2,3,4,5,6,7,8,9,10,11',
+        ], [
+            'contenido.max' => 'El contenido supera los 2 MB. Reduce o elimina imágenes.',
         ]);
 
         $data['grados'] = !empty($data['grados']) ? $data['grados'] : null;

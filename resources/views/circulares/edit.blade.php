@@ -140,29 +140,19 @@
                 <h2 class="text-sm font-semibold text-gray-700 border-b pb-2 mb-3">Contenido de la circular <span class="text-xs font-normal text-gray-400">(opcional si hay enlace a Drive)</span></h2>
 
                 <details class="mb-3 text-xs text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <summary class="cursor-pointer font-semibold text-blue-800">¿Cómo insertar una imagen o documento?</summary>
+                    <summary class="cursor-pointer font-semibold text-blue-800">¿Cómo insertar imágenes, documentos o videos?</summary>
                     <div class="mt-2 space-y-2">
-                        <p>Por espacio en servidor, <b>no se pueden subir imágenes</b> directamente. Usa una de estas opciones:</p>
                         <ol class="list-decimal ml-5 space-y-2">
                             <li>
-                                <b>Imagen desde Google Drive (recomendado):</b>
-                                <ol class="list-[lower-alpha] ml-5 mt-1 space-y-0.5">
-                                    <li>Sube la imagen a Drive y compártela como <i>"Cualquier persona con el enlace"</i>.</li>
-                                    <li>Copia el ID del archivo (la parte larga entre <code>/d/</code> y <code>/view</code> del link).<br>
-                                        Ej. si el link es <code>drive.google.com/file/d/<b>1aBcDeFgHiJk</b>/view</code>, el ID es <code>1aBcDeFgHiJk</code>.
-                                    </li>
-                                    <li>En el editor, usa el botón <b>Insertar HTML</b> (&lt;/&gt;) y pega:
-                                        <pre class="bg-white border border-blue-100 rounded p-2 mt-1 text-[11px] overflow-x-auto">&lt;img src="https://lh3.googleusercontent.com/d/ID_ARCHIVO" style="max-width:100%"&gt;</pre>
-                                    </li>
-                                </ol>
-                                <p class="mt-1 text-[11px] text-blue-800">✅ Esta opción se ve en el portal <u>y en el PDF</u>. Importante: el archivo debe estar compartido <b>públicamente</b> en Drive.</p>
+                                <b>Imagen (recomendado):</b> usa el botón <b>🖼️ Insertar imagen</b> del editor o simplemente <b>arrastra la imagen</b> al contenido.
+                                <p class="mt-1 text-[11px] text-blue-800">La imagen se comprime automáticamente (máx. 1200 px, ~300 KB) y queda incrustada en la circular y en el PDF. El peso total del contenido no debe pasar los 2 MB.</p>
                             </li>
                             <li>
-                                <b>Documento (PDF, Word, etc.) desde Drive:</b> usa <b>Insertar HTML</b> con:
+                                <b>Documento (PDF, Word, etc.) desde Drive:</b> usa <b>Insertar HTML</b> (&lt;/&gt;) con:
                                 <pre class="bg-white border border-blue-100 rounded p-2 mt-1 text-[11px] overflow-x-auto">&lt;iframe src="https://drive.google.com/file/d/ID_ARCHIVO/preview" width="640" height="480"&gt;&lt;/iframe&gt;</pre>
                                 <p class="mt-1 text-[11px] text-amber-700">⚠️ Los iframes solo se ven en el portal; en el PDF aparecen como un enlace "Ver en Drive".</p>
                             </li>
-                            <li><b>Video de YouTube/Vimeo:</b> usa el botón <b>Insertar medio</b> y pega la URL del video. (También solo se ve en portal, no en PDF.)</li>
+                            <li><b>Video de YouTube/Vimeo:</b> usa el botón <b>Insertar medio</b> y pega la URL. (Solo se ve en el portal, no en el PDF.)</li>
                         </ol>
                     </div>
                 </details>
@@ -171,6 +161,14 @@
 
                 <div id="editor" style="min-height: 420px;">{!! old('contenido', $circular->contenido) !!}</div>
                 <input type="hidden" name="contenido" id="contenido-input">
+
+                <div id="peso-barra" class="mt-3 text-xs flex items-center gap-3">
+                    <div class="flex-1 h-2 bg-gray-200 rounded overflow-hidden">
+                        <div id="peso-progreso" class="h-full bg-blue-600 transition-all" style="width:0%"></div>
+                    </div>
+                    <span id="peso-texto" class="text-gray-600 font-mono whitespace-nowrap">0 KB / 2 MB</span>
+                </div>
+                <p id="peso-alerta" class="hidden mt-1 text-xs text-red-600">⚠️ El contenido supera los 2 MB. Elimina o reemplaza imágenes antes de guardar.</p>
             </div>
         </div>
 
@@ -193,8 +191,50 @@
         document.getElementById('editor').innerHTML =
             '<div style="color:#b91c1c;padding:12px;">No se pudo cargar el editor CKEditor. Revisa tu conexión a internet.</div>';
     } else {
+    // Adapter que comprime imágenes a JPEG base64 antes de insertarlas (sin subir al servidor).
+    function Base64CompressAdapterPlugin(editor) {
+        editor.plugins.get('FileRepository').createUploadAdapter = (loader) => ({
+            upload: () => loader.file.then(file => new Promise((resolve, reject) => {
+                if (!file || !file.type || !file.type.startsWith('image/')) {
+                    reject('Solo se permiten imágenes.'); return;
+                }
+                const MAX_DIM = 1200;
+                const TARGET_BYTES = 400 * 1024;
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let w = img.naturalWidth, h = img.naturalHeight;
+                        if (w > MAX_DIM || h > MAX_DIM) {
+                            const r = Math.min(MAX_DIM / w, MAX_DIM / h);
+                            w = Math.round(w * r); h = Math.round(h * r);
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w; canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, w, h);
+                        ctx.drawImage(img, 0, 0, w, h);
+                        let dataUrl = '';
+                        for (const q of [0.75, 0.65, 0.55, 0.45, 0.35]) {
+                            dataUrl = canvas.toDataURL('image/jpeg', q);
+                            if (dataUrl.length * 0.75 <= TARGET_BYTES) break;
+                        }
+                        resolve({ default: dataUrl });
+                    };
+                    img.onerror = () => reject('No se pudo leer la imagen.');
+                    img.src = reader.result;
+                };
+                reader.onerror = () => reject('No se pudo leer el archivo.');
+                reader.readAsDataURL(file);
+            })),
+            abort: () => {}
+        });
+    }
+
     EditorClass.create(document.querySelector('#editor'), {
         language: 'es',
+        extraPlugins: [Base64CompressAdapterPlugin],
         removePlugins: [
             // Premium / licencia
             'RealTimeCollaborativeComments', 'RealTimeCollaborativeTrackChanges',
@@ -204,20 +244,13 @@
             'SlashCommand', 'Template', 'DocumentOutline', 'FormatPainter',
             'TableOfContents', 'PasteFromOfficeEnhanced', 'CaseChange',
             'ExportPdf', 'ExportWord', 'AIAssistant', 'MultiLevelList',
-            // CKBox / CKFinder / EasyImage (primero estos, dependen de Image/PictureEditing)
+            // CKBox / CKFinder / EasyImage — uploaders externos no deseados
             'CKBox', 'CKBoxEditing', 'CKBoxUI', 'CKBoxImageEdit',
             'CKBoxImageEditEditing', 'CKBoxImageEditUI',
             'CKFinder', 'CKFinderEditing', 'CKFinderUploadAdapter',
             'EasyImage', 'CloudServices',
-            // Adaptadores de upload
+            // Uploaders estándar: los reemplazamos con nuestro adapter con compresión
             'Base64UploadAdapter', 'SimpleUploadAdapter', 'CloudServicesUploadAdapter',
-            // Imágenes — desactivadas para no saturar espacio. Usar iframe (htmlEmbed) o mediaEmbed.
-            'PictureEditing', 'AutoImage', 'LinkImage',
-            'ImageUpload', 'ImageUploadEditing', 'ImageUploadUI', 'ImageUploadProgress',
-            'ImageInsert', 'ImageInsertViaUrl', 'ImageInsertUI',
-            'ImageResize', 'ImageResizeEditing', 'ImageResizeHandles', 'ImageResizeButtons',
-            'ImageStyle', 'ImageTextAlternative', 'ImageToolbar', 'ImageCaption',
-            'ImageBlock', 'ImageInline', 'Image',
         ],
         toolbar: {
             items: [
@@ -225,13 +258,20 @@
                 'heading', 'style', '|',
                 'fontFamily', 'fontSize', 'fontColor', 'fontBackgroundColor', '|',
                 'bold', 'italic', 'underline', 'strikethrough', 'subscript', 'superscript', 'removeFormat', '|',
-                'link', 'insertTable', 'mediaEmbed', 'htmlEmbed',
+                'link', 'uploadImage', 'insertTable', 'mediaEmbed', 'htmlEmbed',
                 'blockQuote', 'codeBlock', 'horizontalLine', 'pageBreak', 'specialCharacters', '|',
                 'alignment', '|',
                 'bulletedList', 'numberedList', 'todoList', 'outdent', 'indent', '|',
                 'findAndReplace', 'sourceEditing',
             ],
             shouldNotGroupWhenFull: true,
+        },
+        image: {
+            toolbar: [
+                'imageTextAlternative', '|',
+                'imageStyle:inline', 'imageStyle:block', 'imageStyle:side', '|',
+                'resizeImage',
+            ],
         },
         mediaEmbed: { previewsInData: true },
         table: {
@@ -245,6 +285,22 @@
         },
     }).then(editor => {
         ckEditor = editor;
+        const actualizarPeso = () => {
+            const bytes = new Blob([editor.getData()]).size;
+            const MAX = 2_000_000;
+            const pct = Math.min(100, (bytes / MAX) * 100);
+            const kb = bytes / 1024;
+            const texto = kb < 1024 ? `${kb.toFixed(0)} KB / 2 MB` : `${(kb/1024).toFixed(2)} MB / 2 MB`;
+            document.getElementById('peso-texto').textContent = texto;
+            const barra = document.getElementById('peso-progreso');
+            barra.style.width = pct + '%';
+            barra.classList.toggle('bg-red-600', bytes > MAX);
+            barra.classList.toggle('bg-amber-500', bytes > MAX * 0.8 && bytes <= MAX);
+            barra.classList.toggle('bg-blue-600', bytes <= MAX * 0.8);
+            document.getElementById('peso-alerta').classList.toggle('hidden', bytes <= MAX);
+        };
+        editor.model.document.on('change:data', actualizarPeso);
+        actualizarPeso();
     }).catch(err => {
         console.error('Error inicializando CKEditor:', err);
         document.getElementById('editor').innerHTML =
@@ -252,8 +308,15 @@
     });
     }
 
-    document.querySelector('form').addEventListener('submit', function () {
-        document.getElementById('contenido-input').value = ckEditor ? ckEditor.getData() : '';
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const data = ckEditor ? ckEditor.getData() : '';
+        const bytes = new Blob([data]).size;
+        if (bytes > 2_000_000) {
+            e.preventDefault();
+            alert('El contenido supera los 2 MB (' + (bytes/1024/1024).toFixed(2) + ' MB). Elimina o reemplaza imágenes antes de guardar.');
+            return;
+        }
+        document.getElementById('contenido-input').value = data;
     });
 </script>
 

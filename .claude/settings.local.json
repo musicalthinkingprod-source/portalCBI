@@ -34,7 +34,30 @@
       "Bash(powershell -Command ':*)",
       "Bash(powershell -command \"'{0:N2} MB' -f \\(\\(Get-ChildItem vendor -Recurse | Measure-Object -Property Length -Sum\\).Sum / 1MB\\)\")",
       "Bash(powershell -command \"Compress-Archive -Path 'vendor' -DestinationPath 'vendor.zip' -Force\")",
-      "Bash(composer remove:*)"
+      "Bash(composer remove:*)",
+      "Bash(\"/c/laragon/bin/mysql/mysql-8.4.3-winx64/bin/mysql.exe\" -h 98.142.110.10 -u cbicole_danicaradmin -p'Danieselmejor98.' cbicole_portal -e \"SHOW TABLES LIKE '%user%';\")",
+      "Bash(\"/c/laragon/bin/mysql/mysql-8.4.3-winx64/bin/mysql.exe\" -h 98.142.110.10 -u cbicole_danicaradmin -p'Danieselmejor98.' cbicole_portal -e \"SHOW TABLES LIKE '%prin%';\")",
+      "Bash(\"/c/laragon/bin/mysql/mysql-8.4.3-winx64/bin/mysql.exe\" -h 98.142.110.10 -u cbicole_danicaradmin -p'Danieselmejor98.' cbicole_portal -e \"SHOW TABLES;\")",
+      "Bash(/c/laragon/bin/mysql/mysql-8.4.3-winx64/bin/mysql.exe *)",
+      "Read(//c/laragon/bin/apache/**)",
+      "Bash(\"/c/laragon/bin/mysql/mysql-8.4.3-winx64/bin/mysql.exe\" -h 98.142.110.10 -u cbicole_danicaradmin -p\"Danieselmejor98.\" cbicole_portal -e \"SHOW TABLES LIKE '%DOCENTE%'; SHOW TABLES LIKE '%EMPLEADO%'; SHOW TABLES LIKE '%USER%';\")",
+      "Bash(\"/c/laragon/bin/mysql/mysql-8.4.3-winx64/bin/mysql.exe\" -h 98.142.110.10 -u cbicole_danicaradmin -p\"Danieselmejor98.\" cbicole_portal -e \"SHOW TABLES LIKE '%PROFES%'; SHOW TABLES LIKE '%PERSON%'; SHOW TABLES LIKE '%PRIN%';\")",
+      "Bash(\"/c/laragon/bin/mysql/mysql-8.4.3-winx64/bin/mysql.exe\" -h 98.142.110.10 -u cbicole_danicaradmin -p\"Danieselmejor98.\" cbicole_portal -e \"SHOW TABLES;\")",
+      "Bash(\"/c/laragon/bin/mysql/mysql-8.4.3-winx64/bin/mysql.exe\" -h 98.142.110.10 -u cbicole_danicaradmin -p\"Danieselmejor98.\" cbicole_portal -e \"SELECT * FROM nomina_empleados WHERE nombres LIKE '%ALEXANDER%' OR apellidos LIKE '%ALEXANDER%' OR primer_nombre LIKE '%ALEXANDER%' LIMIT 10;\")",
+      "Bash(\"/c/laragon/bin/mysql/mysql-8.4.3-winx64/bin/mysql.exe\" -h 98.142.110.10 -u cbicole_danicaradmin -p\"Danieselmejor98.\" cbicole_portal -e \"DESCRIBE nomina_empleados;\")",
+      "Bash(/c/laragon/bin/mysql/mysql-8.0.30-winx64/bin/mysql.exe *)",
+      "Bash(tail -3000 storage/logs/laravel.log)",
+      "Read(//tmp/**)",
+      "Bash(git log *)",
+      "Bash(/c/php/php *)",
+      "Bash(git rm *)",
+      "WebFetch(domain:cdn.ckeditor.com)",
+      "Bash(sed -E 's/CREATE TABLE `?\\([^` \\(]+\\)`?.*/\\\\1/')",
+      "Bash(Read C:\\\\laragon\\\\www\\\\portalcbi\\\\.env)",
+      "Bash(git -C \"C:/laragon/www/portalcbi/.claude/worktrees/sharp-northcutt\" status)",
+      "Bash(git -C \"C:/laragon/www/portalcbi/.claude/worktrees/sharp-northcutt\" log --oneline -10)",
+      "Bash(git -C \"C:/laragon/www/portalcbi/.claude/worktrees/hungry-chaum\" status)",
+      "Bash(git -C \"C:/laragon/www/portalcbi/.claude/worktrees/hungry-chaum\" log --oneline -10)"
     ]
   }
 }

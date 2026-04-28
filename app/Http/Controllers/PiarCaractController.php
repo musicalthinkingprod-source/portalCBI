@@ -84,8 +84,10 @@ class PiarCaractController extends Controller
                 // Alerta basada en contenido diligenciado, no solo en existencia del registro
                 DB::raw("CASE WHEN pc.CARACTERIZACION IS NOT NULL AND pc.CARACTERIZACION != '' THEN 1 ELSE 0 END as CARACT_MAT_OK"),
                 DB::raw("CASE WHEN pm.BARRERAS IS NOT NULL AND pm.BARRERAS != '' THEN 1 ELSE 0 END as AJUSTES_OK"),
+                DB::raw("CASE WHEN pm.ESTRAG_CASERA IS NOT NULL AND pm.ESTRAG_CASERA != '' THEN 1 ELSE 0 END as PLAN_CASERO_OK"),
                 DB::raw("COALESCE(MAX(pc.ESTADO), 'pendiente') as CARACT_MAT_ESTADO"),
-                DB::raw("COALESCE(MAX(pm.ESTADO), 'pendiente') as AJUSTES_ESTADO")
+                DB::raw("COALESCE(MAX(pm.ESTADO), 'pendiente') as AJUSTES_ESTADO"),
+                DB::raw("COALESCE(MAX(pm.ESTADO_CASERO), 'pendiente') as PLAN_CASERO_ESTADO")
             )
             ->where('e.ESTADO', 'MATRICULADO')
             ->whereNotIn('a.CODIGO_MAT', self::MATS_EXCLUIDAS_PIAR)
@@ -116,7 +118,11 @@ class PiarCaractController extends Controller
                     DB::raw('NULL as CODIGO_MAT'),
                     DB::raw('NULL as NOMBRE_MAT'),
                     DB::raw('0 as CARACT_MAT_OK'),
-                    DB::raw('0 as AJUSTES_OK')
+                    DB::raw('0 as AJUSTES_OK'),
+                    DB::raw('0 as PLAN_CASERO_OK'),
+                    DB::raw("'pendiente' as CARACT_MAT_ESTADO"),
+                    DB::raw("'pendiente' as AJUSTES_ESTADO"),
+                    DB::raw("'pendiente' as PLAN_CASERO_ESTADO")
                 )
                 ->where('e.ESTADO', 'MATRICULADO')
                 ->where('e.CURSO', $dirInfo->DIR_GRUPO)

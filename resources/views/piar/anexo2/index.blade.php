@@ -173,8 +173,10 @@
             @foreach($materias as $mat)
             @if(!$mat->CODIGO_MAT) @continue @endif
             @php
-                $cEstado = $mat->CARACT_MAT_ESTADO ?? 'pendiente';
-                $aEstado = $mat->AJUSTES_ESTADO    ?? 'pendiente';
+                $cEstado  = $mat->CARACT_MAT_ESTADO  ?? 'pendiente';
+                $aEstado  = $mat->AJUSTES_ESTADO     ?? 'pendiente';
+                $pcEstado = $mat->PLAN_CASERO_ESTADO ?? 'pendiente';
+                $pcOk     = (int)($mat->PLAN_CASERO_OK ?? 0) === 1;
             @endphp
             <tr class="hover:bg-gray-50">
                 <td class="px-4 py-4 text-gray-800 font-medium">{{ $mat->NOMBRE_MAT }}</td>
@@ -205,16 +207,12 @@
                 <td class="px-4 py-4 text-center">
                     @if($etapaPlanCasero === 'cerrado')
                         <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-400 text-xs px-2 py-1 rounded-full">🔒 Cerrado</span>
-                    @elseif($etapaPlanCasero === 'finalizado')
-                        <span class="inline-flex items-center gap-1 bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full font-semibold">✓ Finalizado</span>
                     @else
                         <div class="flex flex-wrap items-center justify-center gap-2">
-                            @if($etapaPlanCasero === 'revision')
-                                <span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold">👁 En revisión</span>
-                            @endif
+                            {!! badgeEstado($pcEstado, $puedeAprobar) !!}
                             <a href="{{ route('piar.plan_casero.form', [$codigo, $mat->CODIGO_MAT]) }}"
                                class="bg-indigo-700 hover:bg-indigo-600 text-white text-xs px-3 py-1 rounded-lg transition">
-                                Diligenciar
+                                {{ $pcOk ? 'Editar' : 'Diligenciar' }}
                             </a>
                         </div>
                     @endif
