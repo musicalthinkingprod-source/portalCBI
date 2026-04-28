@@ -11,6 +11,7 @@ use App\Http\Controllers\PadresController;
 use App\Http\Controllers\AlumnoController;
 use App\Http\Controllers\NotasController;
 use App\Http\Controllers\NotasV2Controller;
+use App\Http\Controllers\InformeNotasController;
 use App\Http\Controllers\SolicitudCorreccionController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\FechasController;
@@ -106,6 +107,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/admin/fechas', [FechasController::class, 'upsert'])->name('admin.fechas.upsert');
         Route::delete('/admin/fechas/{codigo}', [FechasController::class, 'destroy'])->name('admin.fechas.destroy');
         Route::get('/notas/reporte', [NotasController::class, 'reporte'])->name('notas.reporte');
+        Route::get('/informes/notas', [InformeNotasController::class, 'index'])->name('informes.notas');
         Route::get('/english-acq/informe', [EnglishAcqController::class, 'informe'])->name('english-acq.informe');
         Route::post('/english-acq/entregar', [EnglishAcqController::class, 'entregar'])->name('english-acq.entregar');
         Route::get('/control/planilla', [ControlPlanillaController::class, 'index'])->name('control.planilla');

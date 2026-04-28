@@ -510,6 +510,7 @@
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
                 {!! sidebarLink(route('piar.informe'), '📊 Informe PIAR') !!}
                 {!! sidebarLink(route('notas.reporte'), '📊 Informe de digitación') !!}
+                {!! sidebarLink(route('informes.notas'), '📈 Informe general de notas') !!}
                 {!! sidebarLink(route('english-acq.informe'), '📊 Informe English ACQ') !!}
                 {!! sidebarLink(route('derroteros.index'), '📊 Informe derroteros') !!}
                 {!! sidebarLink(route('derroteros.estadisticas'), '📈 Stats recuperaciones') !!}
