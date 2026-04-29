@@ -4,6 +4,8 @@
 
 @section('slot')
 
+@include('partials.piar_header_estudiante')
+
 @php
     $puedeObservar = in_array(auth()->user()->PROFILE, ['SuperAd', 'Ori', 'Piar']);
     $estadoActual  = $piarMat->ESTADO_CASERO ?? 'pendiente';
