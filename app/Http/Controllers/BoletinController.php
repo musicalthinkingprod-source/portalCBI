@@ -26,7 +26,7 @@ class BoletinController extends Controller
             $q = DB::table('NOTAS_' . $anio . ' as n')
                 ->join('CODIGOSMAT as m',    'm.CODIGO_MAT',   '=', 'n.CODIGO_MAT')
                 ->join('CODIGOSAREA as a',   'a.CODIGO_AREA',  '=', 'm.AREA_MAT')
-                ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'n.CODIGO_DOC');
+                ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_EMP', '=', 'n.CODIGO_EMP');
 
             if ($hayLogros) {
                 $q->leftJoin('LOGROS_' . $anio . ' as l', function ($join) use ($grado) {
@@ -100,9 +100,9 @@ class BoletinController extends Controller
     private function accesoDocente(): array|null
     {
         $profile = auth()->user()->PROFILE;
-        if (!str_starts_with($profile, 'DOC')) return null; // no es docente
+        if (!str_starts_with($profile, 'DOC') && !str_starts_with($profile, 'COR')) return null; // no es docente
 
-        $docente = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $profile)->first();
+        $docente = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $profile)->first();
         return $docente ? (array) $docente : [];
     }
 
@@ -120,12 +120,12 @@ class BoletinController extends Controller
     {
         $profile      = auth()->user()->PROFILE;
         $user         = auth()->user()->USER;
-        $esDocente    = str_starts_with($profile, 'DOC');
+        $esDocente    = str_starts_with($profile, 'DOC') || str_starts_with($profile, 'COR');
         $esOrientador = str_starts_with($profile, 'Ori');
         $cursoDir     = null;
 
         if ($esDocente) {
-            $doc = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $profile)->first();
+            $doc = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $profile)->first();
             if (!$doc || !$doc->DIR_GRUPO) {
                 return redirect()->route('notas.index')
                     ->with('error', 'No tienes una dirección de grupo asignada. No puedes ver boletines.');
@@ -175,11 +175,11 @@ class BoletinController extends Controller
     {
         $profile      = auth()->user()->PROFILE;
         $user         = auth()->user()->USER;
-        $esDocente    = str_starts_with($profile, 'DOC');
+        $esDocente    = str_starts_with($profile, 'DOC') || str_starts_with($profile, 'COR');
         $esOrientador = str_starts_with($profile, 'Ori');
 
         if ($esDocente) {
-            $doc = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $profile)->first();
+            $doc = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $profile)->first();
             if (!$doc || !$doc->DIR_GRUPO) abort(403, 'No tienes dirección de grupo asignada.');
 
             $estudiante = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->first();

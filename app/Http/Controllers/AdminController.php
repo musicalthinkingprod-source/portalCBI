@@ -23,9 +23,9 @@ class AdminController extends Controller
             ->get();
 
         $ultimoCod = DB::table('CODIGOS_DOC')
-            ->where('CODIGO_DOC', 'like', 'DOC%')
-            ->orderByRaw('CAST(SUBSTRING(CODIGO_DOC, 4) AS UNSIGNED) DESC')
-            ->value('CODIGO_DOC');
+            ->where('CODIGO_EMP', 'like', 'DOC%')
+            ->orderByRaw('CAST(SUBSTRING(CODIGO_EMP, 4) AS UNSIGNED) DESC')
+            ->value('CODIGO_EMP');
         $siguienteCodDoc = 'DOC001';
         if ($ultimoCod) {
             $num = (int) substr($ultimoCod, 3);
@@ -54,7 +54,7 @@ class AdminController extends Controller
 
         $directores = DB::table('CODIGOS_DOC')
             ->whereNotNull('DIR_GRUPO')
-            ->pluck('CODIGO_DOC', 'DIR_GRUPO');
+            ->pluck('CODIGO_EMP', 'DIR_GRUPO');
 
         $docentes = DB::table('CODIGOS_DOC')
             ->where('ESTADO', 'ACTIVO')
@@ -67,10 +67,10 @@ class AdminController extends Controller
     public function asignaciones(Request $request)
     {
         $docentesConAsig = DB::table('ASIGNACION_PCM as a')
-            ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_DOC', '=', 'd.CODIGO_DOC')
-            ->select('a.CODIGO_DOC', DB::raw('COALESCE(d.NOMBRE_DOC, a.CODIGO_DOC) as NOMBRE_DOC'),
+            ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_EMP', '=', 'd.CODIGO_EMP')
+            ->select('a.CODIGO_EMP', DB::raw('COALESCE(d.NOMBRE_DOC, a.CODIGO_EMP) as NOMBRE_DOC'),
                      DB::raw('COUNT(*) as total_asig'))
-            ->groupBy('a.CODIGO_DOC', 'd.NOMBRE_DOC')
+            ->groupBy('a.CODIGO_EMP', 'd.NOMBRE_DOC')
             ->orderBy('d.NOMBRE_DOC')
             ->get();
 
@@ -84,8 +84,8 @@ class AdminController extends Controller
         if ($verAsigDoc) {
             $asigIndividual = DB::table('ASIGNACION_PCM as a')
                 ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
-                ->where('a.CODIGO_DOC', $verAsigDoc)
-                ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT')
+                ->where('a.CODIGO_EMP', $verAsigDoc)
+                ->select('a.CODIGO_EMP', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT')
                 ->orderBy('m.NOMBRE_MAT')
                 ->orderBy('a.CURSO')
                 ->get();
@@ -135,14 +135,14 @@ class AdminController extends Controller
     public function storeDocente(Request $request)
     {
         $request->validate([
-            'CODIGO_DOC' => 'required|max:10',
+            'CODIGO_EMP' => 'required|max:10',
             'NOMBRE_DOC' => 'required|max:150',
             'TIPO'       => 'required|in:DOCENTE,ADMINISTRATIVO',
         ]);
 
-        $codigo = strtoupper(trim($request->CODIGO_DOC));
+        $codigo = strtoupper(trim($request->CODIGO_EMP));
 
-        if (DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $codigo)->exists()) {
+        if (DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $codigo)->exists()) {
             return back()->withErrors(['docente_store' => "Ya existe un docente con el código «{$codigo}»."]);
         }
 
@@ -150,7 +150,7 @@ class AdminController extends Controller
 
         DB::table('CODIGOS_DOC')->insert([
             'ID_DOCENTE'  => $ultimo + 1,
-            'CODIGO_DOC'  => $codigo,
+            'CODIGO_EMP'  => $codigo,
             'NOMBRE_DOC'  => trim($request->NOMBRE_DOC),
             'TIPO'        => $request->TIPO,
             'ESTADO'      => 'ACTIVO',
@@ -162,7 +162,7 @@ class AdminController extends Controller
 
     public function toggleDocente($codigo)
     {
-        $docente = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $codigo)->first();
+        $docente = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $codigo)->first();
 
         if (!$docente) {
             return back()->withErrors(['docente' => 'Docente no encontrado.']);
@@ -170,7 +170,7 @@ class AdminController extends Controller
 
         $nuevoEstado = $docente->ESTADO === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
 
-        DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $codigo)->update(['ESTADO' => $nuevoEstado]);
+        DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $codigo)->update(['ESTADO' => $nuevoEstado]);
 
         return back()->with('success_docente', "Docente «{$docente->NOMBRE_DOC}» marcado como {$nuevoEstado}.");
     }
@@ -191,10 +191,10 @@ class AdminController extends Controller
         }
 
         DB::table('ASIGNACION_PCM')
-            ->where('CODIGO_DOC', $origen)
+            ->where('CODIGO_EMP', $origen)
             ->where('CODIGO_MAT', $mat)
             ->where('CURSO', $curso)
-            ->update(['CODIGO_DOC' => $destino]);
+            ->update(['CODIGO_EMP' => $destino]);
 
         return redirect()
             ->route('admin.asignaciones', ['ver_asig' => $origen])
@@ -211,7 +211,7 @@ class AdminController extends Controller
 
         // Asignar si se eligió un docente
         if ($docente) {
-            DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $docente)->update(['DIR_GRUPO' => $curso]);
+            DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $docente)->update(['DIR_GRUPO' => $curso]);
             return back()->with('success_dir_grupo', "Director del curso {$curso} asignado correctamente.");
         }
 
@@ -230,13 +230,13 @@ class AdminController extends Controller
         $origen  = $request->origen;
         $destino = $request->destino;
 
-        $total = DB::table('ASIGNACION_PCM')->where('CODIGO_DOC', $origen)->count();
+        $total = DB::table('ASIGNACION_PCM')->where('CODIGO_EMP', $origen)->count();
 
         if ($total === 0) {
             return back()->withErrors(['mover' => 'El docente origen no tiene asignaciones.']);
         }
 
-        DB::table('ASIGNACION_PCM')->where('CODIGO_DOC', $origen)->update(['CODIGO_DOC' => $destino]);
+        DB::table('ASIGNACION_PCM')->where('CODIGO_EMP', $origen)->update(['CODIGO_EMP' => $destino]);
 
         return back()->with('success_mover', "{$total} asignación(es) movidas de «{$origen}» a «{$destino}».");
     }

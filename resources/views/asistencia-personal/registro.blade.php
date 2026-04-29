@@ -56,8 +56,8 @@
                             @endif
                         </td>
                         <td class="px-3 py-2 text-center">
-                            <select name="asistencias[{{ $doc->CODIGO_DOC }}][estado]"
-                                onchange="toggleHora(this, '{{ $doc->CODIGO_DOC }}')"
+                            <select name="asistencias[{{ $doc->CODIGO_EMP }}][estado]"
+                                onchange="toggleHora(this, '{{ $doc->CODIGO_EMP }}')"
                                 class="estado-select border border-gray-300 rounded-lg px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 w-full"
                                 {{ $tienePermiso ? 'disabled' : '' }}>
                                 @foreach(AP::$estadoLabel as $val => $lbl)
@@ -67,21 +67,21 @@
                                 @endforeach
                             </select>
                             @if($tienePermiso)
-                                <input type="hidden" name="asistencias[{{ $doc->CODIGO_DOC }}][estado]"
+                                <input type="hidden" name="asistencias[{{ $doc->CODIGO_EMP }}][estado]"
                                     value="{{ $doc->tipo_permiso === 'incapacidad' ? 'incapacidad' : 'permiso' }}">
                             @endif
                         </td>
                         <td class="px-3 py-2 text-center">
                             <input type="time"
-                                name="asistencias[{{ $doc->CODIGO_DOC }}][hora_llegada]"
+                                name="asistencias[{{ $doc->CODIGO_EMP }}][hora_llegada]"
                                 value="{{ $doc->hora_llegada ?? '' }}"
-                                id="hora_{{ $doc->CODIGO_DOC }}"
+                                id="hora_{{ $doc->CODIGO_EMP }}"
                                 class="border border-gray-300 rounded-lg px-2 py-1 text-xs focus:ring-2 focus:ring-yellow-400 w-full
                                     {{ $estadoActual !== 'retardo' ? 'hidden' : '' }}">
                         </td>
                         <td class="px-3 py-2">
                             <input type="text"
-                                name="asistencias[{{ $doc->CODIGO_DOC }}][observacion]"
+                                name="asistencias[{{ $doc->CODIGO_EMP }}][observacion]"
                                 value="{{ $doc->observacion ?? '' }}"
                                 maxlength="300" placeholder="—"
                                 class="border border-gray-200 rounded-lg px-2 py-1 text-xs w-full focus:ring-1 focus:ring-blue-400">

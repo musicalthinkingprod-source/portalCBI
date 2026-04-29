@@ -78,7 +78,7 @@
                             <span class="bg-orange-100 text-orange-700 font-semibold text-xs px-2 py-0.5 rounded-full">P{{ $r->PERIODO }}</span>
                         </td>
                         <td class="px-4 py-2 text-gray-700">{{ $r->NOMBRE_MAT }}</td>
-                        <td class="px-4 py-2 text-gray-500 text-xs">{{ $r->NOMBRE_DOC ?? $r->CODIGO_DOC }}</td>
+                        <td class="px-4 py-2 text-gray-500 text-xs">{{ $r->NOMBRE_DOC ?? $r->CODIGO_EMP }}</td>
                     </tr>
                     @endforeach
                 </tbody>

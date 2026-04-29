@@ -18,10 +18,10 @@ class NotasV2Controller extends Controller
         $queryAsig = DB::table('ASIGNACION_PCM as a')
             ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
             ->where('a.calificable', 1)
-            ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT');
+            ->select('a.CODIGO_EMP', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT');
 
         if (!$esSuperior) {
-            $queryAsig->where('a.CODIGO_DOC', $profile);
+            $queryAsig->where('a.CODIGO_EMP', $profile);
         }
 
         $asignaciones = $queryAsig->orderBy('m.NOMBRE_MAT')->orderBy('a.CURSO')->get();
@@ -153,7 +153,7 @@ class NotasV2Controller extends Controller
         }
 
         DB::table('planilla_columnas')->insert([
-            'codigo_doc'      => $profile,
+            'codigo_emp'      => $profile,
             'codigo_mat'      => $request->codigo_mat,
             'curso'           => $request->curso,
             'periodo'         => $request->periodo,
@@ -324,7 +324,7 @@ class NotasV2Controller extends Controller
                     ],
                     [
                         'NOTA'       => $notaFinal,
-                        'CODIGO_DOC' => $profile,
+                        'CODIGO_EMP' => $profile,
                     ]
                 );
             }

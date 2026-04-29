@@ -21,7 +21,7 @@ class VigilanciaController extends Controller
 
         // Todas las asignaciones del docente para este año
         $filas = DB::table('vigilancias')
-            ->where('CODIGO_DOC', $profile)
+            ->where('CODIGO_EMP', $profile)
             ->where('ANIO', $anio)
             ->get();
 
@@ -103,10 +103,10 @@ class VigilanciaController extends Controller
         $conAsignacion = DB::table('vigilancias')
             ->where('ANIO', $anio)
             ->distinct()
-            ->pluck('CODIGO_DOC');
+            ->pluck('CODIGO_EMP');
 
         $docentes = DB::table('CODIGOS_DOC')
-            ->whereIn('CODIGO_DOC', $conAsignacion)
+            ->whereIn('CODIGO_EMP', $conAsignacion)
             ->orderBy('ESTADO')
             ->orderBy('NOMBRE_DOC')
             ->get();
@@ -114,11 +114,11 @@ class VigilanciaController extends Controller
         $conAsignacionCodigos = DB::table('vigilancias')
             ->where('ANIO', $anio)
             ->distinct()
-            ->pluck('CODIGO_DOC');
+            ->pluck('CODIGO_EMP');
 
         $docentesDestino = DB::table('CODIGOS_DOC')
             ->where('ESTADO', 'ACTIVO')
-            ->whereNotIn('CODIGO_DOC', $conAsignacionCodigos)
+            ->whereNotIn('CODIGO_EMP', $conAsignacionCodigos)
             ->orderBy('NOMBRE_DOC')
             ->get();
 
@@ -126,10 +126,10 @@ class VigilanciaController extends Controller
             ->where('ANIO', $anio)
             ->get();
 
-        // Matriz [CODIGO_DOC][DIA_CICLO][DESCANSO] => POSICION
+        // Matriz [CODIGO_EMP][DIA_CICLO][DESCANSO] => POSICION
         $matriz = [];
         foreach ($filas as $f) {
-            $matriz[$f->CODIGO_DOC][$f->DIA_CICLO][$f->DESCANSO] = $f->POSICION;
+            $matriz[$f->CODIGO_EMP][$f->DIA_CICLO][$f->DESCANSO] = $f->POSICION;
         }
 
         // Parsear KML para el mapa admin
@@ -138,12 +138,12 @@ class VigilanciaController extends Controller
         $puntosMapa = array_merge($puntosA, $puntosB);
 
         // Mapa posicion → nombre docente (para mostrar en el mapa)
-        $nombresDoc = DB::table('CODIGOS_DOC')->pluck('NOMBRE_DOC', 'CODIGO_DOC');
+        $nombresDoc = DB::table('CODIGOS_DOC')->pluck('NOMBRE_DOC', 'CODIGO_EMP');
         $posicionDocente = [];
         foreach ($filas as $f) {
             if (!$f->POSICION) continue;
             $posicionDocente[strtoupper($f->POSICION)] = [
-                'docente'  => $nombresDoc[$f->CODIGO_DOC] ?? $f->CODIGO_DOC,
+                'docente'  => $nombresDoc[$f->CODIGO_EMP] ?? $f->CODIGO_EMP,
                 'descanso' => $f->DESCANSO,
                 'dia'      => $f->DIA_CICLO,
             ];
@@ -151,14 +151,14 @@ class VigilanciaController extends Controller
 
         // Datos para reasignaciones
         $docentesConAsig = DB::table('vigilancias as v')
-            ->leftJoin('CODIGOS_DOC as d', 'v.CODIGO_DOC', '=', 'd.CODIGO_DOC')
+            ->leftJoin('CODIGOS_DOC as d', 'v.CODIGO_EMP', '=', 'd.CODIGO_EMP')
             ->where('v.ANIO', $anio)
             ->select(
-                'v.CODIGO_DOC',
-                DB::raw('COALESCE(d.NOMBRE_DOC, v.CODIGO_DOC) as NOMBRE_DOC'),
+                'v.CODIGO_EMP',
+                DB::raw('COALESCE(d.NOMBRE_DOC, v.CODIGO_EMP) as NOMBRE_DOC'),
                 DB::raw('COUNT(*) as total_slots')
             )
-            ->groupBy('v.CODIGO_DOC', 'd.NOMBRE_DOC')
+            ->groupBy('v.CODIGO_EMP', 'd.NOMBRE_DOC')
             ->orderBy('d.NOMBRE_DOC')
             ->get();
 
@@ -166,7 +166,7 @@ class VigilanciaController extends Controller
         $slotsDoc = collect();
         if ($verDoc) {
             $slotsDoc = DB::table('vigilancias')
-                ->where('CODIGO_DOC', $verDoc)
+                ->where('CODIGO_EMP', $verDoc)
                 ->where('ANIO', $anio)
                 ->orderBy('DIA_CICLO')->orderBy('DESCANSO')
                 ->get();
@@ -194,7 +194,7 @@ class VigilanciaController extends Controller
             ->value('dia_ciclo');
 
         // Todas las asignaciones de hoy: posicion → {docente, descanso}
-        $nombresDoc = DB::table('CODIGOS_DOC')->pluck('NOMBRE_DOC', 'CODIGO_DOC');
+        $nombresDoc = DB::table('CODIGOS_DOC')->pluck('NOMBRE_DOC', 'CODIGO_EMP');
         $posicionDocente = [];
 
         if ($diaHoy) {
@@ -206,7 +206,7 @@ class VigilanciaController extends Controller
             foreach ($filas as $f) {
                 if (!$f->POSICION) continue;
                 $posicionDocente[strtoupper($f->POSICION)] = [
-                    'docente'  => $nombresDoc[$f->CODIGO_DOC] ?? $f->CODIGO_DOC,
+                    'docente'  => $nombresDoc[$f->CODIGO_EMP] ?? $f->CODIGO_EMP,
                     'descanso' => $f->DESCANSO,
                 ];
             }
@@ -225,14 +225,14 @@ class VigilanciaController extends Controller
         $anio = (int) ($request->input('anio', date('Y')));
 
         $docentesConAsig = DB::table('vigilancias as v')
-            ->leftJoin('CODIGOS_DOC as d', 'v.CODIGO_DOC', '=', 'd.CODIGO_DOC')
+            ->leftJoin('CODIGOS_DOC as d', 'v.CODIGO_EMP', '=', 'd.CODIGO_EMP')
             ->where('v.ANIO', $anio)
             ->select(
-                'v.CODIGO_DOC',
-                DB::raw('COALESCE(d.NOMBRE_DOC, v.CODIGO_DOC) as NOMBRE_DOC'),
+                'v.CODIGO_EMP',
+                DB::raw('COALESCE(d.NOMBRE_DOC, v.CODIGO_EMP) as NOMBRE_DOC'),
                 DB::raw('COUNT(*) as total_slots')
             )
-            ->groupBy('v.CODIGO_DOC', 'd.NOMBRE_DOC')
+            ->groupBy('v.CODIGO_EMP', 'd.NOMBRE_DOC')
             ->orderBy('d.NOMBRE_DOC')
             ->get();
 
@@ -246,7 +246,7 @@ class VigilanciaController extends Controller
 
         if ($verDoc) {
             $slotsDoc = DB::table('vigilancias')
-                ->where('CODIGO_DOC', $verDoc)
+                ->where('CODIGO_EMP', $verDoc)
                 ->where('ANIO', $anio)
                 ->orderBy('DIA_CICLO')
                 ->orderBy('DESCANSO')
@@ -276,7 +276,7 @@ class VigilanciaController extends Controller
 
         // Buscar slot origen
         $slotOrigen = DB::table('vigilancias')
-            ->where('CODIGO_DOC', $origen)
+            ->where('CODIGO_EMP', $origen)
             ->where('DIA_CICLO', $dia)
             ->where('DESCANSO', $descanso)
             ->where('ANIO', $anio)
@@ -288,7 +288,7 @@ class VigilanciaController extends Controller
 
         // Buscar si el destino ya tiene algo en ese slot → intercambiar
         $slotDestino = DB::table('vigilancias')
-            ->where('CODIGO_DOC', $destino)
+            ->where('CODIGO_EMP', $destino)
             ->where('DIA_CICLO', $dia)
             ->where('DESCANSO', $descanso)
             ->where('ANIO', $anio)
@@ -297,14 +297,14 @@ class VigilanciaController extends Controller
         if ($slotDestino) {
             // Intercambio: darle al destino la posición del origen y viceversa
             DB::table('vigilancias')->where('id', $slotOrigen->id)
-                ->update(['CODIGO_DOC' => $destino, 'updated_at' => now()]);
+                ->update(['CODIGO_EMP' => $destino, 'updated_at' => now()]);
             DB::table('vigilancias')->where('id', $slotDestino->id)
-                ->update(['CODIGO_DOC' => $origen, 'updated_at' => now()]);
+                ->update(['CODIGO_EMP' => $origen, 'updated_at' => now()]);
             $msg = "Posiciones intercambiadas entre «{$origen}» y «{$destino}» en Día {$dia} / Descanso {$descanso}.";
         } else {
             // Solo mover
             DB::table('vigilancias')->where('id', $slotOrigen->id)
-                ->update(['CODIGO_DOC' => $destino, 'updated_at' => now()]);
+                ->update(['CODIGO_EMP' => $destino, 'updated_at' => now()]);
             $msg = "Slot Día {$dia} / Descanso {$descanso} movido de «{$origen}» a «{$destino}».";
         }
 
@@ -328,28 +328,28 @@ class VigilanciaController extends Controller
         $anio    = (int) $request->input('anio', date('Y'));
 
         $totalOrigen = DB::table('vigilancias')
-            ->where('CODIGO_DOC', $origen)->where('ANIO', $anio)->count();
+            ->where('CODIGO_EMP', $origen)->where('ANIO', $anio)->count();
 
         if ($totalOrigen === 0) {
             return back()->withErrors(['reasig_bloque' => 'El docente origen no tiene vigilancias asignadas.']);
         }
 
         $tieneDestino = DB::table('vigilancias')
-            ->where('CODIGO_DOC', $destino)->where('ANIO', $anio)->exists();
+            ->where('CODIGO_EMP', $destino)->where('ANIO', $anio)->exists();
 
         if ($tieneDestino) {
             // Intercambio completo usando un código temporal para evitar conflicto de unique
             $tmp = '_TMP_' . uniqid();
-            DB::table('vigilancias')->where('CODIGO_DOC', $origen)->where('ANIO', $anio)
-                ->update(['CODIGO_DOC' => $tmp]);
-            DB::table('vigilancias')->where('CODIGO_DOC', $destino)->where('ANIO', $anio)
-                ->update(['CODIGO_DOC' => $origen]);
-            DB::table('vigilancias')->where('CODIGO_DOC', $tmp)->where('ANIO', $anio)
-                ->update(['CODIGO_DOC' => $destino]);
+            DB::table('vigilancias')->where('CODIGO_EMP', $origen)->where('ANIO', $anio)
+                ->update(['CODIGO_EMP' => $tmp]);
+            DB::table('vigilancias')->where('CODIGO_EMP', $destino)->where('ANIO', $anio)
+                ->update(['CODIGO_EMP' => $origen]);
+            DB::table('vigilancias')->where('CODIGO_EMP', $tmp)->where('ANIO', $anio)
+                ->update(['CODIGO_EMP' => $destino]);
             $msg = "Vigilancias intercambiadas entre «{$origen}» y «{$destino}».";
         } else {
-            DB::table('vigilancias')->where('CODIGO_DOC', $origen)->where('ANIO', $anio)
-                ->update(['CODIGO_DOC' => $destino]);
+            DB::table('vigilancias')->where('CODIGO_EMP', $origen)->where('ANIO', $anio)
+                ->update(['CODIGO_EMP' => $destino]);
             $msg = "{$totalOrigen} slot(s) movidos de «{$origen}» a «{$destino}».";
         }
 
@@ -368,7 +368,7 @@ class VigilanciaController extends Controller
                     $posicion = strtoupper(trim($posicion));
 
                     $existe = DB::table('vigilancias')
-                        ->where('CODIGO_DOC', $codigoDoc)
+                        ->where('CODIGO_EMP', $codigoDoc)
                         ->where('DIA_CICLO', $dia)
                         ->where('DESCANSO', $descanso)
                         ->where('ANIO', $anio)
@@ -376,21 +376,21 @@ class VigilanciaController extends Controller
 
                     if ($posicion === '') {
                         DB::table('vigilancias')
-                            ->where('CODIGO_DOC', $codigoDoc)
+                            ->where('CODIGO_EMP', $codigoDoc)
                             ->where('DIA_CICLO', $dia)
                             ->where('DESCANSO', $descanso)
                             ->where('ANIO', $anio)
                             ->delete();
                     } elseif ($existe) {
                         DB::table('vigilancias')
-                            ->where('CODIGO_DOC', $codigoDoc)
+                            ->where('CODIGO_EMP', $codigoDoc)
                             ->where('DIA_CICLO', $dia)
                             ->where('DESCANSO', $descanso)
                             ->where('ANIO', $anio)
                             ->update(['POSICION' => $posicion, 'updated_at' => now()]);
                     } else {
                         DB::table('vigilancias')->insert([
-                            'CODIGO_DOC'  => $codigoDoc,
+                            'CODIGO_EMP'  => $codigoDoc,
                             'DIA_CICLO'   => $dia,
                             'DESCANSO'    => $descanso,
                             'POSICION'    => $posicion,

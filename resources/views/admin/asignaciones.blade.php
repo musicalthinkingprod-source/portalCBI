@@ -34,8 +34,8 @@
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">— Seleccionar docente —</option>
                         @foreach($docentesConAsig as $d)
-                        <option value="{{ $d->CODIGO_DOC }}" {{ $verAsigDoc == $d->CODIGO_DOC ? 'selected' : '' }}>
-                            {{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_DOC }}) — {{ $d->total_asig }} asignación(es)
+                        <option value="{{ $d->CODIGO_EMP }}" {{ $verAsigDoc == $d->CODIGO_EMP ? 'selected' : '' }}>
+                            {{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_EMP }}) — {{ $d->total_asig }} asignación(es)
                         </option>
                         @endforeach
                     </select>
@@ -78,16 +78,16 @@
                               class="flex gap-2 items-center"
                               onsubmit="return confirm('¿Mover esta asignación?')">
                             @csrf
-                            <input type="hidden" name="origen"     value="{{ $asig->CODIGO_DOC }}">
+                            <input type="hidden" name="origen"     value="{{ $asig->CODIGO_EMP }}">
                             <input type="hidden" name="CODIGO_MAT" value="{{ $asig->CODIGO_MAT }}">
                             <input type="hidden" name="CURSO"      value="{{ $asig->CURSO }}">
                             <select name="destino" required
                                 class="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="">— Seleccionar destino —</option>
                                 @foreach($docentesActivos as $dest)
-                                    @if($dest->CODIGO_DOC !== $asig->CODIGO_DOC)
-                                    <option value="{{ $dest->CODIGO_DOC }}">
-                                        {{ $dest->NOMBRE_DOC }} ({{ $dest->CODIGO_DOC }})
+                                    @if($dest->CODIGO_EMP !== $asig->CODIGO_EMP)
+                                    <option value="{{ $dest->CODIGO_EMP }}">
+                                        {{ $dest->NOMBRE_DOC }} ({{ $dest->CODIGO_EMP }})
                                     </option>
                                     @endif
                                 @endforeach
@@ -132,8 +132,8 @@
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">— Selecciona el docente con las asignaciones actuales —</option>
                         @foreach($docentesConAsig as $d)
-                        <option value="{{ $d->CODIGO_DOC }}">
-                            {{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_DOC }}) — {{ $d->total_asig }} asignación(es)
+                        <option value="{{ $d->CODIGO_EMP }}">
+                            {{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_EMP }}) — {{ $d->total_asig }} asignación(es)
                         </option>
                         @endforeach
                     </select>
@@ -146,8 +146,8 @@
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">— Selecciona el docente que recibirá las asignaciones —</option>
                         @foreach($docentesActivos as $d)
-                        <option value="{{ $d->CODIGO_DOC }}">
-                            {{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_DOC }})
+                        <option value="{{ $d->CODIGO_EMP }}">
+                            {{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_EMP }})
                         </option>
                         @endforeach
                     </select>

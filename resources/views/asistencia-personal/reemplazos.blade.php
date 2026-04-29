@@ -41,7 +41,7 @@
 
     {{-- Tarjeta por cada docente ausente --}}
     @foreach($ausentes as $doc)
-    @php $clases = $horarioAusentes[$doc->codigo_doc] ?? collect(); @endphp
+    @php $clases = $horarioAusentes[$doc->codigo_emp] ?? collect(); @endphp
 
     <div class="bg-white rounded-xl shadow overflow-hidden">
 
@@ -74,7 +74,7 @@
             <tbody class="divide-y divide-gray-50">
                 @foreach($clases as $clase)
                 @php
-                    $slotKey  = $doc->codigo_doc . '_' . $clase->HORA . '_' . $clase->CURSO;
+                    $slotKey  = $doc->codigo_emp . '_' . $clase->HORA . '_' . $clase->CURSO;
                     $asignado = $yaAsignados->get($slotKey)?->first();
                     $dispList = $disponiblesPorHoraCurso[$clase->HORA][$clase->CURSO] ?? collect();
                 @endphp
@@ -92,10 +92,10 @@
                         @if($asignado)
                         <div class="flex items-center gap-3 flex-wrap">
                             @php
-                                $numReemplazos = $reemplazosPorDocente[$asignado->codigo_doc_reemplazo] ?? 0;
+                                $numReemplazos = $reemplazosPorDocente[$asignado->codigo_emp_reemplazo] ?? 0;
                                 $nombreReemplazo = \Illuminate\Support\Facades\DB::table('CODIGOS_DOC')
-                                    ->where('CODIGO_DOC', $asignado->codigo_doc_reemplazo)
-                                    ->value('NOMBRE_DOC') ?? $asignado->codigo_doc_reemplazo;
+                                    ->where('CODIGO_EMP', $asignado->codigo_emp_reemplazo)
+                                    ->value('NOMBRE_DOC') ?? $asignado->codigo_emp_reemplazo;
                             @endphp
                             <span class="inline-flex items-center gap-2 bg-green-100 text-green-800 font-semibold text-sm px-3 py-1.5 rounded-lg">
                                 ✓ {{ $nombreReemplazo }}
@@ -123,8 +123,8 @@
                             <form method="POST" action="{{ route('asistencia-personal.reemplazos.asignar') }}">
                                 @csrf
                                 <input type="hidden" name="fecha"               value="{{ $fecha }}">
-                                <input type="hidden" name="codigo_doc_ausente"  value="{{ $doc->codigo_doc }}">
-                                <input type="hidden" name="codigo_doc_reemplazo"value="{{ $disp['codigo'] }}">
+                                <input type="hidden" name="codigo_emp_ausente"  value="{{ $doc->codigo_emp }}">
+                                <input type="hidden" name="codigo_emp_reemplazo"value="{{ $disp['codigo'] }}">
                                 <input type="hidden" name="hora"                value="{{ $clase->HORA }}">
                                 <input type="hidden" name="curso"               value="{{ $clase->CURSO }}">
                                 <button type="submit"

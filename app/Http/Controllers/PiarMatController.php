@@ -10,7 +10,8 @@ class PiarMatController extends Controller
 {
     private function esDocente(): bool
     {
-        return str_starts_with(auth()->user()->PROFILE, 'DOC');
+        $profile = auth()->user()->PROFILE;
+        return str_starts_with($profile, 'DOC') || str_starts_with($profile, 'COR');
     }
 
     private function codigoDoc(): string
@@ -27,7 +28,7 @@ class PiarMatController extends Controller
         // Estudiantes con PIAR + materias asignadas al docente
         $query = DB::table('ESTUDIANTES as e')
             ->join('PIAR_DIAG as pd', 'pd.CODIGO_ALUM', '=', 'e.CODIGO')
-            ->join(DB::raw('(SELECT DISTINCT CODIGO_DOC, CODIGO_MAT, CURSO FROM ASIGNACION_PCM) as a'), 'a.CURSO', '=', 'e.CURSO')
+            ->join(DB::raw('(SELECT DISTINCT CODIGO_EMP, CODIGO_MAT, CURSO FROM ASIGNACION_PCM) as a'), 'a.CURSO', '=', 'e.CURSO')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'a.CODIGO_MAT')
             ->leftJoin('PIAR_MAT as pm', function ($j) {
                 $j->on('pm.CODIGO_ALUM', '=', 'e.CODIGO')
@@ -47,7 +48,7 @@ class PiarMatController extends Controller
             );
 
         if ($esDocente) {
-            $query->where('a.CODIGO_DOC', $codigoDoc);
+            $query->where('a.CODIGO_EMP', $codigoDoc);
         }
 
         $filas = $query->orderBy('m.NOMBRE_MAT')->orderBy('e.APELLIDO1')->orderBy('e.NOMBRE1')->get();
@@ -69,7 +70,7 @@ class PiarMatController extends Controller
             $estudiante = DB::table('ESTUDIANTES as e')
                 ->join('ASIGNACION_PCM as a', function ($j) use ($codigoDoc, $codigoMat) {
                     $j->on('a.CURSO', '=', 'e.CURSO')
-                      ->where('a.CODIGO_DOC', $codigoDoc)
+                      ->where('a.CODIGO_EMP', $codigoDoc)
                       ->where('a.CODIGO_MAT', $codigoMat);
                 })
                 ->where('e.CODIGO', $codigo)
@@ -82,7 +83,7 @@ class PiarMatController extends Controller
         if (!$estudiante) abort(403);
 
         $materia  = DB::table('CODIGOSMAT')->where('CODIGO_MAT', $codigoMat)->first();
-        $docente  = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $codigoDoc)->first();
+        $docente  = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $codigoDoc)->first();
         $piarDiag = DB::table('PIAR_DIAG')->where('CODIGO_ALUM', $codigo)->first();
         $piarMat  = DB::table('PIAR_MAT')
                         ->where('CODIGO_ALUM', $codigo)
@@ -126,7 +127,7 @@ class PiarMatController extends Controller
             $estudiante = DB::table('ESTUDIANTES as e')
                 ->join('ASIGNACION_PCM as a', function ($j) use ($codigoDoc, $codigoMat) {
                     $j->on('a.CURSO', '=', 'e.CURSO')
-                      ->where('a.CODIGO_DOC', $codigoDoc)
+                      ->where('a.CODIGO_EMP', $codigoDoc)
                       ->where('a.CODIGO_MAT', $codigoMat);
                 })
                 ->where('e.CODIGO', $codigo)
@@ -139,7 +140,7 @@ class PiarMatController extends Controller
         if (!$estudiante) abort(403);
 
         $materia  = DB::table('CODIGOSMAT')->where('CODIGO_MAT', $codigoMat)->first();
-        $docente  = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $codigoDoc)->first();
+        $docente  = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $codigoDoc)->first();
         $piarDiag = DB::table('PIAR_DIAG')->where('CODIGO_ALUM', $codigo)->first();
         $piarMat  = DB::table('PIAR_MAT')
                         ->where('CODIGO_ALUM', $codigo)
@@ -248,7 +249,7 @@ class PiarMatController extends Controller
             $estudiante = DB::table('ESTUDIANTES as e')
                 ->join('ASIGNACION_PCM as a', function ($j) use ($codigoDoc, $codigoMat) {
                     $j->on('a.CURSO', '=', 'e.CURSO')
-                      ->where('a.CODIGO_DOC', $codigoDoc)
+                      ->where('a.CODIGO_EMP', $codigoDoc)
                       ->where('a.CODIGO_MAT', $codigoMat);
                 })
                 ->where('e.CODIGO', $codigo)
@@ -261,7 +262,7 @@ class PiarMatController extends Controller
         if (!$estudiante) abort(403);
 
         $materia  = DB::table('CODIGOSMAT')->where('CODIGO_MAT', $codigoMat)->first();
-        $docente  = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $codigoDoc)->first();
+        $docente  = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $codigoDoc)->first();
         $piarDiag = DB::table('PIAR_DIAG')->where('CODIGO_ALUM', $codigo)->first();
         $piarMat  = DB::table('PIAR_MAT')
                         ->where('CODIGO_ALUM', $codigo)

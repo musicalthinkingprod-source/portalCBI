@@ -45,7 +45,7 @@ class ControlPlanillaController extends Controller
         $query = DB::table('planilla_notas as pn')
             ->join('planilla_columnas as pc', 'pc.id', '=', 'pn.columna_id')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'pc.codigo_mat')
-            ->join('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'pc.codigo_doc')
+            ->join('CODIGOS_DOC as d', 'd.CODIGO_EMP', '=', 'pc.codigo_emp')
             ->where('pc.anio', $anio)
             ->where('pc.periodo', $periodo)
             ->whereNotNull('pn.nota');
@@ -54,7 +54,7 @@ class ControlPlanillaController extends Controller
         if ($materia) $query->where('pc.codigo_mat', $materia);
 
         $filas = $query->select(
-                'pc.codigo_doc',
+                'pc.codigo_emp',
                 'd.NOMBRE_DOC',
                 'pc.id as columna_id',
                 'pc.nombre_actividad',
@@ -67,12 +67,12 @@ class ControlPlanillaController extends Controller
                 DB::raw('MAX(pn.updated_at) as ultima')
             )
             ->groupBy(
-                'pc.codigo_doc', 'd.NOMBRE_DOC',
+                'pc.codigo_emp', 'd.NOMBRE_DOC',
                 'pc.id', 'pc.nombre_actividad', 'pc.categoria',
                 'pc.codigo_mat', 'm.NOMBRE_MAT', 'pc.curso',
                 DB::raw('DATE(pn.updated_at)')
             )
-            ->orderBy('pc.codigo_doc')
+            ->orderBy('pc.codigo_emp')
             ->orderByDesc(DB::raw('DATE(pn.updated_at)'))
             ->orderBy('pc.id')
             ->get();
@@ -84,10 +84,10 @@ class ControlPlanillaController extends Controller
             return $num ?: null;
         };
 
-        // Organizar: [codigo_doc => [ciclo_num => [fecha => [actividades]]]]
+        // Organizar: [codigo_emp => [ciclo_num => [fecha => [actividades]]]]
         $porDocente = [];
         foreach ($filas as $fila) {
-            $doc   = $fila->codigo_doc;
+            $doc   = $fila->codigo_emp;
             $fecha = $fila->fecha;
             $ciclo = $numeroCiclo($fecha);
 

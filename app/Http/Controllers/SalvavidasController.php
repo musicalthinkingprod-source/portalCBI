@@ -16,10 +16,10 @@ class SalvavidasController extends Controller
         $queryAsig = DB::table('ASIGNACION_PCM as a')
             ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
             ->where('a.calificable', 1)
-            ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT');
+            ->select('a.CODIGO_EMP', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT');
 
         if (!$esSuperior) {
-            $queryAsig->where('a.CODIGO_DOC', $profile);
+            $queryAsig->where('a.CODIGO_EMP', $profile);
         }
 
         $asignaciones = $queryAsig->orderBy('m.NOMBRE_MAT')->orderBy('a.CURSO')->get();
@@ -129,7 +129,7 @@ class SalvavidasController extends Controller
                     'CODIGO_MAT'  => $materia,
                     'PERIODO'     => $periodo,
                     'ANIO'        => $anio,
-                    'CODIGO_DOC'  => $profile,
+                    'CODIGO_EMP'  => $profile,
                 ]);
             }
         }
@@ -177,11 +177,11 @@ class SalvavidasController extends Controller
         $query = DB::table('Salvavidas as s')
             ->join('ESTUDIANTES as e', 'e.CODIGO', '=', 's.CODIGO_ALUM')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 's.CODIGO_MAT')
-            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 's.CODIGO_DOC')
+            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_EMP', '=', 's.CODIGO_EMP')
             ->where('s.ANIO', $anio)
             ->select(
                 'e.CODIGO', 'e.APELLIDO1', 'e.APELLIDO2', 'e.NOMBRE1', 'e.NOMBRE2', 'e.CURSO',
-                'm.NOMBRE_MAT', 's.PERIODO', 'd.NOMBRE_DOC', 's.CODIGO_DOC'
+                'm.NOMBRE_MAT', 's.PERIODO', 'd.NOMBRE_DOC', 's.CODIGO_EMP'
             );
 
         if ($periodo)     $query->where('s.PERIODO', $periodo);

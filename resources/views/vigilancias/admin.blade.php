@@ -46,8 +46,8 @@
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
                             <option value="">— Seleccionar docente —</option>
                             @foreach($docentesConAsig as $d)
-                            <option value="{{ $d->CODIGO_DOC }}" {{ ($verDoc ?? '') == $d->CODIGO_DOC ? 'selected' : '' }}>
-                                {{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_DOC }}) — {{ $d->total_slots }} slot(s)
+                            <option value="{{ $d->CODIGO_EMP }}" {{ ($verDoc ?? '') == $d->CODIGO_EMP ? 'selected' : '' }}>
+                                {{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_EMP }}) — {{ $d->total_slots }} slot(s)
                             </option>
                             @endforeach
                         </select>
@@ -107,7 +107,7 @@
                                         class="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500">
                                         <option value="">— Destino —</option>
                                         @foreach($docentesDestino as $dest)
-                                        <option value="{{ $dest->CODIGO_DOC }}">{{ $dest->NOMBRE_DOC }}</option>
+                                        <option value="{{ $dest->CODIGO_EMP }}">{{ $dest->NOMBRE_DOC }}</option>
                                         @endforeach
                                     </select>
                                     <button type="submit"
@@ -148,8 +148,8 @@
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
                         <option value="">— Docente con vigilancias actuales —</option>
                         @foreach($docentesConAsig as $d)
-                        <option value="{{ $d->CODIGO_DOC }}">
-                            {{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_DOC }}) — {{ $d->total_slots }} slot(s)
+                        <option value="{{ $d->CODIGO_EMP }}">
+                            {{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_EMP }}) — {{ $d->total_slots }} slot(s)
                         </option>
                         @endforeach
                     </select>
@@ -162,7 +162,7 @@
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
                         <option value="">— Docente que recibirá las vigilancias —</option>
                         @foreach($docentesDestino as $d)
-                        <option value="{{ $d->CODIGO_DOC }}">{{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_DOC }})</option>
+                        <option value="{{ $d->CODIGO_EMP }}">{{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_EMP }})</option>
                         @endforeach
                     </select>
                 </div>
@@ -247,10 +247,10 @@
                                 </td>
                                 @for($dia = 1; $dia <= 6; $dia++)
                                     @foreach([1, 2] as $desc)
-                                        @php $val = $matriz[$doc->CODIGO_DOC][$dia][$desc] ?? ''; @endphp
+                                        @php $val = $matriz[$doc->CODIGO_EMP][$dia][$desc] ?? ''; @endphp
                                         <td class="px-1 py-1 {{ $desc === 2 ? 'border-r border-gray-200' : '' }}">
                                             <input type="text"
-                                                name="asignaciones[{{ $doc->CODIGO_DOC }}][{{ $dia }}][{{ $desc }}]"
+                                                name="asignaciones[{{ $doc->CODIGO_EMP }}][{{ $dia }}][{{ $desc }}]"
                                                 value="{{ $val }}"
                                                 maxlength="10" placeholder="—"
                                                 class="w-14 text-center text-xs rounded border py-1 px-1 uppercase

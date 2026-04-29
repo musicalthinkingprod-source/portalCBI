@@ -125,7 +125,7 @@
                 </div>
             @endif
             @php
-                $calRoute = str_starts_with($profile, 'DOC') ? route('calendario.docente') : route('calendario.index');
+                $calRoute = (str_starts_with($profile, 'DOC') || str_starts_with($profile, 'COR')) ? route('calendario.docente') : route('calendario.index');
             @endphp
             <a href="{{ $calRoute }}" class="text-xs text-blue-600 hover:underline mt-auto">Ver más →</a>
         </div>
@@ -172,7 +172,7 @@
         <div class="bg-white rounded-xl shadow p-6">
             <h3 class="text-sm font-bold text-gray-700 mb-4">Accesos rápidos</h3>
             <div class="grid grid-cols-2 gap-2">
-                @if($notas !== null || str_starts_with($profile, 'DOC'))
+                @if($notas !== null || str_starts_with($profile, 'DOC') || str_starts_with($profile, 'COR'))
                 <a href="{{ route('notas.index') }}"
                    class="flex items-center gap-2 px-3 py-3 bg-blue-50 hover:bg-blue-100 rounded-xl text-sm text-blue-800 font-medium transition">
                     📋 Notas

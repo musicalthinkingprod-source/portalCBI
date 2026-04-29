@@ -24,9 +24,9 @@ class PadresController extends Controller
 
         $docentes = DB::table('ASIGNACION_PCM')
             ->where('CODIGO_MAT', $codigoMat)
-            ->get(['CURSO', 'CODIGO_DOC'])
+            ->get(['CURSO', 'CODIGO_EMP'])
             ->filter(fn($r) => rtrim($r->CURSO, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') === $grado)
-            ->pluck('CODIGO_DOC')
+            ->pluck('CODIGO_EMP')
             ->unique();
 
         $identificador = $docentes->count() <= 1 ? $grado : strtolower($curso);
@@ -95,7 +95,7 @@ class PadresController extends Controller
                     $join->on('a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
                          ->where('a.CURSO', $curso);
                 })
-                ->leftJoin('CODIGOS_DOC as cd', 'cd.CODIGO_DOC', '=', 'a.CODIGO_DOC')
+                ->leftJoin('CODIGOS_DOC as cd', 'cd.CODIGO_EMP', '=', 'a.CODIGO_EMP')
                 ->where('h.CURSO', $curso)
                 ->where('h.DIA', $diaCicloHoy)
                 ->select('h.HORA', 'cm.NOMBRE_MAT', 'cd.NOMBRE_DOC')
@@ -115,7 +115,7 @@ class PadresController extends Controller
                     $join->on('a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
                          ->where('a.CURSO', $curso);
                 })
-                ->leftJoin('CODIGOS_DOC as cd', 'cd.CODIGO_DOC', '=', 'a.CODIGO_DOC')
+                ->leftJoin('CODIGOS_DOC as cd', 'cd.CODIGO_EMP', '=', 'a.CODIGO_EMP')
                 ->where('h.CURSO', $curso)
                 ->select('h.DIA', 'h.HORA', 'cm.NOMBRE_MAT', 'cd.NOMBRE_DOC')
                 ->orderBy('h.HORA')->orderBy('h.DIA')
@@ -246,11 +246,11 @@ class PadresController extends Controller
         $anio  = (int) date('Y');
         $hoy   = today();
 
-        // Todos los docentes con slots de atención (CODIGO_MAT=200 en HORARIOS, CURSO=CODIGO_DOC)
+        // Todos los docentes con slots de atención (CODIGO_MAT=200 en HORARIOS, CURSO=CODIGO_EMP)
         $slots = DB::table('HORARIOS as h')
-            ->join('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'h.CURSO')
+            ->join('CODIGOS_DOC as d', 'd.CODIGO_EMP', '=', 'h.CURSO')
             ->where('h.CODIGO_MAT', 200)
-            ->select('h.CURSO as codigo_doc', 'd.NOMBRE_DOC', 'h.DIA', 'h.HORA')
+            ->select('h.CURSO as codigo_emp', 'd.NOMBRE_DOC', 'h.DIA', 'h.HORA')
             ->orderBy('d.NOMBRE_DOC')
             ->orderBy('h.DIA')
             ->orderBy('h.HORA')
@@ -261,8 +261,8 @@ class PadresController extends Controller
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'a.CODIGO_MAT')
             ->where('a.CURSO', $curso)
             ->where('a.CODIGO_MAT', '!=', 200)
-            ->get(['a.CODIGO_DOC', 'm.NOMBRE_MAT'])
-            ->groupBy('CODIGO_DOC')
+            ->get(['a.CODIGO_EMP', 'm.NOMBRE_MAT'])
+            ->groupBy('CODIGO_EMP')
             ->map(fn($items) => $items->pluck('NOMBRE_MAT'));
 
         // Próxima fecha de cada día del ciclo
@@ -274,9 +274,9 @@ class PadresController extends Controller
         }
 
         // Agrupar slots por docente, separando los del curso del estudiante
-        $docentes = $slots->groupBy('codigo_doc')->map(function ($items, $codigoDoc) use ($materiasDocente) {
+        $docentes = $slots->groupBy('codigo_emp')->map(function ($items, $codigoDoc) use ($materiasDocente) {
             return [
-                'codigo_doc'  => $codigoDoc,
+                'codigo_emp'  => $codigoDoc,
                 'nombre'      => $items->first()->NOMBRE_DOC,
                 'materias'    => $materiasDocente->get($codigoDoc, collect()),
                 'es_propio'   => $materiasDocente->has($codigoDoc),

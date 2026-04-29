@@ -25,15 +25,15 @@ class ListadosEspecialesController extends Controller
 
         // Docentes asignados por grupo
         $docentesPorGrupo = DB::table('ASIGNACION_PCM as a')
-            ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_DOC', '=', 'd.CODIGO_DOC')
+            ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_EMP', '=', 'd.CODIGO_EMP')
             ->where('a.CODIGO_MAT', 31)
-            ->select('a.CURSO as grupo', 'a.CODIGO_DOC',
-                     DB::raw("COALESCE(d.NOMBRE_DOC, a.CODIGO_DOC) as NOMBRE_DOC"))
+            ->select('a.CURSO as grupo', 'a.CODIGO_EMP',
+                     DB::raw("COALESCE(d.NOMBRE_DOC, a.CODIGO_EMP) as NOMBRE_DOC"))
             ->get()->keyBy('grupo');
 
         $gruposProyecto = $gruposRaw->map(fn($g) => (object)[
             'grupo'      => $g,
-            'CODIGO_DOC' => $docentesPorGrupo[$g]->CODIGO_DOC ?? null,
+            'CODIGO_EMP' => $docentesPorGrupo[$g]->CODIGO_EMP ?? null,
             'NOMBRE_DOC' => $docentesPorGrupo[$g]->NOMBRE_DOC ?? null,
         ]);
 
@@ -68,7 +68,7 @@ class ListadosEspecialesController extends Controller
         // Docentes activos
         $docentesActivos = DB::table('CODIGOS_DOC')
             ->where('ESTADO', 'ACTIVO')->orderBy('NOMBRE_DOC')
-            ->get(['CODIGO_DOC', 'NOMBRE_DOC']);
+            ->get(['CODIGO_EMP', 'NOMBRE_DOC']);
 
         // ── MÚSICA Y ARTES ─────────────────────────────────────────────────
         $cursoMusica = $request->input('curso_musica', '');
@@ -122,7 +122,7 @@ class ListadosEspecialesController extends Controller
     public function crearGrupo(Request $request)
     {
         $grupo     = strtoupper(trim($request->input('grupo')));
-        $codigoDoc = trim($request->input('codigo_doc', '')) ?: null;
+        $codigoDoc = trim($request->input('codigo_emp', '')) ?: null;
 
         if (!preg_match('/^GP\d+$/', $grupo)) {
             return back()->withErrors(['error' => "Nombre de grupo inválido. Use formato GP1, GP2, etc."]);
@@ -139,7 +139,7 @@ class ListadosEspecialesController extends Controller
         }
 
         DB::table('ASIGNACION_PCM')->insert([
-            'CODIGO_DOC' => $codigoDoc,
+            'CODIGO_EMP' => $codigoDoc,
             'CODIGO_MAT' => 31,
             'CURSO'      => $grupo,
             'IHS'        => null,
@@ -153,7 +153,7 @@ class ListadosEspecialesController extends Controller
     public function asignarDocente(Request $request)
     {
         $grupo     = strtoupper(trim($request->input('grupo')));
-        $codigoDoc = trim($request->input('codigo_doc'));
+        $codigoDoc = trim($request->input('codigo_emp'));
 
         if (!$grupo || !$codigoDoc) {
             return back()->withErrors(['error' => 'Datos incompletos.']);
@@ -163,7 +163,7 @@ class ListadosEspecialesController extends Controller
             ->where('CODIGO_MAT', 31)->where('CURSO', $grupo)->delete();
 
         DB::table('ASIGNACION_PCM')->insert([
-            'CODIGO_DOC' => $codigoDoc,
+            'CODIGO_EMP' => $codigoDoc,
             'CODIGO_MAT' => 31,
             'CURSO'      => $grupo,
             'IHS'        => null,

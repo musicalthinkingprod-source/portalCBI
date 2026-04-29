@@ -68,7 +68,7 @@
                                         <div class="font-semibold text-gray-800">{{ $celda['materia'] }}</div>
                                         @if($celda['docente'])
                                             <div class="text-xs text-blue-600 mt-0.5">
-                                                <a href="{{ route('horarios.por_docente', ['docente' => $celda['codigo_doc']]) }}"
+                                                <a href="{{ route('horarios.por_docente', ['docente' => $celda['codigo_emp']]) }}"
                                                    class="hover:underline">
                                                     {{ $celda['docente'] }}
                                                 </a>

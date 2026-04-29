@@ -191,7 +191,7 @@ class DeroterosController extends Controller
             ->select('a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT');
 
         if (!$esSuperior) {
-            $queryAsig->where('a.CODIGO_DOC', $profile);
+            $queryAsig->where('a.CODIGO_EMP', $profile);
         }
 
         $asignaciones = $queryAsig->orderBy('m.NOMBRE_MAT')->orderBy('a.CURSO')->get();
@@ -275,7 +275,7 @@ class DeroterosController extends Controller
             'RESOLUCION'        => $resolucion,
             'NOTA_RECUPERACION' => $notaFinal,
             'NOTA_ORIGINAL'     => $notaOriginal,
-            'CODIGO_DOC'        => $profile,
+            'CODIGO_EMP'        => $profile,
         ];
 
         if ($existe) {

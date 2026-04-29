@@ -172,7 +172,7 @@
                         </td>
                         <td class="px-4 py-2 text-center text-gray-500">{{ $d->CURSO }}</td>
                         <td class="px-4 py-2 text-center font-semibold text-blue-700">P{{ $d->PERIODO }}</td>
-                        <td class="px-4 py-2 text-gray-700">{{ $d->NOMBRE_DOC ?? $d->CODIGO_DOC }}</td>
+                        <td class="px-4 py-2 text-gray-700">{{ $d->NOMBRE_DOC ?? $d->CODIGO_EMP }}</td>
                         <td class="px-4 py-2 text-gray-500 text-xs">
                             {{ \Carbon\Carbon::parse($d->FECHA)->format('d/m/Y H:i') }}
                         </td>

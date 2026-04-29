@@ -9,7 +9,7 @@ class DashboardController extends Controller
     public function index()
     {
         $profile = auth()->user()->PROFILE;
-        $isDoc   = str_starts_with($profile, 'DOC');
+        $isDoc   = str_starts_with($profile, 'DOC') || str_starts_with($profile, 'COR');
 
         // ── Cartera (SuperAd, Admin, Contab) ──────────────────────────────
         $cartera = null;
@@ -40,7 +40,7 @@ class DashboardController extends Controller
             $conNotas = DB::table('planilla_columnas')
                 ->where('periodo', $periodoActual)
                 ->distinct()
-                ->count(DB::raw('CONCAT(codigo_doc, codigo_mat, curso)'));
+                ->count(DB::raw('CONCAT(codigo_emp, codigo_mat, curso)'));
 
             $notas = [
                 'periodo'   => $periodoActual,
