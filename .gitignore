@@ -21,3 +21,5 @@ subir.env
 /public/test.php
 /public/limpiar.php
 /public/extraer.php
+/app/Console/Commands/SyncFotosEstudiantes.php
+/storage/app/google/

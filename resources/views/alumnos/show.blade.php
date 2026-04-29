@@ -7,7 +7,9 @@
     {{-- CABEZADO: estado del día --}}
     <div class="bg-white rounded-xl shadow p-5 mb-6">
         <div class="flex flex-wrap items-center justify-between gap-4">
-            <div>
+            <div class="flex items-center gap-4">
+                @include('partials.foto_estudiante', ['fotoDrive' => $estudiante->FOTO_DRIVE ?? null, 'width' => 96, 'height' => 120, 'estilo' => 'avatar'])
+                <div>
                 <h2 class="text-2xl font-bold text-blue-800">
                     {{ $estudiante->APELLIDO1 }} {{ $estudiante->APELLIDO2 }} {{ $estudiante->NOMBRE1 }} {{ $estudiante->NOMBRE2 }}
                 </h2>
@@ -29,6 +31,7 @@
                     <span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $estudiante->ESTADO === 'MATRICULADO' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600' }}">
                         {{ $estudiante->ESTADO ?? '—' }}
                     </span>
+                </div>
                 </div>
             </div>
             {{-- Asistencia del día (pendiente de tabla) --}}

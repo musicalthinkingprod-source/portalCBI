@@ -111,7 +111,7 @@ img {
 </tr>
 </table>
 
-<p style="text-align:center"><span style="display:inline-block;width:200px;height:260px;border:2.5px dashed #333;text-align:center;line-height:260px;font-size:13pt;font-family:Arial,sans-serif;color:#555;letter-spacing:2px;">PEGAR FOTO</span></p>
+<p style="text-align:center">@include('partials.foto_estudiante', ['fotoDrive' => $estudiante->FOTO_DRIVE ?? null, 'width' => 200, 'height' => 260, 'estilo' => 'print'])</p>
 <p style="text-align:center;margin-top:10pt;margin-bottom:10pt;"><span style="display:inline-block;border:2px solid #000;padding:12pt 20pt;text-transform:uppercase;"><strong><span style="font-size:16pt;font-family:Arial,sans-serif;">Nombre: {{ $nombreCompleto }} {{ $apellidos }}</span></strong><br/><strong><span style="font-size:16pt;font-family:Arial,sans-serif;">{{ $tipoDoc }}: {{ $numId }}</span></strong><br/><strong><span style="font-size:16pt;font-family:Arial,sans-serif;">Curso: {{ $grado }}{{ $curso ? ' – ' . $curso : '' }}{{ $sede ? ' – ' . $sede : '' }}</span></strong><br/><strong><span style="font-size:16pt;font-family:Arial,sans-serif;">DX: {{ $v('DIAGNOSTICO') }}</span></strong></span></p>
 
 <p>&nbsp;</p>
