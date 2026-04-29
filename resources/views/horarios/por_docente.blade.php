@@ -36,7 +36,7 @@
                 class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <option value="">— Seleccionar —</option>
                 @foreach($docentes as $doc)
-                    <option value="{{ $doc->CODIGO_DOC }}" {{ $doc->CODIGO_DOC === $docenteActual ? 'selected' : '' }}>
+                    <option value="{{ $doc->CODIGO_EMP }}" {{ $doc->CODIGO_EMP === $docenteActual ? 'selected' : '' }}>
                         {{ $doc->NOMBRE_DOC }}{{ ($doc->ESTADO ?? '') !== 'ACTIVO' ? ' ⚠ sin docente' : '' }}
                     </option>
                 @endforeach
@@ -181,7 +181,7 @@
                     <div class="text-indigo-600 text-xs mt-0.5" x-text="datos.horaLabel + ' · Curso ' + datos.cursoLabel"></div>
                 </div>
 
-                <input type="hidden" name="codigo_doc_ausente" :value="datos.ausente">
+                <input type="hidden" name="codigo_emp_ausente" :value="datos.ausente">
                 <input type="hidden" name="hora"               :value="datos.hora">
                 <input type="hidden" name="curso"              :value="datos.curso">
 
@@ -197,7 +197,7 @@
                 {{-- Docente de reemplazo --}}
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">Docente que reemplaza</label>
-                    <select name="codigo_doc_reemplazo"
+                    <select name="codigo_emp_reemplazo"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none"
                             required>
                         <option value="">— Seleccionar —</option>
@@ -236,7 +236,7 @@
 const _ocupadosPorSlot  = @json($ocupadosPorSlot ?? []);
 const _reemplazosCiclo  = @json($reemplazosCiclo ?? []);
 const _docentesPorCurso = @json($docentesPorCurso ?? []);
-const _todosDocentes    = @json($docentesActivos->map(fn($d) => ['codigo' => $d->CODIGO_DOC, 'nombre' => $d->NOMBRE_DOC])->values());
+const _todosDocentes    = @json($docentesActivos->map(fn($d) => ['codigo' => $d->CODIGO_EMP, 'nombre' => $d->NOMBRE_DOC])->values());
 
 function reemplazoModal() {
     return {

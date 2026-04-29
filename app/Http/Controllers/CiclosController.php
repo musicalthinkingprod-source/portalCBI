@@ -20,9 +20,9 @@ class CiclosController extends Controller
         // ── Asignaciones calificables con docente ────────────────────────────
         $asignaciones = DB::table('ASIGNACION_PCM as a')
             ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
-            ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_DOC', '=', 'd.CODIGO_DOC')
+            ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_EMP', '=', 'd.CODIGO_EMP')
             ->where('a.calificable', 1)
-            ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO',
+            ->select('a.CODIGO_EMP', 'a.CODIGO_MAT', 'a.CURSO',
                      'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
             ->orderBy('d.NOMBRE_DOC')->orderBy('m.NOMBRE_MAT')->orderBy('a.CURSO')
             ->get();
@@ -41,12 +41,12 @@ class CiclosController extends Controller
                     $ciclo->fecha_fin    . ' 23:59:59',
                 ])
                 ->whereNotNull('pn.nota')
-                ->select('pc.codigo_doc', 'pc.codigo_mat', 'pc.curso')
+                ->select('pc.codigo_emp', 'pc.codigo_mat', 'pc.curso')
                 ->distinct()
                 ->get();
 
             foreach ($entradas as $e) {
-                $key = $e->codigo_doc . '|' . $e->codigo_mat . '|' . $e->curso;
+                $key = $e->codigo_emp . '|' . $e->codigo_mat . '|' . $e->curso;
                 $cumplimiento[$ciclo->id][$key] = true;
             }
         }
@@ -133,9 +133,9 @@ class CiclosController extends Controller
         // ── Asignaciones calificables ─────────────────────────────────────
         $asignaciones = DB::table('ASIGNACION_PCM as a')
             ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
-            ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_DOC', '=', 'd.CODIGO_DOC')
+            ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_EMP', '=', 'd.CODIGO_EMP')
             ->where('a.calificable', 1)
-            ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO',
+            ->select('a.CODIGO_EMP', 'a.CODIGO_MAT', 'a.CURSO',
                      'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
             ->orderBy('d.NOMBRE_DOC')->orderBy('m.NOMBRE_MAT')->orderBy('a.CURSO')
             ->get();
@@ -154,17 +154,17 @@ class CiclosController extends Controller
                 ])
                 ->whereNotNull('pn.nota')
                 ->select(
-                    'pc.codigo_doc',
+                    'pc.codigo_emp',
                     'pc.codigo_mat',
                     'pc.curso',
                     DB::raw('DATE(pn.updated_at) as fecha'),
                     DB::raw('COUNT(*) as total')
                 )
-                ->groupBy('pc.codigo_doc', 'pc.codigo_mat', 'pc.curso', DB::raw('DATE(pn.updated_at)'))
+                ->groupBy('pc.codigo_emp', 'pc.codigo_mat', 'pc.curso', DB::raw('DATE(pn.updated_at)'))
                 ->get();
 
             foreach ($filas as $f) {
-                $key = $f->codigo_doc . '|' . $f->codigo_mat . '|' . $f->curso;
+                $key = $f->codigo_emp . '|' . $f->codigo_mat . '|' . $f->curso;
                 $conteos[$f->fecha][$key] = (int) $f->total;
             }
         }

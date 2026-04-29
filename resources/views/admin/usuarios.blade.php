@@ -96,7 +96,8 @@
                             {{ $u->PROFILE === 'SuperAd' ? 'bg-purple-100 text-purple-700' :
                                ($u->PROFILE === 'Admin'   ? 'bg-blue-100 text-blue-700' :
                                (str_starts_with($u->PROFILE, 'DOC') ? 'bg-green-100 text-green-700' :
-                               'bg-gray-100 text-gray-600')) }}">
+                               (str_starts_with($u->PROFILE, 'COR') ? 'bg-emerald-100 text-emerald-700' :
+                               'bg-gray-100 text-gray-600'))) }}">
                             {{ $u->PROFILE }}
                         </span>
                     </td>
@@ -148,8 +149,8 @@
             @csrf
             <div>
                 <label class="block text-xs text-gray-500 mb-1">Código</label>
-                <input type="text" name="CODIGO_DOC" id="inp-cod-doc"
-                    value="{{ old('CODIGO_DOC', $siguienteCodDoc) }}"
+                <input type="text" name="CODIGO_EMP" id="inp-cod-doc"
+                    value="{{ old('CODIGO_EMP', $siguienteCodDoc) }}"
                     required maxlength="10"
                     class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
@@ -190,7 +191,7 @@
             <tbody class="divide-y divide-gray-100">
                 @forelse($docentes as $doc)
                 <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-2 font-mono text-xs text-gray-500">{{ $doc->CODIGO_DOC }}</td>
+                    <td class="px-4 py-2 font-mono text-xs text-gray-500">{{ $doc->CODIGO_EMP }}</td>
                     <td class="px-4 py-2 font-medium">{{ $doc->NOMBRE_DOC }}</td>
                     <td class="px-4 py-2 text-xs text-gray-500">{{ $doc->TIPO ?? '—' }}</td>
                     <td class="px-4 py-2 text-center">
@@ -200,7 +201,7 @@
                         </span>
                     </td>
                     <td class="px-4 py-2 text-right">
-                        <form method="POST" action="{{ route('admin.docentes.estado', $doc->CODIGO_DOC) }}" class="flex gap-1 justify-end">
+                        <form method="POST" action="{{ route('admin.docentes.estado', $doc->CODIGO_EMP) }}" class="flex gap-1 justify-end">
                             @csrf
                             <select name="estado" class="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500">
                                 <option value="ACTIVO"      {{ $doc->ESTADO === 'ACTIVO'      ? 'selected' : '' }}>Activo</option>

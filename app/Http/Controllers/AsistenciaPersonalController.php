@@ -46,12 +46,12 @@ class AsistenciaPersonalController extends Controller
         // Todos los docentes activos con su registro de asistencia para esa fecha
         $docentes = DB::table('CODIGOS_DOC as d')
             ->leftJoin('asistencia_docentes as a', function ($j) use ($fecha) {
-                $j->on('a.codigo_doc', '=', 'd.CODIGO_DOC')->where('a.fecha', $fecha);
+                $j->on('a.codigo_emp', '=', 'd.CODIGO_EMP')->where('a.fecha', $fecha);
             })
             ->whereIn('d.ESTADO', ['ACTIVO', 'INCAPACIDAD'])
             ->orderBy('d.NOMBRE_DOC')
             ->select(
-                'd.CODIGO_DOC', 'd.NOMBRE_DOC', 'd.TIPO', 'd.ESTADO as estado_docente',
+                'd.CODIGO_EMP', 'd.NOMBRE_DOC', 'd.TIPO', 'd.ESTADO as estado_docente',
                 'a.estado', 'a.hora_llegada', 'a.observacion'
             )
             ->get();
@@ -79,10 +79,10 @@ class AsistenciaPersonalController extends Controller
         // Docentes con su estado y si tienen permiso aprobado para esta fecha
         $docentes = DB::table('CODIGOS_DOC as d')
             ->leftJoin('asistencia_docentes as a', function ($j) use ($fecha) {
-                $j->on('a.codigo_doc', '=', 'd.CODIGO_DOC')->where('a.fecha', $fecha);
+                $j->on('a.codigo_emp', '=', 'd.CODIGO_EMP')->where('a.fecha', $fecha);
             })
             ->leftJoin('permisos_docentes as p', function ($j) use ($fecha) {
-                $j->on('p.codigo_doc', '=', 'd.CODIGO_DOC')
+                $j->on('p.codigo_emp', '=', 'd.CODIGO_EMP')
                   ->where('p.estado', 'aprobado')
                   ->where('p.fecha_inicio', '<=', $fecha)
                   ->where('p.fecha_fin',    '>=', $fecha);
@@ -90,7 +90,7 @@ class AsistenciaPersonalController extends Controller
             ->whereIn('d.ESTADO', ['ACTIVO', 'INCAPACIDAD'])
             ->orderBy('d.NOMBRE_DOC')
             ->select(
-                'd.CODIGO_DOC', 'd.NOMBRE_DOC', 'd.TIPO', 'd.ESTADO as estado_docente',
+                'd.CODIGO_EMP', 'd.NOMBRE_DOC', 'd.TIPO', 'd.ESTADO as estado_docente',
                 'a.id as asistencia_id', 'a.estado', 'a.hora_llegada', 'a.observacion',
                 'p.tipo as tipo_permiso'
             )
@@ -116,7 +116,7 @@ class AsistenciaPersonalController extends Controller
             $observacion = trim($datos['observacion'] ?? '') ?: null;
 
             DB::table('asistencia_docentes')->updateOrInsert(
-                ['fecha' => $fecha, 'codigo_doc' => $codigoDoc],
+                ['fecha' => $fecha, 'codigo_emp' => $codigoDoc],
                 [
                     'estado'         => $estado,
                     'hora_llegada'   => $horaLlegada,
@@ -141,7 +141,7 @@ class AsistenciaPersonalController extends Controller
             ->get();
 
         $permisos = DB::table('permisos_docentes as p')
-            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'p.codigo_doc')
+            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_EMP', '=', 'p.codigo_emp')
             ->orderByDesc('p.fecha_inicio')
             ->select('p.*', 'd.NOMBRE_DOC')
             ->get();
@@ -152,7 +152,7 @@ class AsistenciaPersonalController extends Controller
     public function crearPermiso(Request $request)
     {
         $request->validate([
-            'codigo_doc'  => 'required|string',
+            'codigo_emp'  => 'required|string',
             'fecha_inicio'=> 'required|date',
             'fecha_fin'   => 'required|date|after_or_equal:fecha_inicio',
             'tipo'        => 'required|in:permiso,incapacidad,calamidad,comision',
@@ -160,7 +160,7 @@ class AsistenciaPersonalController extends Controller
         ]);
 
         DB::table('permisos_docentes')->insert([
-            'codigo_doc'   => $request->codigo_doc,
+            'codigo_emp'   => $request->codigo_emp,
             'fecha_inicio' => $request->fecha_inicio,
             'fecha_fin'    => $request->fecha_fin,
             'tipo'         => $request->tipo,
@@ -201,38 +201,38 @@ class AsistenciaPersonalController extends Controller
         $reemplazosPorDocente = DB::table('reemplazos_asignados')
             ->where('fecha', '>=', $inicioCiclo)
             ->where('fecha', '<=', $fecha)
-            ->select('codigo_doc_reemplazo', DB::raw('COUNT(*) as total'))
-            ->groupBy('codigo_doc_reemplazo')
-            ->pluck('total', 'codigo_doc_reemplazo')
+            ->select('codigo_emp_reemplazo', DB::raw('COUNT(*) as total'))
+            ->groupBy('codigo_emp_reemplazo')
+            ->pluck('total', 'codigo_emp_reemplazo')
             ->toArray();
 
         // Docentes ausentes/con permiso hoy
         $ausentes = DB::table('asistencia_docentes as a')
-            ->join('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'a.codigo_doc')
+            ->join('CODIGOS_DOC as d', 'd.CODIGO_EMP', '=', 'a.codigo_emp')
             ->where('a.fecha', $fecha)
             ->whereIn('a.estado', ['ausente', 'permiso', 'incapacidad'])
-            ->select('a.codigo_doc', 'd.NOMBRE_DOC', 'a.estado', 'a.observacion')
+            ->select('a.codigo_emp', 'd.NOMBRE_DOC', 'a.estado', 'a.observacion')
             ->get();
 
         // Docentes presentes hoy
         $presentes = DB::table('asistencia_docentes as a')
             ->where('a.fecha', $fecha)
             ->whereIn('a.estado', ['presente', 'retardo'])
-            ->pluck('a.codigo_doc')
+            ->pluck('a.codigo_emp')
             ->toArray();
 
         // Info de docentes presentes (nombre + conteo)
         $infoPresentes = DB::table('CODIGOS_DOC')
-            ->whereIn('CODIGO_DOC', $presentes)
+            ->whereIn('CODIGO_EMP', $presentes)
             ->orderBy('NOMBRE_DOC')
-            ->get(['CODIGO_DOC', 'NOMBRE_DOC'])
-            ->keyBy('CODIGO_DOC');
+            ->get(['CODIGO_EMP', 'NOMBRE_DOC'])
+            ->keyBy('CODIGO_EMP');
 
         // Reemplazos ya asignados para esta fecha
         $yaAsignados = DB::table('reemplazos_asignados')
             ->where('fecha', $fecha)
             ->get()
-            ->groupBy(fn($r) => $r->codigo_doc_ausente . '_' . $r->hora . '_' . $r->curso);
+            ->groupBy(fn($r) => $r->codigo_emp_ausente . '_' . $r->hora . '_' . $r->curso);
 
         // Para cada ausente: su horario en el día académico
         $horarioAusentes = [];
@@ -242,14 +242,14 @@ class AsistenciaPersonalController extends Controller
                     ->join('ASIGNACION_PCM as a', function ($j) use ($doc) {
                         $j->on('a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
                           ->on('a.CURSO', '=', 'h.CURSO')
-                          ->where('a.CODIGO_DOC', $doc->codigo_doc);
+                          ->where('a.CODIGO_EMP', $doc->codigo_emp);
                     })
                     ->leftJoin('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'h.CODIGO_MAT')
                     ->where('h.DIA', $diaAcademico)
                     ->select('h.HORA', 'h.CURSO', 'h.CODIGO_MAT', 'm.NOMBRE_MAT')
                     ->orderBy('h.HORA')
                     ->get();
-                $horarioAusentes[$doc->codigo_doc] = $clases;
+                $horarioAusentes[$doc->codigo_emp] = $clases;
             }
         }
 
@@ -259,29 +259,29 @@ class AsistenciaPersonalController extends Controller
         if ($diaAcademico && !empty($presentes)) {
             // Docentes del curso en ASIGNACION_PCM (todos los cursos)
             $docentesPorCurso = DB::table('ASIGNACION_PCM')
-                ->whereIn('CODIGO_DOC', $presentes)
-                ->select('CODIGO_DOC', 'CURSO')
+                ->whereIn('CODIGO_EMP', $presentes)
+                ->select('CODIGO_EMP', 'CURSO')
                 ->get()
                 ->groupBy('CURSO')
-                ->map(fn($rows) => $rows->pluck('CODIGO_DOC')->toArray());
+                ->map(fn($rows) => $rows->pluck('CODIGO_EMP')->toArray());
 
             for ($hora = 1; $hora <= 8; $hora++) {
                 $ocupados = DB::table('HORARIOS as h')
                     ->join('ASIGNACION_PCM as a', function ($j) use ($presentes) {
                         $j->on('a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
                           ->on('a.CURSO', '=', 'h.CURSO')
-                          ->whereIn('a.CODIGO_DOC', $presentes);
+                          ->whereIn('a.CODIGO_EMP', $presentes);
                     })
                     ->where('h.DIA', $diaAcademico)
                     ->where('h.HORA', $hora)
-                    ->pluck('a.CODIGO_DOC')
+                    ->pluck('a.CODIGO_EMP')
                     ->toArray();
 
                 $libres = array_values(array_diff($presentes, $ocupados));
 
                 // Para cada curso ausente en esta hora, construir lista priorizada
                 foreach ($ausentes as $doc) {
-                    $clases = $horarioAusentes[$doc->codigo_doc] ?? collect();
+                    $clases = $horarioAusentes[$doc->codigo_emp] ?? collect();
                     foreach ($clases->where('HORA', $hora) as $clase) {
                         $curso = $clase->CURSO;
                         $docsCurso = $docentesPorCurso->get($curso) ?? [];
@@ -321,8 +321,8 @@ class AsistenciaPersonalController extends Controller
     {
         $request->validate([
             'fecha'               => 'required|date',
-            'codigo_doc_ausente'  => 'required|string',
-            'codigo_doc_reemplazo'=> 'required|string',
+            'codigo_emp_ausente'  => 'required|string',
+            'codigo_emp_reemplazo'=> 'required|string',
             'hora'                => 'required|integer|min:1|max:8',
             'curso'               => 'required|string',
         ]);
@@ -330,12 +330,12 @@ class AsistenciaPersonalController extends Controller
         DB::table('reemplazos_asignados')->updateOrInsert(
             [
                 'fecha'              => $request->fecha,
-                'codigo_doc_ausente' => $request->codigo_doc_ausente,
+                'codigo_emp_ausente' => $request->codigo_emp_ausente,
                 'hora'               => $request->hora,
                 'curso'              => $request->curso,
             ],
             [
-                'codigo_doc_reemplazo' => $request->codigo_doc_reemplazo,
+                'codigo_emp_reemplazo' => $request->codigo_emp_reemplazo,
                 'asignado_por'         => auth()->user()->USER,
                 'created_at'           => now(),
                 'updated_at'           => now(),
@@ -345,10 +345,10 @@ class AsistenciaPersonalController extends Controller
         // Notificar al docente de reemplazo
         $horas    = \App\Models\Horario::$horas;
         $horaLbl  = $horas[$request->hora] ?? $request->hora . 'ª hora';
-        $ausente  = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $request->codigo_doc_ausente)->value('NOMBRE_DOC') ?? $request->codigo_doc_ausente;
+        $ausente  = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $request->codigo_emp_ausente)->value('NOMBRE_DOC') ?? $request->codigo_emp_ausente;
 
         DB::table('notificaciones')->insert([
-            'codigo_doc' => $request->codigo_doc_reemplazo,
+            'codigo_emp' => $request->codigo_emp_reemplazo,
             'tipo'       => 'reemplazo',
             'titulo'     => 'Se te asignó un reemplazo',
             'mensaje'    => "Debes cubrir la {$horaLbl} del curso {$request->curso} (ausente: {$ausente}) el " . \Carbon\Carbon::parse($request->fecha)->locale('es')->isoFormat('D [de] MMMM'),

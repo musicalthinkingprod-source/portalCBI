@@ -57,7 +57,7 @@
             <select name="docente" class="w-full border-gray-300 rounded-lg text-sm">
                 <option value="">— Todos —</option>
                 @foreach($opciones['docentes'] as $d)
-                    <option value="{{ $d->CODIGO_DOC }}" @selected($filtros['docente']===$d->CODIGO_DOC)>
+                    <option value="{{ $d->CODIGO_EMP }}" @selected($filtros['docente']===$d->CODIGO_EMP)>
                         {{ $d->NOMBRE_DOC }}
                     </option>
                 @endforeach

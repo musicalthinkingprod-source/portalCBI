@@ -78,10 +78,10 @@ class ControlPlanillaController extends Controller
         // ── Asignaciones calificables (excluyendo materias ficticias) ──
         $asigQuery = DB::table('ASIGNACION_PCM as a')
             ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
-            ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_DOC', '=', 'd.CODIGO_DOC')
+            ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_EMP', '=', 'd.CODIGO_EMP')
             ->where('a.calificable', 1)
             ->whereNotIn('a.CODIGO_MAT', $matExcluidas)
-            ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO',
+            ->select('a.CODIGO_EMP', 'a.CODIGO_MAT', 'a.CURSO',
                      'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
             ->orderBy('d.NOMBRE_DOC')->orderBy('m.NOMBRE_MAT')->orderBy('a.CURSO');
 
@@ -91,7 +91,7 @@ class ControlPlanillaController extends Controller
         $asignaciones = $asigQuery->get();
 
         // Agrupar asignaciones por docente para colapsar/expandir
-        $porDocente = $asignaciones->groupBy('CODIGO_DOC');
+        $porDocente = $asignaciones->groupBy('CODIGO_EMP');
 
         // ── Conteos por día × (doc|mat|curso) × categoría ──
         $conteosCat = []; // [fecha][key]['P'|'C'|'A'] = int
@@ -113,7 +113,7 @@ class ControlPlanillaController extends Controller
             if ($materia) $q->where('pc.codigo_mat', $materia);
 
             $filas = $q->select(
-                    'pc.codigo_doc',
+                    'pc.codigo_emp',
                     'pc.codigo_mat',
                     'pc.curso',
                     'pc.nombre_actividad',
@@ -121,13 +121,13 @@ class ControlPlanillaController extends Controller
                     DB::raw('DATE(pn.updated_at) as fecha'),
                     DB::raw('COUNT(*) as total')
                 )
-                ->groupBy('pc.codigo_doc', 'pc.codigo_mat', 'pc.curso',
+                ->groupBy('pc.codigo_emp', 'pc.codigo_mat', 'pc.curso',
                           'pc.nombre_actividad', 'pc.categoria',
                           DB::raw('DATE(pn.updated_at)'))
                 ->get();
 
             foreach ($filas as $f) {
-                $key = $f->codigo_doc . '|' . $f->codigo_mat . '|' . $f->curso;
+                $key = $f->codigo_emp . '|' . $f->codigo_mat . '|' . $f->curso;
                 $cat = $f->categoria;
                 $conteosCat[$f->fecha][$key][$cat] = ($conteosCat[$f->fecha][$key][$cat] ?? 0) + (int) $f->total;
                 $detalles[$f->fecha][$key][$cat][] = [

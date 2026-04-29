@@ -44,7 +44,7 @@ class EnglishAcqController extends Controller
     public function docente(Request $request)
     {
         $profile    = auth()->user()->PROFILE;
-        $esSuperior = in_array($profile, ['SuperAd', 'Admin']) || str_starts_with($profile, 'DOC');
+        $esSuperior = in_array($profile, ['SuperAd', 'Admin']) || str_starts_with($profile, 'DOC') || str_starts_with($profile, 'COR');
 
         $query = DB::table('ASIGNACION_PCM as a')
             ->where('a.calificable', 1)
@@ -52,7 +52,7 @@ class EnglishAcqController extends Controller
             ->distinct();
 
         if (!$esSuperior) {
-            $query->where('a.CODIGO_DOC', $profile);
+            $query->where('a.CODIGO_EMP', $profile);
         }
 
         $cursos       = $query->orderBy('a.CURSO')->pluck('CURSO');
@@ -110,7 +110,7 @@ class EnglishAcqController extends Controller
 
         DB::table($this->tabla)->insert([
             'CODIGO_ALUM' => $codigoAlum,
-            'CODIGO_DOC'  => $profile,
+            'CODIGO_EMP'  => $profile,
             'PERIODO'     => $periodo,
             'ANIO'        => (int) date('Y'),
             'FECHA'       => now(),
@@ -220,7 +220,7 @@ class EnglishAcqController extends Controller
                     ],
                     [
                         'NOTA'       => $nota,
-                        'CODIGO_DOC' => $profile,
+                        'CODIGO_EMP' => $profile,
                     ]
                 );
                 $procesados++;
@@ -323,10 +323,10 @@ class EnglishAcqController extends Controller
         // Detalle completo con docente (solo admin)
         $detalleQuery = DB::table($this->tabla . ' as n')
             ->join('ESTUDIANTES as e', 'e.CODIGO', '=', 'n.CODIGO_ALUM')
-            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'n.CODIGO_DOC')
+            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_EMP', '=', 'n.CODIGO_EMP')
             ->where('n.ANIO', $anio)
             ->select(
-                'n.id', 'n.CODIGO_ALUM', 'n.PERIODO', 'n.FECHA', 'n.CODIGO_DOC',
+                'n.id', 'n.CODIGO_ALUM', 'n.PERIODO', 'n.FECHA', 'n.CODIGO_EMP',
                 'e.APELLIDO1', 'e.APELLIDO2', 'e.NOMBRE1', 'e.NOMBRE2', 'e.CURSO',
                 'd.NOMBRE_DOC'
             );

@@ -186,7 +186,7 @@
                     foreach ($diasGrid as $d) {
                         $hayReg = false;
                         foreach ($asigs as $a) {
-                            $key = $a->CODIGO_DOC . '|' . $a->CODIGO_MAT . '|' . $a->CURSO;
+                            $key = $a->CODIGO_EMP . '|' . $a->CODIGO_MAT . '|' . $a->CURSO;
                             $cnt = array_sum($conteosCat[$d->fecha][$key] ?? []);
                             $totalDoc += $cnt;
                             if ($cnt > 0) $hayReg = true;
@@ -216,7 +216,7 @@
                             $totalDia = 0;
                             $catsDia  = ['C' => 0, 'P' => 0, 'A' => 0];
                             foreach ($asigs as $a) {
-                                $key = $a->CODIGO_DOC . '|' . $a->CODIGO_MAT . '|' . $a->CURSO;
+                                $key = $a->CODIGO_EMP . '|' . $a->CODIGO_MAT . '|' . $a->CURSO;
                                 foreach (($conteosCat[$d->fecha][$key] ?? []) as $cat => $n) {
                                     $catsDia[$cat] = ($catsDia[$cat] ?? 0) + $n;
                                     $totalDia += $n;
@@ -252,7 +252,7 @@
                 {{-- Filas de cada asignación del docente --}}
                 @foreach($asigs as $asig)
                 @php
-                    $key = $asig->CODIGO_DOC . '|' . $asig->CODIGO_MAT . '|' . $asig->CURSO;
+                    $key = $asig->CODIGO_EMP . '|' . $asig->CODIGO_MAT . '|' . $asig->CURSO;
                     $totalNotas  = 0;
                     $diasConReg  = 0;
                     $diasPasadosA = 0;

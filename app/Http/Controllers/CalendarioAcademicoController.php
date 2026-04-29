@@ -17,7 +17,7 @@ class CalendarioAcademicoController extends Controller
             return ['todos', 'interno', 'docentes', 'directivas', 'padres'];
         }
 
-        if (str_starts_with($profile, 'DOC')) {
+        if (str_starts_with($profile, 'DOC') || str_starts_with($profile, 'COR')) {
             return ['todos', 'interno', 'docentes'];
         }
 

@@ -37,7 +37,7 @@
 
 @php
     $totalAsignados = array_sum(array_map(fn($v) => $v->count(), $estudiantesProyecto));
-    $sinDocente = $gruposProyecto->filter(fn($g) => !$g->CODIGO_DOC)->count();
+    $sinDocente = $gruposProyecto->filter(fn($g) => !$g->CODIGO_EMP)->count();
 @endphp
 
 {{-- Barra superior: estadísticas + Crear grupo --}}
@@ -72,11 +72,11 @@
             </div>
             <div class="flex-1 min-w-[160px]">
                 <label class="block text-xs text-gray-500 mb-1">Docente (opcional)</label>
-                <select name="codigo_doc"
+                <select name="codigo_emp"
                         class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm">
                     <option value="">— Sin asignar aún —</option>
                     @foreach($docentesActivos as $doc)
-                    <option value="{{ $doc->CODIGO_DOC }}">{{ $doc->NOMBRE_DOC }}</option>
+                    <option value="{{ $doc->CODIGO_EMP }}">{{ $doc->NOMBRE_DOC }}</option>
                     @endforeach
                 </select>
             </div>
@@ -164,7 +164,7 @@
 @php
     $ests  = $estudiantesProyecto[$gp->grupo] ?? collect();
     $count = $ests->count();
-    $sinDoc = !$gp->CODIGO_DOC;
+    $sinDoc = !$gp->CODIGO_EMP;
 @endphp
 <div class="bg-white rounded-lg shadow mb-3 overflow-hidden">
 
@@ -178,7 +178,7 @@
                 <span class="text-orange-500 text-sm italic">Sin docente asignado</span>
             @else
                 <span class="font-medium text-gray-800 truncate">{{ $gp->NOMBRE_DOC }}</span>
-                <span class="text-xs text-gray-400 shrink-0">({{ $gp->CODIGO_DOC }})</span>
+                <span class="text-xs text-gray-400 shrink-0">({{ $gp->CODIGO_EMP }})</span>
             @endif
         </div>
         <div class="flex items-center gap-3 shrink-0 ml-4">
@@ -211,12 +211,12 @@
                       class="flex flex-wrap items-center gap-2">
                     @csrf
                     <input type="hidden" name="grupo" value="{{ $gp->grupo }}">
-                    <select name="codigo_doc"
+                    <select name="codigo_emp"
                             class="border border-gray-300 rounded px-2 py-1.5 text-sm flex-1 min-w-[180px]">
                         <option value="">— Seleccionar docente —</option>
                         @foreach($docentesActivos as $doc)
-                        <option value="{{ $doc->CODIGO_DOC }}"
-                                {{ $gp->CODIGO_DOC === $doc->CODIGO_DOC ? 'selected' : '' }}>
+                        <option value="{{ $doc->CODIGO_EMP }}"
+                                {{ $gp->CODIGO_EMP === $doc->CODIGO_EMP ? 'selected' : '' }}>
                             {{ $doc->NOMBRE_DOC }}
                         </option>
                         @endforeach

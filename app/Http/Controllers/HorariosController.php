@@ -50,10 +50,10 @@ class HorariosController extends Controller
 
     public function miHorario()
     {
-        $codigoDoc = auth()->user()->PROFILE; // Para docentes, PROFILE === CODIGO_DOC
+        $codigoDoc = auth()->user()->PROFILE; // Para docentes, PROFILE === CODIGO_EMP
 
         // Nombre del docente
-        $doc = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $codigoDoc)->first();
+        $doc = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $codigoDoc)->first();
         $nombreDocente = $doc?->NOMBRE_DOC ?? $codigoDoc;
 
         // Grid de horario propio
@@ -66,7 +66,7 @@ class HorariosController extends Controller
             ->join('ASIGNACION_PCM as a', function ($join) use ($codigoDoc) {
                 $join->on('a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
                      ->on(DB::raw("SUBSTRING_INDEX(a.CURSO, '-', 1)"), '=', 'h.CURSO')
-                     ->where('a.CODIGO_DOC', $codigoDoc);
+                     ->where('a.CODIGO_EMP', $codigoDoc);
             })
             ->where('h.CODIGO_MAT', '!=', 31)
             ->distinct()
@@ -76,7 +76,7 @@ class HorariosController extends Controller
         // Días de Artes/Música en bachillerato (CODIGO_MAT 25/26 → HORARIOS usa 70)
         $cursosArtesMusica = DB::table('ASIGNACION_PCM')
             ->whereIn('CODIGO_MAT', [25, 26])
-            ->where('CODIGO_DOC', $codigoDoc)
+            ->where('CODIGO_EMP', $codigoDoc)
             ->pluck('CURSO')
             ->map(fn($c) => explode('-', $c)[0])
             ->unique()->values()->toArray();
@@ -89,7 +89,7 @@ class HorariosController extends Controller
 
         // Días de Proyecto (CODIGO_MAT=31): su asignación usa grupo GP como CURSO
         $tieneProyecto = DB::table('ASIGNACION_PCM')
-            ->where('CODIGO_DOC', $codigoDoc)
+            ->where('CODIGO_EMP', $codigoDoc)
             ->where('CODIGO_MAT', 31)
             ->exists();
 
@@ -112,10 +112,10 @@ class HorariosController extends Controller
 
         // Reemplazos donde este docente cubre a otro (próximos 30 días)
         $reemplazosACubrir = DB::table('reemplazos_asignados as r')
-            ->where('r.codigo_doc_reemplazo', $codigoDoc)
+            ->where('r.codigo_emp_reemplazo', $codigoDoc)
             ->where('r.fecha', '>=', today()->toDateString())
             ->where('r.fecha', '<=', today()->addDays(30)->toDateString())
-            ->leftJoin('CODIGOS_DOC as cd', 'cd.CODIGO_DOC', '=', 'r.codigo_doc_ausente')
+            ->leftJoin('CODIGOS_DOC as cd', 'cd.CODIGO_EMP', '=', 'r.codigo_emp_ausente')
             ->leftJoin('calendario_academico as ca', 'ca.fecha', '=', 'r.fecha')
             ->leftJoin('HORARIOS as h', function ($join) {
                 $join->on('h.CURSO', '=', 'r.curso')
@@ -135,10 +135,10 @@ class HorariosController extends Controller
 
         // Ausencias propias con reemplazo asignado (próximos 30 días)
         $misAusencias = DB::table('reemplazos_asignados as r')
-            ->where('r.codigo_doc_ausente', $codigoDoc)
+            ->where('r.codigo_emp_ausente', $codigoDoc)
             ->where('r.fecha', '>=', today()->toDateString())
             ->where('r.fecha', '<=', today()->addDays(30)->toDateString())
-            ->leftJoin('CODIGOS_DOC as cd', 'cd.CODIGO_DOC', '=', 'r.codigo_doc_reemplazo')
+            ->leftJoin('CODIGOS_DOC as cd', 'cd.CODIGO_EMP', '=', 'r.codigo_emp_reemplazo')
             ->leftJoin('calendario_academico as ca', 'ca.fecha', '=', 'r.fecha')
             ->leftJoin('HORARIOS as h', function ($join) {
                 $join->on('h.CURSO', '=', 'r.curso')
@@ -174,7 +174,7 @@ class HorariosController extends Controller
             ->where('ESTADO', 'ACTIVO')
             ->where('TIPO', 'DOCENTE')
             ->orderBy('NOMBRE_DOC')
-            ->get(['CODIGO_DOC', 'NOMBRE_DOC']);
+            ->get(['CODIGO_EMP', 'NOMBRE_DOC']);
 
         // Qué dicta cada docente por hora en este día del ciclo
         // El join usa LIKE para capturar sub-grupos (ej. 10A-1, 10A-2 → matchean con 10A)
@@ -195,7 +195,7 @@ class HorariosController extends Controller
             ->leftJoin('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'h.CODIGO_MAT')
             ->where('h.DIA', $diaCiclo)
             ->whereRaw("h.CURSO NOT LIKE 'DOC%'")   // excluir filas de horario propio del docente
-            ->select('h.HORA', 'a.CODIGO_DOC', 'h.CURSO', 'm.NOMBRE_MAT')
+            ->select('h.HORA', 'a.CODIGO_EMP', 'h.CURSO', 'm.NOMBRE_MAT')
             ->get()
             ->groupBy('HORA');
 
@@ -209,7 +209,7 @@ class HorariosController extends Controller
             ->whereRaw("a.CURSO LIKE 'GP%'")
             ->whereRaw("h.CURSO NOT LIKE 'DOC%'")
             ->whereRaw("h.CURSO NOT LIKE 'GP%'")
-            ->select('h.HORA', 'a.CODIGO_DOC', 'a.CURSO', 'm.NOMBRE_MAT')
+            ->select('h.HORA', 'a.CODIGO_EMP', 'a.CURSO', 'm.NOMBRE_MAT')
             ->distinct()
             ->get()
             ->groupBy('HORA');
@@ -220,7 +220,7 @@ class HorariosController extends Controller
             ->where('h.DIA', $diaCiclo)
             ->where('h.CURSO', 'like', 'DOC%')
             ->where('h.CODIGO_MAT', '!=', 0)
-            ->select('h.HORA', DB::raw('h.CURSO as CODIGO_DOC'), 'm.NOMBRE_MAT')
+            ->select('h.HORA', DB::raw('h.CURSO as CODIGO_EMP'), 'm.NOMBRE_MAT')
             ->get()
             ->groupBy('HORA');
 
@@ -231,22 +231,22 @@ class HorariosController extends Controller
             $gpClases  = $gpOcupados->get($horaNum, collect());
             $propios   = $docOcupadosPropios->get($horaNum, collect());
 
-            $ocupadosCodigos = $clases->pluck('CODIGO_DOC')
-                ->merge($gpClases->pluck('CODIGO_DOC'))
-                ->merge($propios->pluck('CODIGO_DOC'))
+            $ocupadosCodigos = $clases->pluck('CODIGO_EMP')
+                ->merge($gpClases->pluck('CODIGO_EMP'))
+                ->merge($propios->pluck('CODIGO_EMP'))
                 ->unique()->toArray();
 
-            $ocupados = $clases->groupBy('CODIGO_DOC')->map(fn($rows) => [
-                'nombre' => $todosDocentes->firstWhere('CODIGO_DOC', $rows->first()->CODIGO_DOC)?->NOMBRE_DOC ?? $rows->first()->CODIGO_DOC,
+            $ocupados = $clases->groupBy('CODIGO_EMP')->map(fn($rows) => [
+                'nombre' => $todosDocentes->firstWhere('CODIGO_EMP', $rows->first()->CODIGO_EMP)?->NOMBRE_DOC ?? $rows->first()->CODIGO_EMP,
                 'clases' => $rows->sortBy(fn($r) => str_pad(preg_replace('/[^0-9]/', '', $r->CURSO), 4, '0', STR_PAD_LEFT) . $r->CURSO)
                                  ->map(fn($r) => $r->CURSO . ' – ' . ($r->NOMBRE_MAT ?? '?'))->implode(', '),
             ]);
 
             // Añadir ocupados por grupos GP
-            foreach ($gpClases->groupBy('CODIGO_DOC') as $doc => $rows) {
+            foreach ($gpClases->groupBy('CODIGO_EMP') as $doc => $rows) {
                 if (!$ocupados->has($doc)) {
                     $ocupados->put($doc, [
-                        'nombre' => $todosDocentes->firstWhere('CODIGO_DOC', $doc)?->NOMBRE_DOC ?? $doc,
+                        'nombre' => $todosDocentes->firstWhere('CODIGO_EMP', $doc)?->NOMBRE_DOC ?? $doc,
                         'clases' => 'Proyecto (' . $rows->first()->CURSO . ') – ' . ($rows->first()->NOMBRE_MAT ?? '?'),
                     ]);
                 }
@@ -254,16 +254,16 @@ class HorariosController extends Controller
 
             // Añadir ocupados por filas DOC-prefixed (Atención a Padres, etc.)
             foreach ($propios as $p) {
-                if (!$ocupados->has($p->CODIGO_DOC)) {
-                    $ocupados->put($p->CODIGO_DOC, [
-                        'nombre' => $todosDocentes->firstWhere('CODIGO_DOC', $p->CODIGO_DOC)?->NOMBRE_DOC ?? $p->CODIGO_DOC,
+                if (!$ocupados->has($p->CODIGO_EMP)) {
+                    $ocupados->put($p->CODIGO_EMP, [
+                        'nombre' => $todosDocentes->firstWhere('CODIGO_EMP', $p->CODIGO_EMP)?->NOMBRE_DOC ?? $p->CODIGO_EMP,
                         'clases' => $p->NOMBRE_MAT ?? '—',
                     ]);
                 }
             }
 
             $libres = $todosDocentes->filter(
-                fn($d) => !in_array($d->CODIGO_DOC, $ocupadosCodigos)
+                fn($d) => !in_array($d->CODIGO_EMP, $ocupadosCodigos)
             )->values();
 
             $ocupadosOrdenados = $ocupados->values()->sortBy(function ($doc) {
@@ -305,25 +305,25 @@ class HorariosController extends Controller
                      });
             })
             ->leftJoin('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'h.CODIGO_MAT')
-            ->leftJoin('CODIGOS_DOC as cd', 'cd.CODIGO_DOC', '=', 'a.CODIGO_DOC')
+            ->leftJoin('CODIGOS_DOC as cd', 'cd.CODIGO_EMP', '=', 'a.CODIGO_EMP')
             ->whereRaw("h.CURSO NOT LIKE 'DOC%'")
             ->whereRaw("a.CURSO NOT LIKE 'GP%'")
             ->select(
-                'a.CODIGO_DOC',
+                'a.CODIGO_EMP',
                 'cd.NOMBRE_DOC',
                 'h.DIA',
                 'h.HORA',
                 DB::raw('COUNT(*) as n'),
                 DB::raw("GROUP_CONCAT(CONCAT(a.CURSO, ' [', IFNULL(m.NOMBRE_MAT,'?'), ']') ORDER BY a.CURSO SEPARATOR ' | ') as detalle")
             )
-            ->groupBy('a.CODIGO_DOC', 'cd.NOMBRE_DOC', 'h.DIA', 'h.HORA')
+            ->groupBy('a.CODIGO_EMP', 'cd.NOMBRE_DOC', 'h.DIA', 'h.HORA')
             ->havingRaw('COUNT(*) > 1')
-            ->orderBy('a.CODIGO_DOC')
+            ->orderBy('a.CODIGO_EMP')
             ->orderBy('h.DIA')
             ->orderBy('h.HORA')
             ->get();
 
-        $porDocente = $conflictos->groupBy('CODIGO_DOC');
+        $porDocente = $conflictos->groupBy('CODIGO_EMP');
 
         return view('horarios.conflictos', compact('porDocente', 'dias', 'horas'));
     }
@@ -343,7 +343,7 @@ class HorariosController extends Controller
             ->where('ESTADO', 'ACTIVO')
             ->where('TIPO', 'DOCENTE')
             ->orderBy('NOMBRE_DOC')
-            ->get(['CODIGO_DOC', 'NOMBRE_DOC']);
+            ->get(['CODIGO_EMP', 'NOMBRE_DOC']);
 
         // Próxima fecha de cada día del ciclo
         $proximaFecha = [];
@@ -358,14 +358,14 @@ class HorariosController extends Controller
         $reemplazosGrid   = []; // [dia_ciclo][hora][curso] = {id, nombre_reemplazo}
 
         if ($docenteActual) {
-            $doc = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $docenteActual)->first();
+            $doc = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $docenteActual)->first();
             $nombreDocente = $doc?->NOMBRE_DOC;
 
             $diasRegulares = DB::table('HORARIOS as h')
                 ->join('ASIGNACION_PCM as a', function ($join) use ($docenteActual) {
                     $join->on('a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
                          ->on(DB::raw("SUBSTRING_INDEX(a.CURSO, '-', 1)"), '=', 'h.CURSO')
-                         ->where('a.CODIGO_DOC', $docenteActual);
+                         ->where('a.CODIGO_EMP', $docenteActual);
                 })
                 ->where('h.CODIGO_MAT', '!=', 31)
                 ->distinct()
@@ -374,7 +374,7 @@ class HorariosController extends Controller
 
             $cursosArtesMusica = DB::table('ASIGNACION_PCM')
                 ->whereIn('CODIGO_MAT', [25, 26])
-                ->where('CODIGO_DOC', $docenteActual)
+                ->where('CODIGO_EMP', $docenteActual)
                 ->pluck('CURSO')
                 ->map(fn($c) => explode('-', $c)[0])
                 ->unique()->values()->toArray();
@@ -386,7 +386,7 @@ class HorariosController extends Controller
                 : [];
 
             $tieneProyecto = DB::table('ASIGNACION_PCM')
-                ->where('CODIGO_DOC', $docenteActual)
+                ->where('CODIGO_EMP', $docenteActual)
                 ->where('CODIGO_MAT', 31)
                 ->exists();
 
@@ -399,11 +399,11 @@ class HorariosController extends Controller
             // Cargar reemplazos próximos (60 días) mapeados a día del ciclo
             $reemplazos = DB::table('reemplazos_asignados as r')
                 ->join('calendario_academico as ca', 'ca.fecha', '=', 'r.fecha')
-                ->leftJoin('CODIGOS_DOC as cd', 'cd.CODIGO_DOC', '=', 'r.codigo_doc_reemplazo')
-                ->where('r.codigo_doc_ausente', $docenteActual)
+                ->leftJoin('CODIGOS_DOC as cd', 'cd.CODIGO_EMP', '=', 'r.codigo_emp_reemplazo')
+                ->where('r.codigo_emp_ausente', $docenteActual)
                 ->where('r.fecha', '>=', $hoy->toDateString())
                 ->where('r.fecha', '<=', $hoy->copy()->addDays(60)->toDateString())
-                ->select('r.id', 'r.hora', 'r.curso', 'r.fecha', 'ca.dia_ciclo', 'cd.NOMBRE_DOC as nombre_reemplazo', 'r.codigo_doc_reemplazo')
+                ->select('r.id', 'r.hora', 'r.curso', 'r.fecha', 'ca.dia_ciclo', 'cd.NOMBRE_DOC as nombre_reemplazo', 'r.codigo_emp_reemplazo')
                 ->orderBy('r.fecha')
                 ->get();
 
@@ -414,7 +414,7 @@ class HorariosController extends Controller
 
         // ── Datos para el modal de reemplazo ──────────────────────────────────
 
-        // Qué docente ocupa cada slot [dia_ciclo][hora] = [CODIGO_DOC, ...]
+        // Qué docente ocupa cada slot [dia_ciclo][hora] = [CODIGO_EMP, ...]
         $ocupadosPorSlot = [];
 
         // 1. Clases regulares + Artes/Música (25/26→70) + subgrupos + VOC*
@@ -430,21 +430,21 @@ class HorariosController extends Controller
                      });
             })
             ->whereRaw("h.CURSO NOT LIKE 'DOC%'")
-            ->select('h.DIA', 'h.HORA', 'a.CODIGO_DOC')
+            ->select('h.DIA', 'h.HORA', 'a.CODIGO_EMP')
             ->distinct()
             ->get()
             ->each(function ($row) use (&$ocupadosPorSlot) {
-                $ocupadosPorSlot[$row->DIA][$row->HORA][] = $row->CODIGO_DOC;
+                $ocupadosPorSlot[$row->DIA][$row->HORA][] = $row->CODIGO_EMP;
             });
 
         // 2. Slots DOC-prefixed (Atención a Padres, etc.)
         DB::table('HORARIOS')
             ->whereRaw("CURSO LIKE 'DOC%'")
             ->where('CODIGO_MAT', '!=', 0)
-            ->select('DIA', 'HORA', DB::raw('CURSO as CODIGO_DOC'))
+            ->select('DIA', 'HORA', DB::raw('CURSO as CODIGO_EMP'))
             ->get()
             ->each(function ($row) use (&$ocupadosPorSlot) {
-                $ocupadosPorSlot[$row->DIA][$row->HORA][] = $row->CODIGO_DOC;
+                $ocupadosPorSlot[$row->DIA][$row->HORA][] = $row->CODIGO_EMP;
             });
 
         // 3. Proyecto (GP*): ocupado en cualquier slot de CODIGO_MAT=31
@@ -453,11 +453,11 @@ class HorariosController extends Controller
             ->whereRaw("a.CURSO LIKE 'GP%'")
             ->whereRaw("h.CURSO NOT LIKE 'DOC%'")
             ->whereRaw("h.CURSO NOT LIKE 'GP%'")
-            ->select('h.DIA', 'h.HORA', 'a.CODIGO_DOC')
+            ->select('h.DIA', 'h.HORA', 'a.CODIGO_EMP')
             ->distinct()
             ->get()
             ->each(function ($row) use (&$ocupadosPorSlot) {
-                $ocupadosPorSlot[$row->DIA][$row->HORA][] = $row->CODIGO_DOC;
+                $ocupadosPorSlot[$row->DIA][$row->HORA][] = $row->CODIGO_EMP;
             });
 
         // Deduplicar
@@ -477,17 +477,17 @@ class HorariosController extends Controller
         // Cantidad de reemplazos en el ciclo actual por docente
         $reemplazosCiclo = DB::table('reemplazos_asignados')
             ->where('fecha', '>=', $inicioCiclo)
-            ->select('codigo_doc_reemplazo', DB::raw('COUNT(*) as total'))
-            ->groupBy('codigo_doc_reemplazo')
-            ->pluck('total', 'codigo_doc_reemplazo')
+            ->select('codigo_emp_reemplazo', DB::raw('COUNT(*) as total'))
+            ->groupBy('codigo_emp_reemplazo')
+            ->pluck('total', 'codigo_emp_reemplazo')
             ->toArray();
 
         // Docentes que dictan en cada curso (para priorizar en el modal)
         $docentesPorCurso = DB::table('ASIGNACION_PCM')
-            ->select('CODIGO_DOC', 'CURSO')
+            ->select('CODIGO_EMP', 'CURSO')
             ->get()
             ->groupBy('CURSO')
-            ->map(fn($rows) => $rows->pluck('CODIGO_DOC')->unique()->values()->toArray())
+            ->map(fn($rows) => $rows->pluck('CODIGO_EMP')->unique()->values()->toArray())
             ->toArray();
 
         return view('horarios.por_docente', compact(

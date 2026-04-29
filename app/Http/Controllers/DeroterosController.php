@@ -132,9 +132,9 @@ class DeroterosController extends Controller
             ->where('calificable', 1)
             ->get()
             ->groupBy(fn($a) => (explode('-', (string) $a->CURSO)[0] ?? '') . '_' . $a->CODIGO_MAT);
-        $docCodigos = $asigDoc->flatten()->pluck('CODIGO_DOC')->unique()->filter()->toArray();
+        $docCodigos = $asigDoc->flatten()->pluck('CODIGO_EMP')->unique()->filter()->toArray();
         $docNombres = $docCodigos
-            ? DB::table('CODIGOS_DOC')->whereIn('CODIGO_DOC', $docCodigos)->pluck('NOMBRE_DOC', 'CODIGO_DOC')
+            ? DB::table('CODIGOS_DOC')->whereIn('CODIGO_EMP', $docCodigos)->pluck('NOMBRE_DOC', 'CODIGO_EMP')
             : collect();
 
         // ── 5. Mapear reglas ───────────────────────────────────────────────────
@@ -166,7 +166,7 @@ class DeroterosController extends Controller
 
             $base    = explode('-', (string) $f->CURSO)[0] ?? '';
             $aRow    = isset($asigDoc[$base . '_' . $f->CODIGO_MAT]) ? $asigDoc[$base . '_' . $f->CODIGO_MAT]->first() : null;
-            $f->docente_cod = $aRow->CODIGO_DOC ?? null;
+            $f->docente_cod = $aRow->CODIGO_EMP ?? null;
             $f->docente_nom = $f->docente_cod ? ($docNombres[$f->docente_cod] ?? $f->docente_cod) : null;
 
             // Normalización: la resolución vieja 'NO_ASISTIO' equivale ahora a
@@ -251,7 +251,7 @@ class DeroterosController extends Controller
             ->select('a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT');
 
         if (!$esSuperior) {
-            $queryAsig->where('a.CODIGO_DOC', $profile);
+            $queryAsig->where('a.CODIGO_EMP', $profile);
         }
 
         $asignaciones = $queryAsig->orderBy('m.NOMBRE_MAT')->orderBy('a.CURSO')->get();
@@ -355,7 +355,7 @@ class DeroterosController extends Controller
         if (!$esSuperior) {
             $codigosMat = $items->pluck('CODIGO_MAT')->unique()->toArray();
             $asigDoc    = DB::table('ASIGNACION_PCM')
-                ->where('CODIGO_DOC', $profile)
+                ->where('CODIGO_EMP', $profile)
                 ->where('calificable', 1)
                 ->whereIn('CODIGO_MAT', $codigosMat)
                 ->get(['CODIGO_MAT', 'CURSO']);
@@ -426,7 +426,7 @@ class DeroterosController extends Controller
             $datos = [
                 'ASISTENCIA'    => $asistencia,
                 'NOTA_ORIGINAL' => $notaOriginal,
-                'CODIGO_DOC'    => $profile,
+                'CODIGO_EMP'    => $profile,
             ];
 
             if ($existe) {
@@ -470,7 +470,7 @@ class DeroterosController extends Controller
             'RESOLUCION'        => $resolucion,
             'NOTA_RECUPERACION' => $notaFinal,
             'NOTA_ORIGINAL'     => $notaOriginal,
-            'CODIGO_DOC'        => $profile,
+            'CODIGO_EMP'        => $profile,
         ];
 
         if ($existe) {
@@ -648,17 +648,17 @@ class DeroterosController extends Controller
             ->get()
             ->groupBy(fn($a) => (explode('-', (string) $a->CURSO)[0] ?? '') . '_' . $a->CODIGO_MAT);
 
-        $docCodigos = $asig->flatten()->pluck('CODIGO_DOC')->unique()->filter()->toArray();
+        $docCodigos = $asig->flatten()->pluck('CODIGO_EMP')->unique()->filter()->toArray();
         $docentesMap = DB::table('CODIGOS_DOC')
-            ->whereIn('CODIGO_DOC', $docCodigos)
-            ->pluck('NOMBRE_DOC', 'CODIGO_DOC');
+            ->whereIn('CODIGO_EMP', $docCodigos)
+            ->pluck('NOMBRE_DOC', 'CODIGO_EMP');
 
         $cards = $items->map(function ($m) use ($derrRows, $asig, $docentesMap) {
             $key     = $m->CODIGO_ALUM . '_' . $m->CODIGO_MAT;
             $d       = $derrRows[$key] ?? null;
             $asigKey = $m->CURSO . '_' . $m->CODIGO_MAT;
             $aRow    = isset($asig[$asigKey]) ? $asig[$asigKey]->first() : null;
-            $docCod  = $aRow->CODIGO_DOC ?? null;
+            $docCod  = $aRow->CODIGO_EMP ?? null;
             $grado   = preg_match('/^(\d+)/', (string) $m->CURSO, $gm) ? $gm[1] : (string) $m->CURSO;
 
             return (object) [
@@ -797,10 +797,10 @@ class DeroterosController extends Controller
             ->where('calificable', 1)
             ->get()
             ->groupBy(fn($a) => (explode('-', (string) $a->CURSO)[0] ?? '') . '_' . $a->CODIGO_MAT);
-        $docCodigos = $asig->flatten()->pluck('CODIGO_DOC')->unique()->filter()->toArray();
+        $docCodigos = $asig->flatten()->pluck('CODIGO_EMP')->unique()->filter()->toArray();
         $docNombres = DB::table('CODIGOS_DOC')
-            ->whereIn('CODIGO_DOC', $docCodigos)
-            ->pluck('NOMBRE_DOC', 'CODIGO_DOC');
+            ->whereIn('CODIGO_EMP', $docCodigos)
+            ->pluck('NOMBRE_DOC', 'CODIGO_EMP');
 
         $publicados = 0;
         $sinFranja  = 0;
@@ -812,7 +812,7 @@ class DeroterosController extends Controller
             $curso = $cursosAlum[$r->CODIGO_ALUM] ?? '';
             $base  = explode('-', (string) $curso)[0] ?? '';
             $aRow  = isset($asig[$base . '_' . $r->CODIGO_MAT]) ? $asig[$base . '_' . $r->CODIGO_MAT]->first() : null;
-            $docTx = $aRow ? ($docNombres[$aRow->CODIGO_DOC] ?? $aRow->CODIGO_DOC) : '';
+            $docTx = $aRow ? ($docNombres[$aRow->CODIGO_EMP] ?? $aRow->CODIGO_EMP) : '';
             $partes = array_filter([
                 $fechaTxt,
                 $franjasMap[$franja],

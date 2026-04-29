@@ -327,10 +327,10 @@
                 {{ $emp->sueldo_basico ? '$' . number_format($emp->sueldo_basico, 0, ',', '.') : '—' }}
             </div>
         </div>
-        @if($emp->codigo_doc)
+        @if($emp->codigo_emp)
         <div class="field">
             <div class="field-label">Código docente</div>
-            <div class="field-value">{{ $emp->codigo_doc }}</div>
+            <div class="field-value">{{ $emp->codigo_emp }}</div>
         </div>
         @endif
     </div>

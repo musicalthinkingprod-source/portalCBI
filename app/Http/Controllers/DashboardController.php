@@ -9,7 +9,7 @@ class DashboardController extends Controller
     public function index()
     {
         $profile = auth()->user()->PROFILE;
-        $isDoc   = str_starts_with($profile, 'DOC');
+        $isDoc   = str_starts_with($profile, 'DOC') || str_starts_with($profile, 'COR');
 
         // ── Cartera (SuperAd, Admin, Contab) ──────────────────────────────
         $cartera = null;
@@ -90,7 +90,7 @@ class DashboardController extends Controller
             try {
                 $conNotas = (int) DB::table('ASIGNACION_PCM as a')
                     ->join($tablaNotas . ' as n', function ($j) use ($periodoDigitacion) {
-                        $j->on('n.CODIGO_DOC', '=', 'a.CODIGO_DOC')
+                        $j->on('n.CODIGO_EMP', '=', 'a.CODIGO_EMP')
                           ->on('n.CODIGO_MAT', '=', 'a.CODIGO_MAT')
                           ->where('n.PERIODO', '=', $periodoDigitacion);
                     })
@@ -107,7 +107,7 @@ class DashboardController extends Controller
                         (a.CODIGO_MAT IN (25,26) AND a.CURSO NOT REGEXP '-[12]\$' AND a.CURSO = e.CURSO)
                     )")
                     ->distinct()
-                    ->count(DB::raw("CONCAT_WS('|', a.CODIGO_DOC, a.CODIGO_MAT, a.CURSO)"));
+                    ->count(DB::raw("CONCAT_WS('|', a.CODIGO_EMP, a.CODIGO_MAT, a.CURSO)"));
             } catch (\Exception $e) {
                 // tabla del año podría no existir
             }

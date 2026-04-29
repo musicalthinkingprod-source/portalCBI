@@ -232,14 +232,18 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/world-office/exportar', [WorldOfficeController::class, 'exportarCSV'])->name('world-office.exportar');
     });
 
-    // ── Estudiantes: SuperAd, Admin, Ori, Sec* ───────────────────────────────
-    Route::middleware('profile:SuperAd,Admin,Ori,Sec*')->group(function () {
+    // ── Estudiantes lectura: SuperAd, Admin, Ori, Sec*, COR* ─────────────────
+    Route::middleware('profile:SuperAd,Admin,Ori,Sec*,COR*')->group(function () {
         Route::get('/alumnos', [AlumnoController::class, 'index'])->name('alumnos.index');
         Route::get('/alumnos/imprimir-lista', [AlumnoController::class, 'printList'])->name('alumnos.print_list');
         Route::get('/alumnos/{codigo}', [AlumnoController::class, 'show'])->name('alumnos.show');
+        Route::get('/alumnos/{codigo}/imprimir', [AlumnoController::class, 'printView'])->name('alumnos.print');
+    });
+
+    // ── Estudiantes edicion: SuperAd, Admin, Ori, Sec* (sin COR*) ───────────
+    Route::middleware('profile:SuperAd,Admin,Ori,Sec*')->group(function () {
         Route::get('/alumnos/{codigo}/editar', [AlumnoController::class, 'edit'])->name('alumnos.edit');
         Route::put('/alumnos/{codigo}', [AlumnoController::class, 'update'])->name('alumnos.update');
-        Route::get('/alumnos/{codigo}/imprimir', [AlumnoController::class, 'printView'])->name('alumnos.print');
     });
 
     // ── Rutas de transporte: SuperAd, Admin y Sec* ────────────────────────────
@@ -265,8 +269,8 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/calendario/evento/{id}',    [CalendarioAcademicoController::class, 'eliminarEvento'])  ->name('calendario.evento.eliminar');
     });
 
-    // ── Calendario académico: Docentes (solo lectura) ─────────────────────────
-    Route::middleware('profile:DOC*')->group(function () {
+    // ── Calendario académico: Docentes y Coordinadores (solo lectura) ────────
+    Route::middleware('profile:DOC*,COR*')->group(function () {
         Route::get('/calendario/docente', [CalendarioAcademicoController::class, 'docente'])->name('calendario.docente');
     });
 
@@ -280,6 +284,10 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('profile:SuperAd,Admin,Sec*')->group(function () {
         Route::get('/llamadas',         [LlamadasController::class, 'index'])  ->name('llamadas.index');
         Route::post('/llamadas',        [LlamadasController::class, 'store'])  ->name('llamadas.store');
+    });
+
+    // ── Reporte de llamadas: SuperAd, Admin, Sec*, COR* (incluye Martha) ────
+    Route::middleware('profile:SuperAd,Admin,Sec*,COR*')->group(function () {
         Route::get('/llamadas/reporte', [LlamadasController::class, 'reporte'])->name('llamadas.reporte');
     });
 
@@ -287,7 +295,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/asistencia/reporte', [AsistenciaController::class, 'reporte'])->name('asistencia.reporte');
 
     // ── PIAR Anexo 2 + Caracterizaciones ────────────────────────────────────
-    Route::middleware('profile:SuperAd,Ori,Admin,DOC*,Piar')->group(function () {
+    Route::middleware('profile:SuperAd,Ori,Admin,DOC*,COR*,Piar')->group(function () {
         // Índice unificado (Anexo 2 + Caracterizaciones)
         Route::get('/piar/anexo2',                              [PiarCaractController::class, 'index'])   ->name('piar.anexo2.index');
 
@@ -323,7 +331,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ── Corrección de notas: SuperAd, Admin, DOC*, Ori* ─────────────────────
-    Route::middleware('profile:SuperAd,Admin,DOC*,Ori*')->group(function () {
+    Route::middleware('profile:SuperAd,Admin,DOC*,COR*,Ori*')->group(function () {
         Route::get('/correcciones', [SolicitudCorreccionController::class, 'index'])->name('correcciones.index');
         Route::get('/correcciones/nueva', [SolicitudCorreccionController::class, 'create'])->name('correcciones.create');
         Route::post('/correcciones', [SolicitudCorreccionController::class, 'store'])->name('correcciones.store');
@@ -333,8 +341,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/correcciones/{id}/rechazar', [SolicitudCorreccionController::class, 'rechazar'])->name('correcciones.rechazar');
     });
 
-    // ── Docentes: SuperAd, Admin, DOC* ───────────────────────────────────────
-    Route::middleware('profile:SuperAd,Admin,DOC*')->group(function () {
+    // ── Docentes y Coordinadores: SuperAd, Admin, DOC*, COR* ─────────────────
+    Route::middleware('profile:SuperAd,Admin,DOC*,COR*')->group(function () {
         Route::get('/notas', [NotasController::class, 'index'])->name('notas.index');
         Route::post('/notas/guardar', [NotasController::class, 'guardar'])->name('notas.guardar');
         Route::get('/notas-v2', [NotasV2Controller::class, 'index'])->name('notas.v2.index');
@@ -368,8 +376,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/piar/imprimir/{codigo}', [PiarController::class, 'imprimir'])->name('piar.imprimir');
     });
 
-    // ── Horarios: SuperAd, Admin, Sec*, DOC* ────────────────────────────────
-    Route::middleware('profile:SuperAd,Admin,Sec*,DOC*')->group(function () {
+    // ── Horarios: SuperAd, Admin, Sec*, DOC*, COR* ───────────────────────────
+    Route::middleware('profile:SuperAd,Admin,Sec*,DOC*,COR*')->group(function () {
         Route::get('/derroteros/horarios', [DeroterosController::class, 'horarios'])->name('derroteros.horarios');
         Route::post('/derroteros/horarios', [DeroterosController::class, 'guardarHorario'])->name('derroteros.horario.guardar');
     });
@@ -387,8 +395,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/derroteros/estadisticas', [DeroterosController::class, 'estadisticas'])->name('derroteros.estadisticas');
     });
 
-    // ── Boletines: SuperAd, Admin, Sec*, DOC*, Ori* ──────────────────────────
-    Route::middleware('profile:SuperAd,Admin,Sec*,DOC*,Ori*')->group(function () {
+    // ── Boletines: SuperAd, Admin, Sec*, DOC*, COR*, Ori* ────────────────────
+    Route::middleware('profile:SuperAd,Admin,Sec*,DOC*,COR*,Ori*')->group(function () {
         Route::get('/informes/boletin', [BoletinController::class, 'buscar'])->name('informes.boletin');
         Route::get('/boletines/{codigo}', [BoletinController::class, 'ver'])->name('boletines.ver');
         Route::get('/informes/promedios/{codigo}', [BoletinController::class, 'promedios'])->name('informes.promedios');
@@ -428,8 +436,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/vigilancias/docente/agregar', [VigilanciaController::class, 'agregarDocente'])->name('vigilancias.docente.agregar');
     });
 
-    // ── Control de vigilancias: SuperAd y ConvCor28 ──────────────────────
-    Route::middleware('profile:SuperAd,ConvCor28')->group(function () {
+    // ── Control de vigilancias: SuperAd, ConvCor28 (legacy) y COR* ───────
+    Route::middleware('profile:SuperAd,ConvCor28,COR*')->group(function () {
         Route::get('/vigilancias/control', [VigilanciaController::class, 'control'])->name('vigilancias.control');
     });
 
@@ -442,8 +450,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/horarios/conflictos', [HorariosController::class, 'conflictos'])->name('horarios.conflictos');
     });
 
-    // ── Mi Horario: vista personal del docente ────────────────────────────
-    Route::middleware('profile:DOC*')->group(function () {
+    // ── Mi Horario: vista personal del docente y coordinador ──────────────
+    Route::middleware('profile:DOC*,COR*')->group(function () {
         Route::get('/horarios/mi-horario', [HorariosController::class, 'miHorario'])->name('horarios.mi_horario');
     });
 

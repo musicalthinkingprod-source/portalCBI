@@ -18,7 +18,7 @@ class NominaEmpleadosSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
         DB::statement("INSERT INTO nomina_empleados
-            (cedula,ciudad_identificacion,nombre,correo,direccion,telefono,fecha_ingreso,fecha_fin_contrato,cargo,fecha_nacimiento,numero_hijos,eps,fondo_pension,fondo_arl,caja_compensacion,sueldo_basico,tipo_sangre,contacto_emergencia,tel_emergencia,codigo_doc,created_at,updated_at)
+            (cedula,ciudad_identificacion,nombre,correo,direccion,telefono,fecha_ingreso,fecha_fin_contrato,cargo,fecha_nacimiento,numero_hijos,eps,fondo_pension,fondo_arl,caja_compensacion,sueldo_basico,tipo_sangre,contacto_emergencia,tel_emergencia,codigo_emp,created_at,updated_at)
         VALUES
             ('51796808','BOGOTA','LUZ ANGELA VEGA BUENAHORA','administration@cbi.edu.co',NULL,'3118101018','2009-01-01',NULL,'DIRECTORA GENERAL','1965-11-11',1,'SANITAS','COLPENSIONES','SURA','COMPENSAR',NULL,'O+','JOHN CÁRDENAS','3118101018',NULL,NOW(),NOW()),
             ('79996161','BOGOTA','WILLY EDUARDO RENGIFO TRUJILLO','wrmanson10@hotmail.com','CL 50SUR  78H 70','3192081617','2026-01-13','2026-04-30','COORDINADOR ACADEMICO','1981-04-23',0,'COMPENSAR','PORVENIR','SURA','COMPENSAR',3745000.0,'O+','NIDIA TRUJILLO','3192081617','8207',NOW(),NOW()),

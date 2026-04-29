@@ -29,14 +29,14 @@ class NotificacionesController extends Controller
 
             if (!$backupHecho) {
                 $yaNotificado = DB::table('notificaciones')
-                    ->where('codigo_doc', $codigoDoc)
+                    ->where('codigo_emp', $codigoDoc)
                     ->where('tipo', 'backup')
                     ->whereDate('created_at', today())
                     ->exists();
 
                 if (!$yaNotificado) {
                     DB::table('notificaciones')->insert([
-                        'codigo_doc' => $codigoDoc,
+                        'codigo_emp' => $codigoDoc,
                         'tipo'       => 'backup',
                         'titulo'     => 'Copia de seguridad pendiente',
                         'mensaje'    => 'Son las 4 p.m. Recuerda descargar la copia de seguridad antes de terminar tu jornada.',
@@ -50,7 +50,7 @@ class NotificacionesController extends Controller
         // ────────────────────────────────────────────────────────────────────
 
         $notifs = DB::table('notificaciones')
-            ->where('codigo_doc', $codigoDoc)
+            ->where('codigo_emp', $codigoDoc)
             ->where('leida', false)
             ->orderByDesc('created_at')
             ->limit(20)
@@ -71,7 +71,7 @@ class NotificacionesController extends Controller
 
         DB::table('notificaciones')
             ->where('id', $id)
-            ->where('codigo_doc', $codigoDoc)
+            ->where('codigo_emp', $codigoDoc)
             ->update(['leida' => true, 'updated_at' => now()]);
 
         return response()->json(['ok' => true]);
@@ -85,7 +85,7 @@ class NotificacionesController extends Controller
         $codigoDoc = auth()->user()->PROFILE;
 
         DB::table('notificaciones')
-            ->where('codigo_doc', $codigoDoc)
+            ->where('codigo_emp', $codigoDoc)
             ->where('leida', false)
             ->update(['leida' => true, 'updated_at' => now()]);
 
@@ -101,7 +101,7 @@ class NotificacionesController extends Controller
         if ($codigoDoc === '') return;
 
         $yaExiste = DB::table('notificaciones')
-            ->where('codigo_doc', $codigoDoc)
+            ->where('codigo_emp', $codigoDoc)
             ->where('tipo', $tipo)
             ->where('mensaje', $mensaje)
             ->where('leida', false)
@@ -110,7 +110,7 @@ class NotificacionesController extends Controller
         if ($yaExiste) return;
 
         DB::table('notificaciones')->insert([
-            'codigo_doc' => $codigoDoc,
+            'codigo_emp' => $codigoDoc,
             'tipo'       => $tipo,
             'titulo'     => mb_substr($titulo, 0, 150),
             'mensaje'    => mb_substr($mensaje, 0, 400),

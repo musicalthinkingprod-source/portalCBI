@@ -129,8 +129,12 @@
 
         @auth
         @php
-            $profile    = auth()->user()->PROFILE;
-            $isDoc      = str_starts_with($profile, 'DOC');
+            $profile      = auth()->user()->PROFILE;
+            $isCoordAcad  = $profile === 'COR001';
+            $isCoordConv  = $profile === 'COR002';
+            $isCor        = $isCoordAcad || $isCoordConv;
+            // Martha (COR002) NO actua como docente; solo Willy (COR001) tiene rol docente.
+            $isDoc        = str_starts_with($profile, 'DOC') || $isCoordAcad;
             $isSec      = str_starts_with($profile, 'Sec');
             $isContab   = $profile === 'Contab';
             $isSuperAd  = $profile === 'SuperAd';
@@ -158,7 +162,7 @@
         @endphp
 
         {{-- ── Estudiantes: SuperAd, Admin, Ori*, Sec* ── --}}
-        @if(!$isDoc && !$isContab && ($isSec || $isAdminLike || str_starts_with($profile, 'Ori')))
+        @if(!$isContab && ($isSec || $isAdminLike || str_starts_with($profile, 'Ori') || $isCor) && (!$isDoc || $isCor))
         @php $catId = 'estudiantes'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -314,12 +318,14 @@
                 @if($profile === 'SecA')
                 {!! sidebarLink(route('asistencia-personal.registro'), '✏️ Registrar personal') !!}
                 @endif
-                @if(!$isSuperAd)
+                @if(!$isSuperAd && (!$isDoc || $isCor))
                 {!! sidebarLink(route('asistencia.reporte'), '📋 Reporte de asistencia') !!}
                 @endif
                 @if($isAdminLike || $isSec)
                 {!! sidebarLink(route('llamadas.index'), '📞 Llamadas por inasistencia') !!}
                 @if(!$isSuperAd)
+                {!! sidebarLink(route('llamadas.reporte'), '📊 Reporte de llamadas') !!}
+                @elseif($isCoordConv)
                 {!! sidebarLink(route('llamadas.reporte'), '📊 Reporte de llamadas') !!}
                 @endif
                 @endif
@@ -421,7 +427,25 @@
         </div>
         @endif
 
-        {{-- ── ConvCor28: Vigilancias ── --}}
+        {{-- ── Coordinación Convivencia (COR002) ── --}}
+        @if($isCoordConv)
+        @php $catId = 'coord-convivencia'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Coordinación Convivencia</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('calendario.docente'), '📆 Calendario académico') !!}
+                {!! sidebarLink(route('vigilancias.control'), '🔍 Control de vigilancias') !!}
+            </ul>
+        </div>
+        @endif
+
+        {{-- ── ConvCor28: Vigilancias (legacy) ── --}}
         @if($profile === 'ConvCor28')
         @php $catId = 'vigilancias'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">

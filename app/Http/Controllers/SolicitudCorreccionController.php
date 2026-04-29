@@ -22,7 +22,7 @@ class SolicitudCorreccionController extends Controller
         $q = DB::table('solicitudes_correccion as s')
             ->leftJoin('CODIGOSMAT as m',   'm.CODIGO_MAT', '=', 's.codigo_mat')
             ->leftJoin('ESTUDIANTES as e',   'e.CODIGO',     '=', 's.codigo_alum')
-            ->leftJoin('CODIGOS_DOC as d',   'd.CODIGO_DOC', '=', 's.codigo_doc')
+            ->leftJoin('CODIGOS_DOC as d',   'd.CODIGO_EMP', '=', 's.codigo_emp')
             ->select(
                 's.*',
                 'm.NOMBRE_MAT',
@@ -34,7 +34,7 @@ class SolicitudCorreccionController extends Controller
             ->orderByDesc('s.created_at');
 
         if (!$esSuperior) {
-            $q->where('s.codigo_doc', $profile);
+            $q->where('s.codigo_emp', $profile);
         }
 
         // Filtro de estado
@@ -68,10 +68,10 @@ class SolicitudCorreccionController extends Controller
             $queryAsig = DB::table('ASIGNACION_PCM as a')
                 ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
                 ->where('a.calificable', 1)
-                ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT');
+                ->select('a.CODIGO_EMP', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT');
 
             if (!$esSuperior) {
-                $queryAsig->where('a.CODIGO_DOC', $profile);
+                $queryAsig->where('a.CODIGO_EMP', $profile);
             }
 
             $asignaciones = $queryAsig->orderBy('m.NOMBRE_MAT')->orderBy('a.CURSO')->get();
@@ -174,7 +174,7 @@ class SolicitudCorreccionController extends Controller
 
         // Verificar que no haya una solicitud PENDIENTE igual
         $yaPendiente = DB::table('solicitudes_correccion')
-            ->where('codigo_doc',  $profile)
+            ->where('codigo_emp',  $profile)
             ->where('codigo_alum', $request->codigo_alum)
             ->where('codigo_mat',  $request->codigo_mat)
             ->where('periodo',     $request->periodo)
@@ -187,7 +187,7 @@ class SolicitudCorreccionController extends Controller
         }
 
         DB::table('solicitudes_correccion')->insert([
-            'codigo_doc'     => $profile,
+            'codigo_emp'     => $profile,
             'codigo_alum'    => $request->codigo_alum,
             'codigo_mat'     => $request->codigo_mat,
             'periodo'        => $request->periodo,
@@ -236,7 +236,7 @@ class SolicitudCorreccionController extends Controller
                 'PERIODO'     => $sol->periodo,
                 'NOTA'        => $sol->nota_propuesta,
                 'TIPODENOTA'  => 'N',
-                'CODIGO_DOC'  => $sol->codigo_doc,
+                'CODIGO_EMP'  => $sol->codigo_emp,
             ]);
         }
 

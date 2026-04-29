@@ -23,11 +23,11 @@
 
             <div>
                 <label class="block text-xs text-gray-500 mb-1">Docente</label>
-                <select name="codigo_doc" required
+                <select name="codigo_emp" required
                     class="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500">
                     <option value="">— Seleccionar —</option>
                     @foreach($docentes as $doc)
-                        <option value="{{ $doc->CODIGO_DOC }}">{{ $doc->NOMBRE_DOC }}</option>
+                        <option value="{{ $doc->CODIGO_EMP }}">{{ $doc->NOMBRE_DOC }}</option>
                     @endforeach
                 </select>
             </div>
@@ -98,7 +98,7 @@
                 @endphp
                 <tr class="hover:bg-gray-50 {{ $activo ? 'bg-blue-50' : '' }}">
                     <td class="px-4 py-2.5 font-medium text-gray-800">
-                        {{ $p->NOMBRE_DOC ?? $p->codigo_doc }}
+                        {{ $p->NOMBRE_DOC ?? $p->codigo_emp }}
                         @if($activo)
                             <span class="ml-1 text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded-full">Activo</span>
                         @endif

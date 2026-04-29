@@ -32,7 +32,7 @@
                 <label class="block text-sm text-gray-600 mb-1">Selecciona un docente</label>
                 <select name="docente" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     @foreach($docentes as $doc)
-                        <option value="{{ $doc->CODIGO_DOC }}">{{ $doc->NOMBRE_DOC }}{{ ($doc->ESTADO ?? '') !== 'ACTIVO' ? ' ⚠ sin docente' : '' }}</option>
+                        <option value="{{ $doc->CODIGO_EMP }}">{{ $doc->NOMBRE_DOC }}{{ ($doc->ESTADO ?? '') !== 'ACTIVO' ? ' ⚠ sin docente' : '' }}</option>
                     @endforeach
                 </select>
                 <button type="submit" class="w-full bg-indigo-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-indigo-700 transition">

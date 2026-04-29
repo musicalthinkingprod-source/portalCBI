@@ -50,8 +50,8 @@
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
                             <option value="">— Seleccionar docente —</option>
                             @foreach($docentesConAsig as $d)
-                            <option value="{{ $d->CODIGO_DOC }}" {{ $verDoc == $d->CODIGO_DOC ? 'selected' : '' }}>
-                                {{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_DOC }}) — {{ $d->total_slots }} slot(s)
+                            <option value="{{ $d->CODIGO_EMP }}" {{ $verDoc == $d->CODIGO_EMP ? 'selected' : '' }}>
+                                {{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_EMP }}) — {{ $d->total_slots }} slot(s)
                             </option>
                             @endforeach
                         </select>
@@ -111,9 +111,9 @@
                                     class="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-500">
                                     <option value="">— Seleccionar destino —</option>
                                     @foreach($docentesActivos as $dest)
-                                        @if($dest->CODIGO_DOC !== $verDoc)
-                                        <option value="{{ $dest->CODIGO_DOC }}">
-                                            {{ $dest->NOMBRE_DOC }} ({{ $dest->CODIGO_DOC }})
+                                        @if($dest->CODIGO_EMP !== $verDoc)
+                                        <option value="{{ $dest->CODIGO_EMP }}">
+                                            {{ $dest->NOMBRE_DOC }} ({{ $dest->CODIGO_EMP }})
                                         </option>
                                         @endif
                                     @endforeach
@@ -161,8 +161,8 @@
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
                             <option value="">— Docente con vigilancias actuales —</option>
                             @foreach($docentesConAsig as $d)
-                            <option value="{{ $d->CODIGO_DOC }}">
-                                {{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_DOC }}) — {{ $d->total_slots }} slot(s)
+                            <option value="{{ $d->CODIGO_EMP }}">
+                                {{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_EMP }}) — {{ $d->total_slots }} slot(s)
                             </option>
                             @endforeach
                         </select>
@@ -175,8 +175,8 @@
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
                             <option value="">— Docente que recibirá las vigilancias —</option>
                             @foreach($docentesActivos as $d)
-                            <option value="{{ $d->CODIGO_DOC }}">
-                                {{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_DOC }})
+                            <option value="{{ $d->CODIGO_EMP }}">
+                                {{ $d->NOMBRE_DOC }} ({{ $d->CODIGO_EMP }})
                             </option>
                             @endforeach
                         </select>

@@ -191,7 +191,7 @@ class PiarController extends Controller
         $piarDiag = DB::table('PIAR_DIAG')->where('CODIGO_ALUM', $codigo)->first();
 
         $caractDir = DB::table('PIAR_CARACT_DIR as pcd')
-            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'pcd.CODIGO_DOC')
+            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_EMP', '=', 'pcd.CODIGO_EMP')
             ->where('pcd.CODIGO_ALUM', $codigo)
             ->select('pcd.CARACTERIZACION', 'pcd.CURSO', 'd.NOMBRE_DOC')
             ->first();
@@ -200,7 +200,7 @@ class PiarController extends Controller
 
         $caractMats = DB::table('PIAR_CARACT_MAT as pc')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'pc.CODIGO_MAT')
-            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'pc.CODIGO_DOC')
+            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_EMP', '=', 'pc.CODIGO_EMP')
             ->where('pc.CODIGO_ALUM', $codigo)
             ->whereNotIn('pc.CODIGO_MAT', $matsExcluidas)
             ->select('pc.CARACTERIZACION', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
@@ -211,10 +211,10 @@ class PiarController extends Controller
 
         $ajustes = DB::table('PIAR_MAT as pm')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'pm.CODIGO_MAT')
-            ->join(DB::raw('(SELECT CODIGO_MAT, CURSO, MIN(CODIGO_DOC) AS CODIGO_DOC FROM ASIGNACION_PCM GROUP BY CODIGO_MAT, CURSO) as a'), function ($j) use ($cursosEst) {
+            ->join(DB::raw('(SELECT CODIGO_MAT, CURSO, MIN(CODIGO_EMP) AS CODIGO_EMP FROM ASIGNACION_PCM GROUP BY CODIGO_MAT, CURSO) as a'), function ($j) use ($cursosEst) {
                 $j->on('a.CODIGO_MAT', '=', 'pm.CODIGO_MAT')->whereIn('a.CURSO', $cursosEst);
             })
-            ->join('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'a.CODIGO_DOC')
+            ->join('CODIGOS_DOC as d', 'd.CODIGO_EMP', '=', 'a.CODIGO_EMP')
             ->where('pm.CODIGO_ALUM', $codigo)
             ->whereNotIn('pm.CODIGO_MAT', $matsExcluidas)
             ->select('pm.*', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
@@ -408,10 +408,10 @@ class PiarController extends Controller
         // Todas las materias asignadas (deduplicadas por CURSO+CODIGO_MAT), agrupadas por CURSO
         $asignacionesPorCurso = DB::table('ASIGNACION_PCM as a')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'a.CODIGO_MAT')
-            ->join(DB::raw('(SELECT CODIGO_MAT, CURSO, MIN(CODIGO_DOC) AS CODIGO_DOC FROM ASIGNACION_PCM GROUP BY CODIGO_MAT, CURSO) as au'),
-                function ($j) { $j->on('au.CODIGO_MAT','=','a.CODIGO_MAT')->on('au.CURSO','=','a.CURSO')->on('au.CODIGO_DOC','=','a.CODIGO_DOC'); })
-            ->join('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'a.CODIGO_DOC')
-            ->select('a.CURSO', 'a.CODIGO_MAT', 'a.CODIGO_DOC', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
+            ->join(DB::raw('(SELECT CODIGO_MAT, CURSO, MIN(CODIGO_EMP) AS CODIGO_EMP FROM ASIGNACION_PCM GROUP BY CODIGO_MAT, CURSO) as au'),
+                function ($j) { $j->on('au.CODIGO_MAT','=','a.CODIGO_MAT')->on('au.CURSO','=','a.CURSO')->on('au.CODIGO_EMP','=','a.CODIGO_EMP'); })
+            ->join('CODIGOS_DOC as d', 'd.CODIGO_EMP', '=', 'a.CODIGO_EMP')
+            ->select('a.CURSO', 'a.CODIGO_MAT', 'a.CODIGO_EMP', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
             ->whereNotIn('a.CODIGO_MAT', $matsExcluidas)
             ->orderBy('m.NOMBRE_MAT')
             ->get()
@@ -456,7 +456,7 @@ class PiarController extends Controller
 
         // Caracterizaciones por director de grupo
         $caractDirs = DB::table('PIAR_CARACT_DIR as pcd')
-            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'pcd.CODIGO_DOC')
+            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_EMP', '=', 'pcd.CODIGO_EMP')
             ->whereIn('pcd.CODIGO_ALUM', $codigoAlums)
             ->select('pcd.CODIGO_ALUM', 'pcd.CARACTERIZACION', 'pcd.ESTADO',
                      'pcd.APROBADO_POR', 'pcd.FECHA_APROBACION', 'd.NOMBRE_DOC')

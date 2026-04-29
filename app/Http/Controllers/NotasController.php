@@ -20,9 +20,9 @@ class NotasController extends Controller
         // Todos los docentes con asignaciones calificables (activos e inactivos)
         $asignaciones = DB::table('ASIGNACION_PCM as a')
             ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
-            ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_DOC', '=', 'd.CODIGO_DOC')
+            ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_EMP', '=', 'd.CODIGO_EMP')
             ->where('a.calificable', 1)
-            ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT',
+            ->select('a.CODIGO_EMP', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT',
                      'd.NOMBRE_DOC', 'd.ESTADO as ESTADO_DOC')
             ->orderByRaw("CASE WHEN d.ESTADO = 'ACTIVO' OR d.ESTADO IS NULL THEN 0 ELSE 1 END")
             ->orderBy('d.NOMBRE_DOC')
@@ -54,19 +54,19 @@ class NotasController extends Controller
                          ->where('e.ESTADO', '=', 'MATRICULADO');
                 })
                 ->join('ASIGNACION_PCM as a', function ($join) {
-                    $join->on('a.CODIGO_DOC', '=', 'n.CODIGO_DOC')
+                    $join->on('a.CODIGO_EMP', '=', 'n.CODIGO_EMP')
                          ->on('a.CODIGO_MAT', '=', 'n.CODIGO_MAT')
                          ->on('a.CURSO',      '=', 'e.CURSO');
                 })
                 ->where('a.calificable', 1)
                 ->whereNotIn('n.CODIGO_MAT', [25, 26, 31])
-                ->select('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO',
+                ->select('n.CODIGO_EMP', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO',
                          DB::raw('COUNT(DISTINCT n.CODIGO_ALUM) as total'))
-                ->groupBy('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO')
+                ->groupBy('n.CODIGO_EMP', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO')
                 ->get();
 
             foreach ($rows as $r) {
-                $notasConteo[$r->CODIGO_DOC][$r->CODIGO_MAT][$r->CURSO][$r->PERIODO] = $r->total;
+                $notasConteo[$r->CODIGO_EMP][$r->CODIGO_MAT][$r->CURSO][$r->PERIODO] = $r->total;
             }
 
             // Notas de Proyectos (31): join vía LISTADOS_ESPECIALES → a.CURSO = le.GRUPO
@@ -75,18 +75,18 @@ class NotasController extends Controller
                     $j->on('e.CODIGO', '=', 'n.CODIGO_ALUM')->where('e.ESTADO', 'MATRICULADO'))
                 ->join('LISTADOS_ESPECIALES as le', 'le.CODIGO_ALUM', '=', 'n.CODIGO_ALUM')
                 ->join('ASIGNACION_PCM as a', fn($j) =>
-                    $j->on('a.CODIGO_DOC', '=', 'n.CODIGO_DOC')
+                    $j->on('a.CODIGO_EMP', '=', 'n.CODIGO_EMP')
                       ->on('a.CODIGO_MAT', '=', 'n.CODIGO_MAT')
                       ->on('a.CURSO',      '=', 'le.GRUPO'))
                 ->where('a.calificable', 1)
                 ->where('n.CODIGO_MAT', 31)
-                ->select('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO',
+                ->select('n.CODIGO_EMP', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO',
                          DB::raw('COUNT(DISTINCT n.CODIGO_ALUM) as total'))
-                ->groupBy('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO')
+                ->groupBy('n.CODIGO_EMP', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO')
                 ->get();
 
             foreach ($rowsProy as $r) {
-                $notasConteo[$r->CODIGO_DOC][$r->CODIGO_MAT][$r->CURSO][$r->PERIODO] = $r->total;
+                $notasConteo[$r->CODIGO_EMP][$r->CODIGO_MAT][$r->CURSO][$r->PERIODO] = $r->total;
             }
 
             // Música (26) y Artes (25) con listado especial: a.CURSO ya trae sufijo -1/-2
@@ -96,19 +96,19 @@ class NotasController extends Controller
                     $j->on('e.CODIGO', '=', 'n.CODIGO_ALUM')->where('e.ESTADO', 'MATRICULADO'))
                 ->join('LISTADOS_ESPECIALES as le', 'le.CODIGO_ALUM', '=', 'n.CODIGO_ALUM')
                 ->join('ASIGNACION_PCM as a', fn($j) =>
-                    $j->on('a.CODIGO_DOC', '=', 'n.CODIGO_DOC')
+                    $j->on('a.CODIGO_EMP', '=', 'n.CODIGO_EMP')
                       ->on('a.CODIGO_MAT', '=', 'n.CODIGO_MAT')
                       ->on('a.CURSO',      '=', 'le.GRUPO'))
                 ->where('a.calificable', 1)
                 ->whereIn('n.CODIGO_MAT', [25, 26])
                 ->whereRaw("a.CURSO REGEXP '-[12]$'")
-                ->select('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO',
+                ->select('n.CODIGO_EMP', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO',
                          DB::raw('COUNT(DISTINCT n.CODIGO_ALUM) as total'))
-                ->groupBy('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO')
+                ->groupBy('n.CODIGO_EMP', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO')
                 ->get();
 
             foreach ($rowsMusArt as $r) {
-                $notasConteo[$r->CODIGO_DOC][$r->CODIGO_MAT][$r->CURSO][$r->PERIODO] = $r->total;
+                $notasConteo[$r->CODIGO_EMP][$r->CODIGO_MAT][$r->CURSO][$r->PERIODO] = $r->total;
             }
 
             // Música/Artes en cursos base sin dividir (grados 1-5 y 6° cuando no se divide)
@@ -116,19 +116,19 @@ class NotasController extends Controller
                 ->join('ESTUDIANTES as e', fn($j) =>
                     $j->on('e.CODIGO', '=', 'n.CODIGO_ALUM')->where('e.ESTADO', 'MATRICULADO'))
                 ->join('ASIGNACION_PCM as a', fn($j) =>
-                    $j->on('a.CODIGO_DOC', '=', 'n.CODIGO_DOC')
+                    $j->on('a.CODIGO_EMP', '=', 'n.CODIGO_EMP')
                       ->on('a.CODIGO_MAT', '=', 'n.CODIGO_MAT')
                       ->on('a.CURSO',      '=', 'e.CURSO'))
                 ->where('a.calificable', 1)
                 ->whereIn('n.CODIGO_MAT', [25, 26])
                 ->whereRaw("a.CURSO NOT REGEXP '-[12]$'")
-                ->select('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO',
+                ->select('n.CODIGO_EMP', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO',
                          DB::raw('COUNT(DISTINCT n.CODIGO_ALUM) as total'))
-                ->groupBy('n.CODIGO_DOC', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO')
+                ->groupBy('n.CODIGO_EMP', 'n.CODIGO_MAT', 'a.CURSO', 'n.PERIODO')
                 ->get();
 
             foreach ($rowsMusArtBajos as $r) {
-                $notasConteo[$r->CODIGO_DOC][$r->CODIGO_MAT][$r->CURSO][$r->PERIODO] = $r->total;
+                $notasConteo[$r->CODIGO_EMP][$r->CODIGO_MAT][$r->CURSO][$r->PERIODO] = $r->total;
             }
         } catch (\Exception $e) {
             // tabla del año podría no existir
@@ -137,7 +137,7 @@ class NotasController extends Controller
         // Construir reporte por docente
         $docentes = [];
         foreach ($asignaciones as $a) {
-            $doc = $a->CODIGO_DOC;
+            $doc = $a->CODIGO_EMP;
 
             if (!isset($docentes[$doc])) {
                 $docentes[$doc] = [
@@ -193,8 +193,8 @@ class NotasController extends Controller
                 ];
             }
             $observacionesReport[] = [
-                'codigo'  => $dir->CODIGO_DOC,
-                'nombre'  => $dir->NOMBRE_DOC ?? $dir->CODIGO_DOC,
+                'codigo'  => $dir->CODIGO_EMP,
+                'nombre'  => $dir->NOMBRE_DOC ?? $dir->CODIGO_EMP,
                 'estado'  => $dir->ESTADO ?? 'ACTIVO',
                 'curso'   => $dir->DIR_GRUPO,
                 'periodos'=> $periodos,
@@ -214,10 +214,10 @@ class NotasController extends Controller
         $queryAsig = DB::table('ASIGNACION_PCM as a')
             ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
             ->where('a.calificable', 1)
-            ->select('a.CODIGO_DOC', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT');
+            ->select('a.CODIGO_EMP', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT');
 
         if (!$esSuperior) {
-            $queryAsig->where('a.CODIGO_DOC', $profile);
+            $queryAsig->where('a.CODIGO_EMP', $profile);
         }
 
         $asignaciones = $queryAsig->orderBy('m.NOMBRE_MAT')->orderBy('a.CURSO')->get();
@@ -321,7 +321,7 @@ class NotasController extends Controller
                         ->where('CODIGO_ALUM', $codAlum)
                         ->where('CODIGO_MAT', $materia)
                         ->where('PERIODO', $periodo)
-                        ->update(['NOTA' => $nota, 'TIPODENOTA' => 'N', 'CODIGO_DOC' => $docente]);
+                        ->update(['NOTA' => $nota, 'TIPODENOTA' => 'N', 'CODIGO_EMP' => $docente]);
                 } else {
                     DB::table($tabla)->insert([
                         'CODIGO_ALUM' => $codAlum,
@@ -329,7 +329,7 @@ class NotasController extends Controller
                         'CODIGO_MAT'  => $materia,
                         'NOTA'        => $nota,
                         'TIPODENOTA'  => 'N',
-                        'CODIGO_DOC'  => $docente,
+                        'CODIGO_EMP'  => $docente,
                     ]);
                 }
             }

@@ -32,7 +32,7 @@
                     <td class="px-4 py-2 font-mono font-semibold text-blue-800">{{ $curso }}</td>
                     <td class="px-4 py-2">
                         @if($dirActual)
-                            @php $nombreDir = $docentes->firstWhere('CODIGO_DOC', $dirActual)?->NOMBRE_DOC ?? $dirActual; @endphp
+                            @php $nombreDir = $docentes->firstWhere('CODIGO_EMP', $dirActual)?->NOMBRE_DOC ?? $dirActual; @endphp
                             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold">
                                 {{ $nombreDir }}
                             </span>
@@ -49,7 +49,7 @@
                                 class="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="">— Sin director —</option>
                                 @foreach($docentes as $doc)
-                                    <option value="{{ $doc->CODIGO_DOC }}" {{ $dirActual === $doc->CODIGO_DOC ? 'selected' : '' }}>
+                                    <option value="{{ $doc->CODIGO_EMP }}" {{ $dirActual === $doc->CODIGO_EMP ? 'selected' : '' }}>
                                         {{ $doc->NOMBRE_DOC }}
                                     </option>
                                 @endforeach

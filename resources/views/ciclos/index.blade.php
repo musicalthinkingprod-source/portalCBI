@@ -155,18 +155,18 @@
                             @php $docenteAnterior = null; @endphp
                             @foreach($asignaciones as $asig)
                             @php
-                                $key = $asig->CODIGO_DOC . '|' . $asig->CODIGO_MAT . '|' . $asig->CURSO;
+                                $key = $asig->CODIGO_EMP . '|' . $asig->CODIGO_MAT . '|' . $asig->CURSO;
                                 $ciclosPasados = $ciclos->filter(fn($c) => now()->toDateString() >= $c->fecha_inicio);
                                 $cumplidos = $ciclosPasados->filter(fn($c) => ($cumplimiento[$c->id][$key] ?? false))->count();
                                 $total     = $ciclosPasados->count();
                                 $pct       = $total > 0 ? round($cumplidos / $total * 100) : null;
-                                $nuevaFila = $docenteAnterior !== $asig->CODIGO_DOC;
-                                $docenteAnterior = $asig->CODIGO_DOC;
+                                $nuevaFila = $docenteAnterior !== $asig->CODIGO_EMP;
+                                $docenteAnterior = $asig->CODIGO_EMP;
                             @endphp
                             <tr class="hover:bg-gray-50 {{ $nuevaFila ? 'border-t-2 border-gray-300' : '' }}">
                                 <td class="px-4 py-2 sticky left-0 bg-white z-10">
                                     @if($nuevaFila)
-                                    <p class="font-bold text-gray-800">{{ $asig->NOMBRE_DOC ?? $asig->CODIGO_DOC }}</p>
+                                    <p class="font-bold text-gray-800">{{ $asig->NOMBRE_DOC ?? $asig->CODIGO_EMP }}</p>
                                     @else
                                     <p class="text-gray-300 text-xs pl-2">└</p>
                                     @endif

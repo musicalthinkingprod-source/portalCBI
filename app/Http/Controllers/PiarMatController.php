@@ -11,7 +11,8 @@ class PiarMatController extends Controller
 {
     private function esDocente(): bool
     {
-        return str_starts_with(auth()->user()->PROFILE, 'DOC');
+        $profile = auth()->user()->PROFILE;
+        return str_starts_with($profile, 'DOC') || str_starts_with($profile, 'COR');
     }
 
     private function codigoDoc(): string
@@ -42,7 +43,7 @@ class PiarMatController extends Controller
         return DB::table('ASIGNACION_PCM')
             ->whereIn('CURSO', $cursos)
             ->where('CODIGO_MAT', $codigoMat)
-            ->pluck('CODIGO_DOC')
+            ->pluck('CODIGO_EMP')
             ->unique()
             ->filter()
             ->values()
@@ -61,7 +62,7 @@ class PiarMatController extends Controller
         $query = DB::table('ESTUDIANTES as e')
             ->join('PIAR_DIAG as pd', 'pd.CODIGO_ALUM', '=', 'e.CODIGO')
             ->leftJoin('LISTADOS_ESPECIALES as le', 'le.CODIGO_ALUM', '=', 'e.CODIGO')
-            ->join(DB::raw('(SELECT DISTINCT CODIGO_DOC, CODIGO_MAT, CURSO FROM ASIGNACION_PCM) as a'), function ($j) {
+            ->join(DB::raw('(SELECT DISTINCT CODIGO_EMP, CODIGO_MAT, CURSO FROM ASIGNACION_PCM) as a'), function ($j) {
                 $j->whereRaw('(a.CURSO = e.CURSO OR a.CURSO = le.GRUPO)');
             })
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'a.CODIGO_MAT')
@@ -86,7 +87,7 @@ class PiarMatController extends Controller
         $query->whereNotIn('a.CODIGO_MAT', $matsExcluidas);
 
         if ($esDocente) {
-            $query->where('a.CODIGO_DOC', $codigoDoc);
+            $query->where('a.CODIGO_EMP', $codigoDoc);
         }
 
         $filas = $query->orderBy('m.NOMBRE_MAT')->orderBy('e.APELLIDO1')->orderBy('e.NOMBRE1')->get();
@@ -108,7 +109,7 @@ class PiarMatController extends Controller
             $estudiante = DB::table('ESTUDIANTES as e')
                 ->leftJoin('LISTADOS_ESPECIALES as le', 'le.CODIGO_ALUM', '=', 'e.CODIGO')
                 ->join('ASIGNACION_PCM as a', function ($j) use ($codigoDoc, $codigoMat) {
-                    $j->where('a.CODIGO_DOC', $codigoDoc)
+                    $j->where('a.CODIGO_EMP', $codigoDoc)
                       ->where('a.CODIGO_MAT', $codigoMat)
                       ->whereRaw('(a.CURSO = e.CURSO OR a.CURSO = le.GRUPO)');
                 })
@@ -122,7 +123,7 @@ class PiarMatController extends Controller
         if (!$estudiante) abort(403);
 
         $materia  = DB::table('CODIGOSMAT')->where('CODIGO_MAT', $codigoMat)->first();
-        $docente  = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $codigoDoc)->first();
+        $docente  = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $codigoDoc)->first();
         $piarDiag = DB::table('PIAR_DIAG')->where('CODIGO_ALUM', $codigo)->first();
         $piarMat  = DB::table('PIAR_MAT')
                         ->where('CODIGO_ALUM', $codigo)
@@ -166,7 +167,7 @@ class PiarMatController extends Controller
             $estudiante = DB::table('ESTUDIANTES as e')
                 ->leftJoin('LISTADOS_ESPECIALES as le', 'le.CODIGO_ALUM', '=', 'e.CODIGO')
                 ->join('ASIGNACION_PCM as a', function ($j) use ($codigoDoc, $codigoMat) {
-                    $j->where('a.CODIGO_DOC', $codigoDoc)
+                    $j->where('a.CODIGO_EMP', $codigoDoc)
                       ->where('a.CODIGO_MAT', $codigoMat)
                       ->whereRaw('(a.CURSO = e.CURSO OR a.CURSO = le.GRUPO)');
                 })
@@ -180,7 +181,7 @@ class PiarMatController extends Controller
         if (!$estudiante) abort(403);
 
         $materia  = DB::table('CODIGOSMAT')->where('CODIGO_MAT', $codigoMat)->first();
-        $docente  = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $codigoDoc)->first();
+        $docente  = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $codigoDoc)->first();
         $piarDiag = DB::table('PIAR_DIAG')->where('CODIGO_ALUM', $codigo)->first();
         $piarMat  = DB::table('PIAR_MAT')
                         ->where('CODIGO_ALUM', $codigo)
@@ -286,7 +287,7 @@ class PiarMatController extends Controller
         if ($entregar) {
             $materia  = $this->nombreMateria($codigoMat);
             $etiqueta = $this->etiquetaEstudiante($codigo);
-            $nomDoc   = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $this->codigoDoc())->value('NOMBRE_DOC') ?? $this->codigoDoc();
+            $nomDoc   = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $this->codigoDoc())->value('NOMBRE_DOC') ?? $this->codigoDoc();
             $url      = route('piar.anexo2.form', [$codigo, $codigoMat]) . '#observaciones';
             $mensaje  = "{$nomDoc} entregó los ajustes razonables de {$etiqueta} en {$materia}.";
             NotificacionesController::crearParaRevisoresPiar('piar_entreg', 'Anexo 2 entregado para revisión', $mensaje, $url);
@@ -306,7 +307,7 @@ class PiarMatController extends Controller
             $estudiante = DB::table('ESTUDIANTES as e')
                 ->leftJoin('LISTADOS_ESPECIALES as le', 'le.CODIGO_ALUM', '=', 'e.CODIGO')
                 ->join('ASIGNACION_PCM as a', function ($j) use ($codigoDoc, $codigoMat) {
-                    $j->where('a.CODIGO_DOC', $codigoDoc)
+                    $j->where('a.CODIGO_EMP', $codigoDoc)
                       ->where('a.CODIGO_MAT', $codigoMat)
                       ->whereRaw('(a.CURSO = e.CURSO OR a.CURSO = le.GRUPO)');
                 })
@@ -320,7 +321,7 @@ class PiarMatController extends Controller
         if (!$estudiante) abort(403);
 
         $materia  = DB::table('CODIGOSMAT')->where('CODIGO_MAT', $codigoMat)->first();
-        $docente  = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $codigoDoc)->first();
+        $docente  = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $codigoDoc)->first();
         $piarDiag = DB::table('PIAR_DIAG')->where('CODIGO_ALUM', $codigo)->first();
         $piarMat  = DB::table('PIAR_MAT')
                         ->where('CODIGO_ALUM', $codigo)
@@ -411,7 +412,7 @@ class PiarMatController extends Controller
         if ($entregar) {
             $materia  = $this->nombreMateria($codigoMat);
             $etiqueta = $this->etiquetaEstudiante($codigo);
-            $nomDoc   = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $this->codigoDoc())->value('NOMBRE_DOC') ?? $this->codigoDoc();
+            $nomDoc   = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $this->codigoDoc())->value('NOMBRE_DOC') ?? $this->codigoDoc();
             $url      = route('piar.plan_casero.form', [$codigo, $codigoMat]) . '#observaciones';
             $mensaje  = "{$nomDoc} entregó el Plan Casero de {$etiqueta} en {$materia}.";
             NotificacionesController::crearParaRevisoresPiar('piar_casero_entreg', 'Plan Casero entregado para revisión', $mensaje, $url);

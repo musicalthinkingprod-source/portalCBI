@@ -15,7 +15,7 @@ class InformeNotasController extends Controller
         'curso'      => ['label' => 'Curso',       'col' => 'CURSO'],
         'grado'      => ['label' => 'Grado',       'col' => 'GRADO'],
         'sede'       => ['label' => 'Sede',        'col' => 'SEDE'],
-        'docente'    => ['label' => 'Docente',     'col' => 'CODIGO_DOC'],
+        'docente'    => ['label' => 'Docente',     'col' => 'CODIGO_EMP'],
         'materia'    => ['label' => 'Asignatura',  'col' => 'CODIGO_MAT'],
         'area'       => ['label' => 'Área',        'col' => 'AREA_MAT'],
     ];
@@ -94,7 +94,7 @@ class InformeNotasController extends Controller
         $docentes = DB::table('CODIGOS_DOC')
             ->where('ESTADO', 'ACTIVO')
             ->orderBy('NOMBRE_DOC')
-            ->get(['CODIGO_DOC', 'NOMBRE_DOC']);
+            ->get(['CODIGO_EMP', 'NOMBRE_DOC']);
 
         return compact('sedes', 'grados', 'cursos', 'materias', 'areas', 'docentes');
     }
@@ -109,7 +109,7 @@ class InformeNotasController extends Controller
         $q = DB::table($tablaNotas . ' as n')
             ->join('ESTUDIANTES as e', 'e.CODIGO', '=', 'n.CODIGO_ALUM')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'n.CODIGO_MAT')
-            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_DOC', '=', 'n.CODIGO_DOC')
+            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_EMP', '=', 'n.CODIGO_EMP')
             ->where('n.TIPODENOTA', 'N')
             ->where('e.ESTADO', 'MATRICULADO');
 
@@ -119,7 +119,7 @@ class InformeNotasController extends Controller
         if ($f['sede'])        $q->where('e.SEDE', $f['sede']);
         if ($f['grado'])       $q->where('e.GRADO', $f['grado']);
         if ($f['curso'])       $q->where('e.CURSO', $f['curso']);
-        if ($f['docente'])     $q->where('n.CODIGO_DOC', $f['docente']);
+        if ($f['docente'])     $q->where('n.CODIGO_EMP', $f['docente']);
         if ($f['codigo_mat'])  $q->where('n.CODIGO_MAT', (int) $f['codigo_mat']);
         if ($f['area'])        $q->where('m.AREA_MAT', (int) $f['area']);
 
@@ -139,7 +139,7 @@ class InformeNotasController extends Controller
             $sub->select(
                 'n.CODIGO_ALUM',
                 'n.CODIGO_MAT',
-                'n.CODIGO_DOC',
+                'n.CODIGO_EMP',
                 'e.CODIGO',
                 'e.APELLIDO1', 'e.APELLIDO2', 'e.NOMBRE1', 'e.NOMBRE2',
                 'e.GRADO', 'e.CURSO', 'e.SEDE',
@@ -147,7 +147,7 @@ class InformeNotasController extends Controller
                 'd.NOMBRE_DOC',
                 DB::raw('AVG(n.NOTA) as nota_efectiva')
             )->groupBy(
-                'n.CODIGO_ALUM','n.CODIGO_MAT','n.CODIGO_DOC',
+                'n.CODIGO_ALUM','n.CODIGO_MAT','n.CODIGO_EMP',
                 'e.CODIGO','e.APELLIDO1','e.APELLIDO2','e.NOMBRE1','e.NOMBRE2',
                 'e.GRADO','e.CURSO','e.SEDE',
                 'm.NOMBRE_MAT','m.AREA_MAT','d.NOMBRE_DOC'
@@ -159,7 +159,7 @@ class InformeNotasController extends Controller
             $q->addSelect(
                 'n.CODIGO_ALUM',
                 'n.CODIGO_MAT',
-                'n.CODIGO_DOC',
+                'n.CODIGO_EMP',
                 'e.CODIGO',
                 'e.APELLIDO1', 'e.APELLIDO2', 'e.NOMBRE1', 'e.NOMBRE2',
                 'e.GRADO', 'e.CURSO', 'e.SEDE',
@@ -216,9 +216,9 @@ class InformeNotasController extends Controller
                 $order[]  = 'b.SEDE';
                 break;
             case 'docente':
-                $select[] = DB::raw("b.CODIGO_DOC as {$alias}_codigo");
-                $select[] = DB::raw("COALESCE(b.NOMBRE_DOC, b.CODIGO_DOC) as {$alias}_label");
-                $group[]  = 'b.CODIGO_DOC';
+                $select[] = DB::raw("b.CODIGO_EMP as {$alias}_codigo");
+                $select[] = DB::raw("COALESCE(b.NOMBRE_DOC, b.CODIGO_EMP) as {$alias}_label");
+                $group[]  = 'b.CODIGO_EMP';
                 $group[]  = 'b.NOMBRE_DOC';
                 $order[]  = 'b.NOMBRE_DOC';
                 break;

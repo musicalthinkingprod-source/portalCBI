@@ -59,9 +59,9 @@ class Horario extends Model
                 $join->on('a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
                      ->where('a.CURSO', $curso);
             })
-            ->leftJoin('CODIGOS_DOC as cd', 'cd.CODIGO_DOC', '=', 'a.CODIGO_DOC')
+            ->leftJoin('CODIGOS_DOC as cd', 'cd.CODIGO_EMP', '=', 'a.CODIGO_EMP')
             ->where('h.CURSO', $curso)
-            ->select('h.DIA', 'h.HORA', 'h.CODIGO_MAT', 'cm.NOMBRE_MAT', 'cd.NOMBRE_DOC', 'cd.CODIGO_DOC')
+            ->select('h.DIA', 'h.HORA', 'h.CODIGO_MAT', 'cm.NOMBRE_MAT', 'cd.NOMBRE_DOC', 'cd.CODIGO_EMP')
             ->orderBy('h.HORA')
             ->orderBy('h.DIA')
             ->get();
@@ -72,7 +72,7 @@ class Horario extends Model
                 'codigo_mat' => $row->CODIGO_MAT,
                 'materia'    => $row->NOMBRE_MAT ?? '—',
                 'docente'    => $row->NOMBRE_DOC ?? null,
-                'codigo_doc' => $row->CODIGO_DOC ?? null,
+                'codigo_emp' => $row->CODIGO_EMP ?? null,
             ];
         }
         return $grid;
@@ -92,7 +92,7 @@ class Horario extends Model
             ->join('ASIGNACION_PCM as a', function ($join) use ($codigoDoc) {
                 $join->on('a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
                      ->on(DB::raw("SUBSTRING_INDEX(a.CURSO, '-', 1)"), '=', 'h.CURSO')
-                     ->where('a.CODIGO_DOC', $codigoDoc);
+                     ->where('a.CODIGO_EMP', $codigoDoc);
             })
             ->leftJoin('CODIGOSMAT as cm', 'cm.CODIGO_MAT', '=', 'h.CODIGO_MAT')
             ->whereNotIn('h.CODIGO_MAT', [31, 200])
@@ -117,7 +117,7 @@ class Horario extends Model
         // los slots de CODIGO_MAT=70 para los cursos asignados al docente.
         $asigArtesMusica = DB::table('ASIGNACION_PCM')
             ->whereIn('CODIGO_MAT', [25, 26])
-            ->where('CODIGO_DOC', $codigoDoc)
+            ->where('CODIGO_EMP', $codigoDoc)
             ->get(['CODIGO_MAT', 'CURSO']);
 
         // Pre-cargar nombres para evitar N+1
@@ -159,7 +159,7 @@ class Horario extends Model
         // Proyecto (CODIGO_MAT=31): la asignación usa el nombre del grupo (GP1, GP2…)
         // como CURSO en ASIGNACION_PCM, así que se trata por separado.
         $grupoProyecto = DB::table('ASIGNACION_PCM')
-            ->where('CODIGO_DOC', $codigoDoc)
+            ->where('CODIGO_EMP', $codigoDoc)
             ->where('CODIGO_MAT', 31)
             ->value('CURSO'); // p.ej. 'GP1'
 
@@ -185,7 +185,7 @@ class Horario extends Model
         }
 
         // Atención a Padres (CODIGO_MAT=200, no calificable).
-        // Los slots se almacenan en HORARIOS con CURSO=CODIGO_DOC para que
+        // Los slots se almacenan en HORARIOS con CURSO=CODIGO_EMP para que
         // cada docente tenga sus propios bloques sin interferir con otros.
         $slotsAP = DB::table('HORARIOS')
             ->where('CODIGO_MAT', 200)
@@ -258,8 +258,8 @@ class Horario extends Model
     public static function docentes(): array
     {
         return DB::table('CODIGOS_DOC as cd')
-            ->join('ASIGNACION_PCM as a', 'a.CODIGO_DOC', '=', 'cd.CODIGO_DOC')
-            ->select('cd.CODIGO_DOC', 'cd.NOMBRE_DOC', 'cd.ESTADO')
+            ->join('ASIGNACION_PCM as a', 'a.CODIGO_EMP', '=', 'cd.CODIGO_EMP')
+            ->select('cd.CODIGO_EMP', 'cd.NOMBRE_DOC', 'cd.ESTADO')
             ->distinct()
             ->orderBy('cd.NOMBRE_DOC')
             ->get()

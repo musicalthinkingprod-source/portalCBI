@@ -14,7 +14,7 @@ class ObservacionesController extends Controller
         $sinBloqueo = $esSuperior || app()->environment('local');
 
         // Cualquier perfil puede ser director de grupo si tiene DIR_GRUPO en CODIGOS_DOC
-        $docInfo     = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $profile)->first();
+        $docInfo     = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $profile)->first();
         $isDirector  = $docInfo && !empty($docInfo->DIR_GRUPO);
         $cursoDir    = null;
 
@@ -83,7 +83,7 @@ class ObservacionesController extends Controller
             return back()->with('error', 'El período ' . $periodo . ' está cerrado y no permite guardar observaciones.');
         }
 
-        $docInfo    = DB::table('CODIGOS_DOC')->where('CODIGO_DOC', $profile)->first();
+        $docInfo    = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $profile)->first();
         $isDirector = $docInfo && !empty($docInfo->DIR_GRUPO);
 
         if ($isDirector) {
