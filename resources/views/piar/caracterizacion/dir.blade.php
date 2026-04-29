@@ -4,6 +4,8 @@
 
 @section('slot')
 
+@include('partials.piar_header_estudiante')
+
 @php
     $puedeObservar = auth()->user()->PROFILE === 'SuperAd' || auth()->user()->PROFILE === 'Piar' || str_starts_with(auth()->user()->PROFILE, 'Ori');
     $estadoActual  = $caract->ESTADO ?? 'pendiente';

@@ -4,6 +4,8 @@
 
 @section('slot')
 
+@include('partials.piar_header_estudiante')
+
 @if(session('saved'))
     <div class="mb-4 p-3 bg-green-100 text-green-800 rounded-xl text-sm">✅ {{ session('saved') }}</div>
 @endif
