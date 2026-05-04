@@ -234,6 +234,23 @@ class PiarController extends Controller
                 $docentesElaboran->push((object)['NOMBRE_DOC' => $aj->NOMBRE_DOC, 'CARGO' => 'Docente de ' . $aj->NOMBRE_MAT]);
         }
 
+        // ── Datos Anexo 3 (Plan Casero) ──────────────────────────────────────
+        $planes = DB::table('PIAR_MAT as pm')
+            ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'pm.CODIGO_MAT')
+            ->leftJoin(DB::raw('(SELECT CODIGO_MAT, CURSO, MIN(CODIGO_EMP) AS CODIGO_EMP FROM ASIGNACION_PCM GROUP BY CODIGO_MAT, CURSO) as a'), function ($j) use ($cursosEst) {
+                $j->on('a.CODIGO_MAT', '=', 'pm.CODIGO_MAT')->whereIn('a.CURSO', $cursosEst);
+            })
+            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_EMP', '=', 'a.CODIGO_EMP')
+            ->where('pm.CODIGO_ALUM', $codigo)
+            ->whereNotIn('pm.CODIGO_MAT', $matsExcluidas)
+            ->whereNotNull('pm.ESTRAG_CASERA')
+            ->where('pm.ESTRAG_CASERA', '!=', '')
+            ->select('pm.ESTRAG_CASERA', 'pm.FREC_CASERA', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
+            ->orderBy('m.NOMBRE_MAT')
+            ->get();
+
+        $orientadora = $piarDiag->PERSONA_DIL ?? 'Jennifer Andrea Martínez Londoño';
+
         return view('piar.imprimir_todos', compact(
             'estudiante', 'piar', 'piarDiag',
             'nombreCompleto', 'apellidos', 'tipoDoc', 'numId', 'fechaNac',
@@ -241,7 +258,8 @@ class PiarController extends Controller
             'epsEst', 'enferEst', 'telPadres', 'correoPadres',
             'nombreMadre', 'nombrePadre', 'empMadre', 'empPadre',
             'celMadre', 'emailMadre', 'celPadre', 'nombreAcud', 'celAcud', 'emailAcud',
-            'caractDir', 'caractMats', 'ajustes', 'docentesElaboran'
+            'caractDir', 'caractMats', 'ajustes', 'docentesElaboran',
+            'planes', 'orientadora'
         ));
     }
 

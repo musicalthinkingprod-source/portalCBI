@@ -112,12 +112,19 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/english-acq/entregar', [EnglishAcqController::class, 'entregar'])->name('english-acq.entregar');
         Route::get('/control/planilla', [ControlPlanillaController::class, 'index'])->name('control.planilla');
         Route::get('/nomina', [NominaController::class, 'index'])->name('nomina.index');
+        Route::post('/nomina', [NominaController::class, 'store'])->name('nomina.store');
+        Route::put('/nomina/{id}', [NominaController::class, 'update'])->name('nomina.update');
+        Route::delete('/nomina/{id}', [NominaController::class, 'destroy'])->name('nomina.destroy');
+        Route::post('/nomina/{id}/vacaciones', [NominaController::class, 'storeVacacion'])->name('nomina.vacaciones.store');
+        Route::delete('/nomina/vacaciones/{vid}', [NominaController::class, 'destroyVacacion'])->name('nomina.vacaciones.destroy');
+        Route::post('/nomina/{id}/incapacidades', [NominaController::class, 'storeIncapacidad'])->name('nomina.incapacidades.store');
+        Route::delete('/nomina/incapacidades/{iid}', [NominaController::class, 'destroyIncapacidad'])->name('nomina.incapacidades.destroy');
 
 
         // ── Circulares ────────────────────────────────────────────────────────
     });
 
-    Route::middleware('profile:SuperAd,Admin,Ori*,SecC100')->group(function () {
+    Route::middleware('profile:SuperAd,Admin,Ori*,SEC001')->group(function () {
         Route::get('/circulares', [CircularesController::class, 'index'])->name('circulares.index');
         Route::get('/circulares/nueva', [CircularesController::class, 'create'])->name('circulares.create');
         Route::post('/circulares', [CircularesController::class, 'store'])->name('circulares.store');
@@ -153,8 +160,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/backup/descargar', [BackupController::class, 'descargar'])->name('backup.descargar');
     });
 
-    // ── Control de Pagos: lectura + seguimiento cartera (Admin + Contab + SecC100) ────────────────
-    Route::middleware('profile:SuperAd,Admin,Contab,SecC100')->group(function () {
+    // ── Control de Pagos: lectura + seguimiento cartera (Admin + Contab + SEC001) ────────────────
+    Route::middleware('profile:SuperAd,Admin,Contab,SEC001')->group(function () {
         Route::get('/control/estudiante', [ControlEstudianteController::class, 'index'])->name('control.estudiante');
         Route::post('/control/estudiante/observacion', [ControlEstudianteController::class, 'saveObservacion'])->name('control.estudiante.observacion.save');
         Route::get('/pagos', [PagosController::class, 'index'])->name('pagos.index');
@@ -258,7 +265,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ── Calendario académico: Admin y Secretaría (con edición) ───────────────
-    Route::middleware('profile:SuperAd,Admin,SecC100')->group(function () {
+    Route::middleware('profile:SuperAd,Admin,SEC001')->group(function () {
         Route::get('/calendario', [CalendarioAcademicoController::class, 'index'])->name('calendario.index');
     });
 
@@ -309,7 +316,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/piar/anexo2/{codigo}/{codigoMat}',        [PiarMatController::class, 'guardar'])    ->name('piar.anexo2.guardar');
         Route::get('/piar/anexo2/{codigo}/{codigoMat}/imprimir',[PiarMatController::class, 'imprimir'])   ->name('piar.anexo2.imprimir');
 
-        // Plan Casero
+        // Plan Casero (Anexo 3) — la impresión por estudiante debe ir ANTES de las rutas con {codigoMat}
+        Route::get('/piar/plan-casero/{codigo}/imprimir',     [PiarMatController::class, 'imprimirPlanCasero'])->name('piar.plan_casero.imprimir.est');
         Route::get('/piar/plan-casero/{codigo}/{codigoMat}',  [PiarMatController::class, 'formPlanCasero'])   ->name('piar.plan_casero.form');
         Route::post('/piar/plan-casero/{codigo}/{codigoMat}', [PiarMatController::class, 'guardarPlanCasero'])->name('piar.plan_casero.guardar');
 

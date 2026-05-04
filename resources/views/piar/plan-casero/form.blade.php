@@ -52,6 +52,10 @@
 <div class="flex items-center justify-between mb-4">
     <a href="{{ $puedeObservar ? route('piar.informe') : route('piar.anexo2.index') }}" class="text-blue-700 hover:underline text-sm">← Volver</a>
     <div class="flex gap-3">
+        <a href="{{ route('piar.plan_casero.imprimir.est', $estudiante->CODIGO) }}" target="_blank"
+            class="bg-blue-800 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition inline-block">
+            🖨️ Imprimir Anexo 3
+        </a>
         @if($puedeObservar && $estadoEtapa !== 'finalizado')
             <button type="button" id="btn-editar-contenido"
                 onclick="activarEdicion()"

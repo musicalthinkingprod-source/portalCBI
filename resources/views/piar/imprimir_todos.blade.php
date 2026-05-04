@@ -37,6 +37,7 @@ img { max-width: 100%; display: inline-block; }
     <button onclick="window.print()" class="btn-print">🖨️ Imprimir / PDF (Ambos)</button>
     <a href="{{ route('piar.imprimir', $estudiante->CODIGO) }}" target="_blank" class="btn-print" style="background:#374151;">📄 Solo Anexo 1</a>
     <a href="{{ route('piar.anexo2.imprimir.est', $estudiante->CODIGO) }}" target="_blank" class="btn-print" style="background:#374151;">📄 Solo Anexo 2</a>
+    <a href="{{ route('piar.plan_casero.imprimir.est', $estudiante->CODIGO) }}" target="_blank" class="btn-print" style="background:#374151;">📄 Solo Anexo 3</a>
 </div>
 
 {{-- ══════════════════════════════════════════════════════════════════════ --}}
@@ -227,6 +228,11 @@ img { max-width: 100%; display: inline-block; }
 <tr><td style="width:33.33%"><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center"><span style="font-size:12pt"><b>Nombre y firma.</b></span></p></td><td style="width:33.33%"><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center"><span style="font-size:12pt"><b>Nombre y firma</b></span></p></td><td style="width:33.34%"><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center"><span style="font-size:12pt"><b>Nombre y firma</b></span></p></td></tr>
 <tr><td style="width:33.33%"><p style="text-align:center"><span style="font-size:12pt"><b>Área. Orientación escolar.</b></span></p></td><td style="width:33.33%"><p style="text-align:center"><span style="font-size:12pt"><b>Mamá.</b></span></p></td><td style="width:33.34%"><p style="text-align:center"><span style="font-size:12pt"><b>Papá</b></span></p></td></tr>
 </table>
+
+{{-- ══════════════════════════════════════════════════════════════════════ --}}
+{{-- ANEXO 3 – ACTA DE ACUERDO Y PLAN CASERO                                --}}
+{{-- ══════════════════════════════════════════════════════════════════════ --}}
+@include('partials.piar_anexo3')
 
 </div>
 

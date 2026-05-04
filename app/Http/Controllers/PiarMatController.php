@@ -422,6 +422,62 @@ class PiarMatController extends Controller
         return redirect()->route('piar.plan_casero.form', [$codigo, $codigoMat])->with('saved', $msg);
     }
 
+    // ── Vista de impresión Plan Casero (Anexo 3) ─────────────────────────────
+    public function imprimirPlanCasero(string $codigo)
+    {
+        $estudiante = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->first();
+        if (!$estudiante) abort(404);
+
+        $piarDiag = DB::table('PIAR_DIAG')->where('CODIGO_ALUM', $codigo)->first();
+        $padres   = DB::table('INFO_PADRES')->where('CODIGO', $codigo)->first();
+
+        $matsExcluidas = [24, 31, 35, 124, 135, 153];
+        $cursosEst     = $this->cursosAplicables($codigo, $estudiante->CURSO);
+
+        $planes = DB::table('PIAR_MAT as pm')
+            ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'pm.CODIGO_MAT')
+            ->leftJoin(DB::raw('(SELECT CODIGO_MAT, CURSO, MIN(CODIGO_EMP) AS CODIGO_EMP FROM ASIGNACION_PCM GROUP BY CODIGO_MAT, CURSO) as a'), function ($j) use ($cursosEst) {
+                $j->on('a.CODIGO_MAT', '=', 'pm.CODIGO_MAT')->whereIn('a.CURSO', $cursosEst);
+            })
+            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_EMP', '=', 'a.CODIGO_EMP')
+            ->where('pm.CODIGO_ALUM', $codigo)
+            ->whereNotIn('pm.CODIGO_MAT', $matsExcluidas)
+            ->whereNotNull('pm.ESTRAG_CASERA')
+            ->where('pm.ESTRAG_CASERA', '!=', '')
+            ->select('pm.ESTRAG_CASERA', 'pm.FREC_CASERA', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
+            ->orderBy('m.NOMBRE_MAT')
+            ->get();
+
+        $docentesElaboran = collect();
+        foreach ($planes as $pl) {
+            if ($pl->NOMBRE_DOC && !$docentesElaboran->contains('NOMBRE_DOC', $pl->NOMBRE_DOC)) {
+                $docentesElaboran->push((object)['NOMBRE_DOC' => $pl->NOMBRE_DOC, 'MATERIA' => $pl->NOMBRE_MAT]);
+            }
+        }
+
+        $orientadora = $piarDiag->PERSONA_DIL ?? 'Jennifer Andrea Martínez Londoño';
+
+        $nombreCompleto = trim("{$estudiante->NOMBRE1} {$estudiante->NOMBRE2}");
+        $apellidos      = trim("{$estudiante->APELLIDO1} {$estudiante->APELLIDO2}");
+        $tipoDoc = 'TI';
+        $numId   = $estudiante->TAR_ID ?? '';
+        if (!$numId && ($estudiante->REG_CIVIL ?? '')) { $tipoDoc = 'RC'; $numId = $estudiante->REG_CIVIL; }
+        $edad  = $estudiante->EDAD  ?? '';
+        $grado = $estudiante->GRADO ?? '';
+        $curso = $estudiante->CURSO ?? '';
+        $sede  = $estudiante->SEDE  ? 'Sede ' . $estudiante->SEDE : '';
+
+        $nombreMadre = $padres->MADRE ?? '';
+        $nombrePadre = $padres->PADRE ?? '';
+
+        return view('piar.plan-casero.imprimir', compact(
+            'estudiante', 'piarDiag', 'planes', 'docentesElaboran', 'orientadora',
+            'nombreCompleto', 'apellidos', 'tipoDoc', 'numId',
+            'edad', 'grado', 'curso', 'sede',
+            'nombreMadre', 'nombrePadre'
+        ));
+    }
+
     // ── Aprobar Plan Casero (Ori / SuperAd) ──────────────────────────────────
     public function aprobarPlanCasero(string $codigo, int $codigoMat)
     {
