@@ -364,16 +364,16 @@ img {
 </table>
 
 {{-- ══ FIRMAS ══ --}}
-<table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;width:100%">
+<table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;width:100%;table-layout:fixed">
 <tr>
-<td><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center"><span style="font-size:12pt"><b>Nombre y firma.</b></span></p></td>
-<td><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center"><span style="font-size:12pt"><b>Nombre y firma</b></span></p></td>
-<td><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center"><span style="font-size:12pt"><b>Nombre y firma</b></span></p></td>
+<td style="width:33.33%"><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center"><span style="font-size:12pt"><b>Nombre y firma.</b></span></p></td>
+<td style="width:33.33%"><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center"><span style="font-size:12pt"><b>Nombre y firma</b></span></p></td>
+<td style="width:33.34%"><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center">&nbsp;</p><p style="text-align:center"><span style="font-size:12pt"><b>Nombre y firma</b></span></p></td>
 </tr>
 <tr>
-<td><p style="text-align:center"><span style="font-size:12pt"><b>Área. Orientación escolar.</b></span></p></td>
-<td><p style="text-align:center"><span style="font-size:12pt"><b>Mamá.</b></span></p></td>
-<td><p style="text-align:center"><span style="font-size:12pt"><b>Papá</b></span></p></td>
+<td style="width:33.33%"><p style="text-align:center"><span style="font-size:12pt"><b>Área. Orientación escolar.</b></span></p></td>
+<td style="width:33.33%"><p style="text-align:center"><span style="font-size:12pt"><b>Mamá.</b></span></p></td>
+<td style="width:33.34%"><p style="text-align:center"><span style="font-size:12pt"><b>Papá</b></span></p></td>
 </tr>
 </table>
 
