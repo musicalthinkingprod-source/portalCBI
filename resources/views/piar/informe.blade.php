@@ -197,10 +197,14 @@ $pctPendiente  = max(0, 100 - $pctAprobado - $pctRevision);
                        class="flex items-center gap-2 px-4 py-2 text-xs hover:bg-gray-100">
                         📄 Solo Anexo 2
                     </a>
+                    <a href="{{ route('piar.plan_casero.imprimir.est', $est->CODIGO) }}" target="_blank"
+                       class="flex items-center gap-2 px-4 py-2 text-xs hover:bg-gray-100">
+                        📄 Solo Anexo 3
+                    </a>
                     <div class="border-t border-gray-100 my-1"></div>
                     <a href="{{ route('piar.imprimir.todos', $est->CODIGO) }}" target="_blank"
                        class="flex items-center gap-2 px-4 py-2 text-xs hover:bg-blue-50 font-semibold text-blue-700">
-                        🖨️ Ambos (1 + 2)
+                        🖨️ Todos (1 + 2 + 3)
                     </a>
                 </div>
             </div>
