@@ -15,7 +15,7 @@
 
     $fechaNac = '';
     if ($estudiante->FECH_NACIMIENTO ?? null) {
-        try { $fechaNac = \Carbon\Carbon::parse($estudiante->FECH_NACIMIENTO)->translatedFormat('d \d\e F \d\e Y'); }
+        try { $fechaNac = \Carbon\Carbon::parse($estudiante->FECH_NACIMIENTO)->locale('es')->isoFormat('D [de] MMMM [de] YYYY'); }
         catch (\Exception $e) { $fechaNac = $estudiante->FECH_NACIMIENTO; }
     }
 

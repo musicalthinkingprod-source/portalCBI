@@ -103,7 +103,7 @@ class PiarController extends Controller
 
         $fechaNac = '';
         if ($estudiante->FECH_NACIMIENTO ?? null) {
-            try { $fechaNac = \Carbon\Carbon::parse($estudiante->FECH_NACIMIENTO)->translatedFormat('d \d\e F \d\e Y'); }
+            try { $fechaNac = \Carbon\Carbon::parse($estudiante->FECH_NACIMIENTO)->locale('es')->isoFormat('D [de] MMMM [de] YYYY'); }
             catch (\Exception $e) { $fechaNac = $estudiante->FECH_NACIMIENTO; }
         }
 
@@ -162,7 +162,7 @@ class PiarController extends Controller
         if (!$numId && ($estudiante->REG_CIVIL ?? '')) { $tipoDoc = 'RC'; $numId = $estudiante->REG_CIVIL; }
         $fechaNac = '';
         if ($estudiante->FECH_NACIMIENTO ?? null) {
-            try { $fechaNac = \Carbon\Carbon::parse($estudiante->FECH_NACIMIENTO)->translatedFormat('d \d\e F \d\e Y'); }
+            try { $fechaNac = \Carbon\Carbon::parse($estudiante->FECH_NACIMIENTO)->locale('es')->isoFormat('D [de] MMMM [de] YYYY'); }
             catch (\Exception $e) { $fechaNac = $estudiante->FECH_NACIMIENTO; }
         }
         $edad      = $estudiante->EDAD ?? '';

@@ -528,7 +528,7 @@ class PiarCaractController extends Controller
         $edad     = $estudiante->EDAD ?? '';
         $fechaNac = '';
         if (!empty($estudiante->FECH_NACIMIENTO)) {
-            try { $fechaNac = \Carbon\Carbon::parse($estudiante->FECH_NACIMIENTO)->translatedFormat('d \d\e F \d\e Y'); }
+            try { $fechaNac = \Carbon\Carbon::parse($estudiante->FECH_NACIMIENTO)->locale('es')->isoFormat('D [de] MMMM [de] YYYY'); }
             catch (\Exception $e) { $fechaNac = $estudiante->FECH_NACIMIENTO; }
         }
         $grado          = $estudiante->GRADO;
