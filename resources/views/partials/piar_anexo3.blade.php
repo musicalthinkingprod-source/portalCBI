@@ -24,16 +24,16 @@
 @php $totalDocentes = ($docentesElaboran ?? collect())->count(); @endphp
 <tr>
 <td rowspan="{{ $totalDocentes + 2 }}" style="vertical-align:top"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>Nombres equipo directivos y de docentes</b></span></p></td>
-<td><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>DIRECTORA DE LA INSTITUCIÓN.</b></span></p></td>
+<td style="width:18%;word-break:break-word"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:11pt"><b>DIRECTORA DE LA INSTITUCIÓN.</b></span></p></td>
 <td colspan="3"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt">Ángela Vega.</span></p></td>
 </tr>
 <tr>
-<td><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>ORIENTADORA.</b></span></p></td>
+<td style="width:18%;word-break:break-word"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:11pt"><b>ORIENTADORA.</b></span></p></td>
 <td colspan="3"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt">{{ $orientadora ?? 'Jennifer Andrea Martínez Londoño' }}</span></p></td>
 </tr>
 @foreach(($docentesElaboran ?? collect()) as $d)
 <tr>
-<td><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>DOCENTE{{ !empty($d->MATERIA) ? ' – ' . strtoupper($d->MATERIA) : '' }}.</b></span></p></td>
+<td style="width:18%;word-break:break-word"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:11pt"><b>DOCENTE{{ !empty($d->MATERIA) ? ' – ' . strtoupper($d->MATERIA) : '' }}.</b></span></p></td>
 <td colspan="3"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt">{{ $d->NOMBRE_DOC }}</span></p></td>
 </tr>
 @endforeach
