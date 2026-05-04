@@ -21,40 +21,29 @@
 <td colspan="2"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>Documento de Identificación: </b></span><span style="font-size:12pt">{{ $tipoDoc }} {{ $numId }}</span></p></td>
 <td><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>Edad: </b>{{ $edad }} años</span></p><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>Grado: </b>{{ $grado }}{{ $curso ? ' – ' . $curso : '' }}</span></p></td>
 </tr>
-<tr>
-<td colspan="5" style="padding:0;">
 @php $totalDocentes = ($docentesElaboran ?? collect())->count(); @endphp
-<table cellspacing="0" cellpadding="4" style="border-collapse:collapse;width:100%;table-layout:fixed;">
-<colgroup>
-<col style="width:25%"/>
-<col style="width:25%"/>
-<col style="width:50%"/>
-</colgroup>
 <tr>
-<td rowspan="{{ $totalDocentes + 2 }}" style="border:1px solid #000;vertical-align:top;padding:6pt;"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>Nombres equipo directivos y de docentes</b></span></p></td>
-<td style="border:1px solid #000;"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>DIRECTORA DE LA INSTITUCIÓN.</b></span></p></td>
-<td style="border:1px solid #000;"><p style="text-align:center;margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt">Ángela Vega.</span></p></td>
+<td rowspan="{{ $totalDocentes + 2 }}" style="vertical-align:top"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>Nombres equipo directivos y de docentes</b></span></p></td>
+<td><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>DIRECTORA DE LA INSTITUCIÓN.</b></span></p></td>
+<td colspan="3"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt">Ángela Vega.</span></p></td>
 </tr>
 <tr>
-<td style="border:1px solid #000;"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>ORIENTADORA.</b></span></p></td>
-<td style="border:1px solid #000;"><p style="text-align:center;margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt">{{ $orientadora ?? 'Jennifer Andrea Martínez Londoño' }}</span></p></td>
+<td><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>ORIENTADORA.</b></span></p></td>
+<td colspan="3"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt">{{ $orientadora ?? 'Jennifer Andrea Martínez Londoño' }}</span></p></td>
 </tr>
 @foreach(($docentesElaboran ?? collect()) as $d)
 <tr>
-<td style="border:1px solid #000;"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>DOCENTE{{ !empty($d->MATERIA) ? ' – ' . strtoupper($d->MATERIA) : '' }}.</b></span></p></td>
-<td style="border:1px solid #000;"><p style="text-align:center;margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt">{{ $d->NOMBRE_DOC }}</span></p></td>
+<td><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>DOCENTE{{ !empty($d->MATERIA) ? ' – ' . strtoupper($d->MATERIA) : '' }}.</b></span></p></td>
+<td colspan="3"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt">{{ $d->NOMBRE_DOC }}</span></p></td>
 </tr>
 @endforeach
-</table>
-</td>
-</tr>
 <tr>
-<td colspan="2" rowspan="2" style="vertical-align:top"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>Nombres familia del estudiante</b></span></p></td>
-<td colspan="2"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt">{{ $nombreMadre ?: '' }}</span></p></td>
+<td rowspan="2" style="vertical-align:top"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>Nombres familia del estudiante</b></span></p></td>
+<td colspan="3"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt">{{ $nombreMadre ?: '' }}</span></p></td>
 <td><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>Parentesco: </b>Mamá.</span></p></td>
 </tr>
 <tr>
-<td colspan="2"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt">{{ $nombrePadre ?: '' }}</span></p></td>
+<td colspan="3"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt">{{ $nombrePadre ?: '' }}</span></p></td>
 <td><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>Parentesco: </b>Papá.</span></p></td>
 </tr>
 <tr>
