@@ -64,10 +64,23 @@
 <p style="text-align:justify;margin-top:4pt;margin-bottom:4pt;line-height:1.5"><span style="font-size:10pt">Continuar con la implementación del Diseño Universal de Aprendizaje (DUA) bajo sus tres principios: múltiples medios de Representación, de Acción y Expresión, y de Implicación.</span></p></td>
 </tr>
 <tr>
-<td colspan="5"><p style="text-align:center;margin-top:8pt;margin-bottom:8pt"><span style="color:#0070C0;font-size:12pt"><u><b>Y en casa apoyará con las siguientes actividades: Plan Casero.</b></u></span></p></td>
+<td colspan="5" style="border:none;padding:0;">
+<table cellspacing="0" cellpadding="6" style="border:none;border-collapse:collapse;width:100%">
+<tr style="border:none;">
+<td style="width:22%;border:none;text-align:center;vertical-align:middle;"><img src="{{ asset('images/escudoCBI.png') }}" alt="CBI" style="max-height:75pt;max-width:100%;height:auto;width:auto;display:block;margin:0 auto;"></td>
+<td style="border:none;text-align:center;vertical-align:middle;"><p style="text-align:center;margin:0;line-height:1.4"><span style="color:#0070C0;font-size:14pt"><u><b>Y en casa apoyará con las siguientes actividades:</b></u></span></p><p style="text-align:center;margin:0;line-height:1.4"><span style="color:#0070C0;font-size:14pt"><u><b>Plan Casero.</b></u></span></p></td>
+<td style="width:18%;border:none;text-align:center;vertical-align:middle;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="70" height="70" style="display:block;margin:0 auto;">
+<path d="M50 12 L10 48 L22 48 L22 88 L78 88 L78 48 L90 48 Z" fill="none" stroke="#4A90D9" stroke-width="6" stroke-linejoin="round"/>
+<path d="M50 78 C50 78 30 65 30 52 C30 44 38 40 50 50 C62 40 70 44 70 52 C70 65 50 78 50 78 Z" fill="#4A90D9"/>
+</svg>
+</td>
+</tr>
+</table>
+</td>
 </tr>
 <tr>
-<td style="width:18%;background-color:#F2F2F2"><p style="text-align:center;margin-top:6pt;margin-bottom:6pt"><span style="font-size:11pt"><b>Asignatura</b></span></p></td>
+<td style="width:18%;background-color:#F2F2F2"><p style="text-align:center;margin-top:6pt;margin-bottom:6pt"><span style="font-size:11pt"><b>Nombre de la Actividad</b></span></p></td>
 <td colspan="2" style="background-color:#F2F2F2"><p style="text-align:center;margin-top:6pt;margin-bottom:6pt"><span style="font-size:11pt"><b>Descripción de la estrategia.</b></span></p><p style="text-align:center;margin-top:2pt;margin-bottom:6pt"><span style="color:#7F7F7F;font-size:9pt">Descripción y materiales de apoyo didácticos, concretos o virtuales necesarios.</span></p></td>
 <td colspan="2" style="background-color:#F2F2F2"><p style="text-align:center;margin-top:6pt;margin-bottom:6pt"><span style="font-size:11pt"><b>Frecuencia</b></span></p><p style="text-align:center;margin-top:2pt;margin-bottom:6pt"><span style="color:#7F7F7F;font-size:9pt">Diaria / Semanal / Permanente.</span></p></td>
 </tr>
