@@ -41,7 +41,7 @@ p { margin: 0 0 1pt 0; line-height: 1.15; }
 <tr>
 <td style="width:32%;text-align:center;vertical-align:middle;padding:8pt;">
     <img src="{{ asset('images/mineducacion.png') }}" alt="MinEducación" style="max-height:50pt;width:70%;display:block;margin:0 auto 5pt auto;">
-    <img src="{{ asset('images/colombia.png') }}" alt="Gobierno de Colombia" style="max-height:28pt;width:100%;display:block;margin:0 auto;">
+    <img src="{{ asset('images/colombia.png') }}" alt="Gobierno de Colombia" style="max-height:28pt;max-width:100%;height:auto;width:auto;display:block;margin:0 auto;">
 </td>
 <td style="text-align:center;vertical-align:middle;padding:8pt;">
     <p style="text-align:center;line-height:1.5"><span style="color:#8496B0;font-size:18pt"><b>PIAR</b></span></p>
