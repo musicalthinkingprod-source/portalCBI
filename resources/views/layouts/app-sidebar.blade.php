@@ -141,7 +141,7 @@
             $isAdmin    = $profile === 'Admin';
             $isAdminLike = $isSuperAd || $isAdmin;
             $isPiar     = $profile === 'Piar';
-            // "Otros" = ConvCor*, Ori, SecC100, SecA, etc. → ven todo excepto Panel de Control
+            // "Otros" = ConvCor*, Ori, SEC001, SecA, etc. → ven todo excepto Panel de Control
 
             $correccionesPendientes = $isSuperAd
                 ? \Illuminate\Support\Facades\DB::table('solicitudes_correccion')->where('estado', 'PENDIENTE')->count()
@@ -318,7 +318,7 @@
                 @if($profile === 'SecA')
                 {!! sidebarLink(route('asistencia-personal.registro'), '✏️ Registrar personal') !!}
                 @endif
-                @if(!$isSuperAd && (!$isDoc || $isCor))
+                @if(!$isSuperAd)
                 {!! sidebarLink(route('asistencia.reporte'), '📋 Reporte de asistencia') !!}
                 @endif
                 @if($isAdminLike || $isSec)
@@ -333,8 +333,8 @@
         </div>
         @endif
 
-        {{-- ── Control de Pagos: SuperAd, Admin, Contab, SecC100 ── --}}
-        @if(in_array($profile, ['SuperAd','Admin','Contab','SecC100']))
+        {{-- ── Control de Pagos: SuperAd, Admin, Contab, SEC001 ── --}}
+        @if(in_array($profile, ['SuperAd','Admin','Contab','SEC001']))
         @php $catId = 'control-pagos'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -345,7 +345,7 @@
                 </svg>
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
-                @if($profile !== 'SecC100')
+                @if($profile !== 'SEC001')
                 {!! sidebarLink(route('control.estudiante'), '🔍 Consultar estudiante') !!}
                 {!! sidebarLink(route('pagos.index'), '💳 Pagos') !!}
                 {!! sidebarLink(route('facturacion.index'), '🧾 Facturación') !!}
@@ -409,8 +409,8 @@
         </div>
         @endif
 
-        {{-- ── SecC100: Académico ── --}}
-        @if($profile === 'SecC100')
+        {{-- ── SEC001: Académico ── --}}
+        @if($profile === 'SEC001')
         @php $catId = 'academico'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -481,8 +481,8 @@
         </div>
         @endif
 
-        {{-- ── Gestión Personal: solo SuperAd ── --}}
-        @if($isSuperAd)
+        {{-- ── Gestión Personal: SuperAd y Admin ── --}}
+        @if($isSuperAd || $isAdmin)
         @php $catId = 'gestion-personal'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -493,14 +493,17 @@
                 </svg>
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
-                {!! sidebarLink(route('asistencia-personal.index'), '👥 Asistencia personal') !!}
+                {!! sidebarLink(route('nomina.index'), '👥 Gestión de personal') !!}
+                {!! sidebarLink(route('asistencia-personal.index'), '🕒 Asistencia personal') !!}
+                @if($isSuperAd)
                 {!! sidebarLink(route('asistencia-personal.permisos'), '📋 Permisos') !!}
+                @endif
             </ul>
         </div>
         @endif
 
-        {{-- ── Comunicaciones: SuperAd, Admin, Ori*, SecC100 ── --}}
-        @if($isSuperAd || $isAdmin || str_starts_with($profile, 'Ori') || $profile === 'SecC100')
+        {{-- ── Comunicaciones: SuperAd, Admin, Ori*, SEC001, COR001 ── --}}
+        @if($isSuperAd || $isAdmin || str_starts_with($profile, 'Ori') || $profile === 'SEC001' || $isCoordAcad)
         @php $catId = 'comunicaciones'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -564,7 +567,6 @@
                 {!! sidebarLink(route('admin.fechas'), '📅 Fechas') !!}
                 {!! sidebarLink(route('calendario.index'), '📆 Calendario académico') !!}
                 {!! sidebarLink(route('listados.index'), '🗂️ Listados especiales') !!}
-                {!! sidebarLink(route('nomina.index'), '👥 Gestión de personal') !!}
                 {!! sidebarLink(route('rutas.index'), '🚌 Listado de rutas') !!}
                 {!! sidebarLink(route('backup.index'), '💾 Copia de seguridad') !!}
             </ul>

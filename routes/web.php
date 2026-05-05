@@ -124,15 +124,20 @@ Route::middleware(['auth'])->group(function () {
         // ── Circulares ────────────────────────────────────────────────────────
     });
 
-    Route::middleware('profile:SuperAd,Admin,Ori*,SEC001')->group(function () {
+    // ── Circulares: lectura (incluye COR001) ─────────────────────────────────
+    Route::middleware('profile:SuperAd,Admin,Ori*,SEC001,COR001')->group(function () {
         Route::get('/circulares', [CircularesController::class, 'index'])->name('circulares.index');
+        Route::get('/circulares/{circular}', [CircularesController::class, 'show'])->name('circulares.show');
+        Route::get('/circulares/{circular}/pdf', [CircularesController::class, 'pdf'])->name('circulares.pdf');
+    });
+
+    // ── Circulares: gestión (sin COR001) ─────────────────────────────────────
+    Route::middleware('profile:SuperAd,Admin,Ori*,SEC001')->group(function () {
         Route::get('/circulares/nueva', [CircularesController::class, 'create'])->name('circulares.create');
         Route::post('/circulares', [CircularesController::class, 'store'])->name('circulares.store');
-        Route::get('/circulares/{circular}', [CircularesController::class, 'show'])->name('circulares.show');
         Route::get('/circulares/{circular}/editar', [CircularesController::class, 'edit'])->name('circulares.edit');
         Route::put('/circulares/{circular}', [CircularesController::class, 'update'])->name('circulares.update');
         Route::delete('/circulares/{circular}', [CircularesController::class, 'destroy'])->name('circulares.destroy');
-        Route::get('/circulares/{circular}/pdf', [CircularesController::class, 'pdf'])->name('circulares.pdf');
     });
 
     Route::middleware('profile:SuperAd,Admin,Ori*')->group(function () {

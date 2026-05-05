@@ -120,7 +120,8 @@ class BoletinController extends Controller
     {
         $profile      = auth()->user()->PROFILE;
         $user         = auth()->user()->USER;
-        $esDocente    = str_starts_with($profile, 'DOC') || str_starts_with($profile, 'COR');
+        $esCoordAcad  = $profile === 'COR001';
+        $esDocente    = (str_starts_with($profile, 'DOC') || str_starts_with($profile, 'COR')) && !$esCoordAcad;
         $esOrientador = str_starts_with($profile, 'Ori');
         $cursoDir     = null;
 
@@ -187,7 +188,8 @@ class BoletinController extends Controller
     {
         $profile      = auth()->user()->PROFILE;
         $user         = auth()->user()->USER;
-        $esDocente    = str_starts_with($profile, 'DOC') || str_starts_with($profile, 'COR');
+        $esCoordAcad  = $profile === 'COR001';
+        $esDocente    = (str_starts_with($profile, 'DOC') || str_starts_with($profile, 'COR')) && !$esCoordAcad;
         $esOrientador = str_starts_with($profile, 'Ori');
 
         if ($esDocente) {

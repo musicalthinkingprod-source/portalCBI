@@ -10,10 +10,12 @@
         class="border border-gray-300 text-gray-600 px-4 py-2 rounded-lg text-sm hover:bg-gray-50 transition">
         ← Volver al listado
     </a>
+    @if(auth()->user()->PROFILE !== 'COR001')
     <a href="{{ route('circulares.edit', $circular) }}"
         class="border border-blue-300 text-blue-700 px-4 py-2 rounded-lg text-sm hover:bg-blue-50 transition">
         Editar
     </a>
+    @endif
     <a href="{{ route('circulares.pdf', $circular) }}" target="_blank"
         class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
         Descargar PDF

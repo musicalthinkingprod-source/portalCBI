@@ -18,10 +18,12 @@
             </select>
         </div>
     </form>
+    @if(auth()->user()->PROFILE !== 'COR001')
     <a href="{{ route('circulares.create') }}"
         class="bg-blue-800 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-semibold transition">
         + Nueva circular
     </a>
+    @endif
 </div>
 
 @if(session('success'))
@@ -63,16 +65,20 @@
                     <td class="px-4 py-3 text-right space-x-2">
                         <a href="{{ route('circulares.show', $c) }}"
                             class="text-blue-600 hover:underline text-xs">Ver</a>
+                        @if(auth()->user()->PROFILE !== 'COR001')
                         <a href="{{ route('circulares.edit', $c) }}"
                             class="text-gray-600 hover:underline text-xs">Editar</a>
+                        @endif
                         <a href="{{ route('circulares.pdf', $c) }}" target="_blank"
                             class="text-red-600 hover:underline text-xs">PDF</a>
+                        @if(auth()->user()->PROFILE !== 'COR001')
                         <form method="POST" action="{{ route('circulares.destroy', $c) }}"
                             class="inline"
                             onsubmit="return confirm('¿Eliminar la circular {{ $c->numero }}?')">
                             @csrf @method('DELETE')
                             <button type="submit" class="text-red-400 hover:underline text-xs">Eliminar</button>
                         </form>
+                        @endif
                     </td>
                 </tr>
                 @endforeach
