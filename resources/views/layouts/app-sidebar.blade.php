@@ -405,6 +405,9 @@
                 {!! sidebarLink(route('derroteros.tablero'), '📅 Tablero recuperaciones') !!}
                 @endif
                 {!! sidebarLink(route('informes.boletin'), '📋 Boletines') !!}
+                @if($isAdmin)
+                {!! sidebarLink(route('certificados.buscar'), '📜 Certificados de notas') !!}
+                @endif
             </ul>
         </div>
         @endif
@@ -423,6 +426,7 @@
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
                 {!! sidebarLink(route('horarios.index'), '🗓️ Horarios') !!}
                 {!! sidebarLink(route('calendario.index'), '📆 Calendario académico') !!}
+                {!! sidebarLink(route('certificados.buscar'), '📜 Certificados de notas') !!}
             </ul>
         </div>
         @endif
@@ -545,6 +549,7 @@
                 {!! sidebarLink(route('asistencia.reporte'), '📋 Reporte de asistencia') !!}
                 {!! sidebarLink(route('llamadas.reporte'), '📊 Reporte de llamadas') !!}
                 {!! sidebarLink(route('control.planilla'), '📋 Informe de planilla') !!}
+                {!! sidebarLink(route('certificados.buscar'), '📜 Certificados de notas') !!}
             </ul>
         </div>
         @endif

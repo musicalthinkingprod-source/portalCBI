@@ -21,6 +21,7 @@ use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\SalvavidasController;
 use App\Http\Controllers\DeroterosController;
 use App\Http\Controllers\BoletinController;
+use App\Http\Controllers\CertificadosController;
 use App\Http\Controllers\PiarController;
 use App\Http\Controllers\PiarMatController;
 use App\Http\Controllers\PiarCaractController;
@@ -413,6 +414,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/informes/boletin', [BoletinController::class, 'buscar'])->name('informes.boletin');
         Route::get('/boletines/{codigo}', [BoletinController::class, 'ver'])->name('boletines.ver');
         Route::get('/informes/promedios/{codigo}', [BoletinController::class, 'promedios'])->name('informes.promedios');
+    });
+
+    // ── Certificados de notas (consolidado individual): SuperAd, Admin, SEC001 ──
+    Route::middleware('profile:SuperAd,Admin,SEC001')->group(function () {
+        Route::get('/certificados/notas',           [CertificadosController::class, 'buscar'])->name('certificados.buscar');
+        Route::get('/certificados/notas/{codigo}',  [CertificadosController::class, 'ver'])   ->name('certificados.ver');
+        Route::get('/certificados/notas/{codigo}/pdf', [CertificadosController::class, 'pdf'])->name('certificados.pdf');
     });
 
     // ── Observaciones 2026: SuperAd, Admin, DOC* ────────────────────────────
