@@ -333,8 +333,8 @@
         </div>
         @endif
 
-        {{-- ── Control de Pagos: SuperAd, Admin, Contab, SEC001 ── --}}
-        @if(in_array($profile, ['SuperAd','Admin','Contab','SEC001']))
+        {{-- ── Control de Pagos: SuperAd, Admin, Contab, SEC001, SecC100 ── --}}
+        @if(in_array($profile, ['SuperAd','Admin','Contab','SEC001','SecC100']))
         @php $catId = 'control-pagos'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -345,19 +345,19 @@
                 </svg>
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
-                @if($profile !== 'SEC001')
+                @if(!in_array($profile, ['SEC001','SecC100']))
                 {!! sidebarLink(route('control.estudiante'), '🔍 Consultar estudiante') !!}
                 {!! sidebarLink(route('pagos.index'), '💳 Pagos') !!}
                 {!! sidebarLink(route('facturacion.index'), '🧾 Facturación') !!}
                 @if(!$isContab)
                 {!! sidebarLink(route('facturacion.auto'), '⚡ Facturación automática') !!}
                 @endif
-                {!! sidebarLink(route('cartera.index'), '📊 Informe de cartera') !!}
                 {!! sidebarLink(route('cartera.deudores'), '🔴 Cartera / Anticipos') !!}
                 {!! sidebarLink(route('listado-estudiantes.index'), '🎓 Listado estudiantes') !!}
                 {!! sidebarLink(route('world-office.index'), '📄 Plantilla World Office') !!}
                 {!! sidebarLink(route('parametros.index'), '⚙️ Parámetros facturación') !!}
                 @endif
+                {!! sidebarLink(route('cartera.index'), '📊 Informe de cartera') !!}
                 {!! sidebarLink(route('cartera.seguimiento.informe'), '📋 Seguimiento cartera') !!}
                 {!! sidebarLink(route('cartera.por_cc'), '🪪 Cartera por CC') !!}
                 @if($isAdminLike)
@@ -412,8 +412,8 @@
         </div>
         @endif
 
-        {{-- ── SEC001: Académico ── --}}
-        @if($profile === 'SEC001')
+        {{-- ── SEC001 / SecC100 (Paola): Académico ── --}}
+        @if(in_array($profile, ['SEC001','SecC100']))
         @php $catId = 'academico'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"

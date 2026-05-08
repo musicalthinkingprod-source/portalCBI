@@ -83,9 +83,13 @@ class CertificadosController extends Controller
         $cursoAnio = $eca?->{"CURSO_{$anio}"} ?? null;
         if (!$cursoAnio) return [];
 
+        // Excluidas del certificado: Acompañamiento de Padres (32, 50, 51), Conducta (33), Disciplina (34).
+        $matExcluidas = [32, 33, 34, 50, 51];
+
         $notasRaw = DB::table('NOTAS_' . $anio . ' as n')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'n.CODIGO_MAT')
             ->where('n.CODIGO_ALUM', $codigo)
+            ->whereNotIn('n.CODIGO_MAT', $matExcluidas)
             ->select('n.CODIGO_MAT', 'm.NOMBRE_MAT', 'n.PERIODO', 'n.NOTA')
             ->get();
 

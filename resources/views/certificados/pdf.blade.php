@@ -63,12 +63,13 @@
 
         table.notas {
             width: 100%; border-collapse: collapse;
+            table-layout: fixed;
             font-size: 10.5pt; margin-top: 14px;
         }
         table.notas th, table.notas td { border: 1px solid #000; padding: 3px 6px; }
         table.notas th { background: #f0f0f0; text-align: center; font-weight: bold; }
         table.notas td.c { text-align: center; }
-        table.notas td.sep, table.notas th.sep { border: none; width: 14px; padding: 0; }
+        table.notas td.sep, table.notas th.sep { border: none; width: 14px; padding: 0; background: transparent; }
 
         .firma { margin-top: 90px; }
         .firma p { margin: 2px 0; font-weight: bold; }
@@ -129,14 +130,13 @@
 <table class="notas">
     <thead>
         <tr>
-            <th>ASIGNATURA</th>
-            <th style="width: 50px;">I.H.S.</th>
-            <th style="width: 60px;">ESCALA</th>
-            <th style="width: 75px;">NIVEL</th>
-            <th class="sep"></th>
-            <th>ASIGNATURA</th>
-            <th style="width: 60px;">ESCALA</th>
-            <th style="width: 75px;">NIVEL</th>
+            <th style="width: 31%;">ASIGNATURA</th>
+            <th style="width: 8%;">ESCALA</th>
+            <th style="width: 10%;">NIVEL</th>
+            <th class="sep" style="width: 2%;"></th>
+            <th style="width: 31%;">ASIGNATURA</th>
+            <th style="width: 8%;">ESCALA</th>
+            <th style="width: 10%;">NIVEL</th>
         </tr>
     </thead>
     <tbody>
@@ -148,7 +148,6 @@
             @endphp
             <tr>
                 <td>{{ $izq['nombre'] ?? '' }}</td>
-                <td class="c">{{ $izq['ihs'] ?? '' }}</td>
                 <td class="c">{{ $izq['escala'] ?? '' }}</td>
                 <td class="c">{{ $izq['nivel'] ?? '' }}</td>
                 <td class="sep"></td>

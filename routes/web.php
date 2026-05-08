@@ -166,19 +166,23 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/backup/descargar', [BackupController::class, 'descargar'])->name('backup.descargar');
     });
 
+    // ── Cartera lectura + seguimiento de llamadas (Admin + Contab + SEC001 + SecC100/Paola) ──
+    Route::middleware('profile:SuperAd,Admin,Contab,SEC001,SecC100')->group(function () {
+        Route::get('/cartera', [CarteraController::class, 'index'])->name('cartera.index');
+        Route::get('/cartera/seguimiento/informe', [CarteraController::class, 'informeSeguimiento'])->name('cartera.seguimiento.informe');
+        Route::get('/cartera/por-cc', [CarteraController::class, 'carteraPorCC'])->name('cartera.por_cc');
+        Route::get('/cartera/estudiante/{codigo}', [CarteraController::class, 'estudiante'])->name('cartera.estudiante');
+        Route::post('/cartera/estudiante/{codigo}/seguimiento', [CarteraController::class, 'storeSeguimiento'])->name('cartera.seguimiento.store');
+        Route::put('/cartera/seguimiento/{id}', [CarteraController::class, 'updateSeguimiento'])->name('cartera.seguimiento.update');
+        Route::delete('/cartera/seguimiento/{id}', [CarteraController::class, 'destroySeguimiento'])->name('cartera.seguimiento.destroy');
+    });
+
     // ── Control de Pagos: lectura + seguimiento cartera (Admin + Contab + SEC001) ────────────────
     Route::middleware('profile:SuperAd,Admin,Contab,SEC001')->group(function () {
         Route::get('/control/estudiante', [ControlEstudianteController::class, 'index'])->name('control.estudiante');
         Route::post('/control/estudiante/observacion', [ControlEstudianteController::class, 'saveObservacion'])->name('control.estudiante.observacion.save');
         Route::get('/pagos', [PagosController::class, 'index'])->name('pagos.index');
-        Route::get('/cartera', [CarteraController::class, 'index'])->name('cartera.index');
         Route::get('/cartera/deudores', [CarteraController::class, 'deudores'])->name('cartera.deudores');
-        Route::get('/cartera/estudiante/{codigo}', [CarteraController::class, 'estudiante'])->name('cartera.estudiante');
-        Route::get('/cartera/seguimiento/informe', [CarteraController::class, 'informeSeguimiento'])->name('cartera.seguimiento.informe');
-        Route::get('/cartera/por-cc', [CarteraController::class, 'carteraPorCC'])->name('cartera.por_cc');
-        Route::post('/cartera/estudiante/{codigo}/seguimiento', [CarteraController::class, 'storeSeguimiento'])->name('cartera.seguimiento.store');
-        Route::delete('/cartera/seguimiento/{id}', [CarteraController::class, 'destroySeguimiento'])->name('cartera.seguimiento.destroy');
-        Route::put('/cartera/seguimiento/{id}', [CarteraController::class, 'updateSeguimiento'])->name('cartera.seguimiento.update');
         Route::get('/facturacion', [FacturacionController::class, 'index'])->name('facturacion.index');
         Route::get('/facturacion/exportar', [FacturacionController::class, 'exportarExcel'])->name('facturacion.exportar');
         Route::get('/facturacion/auto', [FacturacionController::class, 'autoIndex'])->name('facturacion.auto');
@@ -416,8 +420,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/informes/promedios/{codigo}', [BoletinController::class, 'promedios'])->name('informes.promedios');
     });
 
-    // ── Certificados de notas (consolidado individual): SuperAd, Admin, SEC001 ──
-    Route::middleware('profile:SuperAd,Admin,SEC001')->group(function () {
+    // ── Certificados de notas (consolidado individual): SuperAd, Admin, SEC001, SecC100 ──
+    Route::middleware('profile:SuperAd,Admin,SEC001,SecC100')->group(function () {
         Route::get('/certificados/notas',           [CertificadosController::class, 'buscar'])->name('certificados.buscar');
         Route::get('/certificados/notas/{codigo}',  [CertificadosController::class, 'ver'])   ->name('certificados.ver');
         Route::get('/certificados/notas/{codigo}/pdf', [CertificadosController::class, 'pdf'])->name('certificados.pdf');
