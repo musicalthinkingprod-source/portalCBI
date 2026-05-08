@@ -146,12 +146,12 @@
     <table class="notas">
         <thead>
             <tr>
-                <th style="width: 31%;">ASIGNATURA</th>
-                <th style="width: 8%;">ESCALA</th>
+                <th style="width: 28%;">ASIGNATURA</th>
+                <th style="width: 11%;">ESCALA</th>
                 <th style="width: 10%;">NIVEL</th>
                 <th class="sep" style="width: 2%;"></th>
-                <th style="width: 31%;">ASIGNATURA</th>
-                <th style="width: 8%;">ESCALA</th>
+                <th style="width: 28%;">ASIGNATURA</th>
+                <th style="width: 11%;">ESCALA</th>
                 <th style="width: 10%;">NIVEL</th>
             </tr>
         </thead>
