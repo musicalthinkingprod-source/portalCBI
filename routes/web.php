@@ -275,7 +275,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ── Calendario académico: Admin y Secretaría (con edición) ───────────────
-    Route::middleware('profile:SuperAd,Admin,SEC001')->group(function () {
+    Route::middleware('profile:SuperAd,Admin,SEC001,SecC100')->group(function () {
         Route::get('/calendario', [CalendarioAcademicoController::class, 'index'])->name('calendario.index');
     });
 
