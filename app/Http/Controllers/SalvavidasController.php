@@ -160,8 +160,12 @@ class SalvavidasController extends Controller
             ->get();
 
         $curso = $estudiante->CURSO ?? '';
+        // En PE (prejardín/jardín/transición) las materias son 101-135; el Google Site usa el código base (sin el 100).
         $urlsSite = $salvavidas->pluck('CODIGO_MAT')->unique()
-            ->mapWithKeys(fn($cm) => [$cm => \App\Http\Controllers\PadresController::urlSite((int)$cm, $curso)])
+            ->mapWithKeys(function ($cm) use ($curso) {
+                $codSite = (int) $cm >= 100 ? (int) $cm - 100 : (int) $cm;
+                return [$cm => \App\Http\Controllers\PadresController::urlSite($codSite, $curso)];
+            })
             ->toArray();
 
         return view('salvavidas.padres', compact('salvavidas', 'anio', 'urlsSite'));
