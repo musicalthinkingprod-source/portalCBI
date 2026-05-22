@@ -431,6 +431,40 @@
         </div>
         @endif
 
+        {{-- ── Asignaciones académicas (solo lectura): Ori* y Coordinación ── --}}
+        @if(str_starts_with($profile, 'Ori') || $isCor)
+        @php $catId = 'asig-resumen'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Asignaciones</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('asignaciones.resumen'), '👀 Resumen de asignaciones') !!}
+            </ul>
+        </div>
+        @endif
+
+        {{-- ── Salvavidas: índice de Google Sites (SuperAd, Admin, COR001) ── --}}
+        @if($isSuperAd || $isAdmin || $isCoordAcad)
+        @php $catId = 'salvavidas-links'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Salvavidas</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('salvavidas.links'), '🔗 Links de Google Sites') !!}
+            </ul>
+        </div>
+        @endif
+
         {{-- ── Coordinación Convivencia (COR002) ── --}}
         @if($isCoordConv)
         @php $catId = 'coord-convivencia'; @endphp

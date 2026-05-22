@@ -41,6 +41,7 @@ use App\Http\Controllers\BackupController;
 use App\Http\Controllers\ListadoEstudiantesController;
 use App\Http\Controllers\ObservacionesController;
 use App\Http\Controllers\DocumentacionController;
+use App\Http\Controllers\AsignacionesResumenController;
 
 /*
 |--------------------------------------------------------------------------
@@ -158,6 +159,16 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/listados-especiales/proyecto/asignar', [ListadosEspecialesController::class, 'asignarProyecto'])->name('listados.proyecto.asignar');
         Route::post('/listados-especiales/musica/asignar', [ListadosEspecialesController::class, 'asignarMusica'])->name('listados.musica.asignar');
         Route::post('/listados-especiales/quitar', [ListadosEspecialesController::class, 'quitar'])->name('listados.quitar');
+    });
+
+    // ── Resumen de Asignaciones (solo lectura): Ori* y Coordinación ─────────
+    Route::middleware('profile:Ori*,COR*')->group(function () {
+        Route::get('/asignaciones/resumen', [AsignacionesResumenController::class, 'index'])->name('asignaciones.resumen');
+    });
+
+    // ── Salvavidas: índice de Google Sites (SuperAd, Admin, COR001) ─────────
+    Route::middleware('profile:SuperAd,Admin,COR001')->group(function () {
+        Route::get('/salvavidas/links', [SalvavidasController::class, 'links'])->name('salvavidas.links');
     });
 
     // ── Copia de Seguridad (SuperAd, Admin, Contab, Sec*) ───────────────────

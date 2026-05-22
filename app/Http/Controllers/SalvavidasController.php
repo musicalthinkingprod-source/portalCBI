@@ -208,4 +208,75 @@ class SalvavidasController extends Controller
             'registros', 'anio', 'periodo', 'cursoFiltro', 'busqueda', 'cursos'
         ));
     }
+
+    /**
+     * Índice de Google Sites de salvavidas para revisión de contenido.
+     * Lista una entrada por cada link único (materia × grado/sección) sin importar docente ni estudiantes.
+     * Regla PE: si CODIGO_MAT >= 100 (prejardín/jardín/transición), la URL usa CODIGO_MAT - 100.
+     */
+    public function links()
+    {
+        $asig = DB::table('ASIGNACION_PCM as a')
+            ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
+            ->select('a.CODIGO_MAT', 'a.CURSO', 'a.CODIGO_EMP', 'm.NOMBRE_MAT')
+            ->get();
+
+        $cmpCurso = function ($a, $b) {
+            $key = fn($c) => match(true) {
+                $c === 'J'  => [-2, ''],
+                $c === 'T'  => [-1, ''],
+                default     => [(int) $c, ltrim($c, '0123456789')],
+            };
+            [$na, $la] = $key($a);
+            [$nb, $lb] = $key($b);
+            return $na !== $nb ? $na <=> $nb : strcmp($la, $lb);
+        };
+
+        $base = \App\Http\Controllers\PadresController::SITES_BASE;
+
+        $materias = $asig->groupBy('CODIGO_MAT')->map(function ($items, $codMat) use ($base, $cmpCurso) {
+            $nombre  = $items->first()->NOMBRE_MAT;
+            $codSite = (int) $codMat >= 100 ? (int) $codMat - 100 : (int) $codMat;
+
+            $porGrado = $items->groupBy(function ($i) {
+                $g = rtrim($i->CURSO, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz');
+                return $g !== '' ? $g : $i->CURSO;
+            });
+
+            $links = collect();
+            foreach ($porGrado as $grado => $cursosDelGrado) {
+                $docentesUnicos = $cursosDelGrado->pluck('CODIGO_EMP')->unique();
+                $cursosLista    = $cursosDelGrado->pluck('CURSO')->unique()->sort($cmpCurso)->values();
+
+                if ($docentesUnicos->count() <= 1) {
+                    $links->push((object) [
+                        'grado'  => $grado,
+                        'cursos' => $cursosLista->all(),
+                        'url'    => $base . $codSite . '-' . $grado,
+                    ]);
+                } else {
+                    foreach ($cursosLista as $curso) {
+                        $links->push((object) [
+                            'grado'  => $grado,
+                            'cursos' => [$curso],
+                            'url'    => $base . $codSite . '-' . strtolower($curso),
+                        ]);
+                    }
+                }
+            }
+
+            $links = $links->sort(fn($a, $b) => $cmpCurso($a->grado, $b->grado)
+                ?: strcmp(implode(',', $a->cursos), implode(',', $b->cursos)))->values();
+
+            return (object) [
+                'codigo_mat' => (int) $codMat,
+                'cod_site'   => $codSite,
+                'nombre'     => $nombre,
+                'es_pe'      => (int) $codMat >= 100,
+                'links'      => $links,
+            ];
+        })->sortBy('nombre', SORT_NATURAL | SORT_FLAG_CASE)->values();
+
+        return view('salvavidas.links', compact('materias'));
+    }
 }
