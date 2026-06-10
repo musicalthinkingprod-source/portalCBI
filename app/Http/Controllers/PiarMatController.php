@@ -271,8 +271,10 @@ class PiarMatController extends Controller
             'LOGRO4'        => $request->LOGRO4,
             'DIDACT4'       => $request->DIDACT4,
             'EVAL4'         => $request->EVAL4,
-            'ESTRAG_CASERA' => $request->ESTRAG_CASERA,
-            'FREC_CASERA'   => $request->FREC_CASERA,
+            // El Plan Casero (ESTRAG_CASERA / FREC_CASERA) NO se toca aquí: vive en la
+            // misma fila de PIAR_MAT pero lo administra guardarPlanCasero(). El form del
+            // Anexo 2 no envía esos campos, así que incluirlos los sobreescribía con NULL
+            // y borraba el plan casero al guardar los ajustes razonables.
             'ESTADO'        => $nuevoEstado,
         ];
         if (!$this->esDocente() && $request->has('OBSERVACIONES')) {
