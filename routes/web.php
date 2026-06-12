@@ -440,10 +440,10 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ── Informe anual de desempeño (años anteriores): SuperAd, Admin, SEC001, SecC100 ──
+    // La impresión/PDF se hace desde el navegador (window.print), igual que los boletines.
     Route::middleware('profile:SuperAd,Admin,SEC001,SecC100')->group(function () {
-        Route::get('/informes/anual',              [InformeAnualController::class, 'buscar'])->name('informe-anual.buscar');
-        Route::get('/informes/anual/{codigo}',     [InformeAnualController::class, 'ver'])   ->name('informe-anual.ver');
-        Route::get('/informes/anual/{codigo}/pdf', [InformeAnualController::class, 'pdf'])  ->name('informe-anual.pdf');
+        Route::get('/informes/anual',          [InformeAnualController::class, 'buscar'])->name('informe-anual.buscar');
+        Route::get('/informes/anual/{codigo}', [InformeAnualController::class, 'ver'])   ->name('informe-anual.ver');
     });
 
     // ── Observaciones 2026: SuperAd, Admin, DOC* ────────────────────────────

@@ -65,10 +65,10 @@
                         class="text-xs font-semibold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition whitespace-nowrap">
                         📄 Ver informe
                     </a>
-                    <a href="{{ route('informe-anual.pdf', ['codigo' => $est->CODIGO, 'anio' => $anio]) }}"
+                    <a href="{{ route('informe-anual.ver', ['codigo' => $est->CODIGO, 'anio' => $anio, 'print' => 1]) }}"
                         target="_blank"
                         class="text-xs font-semibold text-red-700 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition whitespace-nowrap">
-                        ⬇️ PDF
+                        🖨️ Imprimir / PDF
                     </a>
                 </div>
             </li>

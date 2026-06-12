@@ -67,26 +67,6 @@ class InformeAnualController extends Controller
         return view('informes-anuales.ver', $datos);
     }
 
-    public function pdf(int $codigo, Request $request)
-    {
-        $datos = $this->datosInforme(
-            $codigo,
-            (int) $request->input('anio', 0),
-            $request->input('director'),
-            $request->input('obs')
-        );
-        if (empty($datos)) abort(404);
-
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('informes-anuales.pdf', $datos)
-            ->setPaper('letter');
-
-        $apellidos = trim($datos['estudiante']->APELLIDO1 . '_' . $datos['estudiante']->APELLIDO2);
-        $apellidos = preg_replace('/[^A-Za-z0-9_]/', '', $apellidos);
-        $nombre    = "InformeAnual_{$datos['anio']}_{$codigo}_{$apellidos}.pdf";
-
-        return $pdf->stream($nombre);
-    }
-
     private function datosInforme(int $codigo, int $anio, ?string $directorInput, ?string $obsInput): array
     {
         if (!in_array($anio, self::ANIOS_DISPONIBLES, true)) return [];

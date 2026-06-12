@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Informe desempeño académico {{ $anio }} — {{ $estudiante->APELLIDO1 }} {{ $estudiante->APELLIDO2 }} {{ $estudiante->NOMBRE1 }}</title>
+    {{-- El título define el nombre sugerido al "Guardar como PDF" en el navegador --}}
+    <title>InformeAnual_{{ $anio }}_{{ $codigo }}_{{ preg_replace('/[^A-Za-z0-9_]/', '', $estudiante->APELLIDO1 . '_' . $estudiante->APELLIDO2) }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #000; }
@@ -90,14 +91,9 @@
             ← Volver a búsqueda
         </a>
         <div class="flex gap-2">
-            <a href="{{ route('informe-anual.pdf', ['codigo' => $codigo, 'anio' => $anio, 'director' => $director, 'obs' => $observaciones]) }}"
-               target="_blank"
-               class="bg-red-700 hover:bg-red-800 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow transition">
-                ⬇️ Descargar PDF
-            </a>
             <button onclick="window.print()"
                 class="bg-blue-800 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow transition">
-                🖨️ Imprimir
+                🖨️ Imprimir / Guardar PDF
             </button>
         </div>
     </div>
@@ -122,7 +118,8 @@
         </button>
     </form>
     <p class="text-xs text-gray-500 mt-2 px-1">
-        El director de grupo se prellena con el actual del curso {{ $cursoAnio }}; corrígelo si en {{ $anio }} era otro docente. Los cambios se reflejan también en el PDF.
+        El director de grupo se prellena con el actual del curso {{ $cursoAnio }}; corrígelo si en {{ $anio }} era otro docente y pulsa Aplicar antes de imprimir.
+        Para obtener el PDF usa Imprimir y elige "Guardar como PDF" como destino.
     </p>
 </div>
 
@@ -216,6 +213,10 @@
     </div>
 
 </div>
+
+@if(request('print'))
+<script>window.addEventListener('load', () => window.print());</script>
+@endif
 
 </body>
 </html>
