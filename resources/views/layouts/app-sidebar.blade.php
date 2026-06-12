@@ -407,6 +407,7 @@
                 {!! sidebarLink(route('informes.boletin'), '📋 Boletines') !!}
                 @if($isAdmin)
                 {!! sidebarLink(route('certificados.buscar'), '📜 Certificados de notas') !!}
+                {!! sidebarLink(route('informe-anual.buscar'), '📚 Informes anteriores') !!}
                 @endif
             </ul>
         </div>
@@ -427,6 +428,7 @@
                 {!! sidebarLink(route('horarios.index'), '🗓️ Horarios') !!}
                 {!! sidebarLink(route('calendario.index'), '📆 Calendario académico') !!}
                 {!! sidebarLink(route('certificados.buscar'), '📜 Certificados de notas') !!}
+                {!! sidebarLink(route('informe-anual.buscar'), '📚 Informes anteriores') !!}
             </ul>
         </div>
         @endif
@@ -584,6 +586,7 @@
                 {!! sidebarLink(route('llamadas.reporte'), '📊 Reporte de llamadas') !!}
                 {!! sidebarLink(route('control.planilla'), '📋 Informe de planilla') !!}
                 {!! sidebarLink(route('certificados.buscar'), '📜 Certificados de notas') !!}
+                {!! sidebarLink(route('informe-anual.buscar'), '📚 Informes anteriores') !!}
             </ul>
         </div>
         @endif

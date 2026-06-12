@@ -22,6 +22,7 @@ use App\Http\Controllers\SalvavidasController;
 use App\Http\Controllers\DeroterosController;
 use App\Http\Controllers\BoletinController;
 use App\Http\Controllers\CertificadosController;
+use App\Http\Controllers\InformeAnualController;
 use App\Http\Controllers\PiarController;
 use App\Http\Controllers\PiarMatController;
 use App\Http\Controllers\PiarCaractController;
@@ -436,6 +437,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/certificados/notas',           [CertificadosController::class, 'buscar'])->name('certificados.buscar');
         Route::get('/certificados/notas/{codigo}',  [CertificadosController::class, 'ver'])   ->name('certificados.ver');
         Route::get('/certificados/notas/{codigo}/pdf', [CertificadosController::class, 'pdf'])->name('certificados.pdf');
+    });
+
+    // ── Informe anual de desempeño (años anteriores): SuperAd, Admin, SEC001, SecC100 ──
+    Route::middleware('profile:SuperAd,Admin,SEC001,SecC100')->group(function () {
+        Route::get('/informes/anual',              [InformeAnualController::class, 'buscar'])->name('informe-anual.buscar');
+        Route::get('/informes/anual/{codigo}',     [InformeAnualController::class, 'ver'])   ->name('informe-anual.ver');
+        Route::get('/informes/anual/{codigo}/pdf', [InformeAnualController::class, 'pdf'])  ->name('informe-anual.pdf');
     });
 
     // ── Observaciones 2026: SuperAd, Admin, DOC* ────────────────────────────
