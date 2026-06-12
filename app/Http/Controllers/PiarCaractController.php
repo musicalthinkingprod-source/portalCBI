@@ -141,10 +141,19 @@ class PiarCaractController extends Controller
         }
 
         // Caracterizaciones de director ya guardadas (códigos de alumnos) con su estado
-        // Para docentes/directores: solo las propias. Para SuperAd/Ori: cualquier director.
+        // Para docentes/directores: las propias y las de los estudiantes de su curso
+        // (aunque las haya escrito el director anterior). Para SuperAd/Ori: cualquier director.
         // Solo se considera diligenciada si el campo CARACTERIZACION tiene contenido real
         $caractDirGuardadas = DB::table('PIAR_CARACT_DIR')
-            ->when($esDocente, fn($q) => $q->where('CODIGO_EMP', $codigoDoc))
+            ->when($esDocente, function ($q) use ($codigoDoc, $dirInfo) {
+                $q->where(function ($w) use ($codigoDoc, $dirInfo) {
+                    $w->where('CODIGO_EMP', $codigoDoc);
+                    if ($dirInfo) {
+                        $w->orWhereIn('CODIGO_ALUM', fn($s) => $s->select('CODIGO')
+                            ->from('ESTUDIANTES')->where('CURSO', $dirInfo->DIR_GRUPO));
+                    }
+                });
+            })
             ->whereNotNull('CARACTERIZACION')
             ->where('CARACTERIZACION', '!=', '')
             ->select('CODIGO_ALUM', DB::raw("COALESCE(ESTADO, 'pendiente') as ESTADO"))
@@ -338,9 +347,10 @@ class PiarCaractController extends Controller
 
         $docente  = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $codigoDocDir)->first();
         $piarDiag = DB::table('PIAR_DIAG')->where('CODIGO_ALUM', $codigo)->first();
+        // Sin filtrar por CODIGO_EMP: el registro debe seguir visible aunque
+        // cambie el director de grupo del curso o su código de empleado
         $caract   = DB::table('PIAR_CARACT_DIR')
                         ->where('CODIGO_ALUM', $codigo)
-                        ->where('CODIGO_EMP', $codigoDocDir)
                         ->first();
 
         $nombreCompleto = trim("{$estudiante->NOMBRE1} {$estudiante->NOMBRE2}");
@@ -369,15 +379,17 @@ class PiarCaractController extends Controller
             : (DB::table('CODIGOS_DOC')->where('DIR_GRUPO', $estudiante->CURSO)->value('CODIGO_EMP') ?? $codigoDoc);
 
         $existingEstado = DB::table('PIAR_CARACT_DIR')
-            ->where('CODIGO_ALUM', $codigo)->where('CODIGO_EMP', $codigoDocDir)
+            ->where('CODIGO_ALUM', $codigo)
             ->value('ESTADO') ?? 'pendiente';
 
         // Orientador envía observaciones
         if (!$esDocente && $request->input('accion') === 'observar') {
             if ($estadoEtapa === 'finalizado') return back()->withErrors(['etapa' => 'La etapa está finalizada.']);
+            // Clave solo por alumno: si el registro quedó a nombre de un director
+            // anterior, se actualiza esa misma fila y pasa al director actual
             DB::table('PIAR_CARACT_DIR')->updateOrInsert(
-                ['CODIGO_ALUM' => $codigo, 'CODIGO_EMP' => $codigoDocDir],
-                ['OBSERVACIONES' => $request->OBSERVACIONES, 'ESTADO' => 'con_observaciones', 'updated_at' => now()]
+                ['CODIGO_ALUM' => $codigo],
+                ['CODIGO_EMP' => $codigoDocDir, 'CURSO' => $estudiante->CURSO, 'OBSERVACIONES' => $request->OBSERVACIONES, 'ESTADO' => 'con_observaciones', 'updated_at' => now()]
             );
 
             $etiqueta = $this->etiquetaEstudiante($codigo);
@@ -405,6 +417,7 @@ class PiarCaractController extends Controller
         $nuevoEstado = $entregar ? 'revision' : (in_array($existingEstado, ['aprobado', 'con_observaciones']) ? 'revision' : ($existingEstado ?? 'pendiente'));
 
         $datos = [
+            'CODIGO_EMP'      => $codigoDocDir,
             'CURSO'           => $estudiante->CURSO,
             'CARACTERIZACION' => $request->CARACTERIZACION,
             'ESTADO'          => $nuevoEstado,
@@ -414,8 +427,10 @@ class PiarCaractController extends Controller
             $datos['OBSERVACIONES'] = $request->OBSERVACIONES;
         }
 
+        // Clave solo por alumno: evita crear una fila duplicada cuando el
+        // registro existente quedó a nombre de un director anterior
         DB::table('PIAR_CARACT_DIR')->updateOrInsert(
-            ['CODIGO_ALUM' => $codigo, 'CODIGO_EMP' => $codigoDocDir],
+            ['CODIGO_ALUM' => $codigo],
             $datos
         );
 
