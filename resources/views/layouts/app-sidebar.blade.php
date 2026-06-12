@@ -112,7 +112,13 @@
     <!-- Logo / Título -->
     <div class="px-6 py-5 border-b border-blue-700 flex items-center justify-between">
         <div class="flex items-center gap-3">
+            @auth
+            <a href="{{ route('dashboard') }}" title="Ir al dashboard">
+                <img src="{{ asset('images/escudoCBI.png') }}" alt="Logo" class="h-9 w-auto opacity-90 hover:opacity-100 transition-opacity">
+            </a>
+            @else
             <img src="{{ asset('images/escudoCBI.png') }}" alt="Logo" class="h-9 w-auto opacity-90">
+            @endauth
             <div>
                 <h1 class="text-lg font-bold leading-tight">Portal Cebeista</h1>
                 <p class="text-xs text-blue-300">Colegio Bilingüe Integral</p>
@@ -133,8 +139,8 @@
             $isCoordAcad  = $profile === 'COR001';
             $isCoordConv  = $profile === 'COR002';
             $isCor        = $isCoordAcad || $isCoordConv;
-            // Martha (COR002) NO actua como docente; solo Willy (COR001) tiene rol docente.
-            $isDoc        = str_starts_with($profile, 'DOC') || $isCoordAcad;
+            // Ningun coordinador (COR001/COR002) actua como docente: no califican notas ni observaciones.
+            $isDoc        = str_starts_with($profile, 'DOC');
             $isSec      = str_starts_with($profile, 'Sec');
             $isContab   = $profile === 'Contab';
             $isSuperAd  = $profile === 'SuperAd';
@@ -199,8 +205,8 @@
         </div>
         @endif
 
-        {{-- ── PIAR: SuperAd, Admin, Ori*, Piar, DOC* ── --}}
-        @if($isAdminLike || str_starts_with($profile, 'Ori') || $isPiar || $isDoc)
+        {{-- ── PIAR: SuperAd, Admin, Ori*, Piar, DOC*, COR001 ── --}}
+        @if($isAdminLike || str_starts_with($profile, 'Ori') || $isPiar || $isDoc || $isCoordAcad)
         @php $catId = 'piar'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -385,8 +391,8 @@
         </div>
         @endif
 
-        {{-- ── Seguimiento Académico: Admin, Sec*, DOC*, Ori* (no SuperAd, usa sección Informes) ── --}}
-        @if(!$isSuperAd && ($isAdmin || $isSec || $isDoc || str_starts_with($profile, 'Ori')))
+        {{-- ── Seguimiento Académico: Admin, Sec*, DOC*, Ori*, COR001 (no SuperAd, usa sección Informes) ── --}}
+        @if(!$isSuperAd && ($isAdmin || $isSec || $isDoc || str_starts_with($profile, 'Ori') || $isCoordAcad))
         @php $catId = 'seguimiento-academico'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"

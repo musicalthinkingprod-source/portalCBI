@@ -9,7 +9,7 @@ class DashboardController extends Controller
     public function index()
     {
         $profile = auth()->user()->PROFILE;
-        $isDoc   = str_starts_with($profile, 'DOC') || str_starts_with($profile, 'COR');
+        $isDoc   = str_starts_with($profile, 'DOC');
 
         // ── Cartera (SuperAd, Admin, Contab) ──────────────────────────────
         $cartera = null;
