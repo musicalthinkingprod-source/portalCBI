@@ -433,10 +433,10 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ── Certificados de notas (consolidado individual): SuperAd, Admin, SEC001, SecC100 ──
+    // La impresión/PDF se hace desde el navegador (window.print), igual que los boletines.
     Route::middleware('profile:SuperAd,Admin,SEC001,SecC100')->group(function () {
         Route::get('/certificados/notas',           [CertificadosController::class, 'buscar'])->name('certificados.buscar');
         Route::get('/certificados/notas/{codigo}',  [CertificadosController::class, 'ver'])   ->name('certificados.ver');
-        Route::get('/certificados/notas/{codigo}/pdf', [CertificadosController::class, 'pdf'])->name('certificados.pdf');
     });
 
     // ── Informe anual de desempeño (años anteriores): SuperAd, Admin, SEC001, SecC100 ──

@@ -57,21 +57,6 @@ class CertificadosController extends Controller
         return view('certificados.ver', $datos);
     }
 
-    public function pdf(int $codigo, Request $request)
-    {
-        $datos = $this->datosCertificado($codigo, (int) $request->input('anio', 0), $request->input('fecha'));
-        if (empty($datos)) abort(404);
-
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificados.pdf', $datos)
-            ->setPaper('letter');
-
-        $apellidos = trim($datos['estudiante']->APELLIDO1 . '_' . $datos['estudiante']->APELLIDO2);
-        $apellidos = preg_replace('/[^A-Za-z0-9_]/', '', $apellidos);
-        $nombre    = "Certificado_{$datos['anio']}_{$codigo}_{$apellidos}.pdf";
-
-        return $pdf->stream($nombre);
-    }
-
     private function datosCertificado(int $codigo, int $anio, ?string $fechaInput): array
     {
         if (!in_array($anio, self::ANIOS_DISPONIBLES, true)) return [];
