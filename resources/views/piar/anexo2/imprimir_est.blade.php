@@ -72,8 +72,12 @@ p { margin: 0 0 2pt 0; line-height: 1.15; }
 
 <p>&nbsp;</p>
 
+{{-- La caracterización solo se imprime con el 1er período o con "todos".
+     Si se imprime un período distinto al primero (2º/3º/4º), no lleva caracterización. --}}
+@php $mostrarCaract = in_array($periodoImp ?? 0, [0, 1]); @endphp
+
 {{-- ══ CARACTERIZACIÓN POR DIRECTOR DE GRUPO ══ --}}
-@if($caractDir)
+@if($caractDir && $mostrarCaract)
 <table>
 <tr>
 <td style="background-color:#DEEAF6">
@@ -95,7 +99,7 @@ p { margin: 0 0 2pt 0; line-height: 1.15; }
 @endif
 
 {{-- ══ CARACTERIZACIONES POR MATERIA ══ --}}
-@if($caractMats->isNotEmpty())
+@if($caractMats->isNotEmpty() && $mostrarCaract)
 <table>
 <tr>
 <td colspan="2" style="background-color:#DEEAF6">
@@ -162,12 +166,16 @@ p { margin: 0 0 2pt 0; line-height: 1.15; }
     <p style="text-align:justify;line-height:1.4;white-space:pre-wrap">{{ $v('BARRERAS') }}</p>
 </td>
 </tr>
-@foreach([['num'=>1,'label'=>'PRIMER'],['num'=>2,'label'=>'SEGUNDO'],['num'=>3,'label'=>'TERCERO'],['num'=>4,'label'=>'CUARTO']] as $p)
+@php
+    $labelsP = [1=>'PRIMER', 2=>'SEGUNDO', 3=>'TERCERO', 4=>'CUARTO'];
+    $listaP  = ($periodoImp ?? 0) ? [$periodoImp => $labelsP[$periodoImp]] : $labelsP;
+@endphp
+@foreach($listaP as $pnum => $plabel)
 <tr>
-<td style="background-color:#E2EFD9;text-align:center;vertical-align:middle;"><p><b>{{ $p['label'] }}</b></p></td>
-<td><p style="text-align:justify;line-height:1.15;white-space:pre-wrap">{{ $v('LOGRO'.$p['num']) }}</p><p>&nbsp;</p></td>
-<td><p style="text-align:justify;line-height:1.15;white-space:pre-wrap">{{ $v('DIDACT'.$p['num']) }}</p></td>
-<td><p style="line-height:1.4;white-space:pre-wrap">{{ $v('EVAL'.$p['num']) }}</p></td>
+<td style="background-color:#E2EFD9;text-align:center;vertical-align:middle;"><p><b>{{ $plabel }}</b></p></td>
+<td><p style="text-align:justify;line-height:1.15;white-space:pre-wrap">{{ $v('LOGRO'.$pnum) }}</p><p>&nbsp;</p></td>
+<td><p style="text-align:justify;line-height:1.15;white-space:pre-wrap">{{ $v('DIDACT'.$pnum) }}</p></td>
+<td><p style="line-height:1.4;white-space:pre-wrap">{{ $v('EVAL'.$pnum) }}</p></td>
 </tr>
 @endforeach
 @endforeach

@@ -32,6 +32,10 @@ p { margin: 0 0 1pt 0; line-height: 1.15; }
     <button onclick="window.print()" class="btn-print">🖨️ Imprimir / PDF</button>
 </div>
 
+@forelse($actas as $i => $acta)
+
+@if($i > 0)<div style="page-break-before:always;break-before:page;"></div>@endif
+
 {{-- ══ ENCABEZADO ══ --}}
 <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%">
 <tr>
@@ -42,6 +46,7 @@ p { margin: 0 0 1pt 0; line-height: 1.15; }
 <td style="text-align:center;vertical-align:middle;padding:8pt;">
     <p style="text-align:center;line-height:1.5"><span style="color:#8496B0;font-size:18pt"><b>PIAR</b></span></p>
     <p style="text-align:center;line-height:1.5"><span style="color:#8496B0;font-size:9pt"><b>Anexo 3 – Decreto 1421/2017</b></span></p>
+    <p style="text-align:center;line-height:1.5"><span style="color:#1e3a8a;font-size:11pt"><b>{{ $acta->label }}</b></span></p>
 </td>
 <td style="width:28%;text-align:center;vertical-align:middle;padding:8pt;">
     <img src="{{ asset('images/escudoCBI.png') }}" alt="CBI" style="max-height:55pt;max-width:100%;display:block;margin:0 auto 4pt auto;">
@@ -52,7 +57,16 @@ p { margin: 0 0 1pt 0; line-height: 1.15; }
 
 <p>&nbsp;</p>
 
-@include('partials.piar_anexo3')
+@include('partials.piar_anexo3', [
+    'planes'           => $acta->planes,
+    'docentesElaboran' => $acta->docentesElaboran,
+    'periodoLabel'     => $acta->label,
+    'sinSaltoPagina'   => true,
+])
+
+@empty
+<p style="text-align:center;color:#888;font-size:12pt;margin-top:40pt;"><i>No hay Plan Casero diligenciado para imprimir.</i></p>
+@endforelse
 
 </body>
 </html>

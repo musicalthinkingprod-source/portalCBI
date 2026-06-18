@@ -59,7 +59,12 @@ p { margin: 0 0 1pt 0; line-height: 1.15; }
 {{-- ══ ANEXO 2 – ENCABEZADO ══ --}}
 <table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;width:100%;page-break-before:always;break-before:page;">
 <tr>
-<td colspan="4"><p style="text-align:center;margin-top:6pt;margin-bottom:6pt;line-height:1.5"><span style="color:#8496B0;font-size:12pt"><b>Plan Individual de Ajustes Razonables – PIAR – ANEXO 2</b></span></p></td>
+@php
+    $labelsPeriodo = [1=>'PRIMER', 2=>'SEGUNDO', 3=>'TERCERO', 4=>'CUARTO'];
+    $periodosAImprimir = ($periodoImp ?? 0) ? [$periodoImp => $labelsPeriodo[$periodoImp]] : $labelsPeriodo;
+    $tituloPeriodo = ($periodoImp ?? 0) ? ' – ' . $labelsPeriodo[$periodoImp] . ' PERÍODO' : '';
+@endphp
+<td colspan="4"><p style="text-align:center;margin-top:6pt;margin-bottom:6pt;line-height:1.5"><span style="color:#8496B0;font-size:12pt"><b>Plan Individual de Ajustes Razonables – PIAR – ANEXO 2{{ $tituloPeriodo }}</b></span></p></td>
 </tr>
 <tr>
 <td><p style="margin-bottom:8pt;line-height:1.08"><b>Fecha de elaboración:</b></p><p style="margin-bottom:8pt;line-height:1.08">{{ now()->translatedFormat('F Y') }}</p></td>
@@ -137,17 +142,12 @@ p { margin: 0 0 1pt 0; line-height: 1.15; }
 <td style="background-color:#FFFFFF"><p style="margin-top:6pt;margin-bottom:6pt;line-height:1.5"><span style="color:#00B0F0;font-size:9pt">Ajustes razonables </span><span style="font-size:9pt">en las herramientas pedagógicas y didácticas que se requiere implementar.</span></p></td>
 <td style="background-color:#FFFFFF"><p style="margin-top:6pt;margin-bottom:6pt;line-height:1.5"><span style="font-size:9pt">Medición de la efectividad de la implementación de los </span><span style="color:#00B0F0;font-size:9pt">ajustes razonables</span><span style="font-size:9pt"> determinados, rúbricas de evaluación.</span></p></td>
 </tr>
-@foreach([
-    ['num'=>1,'label'=>'PRIMER'],
-    ['num'=>2,'label'=>'SEGUNDO'],
-    ['num'=>3,'label'=>'TERCERO'],
-    ['num'=>4,'label'=>'CUARTO'],
-] as $p)
+@foreach($periodosAImprimir as $num => $label)
 <tr>
-<td style="background-color:#E2EFD9;text-align:center;vertical-align:middle;"><p><b>{{ $p['label'] }}</b></p></td>
-<td style="background-color:#FFFFFF"><p style="text-align:justify;margin-bottom:0.1pt;line-height:1.15">{{ $v('LOGRO'.$p['num']) }}</p><p>&nbsp;</p></td>
-<td style="background-color:#FFFFFF"><p style="text-align:justify;margin-top:6pt;margin-bottom:6pt;line-height:1.15">{{ $v('DIDACT'.$p['num']) }}</p></td>
-<td style="background-color:#FFFFFF"><p style="margin-top:6pt;margin-bottom:6pt;line-height:1.5">{{ $v('EVAL'.$p['num']) }}</p></td>
+<td style="background-color:#E2EFD9;text-align:center;vertical-align:middle;"><p><b>{{ $label }}</b></p></td>
+<td style="background-color:#FFFFFF"><p style="text-align:justify;margin-bottom:0.1pt;line-height:1.15">{{ $v('LOGRO'.$num) }}</p><p>&nbsp;</p></td>
+<td style="background-color:#FFFFFF"><p style="text-align:justify;margin-top:6pt;margin-bottom:6pt;line-height:1.15">{{ $v('DIDACT'.$num) }}</p></td>
+<td style="background-color:#FFFFFF"><p style="margin-top:6pt;margin-bottom:6pt;line-height:1.5">{{ $v('EVAL'.$num) }}</p></td>
 </tr>
 @endforeach
 

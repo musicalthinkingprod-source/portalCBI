@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ControlFechasController;
+use App\Http\Controllers\PiarMatController;
 
 class PiarController extends Controller
 {
@@ -234,18 +235,21 @@ class PiarController extends Controller
                 $docentesElaboran->push((object)['NOMBRE_DOC' => $aj->NOMBRE_DOC, 'CARGO' => 'Docente de ' . $aj->NOMBRE_MAT]);
         }
 
-        // ── Datos Anexo 3 (Plan Casero) ──────────────────────────────────────
-        $planes = DB::table('PIAR_MAT as pm')
+        // ── Datos Anexo 3 (Plan Casero) — período activo ─────────────────────
+        $periodoActivo      = ControlFechasController::periodoActivo();
+        $periodoActivoLabel = PiarMatController::etiquetasPeriodo()[$periodoActivo] ?? "Período {$periodoActivo}";
+        $planes = DB::table('PIAR_PLAN_CASERO as pm')
             ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'pm.CODIGO_MAT')
             ->leftJoin(DB::raw('(SELECT CODIGO_MAT, CURSO, MIN(CODIGO_EMP) AS CODIGO_EMP FROM ASIGNACION_PCM GROUP BY CODIGO_MAT, CURSO) as a'), function ($j) use ($cursosEst) {
                 $j->on('a.CODIGO_MAT', '=', 'pm.CODIGO_MAT')->whereIn('a.CURSO', $cursosEst);
             })
             ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_EMP', '=', 'a.CODIGO_EMP')
             ->where('pm.CODIGO_ALUM', $codigo)
+            ->where('pm.PERIODO', $periodoActivo)
             ->whereNotIn('pm.CODIGO_MAT', $matsExcluidas)
-            ->whereNotNull('pm.ESTRAG_CASERA')
-            ->where('pm.ESTRAG_CASERA', '!=', '')
-            ->select('pm.ESTRAG_CASERA', 'pm.FREC_CASERA', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
+            ->whereNotNull('pm.ESTRAG')
+            ->where('pm.ESTRAG', '!=', '')
+            ->select('pm.ESTRAG as ESTRAG_CASERA', 'pm.FREC as FREC_CASERA', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
             ->orderBy('m.NOMBRE_MAT')
             ->get();
 
@@ -259,7 +263,7 @@ class PiarController extends Controller
             'nombreMadre', 'nombrePadre', 'empMadre', 'empPadre',
             'celMadre', 'emailMadre', 'celPadre', 'nombreAcud', 'celAcud', 'emailAcud',
             'caractDir', 'caractMats', 'ajustes', 'docentesElaboran',
-            'planes', 'orientadora'
+            'planes', 'orientadora', 'periodoActivoLabel'
         ));
     }
 
@@ -465,6 +469,15 @@ class PiarController extends Controller
             ->groupBy('CODIGO_ALUM')
             ->map(fn($rows) => $rows->keyBy('CODIGO_MAT'));
 
+        // Plan Casero del período activo (la columna del informe refleja el período en curso)
+        $periodoActivo = ControlFechasController::periodoActivo();
+        $planCaseros = DB::table('PIAR_PLAN_CASERO')
+            ->whereIn('CODIGO_ALUM', $codigoAlums)
+            ->where('PERIODO', $periodoActivo)
+            ->get()
+            ->groupBy('CODIGO_ALUM')
+            ->map(fn($rows) => $rows->keyBy('CODIGO_MAT'));
+
         // Caracterizaciones por materia
         $caractMats = DB::table('PIAR_CARACT_MAT')
             ->whereIn('CODIGO_ALUM', $codigoAlums)
@@ -487,6 +500,6 @@ class PiarController extends Controller
             'plan_casero' => ControlFechasController::estadoEtapa('plan_casero'),
         ];
 
-        return view('piar.informe', compact('estudiantes', 'asignaciones', 'piarMats', 'caractMats', 'caractDirs', 'periodoActual', 'estadosEtapa'));
+        return view('piar.informe', compact('estudiantes', 'asignaciones', 'piarMats', 'planCaseros', 'caractMats', 'caractDirs', 'periodoActual', 'estadosEtapa'));
     }
 }

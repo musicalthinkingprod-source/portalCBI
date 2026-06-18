@@ -232,7 +232,7 @@ img { max-width: 100%; display: inline-block; }
 {{-- ══════════════════════════════════════════════════════════════════════ --}}
 {{-- ANEXO 3 – ACTA DE ACUERDO Y PLAN CASERO                                --}}
 {{-- ══════════════════════════════════════════════════════════════════════ --}}
-@include('partials.piar_anexo3')
+@include('partials.piar_anexo3', ['periodoLabel' => $periodoActivoLabel ?? null])
 
 </div>
 

@@ -475,8 +475,11 @@ class PiarCaractController extends Controller
     }
 
     // ── IMPRESIÓN COMPLETA ANEXO 2 POR ESTUDIANTE (Ori / SuperAd) ───────────
-    public function imprimirAnexo2(string $codigo)
+    public function imprimirAnexo2(Request $request, string $codigo)
     {
+        $periodoImp = (int) $request->query('periodo', 0);
+        if (!in_array($periodoImp, [1, 2, 3, 4])) $periodoImp = 0; // 0 = todos los períodos
+
         $estudiante = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->first();
         if (!$estudiante) abort(404);
         $piarDiag   = DB::table('PIAR_DIAG')->where('CODIGO_ALUM', $codigo)->first();
@@ -553,7 +556,7 @@ class PiarCaractController extends Controller
         return view('piar.anexo2.imprimir_est', compact(
             'estudiante', 'piarDiag', 'caractDir', 'caractMats', 'ajustes',
             'docentesElaboran', 'nombreCompleto', 'apellidos',
-            'numId', 'edad', 'fechaNac', 'grado'
+            'numId', 'edad', 'fechaNac', 'grado', 'periodoImp'
         ));
     }
 }

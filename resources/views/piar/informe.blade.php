@@ -34,8 +34,9 @@ $totalAnexo1Ok      = $estudiantes->where('ANEXO1_OK', 1)->count();
 $cuentaEstados = ['pendiente' => 0, 'revision' => 0, 'con_observaciones' => 0, 'aprobado' => 0, 'cerrado' => 0];
 
 foreach ($estudiantes as $est) {
-    $mats   = $asignaciones[$est->CODIGO] ?? collect();
-    $cDirs  = $caractDirs[$est->CODIGO] ?? collect();
+    $mats      = $asignaciones[$est->CODIGO] ?? collect();
+    $cDirs     = $caractDirs[$est->CODIGO] ?? collect();
+    $pcCaseros = $planCaseros[$est->CODIGO] ?? collect();
 
     // Estado caract. director
     $cDirReg   = $cDirs->first();
@@ -46,9 +47,10 @@ foreach ($estudiantes as $est) {
         $cmReg = ($caractMats[$est->CODIGO] ?? collect())[$mat->CODIGO_MAT] ?? null;
         $pmReg = ($piarMats[$est->CODIGO]   ?? collect())[$mat->CODIGO_MAT] ?? null;
 
+        $pcReg = $pcCaseros[$mat->CODIGO_MAT] ?? null;
         $cmEstado = estadoEfectivo($cmReg ? ($cmReg->ESTADO ?? 'pendiente') : 'pendiente', $estadosEtapa['caract']);
         $pmEstado = estadoEfectivo($pmReg ? ($pmReg->ESTADO ?? 'pendiente') : 'pendiente', $estadosEtapa['ajustes']);
-        $pcEstado = estadoEfectivo($pmReg ? ($pmReg->ESTADO_CASERO ?? 'pendiente') : 'pendiente', $estadosEtapa['plan_casero']);
+        $pcEstado = estadoEfectivo($pcReg ? ($pcReg->ESTADO ?? 'pendiente') : 'pendiente', $estadosEtapa['plan_casero']);
 
         $cuentaEstados[$cmEstado]++;
         $cuentaEstados[$pmEstado]++;
@@ -153,6 +155,7 @@ $pctPendiente  = max(0, 100 - $pctAprobado - $pctRevision);
     $matsPiar = $piarMats[$est->CODIGO]    ?? collect();
     $cMats    = $caractMats[$est->CODIGO]  ?? collect();
     $cDirs    = $caractDirs[$est->CODIGO]  ?? collect();
+    $pcCaseros = $planCaseros[$est->CODIGO] ?? collect();
     $fechasP  = [1 => $est->FECHA_P1, 2 => $est->FECHA_P2, 3 => $est->FECHA_P3];
     $personasP= [1 => $est->PERSONA_P1, 2 => $est->PERSONA_P2, 3 => $est->PERSONA_P3];
 @endphp
@@ -188,20 +191,40 @@ $pctPendiente  = max(0, 100 - $pctAprobado - $pctRevision);
                     class="bg-blue-700 hover:bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1">
                     🖨️ Imprimir ▾
                 </button>
-                <div class="menu-imp hidden absolute right-0 mt-1 w-44 bg-white rounded-lg shadow-xl border border-gray-200 z-50 py-1 text-gray-800">
+                <div class="menu-imp hidden absolute right-0 mt-1 w-60 bg-white rounded-lg shadow-xl border border-gray-200 z-50 py-1 text-gray-800">
+                    @php
+                        $periodosChips = [1=>'1º', 2=>'2º', 3=>'3º', 4=>'4º'];
+                        $rutaA2 = route('piar.anexo2.imprimir.est', $est->CODIGO);
+                        $rutaA3 = route('piar.plan_casero.imprimir.est', $est->CODIGO);
+                    @endphp
                     <a href="{{ route('piar.imprimir', $est->CODIGO) }}" target="_blank"
                        class="flex items-center gap-2 px-4 py-2 text-xs hover:bg-gray-100">
                         📄 Solo Anexo 1
                     </a>
-                    <a href="{{ route('piar.anexo2.imprimir.est', $est->CODIGO) }}" target="_blank"
-                       class="flex items-center gap-2 px-4 py-2 text-xs hover:bg-gray-100">
-                        📄 Solo Anexo 2
-                    </a>
-                    <a href="{{ route('piar.plan_casero.imprimir.est', $est->CODIGO) }}" target="_blank"
-                       class="flex items-center gap-2 px-4 py-2 text-xs hover:bg-gray-100">
-                        📄 Solo Anexo 3
-                    </a>
-                    <div class="border-t border-gray-100 my-1"></div>
+
+                    {{-- Anexo 2 – Ajustes (por período) --}}
+                    <div class="border-t border-gray-100 mt-1 pt-1">
+                        <p class="px-4 pt-1 pb-0.5 text-[10px] uppercase tracking-wide text-gray-400 font-semibold">📄 Anexo 2 – Ajustes</p>
+                        <div class="flex flex-wrap gap-1 px-3 pb-2 pt-0.5">
+                            <a href="{{ $rutaA2 }}" target="_blank" class="px-2 py-0.5 rounded text-xs bg-gray-100 hover:bg-blue-100 text-blue-700 font-semibold">Todos</a>
+                            @foreach($periodosChips as $n => $lbl)
+                                <a href="{{ $rutaA2 }}?periodo={{ $n }}" target="_blank" class="px-2 py-0.5 rounded text-xs bg-gray-100 hover:bg-blue-100 text-gray-600">{{ $lbl }}</a>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    {{-- Anexo 3 – Plan Casero (por período) --}}
+                    <div class="border-t border-gray-100 pt-1">
+                        <p class="px-4 pt-1 pb-0.5 text-[10px] uppercase tracking-wide text-gray-400 font-semibold">📄 Anexo 3 – Plan Casero</p>
+                        <div class="flex flex-wrap gap-1 px-3 pb-2 pt-0.5">
+                            <a href="{{ $rutaA3 }}" target="_blank" class="px-2 py-0.5 rounded text-xs bg-gray-100 hover:bg-indigo-100 text-indigo-700 font-semibold">Todos</a>
+                            @foreach($periodosChips as $n => $lbl)
+                                <a href="{{ $rutaA3 }}?periodo={{ $n }}" target="_blank" class="px-2 py-0.5 rounded text-xs bg-gray-100 hover:bg-indigo-100 text-gray-600">{{ $lbl }}</a>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-100"></div>
                     <a href="{{ route('piar.imprimir.todos', $est->CODIGO) }}" target="_blank"
                        class="flex items-center gap-2 px-4 py-2 text-xs hover:bg-blue-50 font-semibold text-blue-700">
                         🖨️ Todos (1 + 2 + 3)
@@ -259,10 +282,11 @@ $pctPendiente  = max(0, 100 - $pctAprobado - $pctRevision);
             $pmReg    = $matsPiar[$mat->CODIGO_MAT] ?? null;
             $cmTiene  = $cmReg && !empty($cmReg->CARACTERIZACION);
             $pmTiene  = $pmReg && !empty($pmReg->BARRERAS);
+            $pcReg    = $pcCaseros[$mat->CODIGO_MAT] ?? null;
             $cmEstado = estadoEfectivo($cmReg ? ($cmReg->ESTADO ?? 'pendiente') : 'pendiente', $estadosEtapa['caract']);
             $pmEstado = estadoEfectivo($pmReg ? ($pmReg->ESTADO ?? 'pendiente') : 'pendiente', $estadosEtapa['ajustes']);
-            $pcEstado = estadoEfectivo($pmReg ? ($pmReg->ESTADO_CASERO ?? 'pendiente') : 'pendiente', $estadosEtapa['plan_casero']);
-            $pcTiene  = $pmReg && (!empty($pmReg->ESTRAG_CASERA) || !empty($pmReg->FREC_CASERA));
+            $pcEstado = estadoEfectivo($pcReg ? ($pcReg->ESTADO ?? 'pendiente') : 'pendiente', $estadosEtapa['plan_casero']);
+            $pcTiene  = $pcReg && (!empty($pcReg->ESTRAG) || !empty($pcReg->FREC));
             $filaOk  = $cmEstado === 'aprobado' && $pmEstado === 'aprobado' && $pcEstado === 'aprobado';
             $filaMal = $cmEstado === 'pendiente' || $pmEstado === 'pendiente' || $pcEstado === 'pendiente';
         @endphp

@@ -8,9 +8,9 @@
 {{--   $orientadora, $nombreMadre, $nombrePadre                              --}}
 {{-- ══════════════════════════════════════════════════════════════════════ --}}
 
-<table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;width:100%;page-break-before:always;break-before:page;">
+<table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;width:100%;{{ ($sinSaltoPagina ?? false) ? '' : 'page-break-before:always;break-before:page;' }}">
 <tr>
-<td colspan="5" style="background-color:#F2F2F2"><p style="text-align:center;margin-top:6pt;margin-bottom:6pt"><span style="color:#0070C0;font-size:12pt"><b>ACTA DE ACUERDO</b></span></p><p style="text-align:center;margin-top:6pt;margin-bottom:6pt"><span style="color:#0070C0;font-size:12pt"><b>Plan Individual de Ajustes Razonables – PIAR – ANEXO 3</b></span></p></td>
+<td colspan="5" style="background-color:#F2F2F2"><p style="text-align:center;margin-top:6pt;margin-bottom:6pt"><span style="color:#0070C0;font-size:12pt"><b>ACTA DE ACUERDO</b></span></p><p style="text-align:center;margin-top:6pt;margin-bottom:6pt"><span style="color:#0070C0;font-size:12pt"><b>Plan Individual de Ajustes Razonables – PIAR – ANEXO 3{{ isset($periodoLabel) ? ' – ' . $periodoLabel : '' }}</b></span></p></td>
 </tr>
 <tr>
 <td colspan="2"><p style="margin-top:6pt;margin-bottom:6pt"><span style="font-size:12pt"><b>Fecha: </b></span><span style="font-size:12pt">Año {{ date('Y') }}</span></p></td>

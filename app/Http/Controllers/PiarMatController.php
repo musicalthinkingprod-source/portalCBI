@@ -157,8 +157,10 @@ class PiarMatController extends Controller
     }
 
     // ── Vista de impresión ───────────────────────────────────────────────────
-    public function imprimir(string $codigo, int $codigoMat)
+    public function imprimir(Request $request, string $codigo, int $codigoMat)
     {
+        $periodoImp = (int) $request->query('periodo', 0);
+        if (!in_array($periodoImp, [1, 2, 3, 4])) $periodoImp = 0; // 0 = todos los períodos
         // Reutiliza la misma lógica de form() pero retorna la vista de impresión
         $codigoDoc = $this->codigoDoc();
         $esDocente = $this->esDocente();
@@ -203,7 +205,7 @@ class PiarMatController extends Controller
         return view('piar.anexo2.imprimir', compact(
             'estudiante', 'materia', 'docente', 'piarDiag', 'piarMat',
             'nombreCompleto', 'apellidos', 'numId', 'edad', 'grado', 'fechaNac',
-            'codigoMat'
+            'codigoMat', 'periodoImp'
         ));
     }
 
@@ -300,7 +302,7 @@ class PiarMatController extends Controller
     }
 
     // ── Plan Casero ──────────────────────────────────────────────────────────
-    public function formPlanCasero(string $codigo, int $codigoMat)
+    public function formPlanCasero(Request $request, string $codigo, int $codigoMat)
     {
         $codigoDoc = $this->codigoDoc();
         $esDocente = $this->esDocente();
@@ -334,12 +336,24 @@ class PiarMatController extends Controller
                         ->where('CODIGO_MAT', $codigoMat)
                         ->first();
 
+        // Plan casero por período: registros indexados por PERIODO (1-4)
+        $planesPorPeriodo = DB::table('PIAR_PLAN_CASERO')
+            ->where('CODIGO_ALUM', $codigo)
+            ->where('CODIGO_MAT', $codigoMat)
+            ->get()
+            ->keyBy('PERIODO');
+
+        $periodoActivo = ControlFechasController::periodoActivo();
+        $periodoVista  = (int) $request->query('periodo', $periodoActivo);
+        if (!in_array($periodoVista, [1, 2, 3, 4])) $periodoVista = $periodoActivo;
+
         $nombreCompleto = trim("{$estudiante->NOMBRE1} {$estudiante->NOMBRE2}");
         $apellidos      = trim("{$estudiante->APELLIDO1} {$estudiante->APELLIDO2}");
         $estadoEtapa    = ControlFechasController::estadoEtapa('plan_casero');
 
         return view('piar.plan-casero.form', compact(
             'estudiante', 'materia', 'docente', 'piarDiag', 'piarMat', 'caract',
+            'planesPorPeriodo', 'periodoActivo', 'periodoVista',
             'nombreCompleto', 'apellidos', 'codigoMat', 'estadoEtapa'
         ));
     }
@@ -348,29 +362,40 @@ class PiarMatController extends Controller
     {
         $esDocente   = $this->esDocente();
         $estadoEtapa = ControlFechasController::estadoEtapa('plan_casero');
+        $periodoActivo = ControlFechasController::periodoActivo();
 
-        $existingEstado = DB::table('PIAR_MAT')
-            ->where('CODIGO_ALUM', $codigo)->where('CODIGO_MAT', $codigoMat)
-            ->value('ESTADO_CASERO') ?? 'pendiente';
+        // Período objetivo del guardado. El docente solo puede tocar el período activo;
+        // el orientador puede registrar observaciones sobre el período que esté viendo.
+        $periodo = (int) $request->input('PERIODO', $periodoActivo);
+        if (!in_array($periodo, [1, 2, 3, 4])) $periodo = $periodoActivo;
+        if ($esDocente) $periodo = $periodoActivo;
+
+        $clave = ['CODIGO_ALUM' => $codigo, 'CODIGO_MAT' => $codigoMat, 'PERIODO' => $periodo];
+
+        $existingEstado = DB::table('PIAR_PLAN_CASERO')
+            ->where($clave)
+            ->value('ESTADO') ?? 'pendiente';
+
+        $volverUrl = route('piar.plan_casero.form', [$codigo, $codigoMat]) . '?periodo=' . $periodo;
 
         // Orientador envía observaciones → con_observaciones
         if (!$esDocente && $request->input('accion') === 'observar') {
             if ($estadoEtapa === 'finalizado') {
                 return back()->withErrors(['etapa' => 'La etapa está finalizada.']);
             }
-            DB::table('PIAR_MAT')->updateOrInsert(
-                ['CODIGO_ALUM' => $codigo, 'CODIGO_MAT' => $codigoMat],
+            DB::table('PIAR_PLAN_CASERO')->updateOrInsert(
+                $clave,
                 [
-                    'OBSERVACIONES_CASERO' => $request->OBSERVACIONES_CASERO,
-                    'ESTADO_CASERO'        => 'con_observaciones',
-                    'updated_at'           => now(),
+                    'OBSERVACIONES' => $request->OBSERVACIONES_CASERO,
+                    'ESTADO'        => 'con_observaciones',
+                    'updated_at'    => now(),
                 ]
             );
 
             $materia  = $this->nombreMateria($codigoMat);
             $etiqueta = $this->etiquetaEstudiante($codigo);
-            $url      = route('piar.plan_casero.form', [$codigo, $codigoMat]) . '#observaciones';
-            $mensaje  = "{$materia} — {$etiqueta}: hay observaciones pendientes en el Plan Casero.";
+            $url      = $volverUrl . '#observaciones';
+            $mensaje  = "{$materia} — {$etiqueta}: hay observaciones pendientes en el Plan Casero (período {$periodo}).";
             foreach ($this->docentesAsignados($codigo, $codigoMat) as $doc) {
                 NotificacionesController::crear($doc, 'piar_casero_observ', 'Observaciones en Plan Casero', $mensaje, $url);
             }
@@ -397,35 +422,40 @@ class PiarMatController extends Controller
             : (in_array($existingEstado, ['aprobado', 'con_observaciones']) ? 'revision' : ($existingEstado ?? 'pendiente'));
 
         $datos = [
-            'ESTRAG_CASERA' => $request->ESTRAG_CASERA,
-            'FREC_CASERA'   => $request->FREC_CASERA,
-            'ESTADO_CASERO' => $nuevoEstado,
-            'updated_at'    => now(),
+            'ESTRAG'     => $request->ESTRAG_CASERA,
+            'FREC'       => $request->FREC_CASERA,
+            'ESTADO'     => $nuevoEstado,
+            'updated_at' => now(),
         ];
         if (!$esDocente && $request->has('OBSERVACIONES_CASERO')) {
-            $datos['OBSERVACIONES_CASERO'] = $request->OBSERVACIONES_CASERO;
+            $datos['OBSERVACIONES'] = $request->OBSERVACIONES_CASERO;
         }
 
-        DB::table('PIAR_MAT')->updateOrInsert(
-            ['CODIGO_ALUM' => $codigo, 'CODIGO_MAT' => $codigoMat],
-            $datos
-        );
+        DB::table('PIAR_PLAN_CASERO')->updateOrInsert($clave, $datos);
 
         if ($entregar) {
             $materia  = $this->nombreMateria($codigoMat);
             $etiqueta = $this->etiquetaEstudiante($codigo);
             $nomDoc   = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $this->codigoDoc())->value('NOMBRE_DOC') ?? $this->codigoDoc();
-            $url      = route('piar.plan_casero.form', [$codigo, $codigoMat]) . '#observaciones';
-            $mensaje  = "{$nomDoc} entregó el Plan Casero de {$etiqueta} en {$materia}.";
+            $url      = $volverUrl . '#observaciones';
+            $mensaje  = "{$nomDoc} entregó el Plan Casero de {$etiqueta} en {$materia} (período {$periodo}).";
             NotificacionesController::crearParaRevisoresPiar('piar_casero_entreg', 'Plan Casero entregado para revisión', $mensaje, $url);
         }
 
         $msg = $entregar ? 'Plan Casero marcado como entregado para revisión.' : 'Plan Casero guardado correctamente.';
-        return redirect()->route('piar.plan_casero.form', [$codigo, $codigoMat])->with('saved', $msg);
+        return redirect($volverUrl)->with('saved', $msg);
+    }
+
+    // ── Etiquetas de período ──────────────────────────────────────────────────
+    public static function etiquetasPeriodo(): array
+    {
+        return [1 => 'Primer período', 2 => 'Segundo período', 3 => 'Tercer período', 4 => 'Cuarto período'];
     }
 
     // ── Vista de impresión Plan Casero (Anexo 3) ─────────────────────────────
-    public function imprimirPlanCasero(string $codigo)
+    // Un acta por período. Si llega ?periodo=N imprime solo ese; si no, imprime
+    // un acta por cada período que tenga al menos una estrategia diligenciada.
+    public function imprimirPlanCasero(Request $request, string $codigo)
     {
         $estudiante = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->first();
         if (!$estudiante) abort(404);
@@ -435,26 +465,49 @@ class PiarMatController extends Controller
 
         $matsExcluidas = [24, 31, 35, 124, 135, 153];
         $cursosEst     = $this->cursosAplicables($codigo, $estudiante->CURSO);
+        $etiquetas     = self::etiquetasPeriodo();
 
-        $planes = DB::table('PIAR_MAT as pm')
-            ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'pm.CODIGO_MAT')
-            ->leftJoin(DB::raw('(SELECT CODIGO_MAT, CURSO, MIN(CODIGO_EMP) AS CODIGO_EMP FROM ASIGNACION_PCM GROUP BY CODIGO_MAT, CURSO) as a'), function ($j) use ($cursosEst) {
-                $j->on('a.CODIGO_MAT', '=', 'pm.CODIGO_MAT')->whereIn('a.CURSO', $cursosEst);
-            })
-            ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_EMP', '=', 'a.CODIGO_EMP')
-            ->where('pm.CODIGO_ALUM', $codigo)
-            ->whereNotIn('pm.CODIGO_MAT', $matsExcluidas)
-            ->whereNotNull('pm.ESTRAG_CASERA')
-            ->where('pm.ESTRAG_CASERA', '!=', '')
-            ->select('pm.ESTRAG_CASERA', 'pm.FREC_CASERA', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
-            ->orderBy('m.NOMBRE_MAT')
-            ->get();
+        // Períodos a imprimir
+        $periodoParam = (int) $request->query('periodo', 0);
+        $periodos = in_array($periodoParam, [1, 2, 3, 4])
+            ? [$periodoParam]
+            : DB::table('PIAR_PLAN_CASERO')
+                ->where('CODIGO_ALUM', $codigo)
+                ->whereNotNull('ESTRAG')->where('ESTRAG', '!=', '')
+                ->whereNotIn('CODIGO_MAT', $matsExcluidas)
+                ->distinct()->orderBy('PERIODO')->pluck('PERIODO')->all();
 
-        $docentesElaboran = collect();
-        foreach ($planes as $pl) {
-            if ($pl->NOMBRE_DOC && !$docentesElaboran->contains('NOMBRE_DOC', $pl->NOMBRE_DOC)) {
-                $docentesElaboran->push((object)['NOMBRE_DOC' => $pl->NOMBRE_DOC, 'MATERIA' => $pl->NOMBRE_MAT]);
+        // Construye un "acta" por período (planes de ese período + docentes que elaboran)
+        $actas = collect();
+        foreach ($periodos as $periodo) {
+            $planes = DB::table('PIAR_PLAN_CASERO as pm')
+                ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'pm.CODIGO_MAT')
+                ->leftJoin(DB::raw('(SELECT CODIGO_MAT, CURSO, MIN(CODIGO_EMP) AS CODIGO_EMP FROM ASIGNACION_PCM GROUP BY CODIGO_MAT, CURSO) as a'), function ($j) use ($cursosEst) {
+                    $j->on('a.CODIGO_MAT', '=', 'pm.CODIGO_MAT')->whereIn('a.CURSO', $cursosEst);
+                })
+                ->leftJoin('CODIGOS_DOC as d', 'd.CODIGO_EMP', '=', 'a.CODIGO_EMP')
+                ->where('pm.CODIGO_ALUM', $codigo)
+                ->where('pm.PERIODO', $periodo)
+                ->whereNotIn('pm.CODIGO_MAT', $matsExcluidas)
+                ->whereNotNull('pm.ESTRAG')
+                ->where('pm.ESTRAG', '!=', '')
+                ->select('pm.ESTRAG as ESTRAG_CASERA', 'pm.FREC as FREC_CASERA', 'm.NOMBRE_MAT', 'd.NOMBRE_DOC')
+                ->orderBy('m.NOMBRE_MAT')
+                ->get();
+
+            $docentesElaboran = collect();
+            foreach ($planes as $pl) {
+                if ($pl->NOMBRE_DOC && !$docentesElaboran->contains('NOMBRE_DOC', $pl->NOMBRE_DOC)) {
+                    $docentesElaboran->push((object)['NOMBRE_DOC' => $pl->NOMBRE_DOC, 'MATERIA' => $pl->NOMBRE_MAT]);
+                }
             }
+
+            $actas->push((object)[
+                'periodo'          => $periodo,
+                'label'            => $etiquetas[$periodo] ?? "Período {$periodo}",
+                'planes'           => $planes,
+                'docentesElaboran' => $docentesElaboran,
+            ]);
         }
 
         $orientadora = $piarDiag->PERSONA_DIL ?? 'Jennifer Andrea Martínez Londoño';
@@ -473,7 +526,7 @@ class PiarMatController extends Controller
         $nombrePadre = $padres->PADRE ?? '';
 
         return view('piar.plan-casero.imprimir', compact(
-            'estudiante', 'piarDiag', 'planes', 'docentesElaboran', 'orientadora',
+            'estudiante', 'piarDiag', 'actas', 'orientadora',
             'nombreCompleto', 'apellidos', 'tipoDoc', 'numId',
             'edad', 'grado', 'curso', 'sede',
             'nombreMadre', 'nombrePadre'
@@ -481,20 +534,22 @@ class PiarMatController extends Controller
     }
 
     // ── Aprobar Plan Casero (Ori / SuperAd) ──────────────────────────────────
-    public function aprobarPlanCasero(string $codigo, int $codigoMat)
+    public function aprobarPlanCasero(string $codigo, int $codigoMat, int $periodo)
     {
-        DB::table('PIAR_MAT')
-            ->where('CODIGO_ALUM', $codigo)->where('CODIGO_MAT', $codigoMat)
+        if (!in_array($periodo, [1, 2, 3, 4])) abort(404);
+
+        DB::table('PIAR_PLAN_CASERO')
+            ->where('CODIGO_ALUM', $codigo)->where('CODIGO_MAT', $codigoMat)->where('PERIODO', $periodo)
             ->update([
-                'ESTADO_CASERO'         => 'aprobado',
-                'APROBADO_CASERO_POR'   => auth()->user()->name ?? auth()->user()->PROFILE,
-                'FECHA_APROB_CASERO'    => today()->toDateString(),
+                'ESTADO'           => 'aprobado',
+                'APROBADO_POR'     => auth()->user()->name ?? auth()->user()->PROFILE,
+                'FECHA_APROBACION' => today()->toDateString(),
             ]);
 
         $materia  = $this->nombreMateria($codigoMat);
         $etiqueta = $this->etiquetaEstudiante($codigo);
-        $url      = route('piar.plan_casero.form', [$codigo, $codigoMat]) . '#observaciones';
-        $mensaje  = "{$materia} — {$etiqueta}: el Plan Casero fue aprobado.";
+        $url      = route('piar.plan_casero.form', [$codigo, $codigoMat]) . '?periodo=' . $periodo . '#observaciones';
+        $mensaje  = "{$materia} — {$etiqueta}: el Plan Casero del período {$periodo} fue aprobado.";
         foreach ($this->docentesAsignados($codigo, $codigoMat) as $doc) {
             NotificacionesController::crear($doc, 'piar_casero_aprob', 'Plan Casero aprobado', $mensaje, $url);
         }

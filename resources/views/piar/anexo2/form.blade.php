@@ -47,6 +47,10 @@
 <div class="flex items-center justify-between mb-4">
     <a href="{{ $puedeObservar ? route('piar.informe') : route('piar.anexo2.index') }}" class="text-blue-700 hover:underline text-sm">← Volver</a>
     <div class="flex gap-3">
+        @include('piar.partials.menu_imprimir', [
+            'rutaBase' => route('piar.anexo2.imprimir', [$estudiante->CODIGO, $codigoMat]),
+            'titulo'   => 'Imprimir Anexo 2',
+        ])
         @if($puedeObservar)
             @if($estadoEtapa !== 'finalizado')
             <button type="button" id="btn-editar-contenido"
@@ -67,10 +71,6 @@
                 @endif
             </div>
             @endif
-            <a href="{{ route('piar.anexo2.imprimir', [$estudiante->CODIGO, $codigoMat]) }}" target="_blank"
-                class="bg-blue-800 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition inline-block">
-                🖨️ Imprimir Anexo 2
-            </a>
         @elseif($docentePuede)
             <button type="submit" form="form-anexo2" name="accion" value="guardar"
                 class="bg-gray-600 hover:bg-gray-500 text-white text-sm font-semibold px-5 py-2 rounded-lg transition">
