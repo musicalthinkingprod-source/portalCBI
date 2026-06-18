@@ -187,6 +187,29 @@
         </div>
         @endif
 
+        {{-- ── Bitácora del Estudiante: SuperAd, Coordinadores y Docentes ── --}}
+        @if($isSuperAd || $isCoordAcad || $isCoordConv || $isDoc)
+        @php $catId = 'bitacora'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Bitácora del Estudiante</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('bitacora.index'), '📖 Registrar observaciones') !!}
+                @if($isSuperAd || $isCoordAcad || $isCoordConv)
+                {!! sidebarLink(route('bitacora.masiva'), '📋 Carga masiva por curso') !!}
+                @endif
+                @if($isSuperAd)
+                {!! sidebarLink(route('bitacora.config'), '⚙️ Configurar bitácora') !!}
+                @endif
+            </ul>
+        </div>
+        @endif
+
         {{-- ── Orientación: Ori* ── --}}
         @if(str_starts_with($profile, 'Ori'))
         @php $catId = 'orientacion'; @endphp

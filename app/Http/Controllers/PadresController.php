@@ -173,6 +173,7 @@ class PadresController extends Controller
             ['seccion' => 'Académico', 'label' => 'Calendario académico', 'icon' => '📆', 'route' => 'padres.calendario',        'activo' => true,                                 'requiere_pago' => false],
             // ── Comunicaciones ─────────────────────────────────────────────
             ['seccion' => 'Comunicaciones', 'label' => 'Circulares',    'icon' => '📢', 'route' => 'padres.circulares',    'activo' => true, 'requiere_pago' => false],
+            ['seccion' => 'Comunicaciones', 'label' => 'Bitácora del estudiante', 'icon' => '📖', 'route' => 'padres.bitacora', 'activo' => true, 'requiere_pago' => false],
             ['seccion' => 'Comunicaciones', 'label' => 'Documentación', 'icon' => '📁', 'route' => 'padres.documentacion', 'activo' => true, 'requiere_pago' => false],
             // ── Financiero ─────────────────────────────────────────────────
             ['seccion' => 'Financiero', 'label' => 'Estado de cuenta', 'icon' => '📊', 'route' => 'padres.estado_cuenta', 'activo' => true, 'requiere_pago' => false],
@@ -420,6 +421,27 @@ class PadresController extends Controller
         $estudiante = session('padre_estudiante');
         if (!$estudiante) return redirect()->route('padres.portal');
         return view('padres.conducto-regular', compact('estudiante'));
+    }
+
+    public function bitacora()
+    {
+        $estudiante = session('padre_estudiante');
+        if (!$estudiante) return redirect()->route('padres.portal');
+
+        $entradas = DB::table('bitacora_entradas as b')
+            ->join('bitacora_categorias as c', 'c.id', '=', 'b.categoria_id')
+            ->leftJoin('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'b.codigo_mat')
+            ->where('b.codigo_alumno', $estudiante->CODIGO)
+            ->select(
+                'b.fecha', 'b.observacion', 'b.registrado_nombre',
+                'c.nombre as categoria', 'c.color as categoria_color', 'c.docentes as es_aula',
+                'm.NOMBRE_MAT as materia'
+            )
+            ->orderByDesc('b.fecha')
+            ->orderByDesc('b.id')
+            ->get();
+
+        return view('padres.bitacora', compact('estudiante', 'entradas'));
     }
 
     public function circulares()

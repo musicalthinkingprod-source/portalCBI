@@ -41,6 +41,7 @@ use App\Http\Controllers\AsistenciaPersonalController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\ListadoEstudiantesController;
 use App\Http\Controllers\ObservacionesController;
+use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\DocumentacionController;
 use App\Http\Controllers\AsignacionesResumenController;
 
@@ -82,6 +83,7 @@ Route::middleware('padre.verificado')->group(function () {
     Route::get('/padres/circulares', [PadresController::class, 'circulares'])->name('padres.circulares');
     Route::get('/padres/circulares/{circular}', [PadresController::class, 'circularShow'])->name('padres.circulares.show');
     Route::get('/padres/documentacion', [DocumentacionController::class, 'padres'])->name('padres.documentacion');
+    Route::get('/padres/bitacora', [PadresController::class, 'bitacora'])->name('padres.bitacora');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -450,6 +452,31 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('profile:SuperAd,Admin,DOC*')->group(function () {
         Route::get('/observaciones',  [ObservacionesController::class, 'index'])->name('observaciones.index');
         Route::post('/observaciones', [ObservacionesController::class, 'store'])->name('observaciones.store');
+    });
+
+    // ── Bitácora: carga masiva (solo SuperAd + Coordinadores, NO docentes) ───
+    Route::middleware('profile:SuperAd,COR001,COR002')->group(function () {
+        Route::get('/bitacora/masiva',  [BitacoraController::class, 'masivaForm'])    ->name('bitacora.masiva');
+        Route::post('/bitacora/masiva', [BitacoraController::class, 'masivaGuardar']) ->name('bitacora.masiva.guardar');
+    });
+
+    // ── Bitácora: registro individual (SuperAd + Coordinadores + Docentes) ───
+    Route::middleware('profile:SuperAd,COR001,COR002,DOC*')->group(function () {
+        Route::get('/bitacora',         [BitacoraController::class, 'index'])  ->name('bitacora.index');
+        Route::post('/bitacora',        [BitacoraController::class, 'store'])  ->name('bitacora.store');
+        Route::put('/bitacora/{id}',    [BitacoraController::class, 'update']) ->name('bitacora.update');
+        Route::delete('/bitacora/{id}', [BitacoraController::class, 'destroy'])->name('bitacora.destroy');
+    });
+
+    // ── Bitácora del Estudiante: configuración de catálogos (solo SuperAd) ───
+    Route::middleware('profile:SuperAd')->group(function () {
+        Route::get('/bitacora/config',                [BitacoraController::class, 'config'])         ->name('bitacora.config');
+        Route::post('/bitacora/categorias',           [BitacoraController::class, 'storeCategoria']) ->name('bitacora.categorias.store');
+        Route::put('/bitacora/categorias/{id}',       [BitacoraController::class, 'updateCategoria'])->name('bitacora.categorias.update');
+        Route::delete('/bitacora/categorias/{id}',    [BitacoraController::class, 'destroyCategoria'])->name('bitacora.categorias.destroy');
+        Route::post('/bitacora/plantillas',           [BitacoraController::class, 'storePlantilla']) ->name('bitacora.plantillas.store');
+        Route::put('/bitacora/plantillas/{id}',       [BitacoraController::class, 'updatePlantilla'])->name('bitacora.plantillas.update');
+        Route::delete('/bitacora/plantillas/{id}',    [BitacoraController::class, 'destroyPlantilla'])->name('bitacora.plantillas.destroy');
     });
 
     // ── Asistencia personal: SuperAd y SecA ven el estado; SecA registra ────
