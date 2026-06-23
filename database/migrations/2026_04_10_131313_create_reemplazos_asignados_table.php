@@ -14,14 +14,14 @@ return new class extends Migration
         Schema::create('reemplazos_asignados', function (Blueprint $table) {
             $table->id();
             $table->date('fecha');
-            $table->string('codigo_doc_ausente', 25);
-            $table->string('codigo_doc_reemplazo', 25);
+            $table->string('codigo_emp_ausente', 25);
+            $table->string('codigo_emp_reemplazo', 25);
             $table->tinyInteger('hora');
             $table->string('curso', 10);
             $table->string('asignado_por', 50);
             $table->timestamps();
             // Un solo reemplazo por slot (fecha + ausente + hora + curso)
-            $table->unique(['fecha', 'codigo_doc_ausente', 'hora', 'curso'], 'reemplazo_slot_unique');
+            $table->unique(['fecha', 'codigo_emp_ausente', 'hora', 'curso'], 'reemplazo_slot_unique');
         });
     }
 

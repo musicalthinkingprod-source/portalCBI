@@ -33,6 +33,8 @@ use App\Http\Controllers\RutasController;
 use App\Http\Controllers\LlamadasController;
 use App\Http\Controllers\VigilanciaController;
 use App\Http\Controllers\NominaController;
+use App\Http\Controllers\InventarioController;
+use App\Http\Controllers\InventarioAseoController;
 use App\Http\Controllers\ListadosEspecialesController;
 use App\Http\Controllers\CircularesController;
 use App\Http\Controllers\HorariosController;
@@ -84,6 +86,9 @@ Route::middleware('padre.verificado')->group(function () {
     Route::get('/padres/circulares/{circular}', [PadresController::class, 'circularShow'])->name('padres.circulares.show');
     Route::get('/padres/documentacion', [DocumentacionController::class, 'padres'])->name('padres.documentacion');
     Route::get('/padres/bitacora', [PadresController::class, 'bitacora'])->name('padres.bitacora');
+    Route::post('/padres/bitacora/{id}/confirmar', [PadresController::class, 'bitacoraConfirmar'])->name('padres.bitacora.confirmar');
+    Route::post('/padres/bitacora/{id}/comentar', [PadresController::class, 'bitacoraComentar'])->name('padres.bitacora.comentar');
+    Route::delete('/padres/bitacora/comentarios/{id}', [PadresController::class, 'bitacoraComentarBorrar'])->name('padres.bitacora.comentar.destroy');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -454,18 +459,36 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/observaciones', [ObservacionesController::class, 'store'])->name('observaciones.store');
     });
 
-    // ── Bitácora: carga masiva (solo SuperAd + Coordinadores, NO docentes) ───
+    // ── Bitácora: carga masiva de observaciones por curso (solo SuperAd + Coord.) ─
     Route::middleware('profile:SuperAd,COR001,COR002')->group(function () {
         Route::get('/bitacora/masiva',  [BitacoraController::class, 'masivaForm'])    ->name('bitacora.masiva');
         Route::post('/bitacora/masiva', [BitacoraController::class, 'masivaGuardar']) ->name('bitacora.masiva.guardar');
     });
 
-    // ── Bitácora: registro individual (SuperAd + Coordinadores + Docentes) ───
+    // ── Bitácora: tareas a un curso/grupo (Docentes + SuperAd) ───────────────
+    // Un solo texto compartido para todo el grupo de la asignación (incluye
+    // grupos de proyecto GP* y subgrupos de Artes/Música 7A-1).
+    Route::middleware('profile:SuperAd,DOC*')->group(function () {
+        Route::get('/bitacora/tareas',  [BitacoraController::class, 'tareasForm'])    ->name('bitacora.tareas');
+        Route::post('/bitacora/tareas', [BitacoraController::class, 'tareasGuardar']) ->name('bitacora.tareas.guardar');
+    });
+
+    // ── Bitácora: registro individual + hilos (SuperAd + Coordinadores + Docentes) ─
     Route::middleware('profile:SuperAd,COR001,COR002,DOC*')->group(function () {
         Route::get('/bitacora',         [BitacoraController::class, 'index'])  ->name('bitacora.index');
         Route::post('/bitacora',        [BitacoraController::class, 'store'])  ->name('bitacora.store');
         Route::put('/bitacora/{id}',    [BitacoraController::class, 'update']) ->name('bitacora.update');
         Route::delete('/bitacora/{id}', [BitacoraController::class, 'destroy'])->name('bitacora.destroy');
+        // Hilos de comentarios sobre una anotación
+        Route::post('/bitacora/{id}/comentar',       [BitacoraController::class, 'comentar'])       ->name('bitacora.comentar');
+        Route::delete('/bitacora/comentarios/{id}',  [BitacoraController::class, 'borrarComentario'])->name('bitacora.comentarios.destroy');
+    });
+
+    // ── Bitácora: consulta de agenda por estudiante (Docentes + SuperAd + Secretarías) ─
+    // SuperAd/Admin/Secretarías ven toda la agenda; el docente director de grupo, la de
+    // sus estudiantes; el resto, solo sus propias anotaciones. Solo lectura, con hilos.
+    Route::middleware('profile:SuperAd,DOC*,Sec*')->group(function () {
+        Route::get('/bitacora/consulta', [BitacoraController::class, 'consulta'])->name('bitacora.consulta');
     });
 
     // ── Bitácora del Estudiante: configuración de catálogos (solo SuperAd) ───
@@ -530,6 +553,59 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/notificaciones/nuevas',       [\App\Http\Controllers\NotificacionesController::class, 'nuevas'])->name('notificaciones.nuevas');
     Route::post('/notificaciones/{id}/leer',   [\App\Http\Controllers\NotificacionesController::class, 'leer'])  ->name('notificaciones.leer');
     Route::post('/notificaciones/leer-todas',  [\App\Http\Controllers\NotificacionesController::class, 'leerTodas'])->name('notificaciones.leer_todas');
+
+    // ── Inventario de uniformes (INVCBI): SuperAd, Admin, Secretarías ─────
+    Route::middleware('profile:SuperAd,Admin,Sec*')->group(function () {
+        Route::get('/inventario',                 [InventarioController::class, 'dashboard'])    ->name('inventario.dashboard');
+
+        Route::get('/inventario/productos',        [InventarioController::class, 'productos'])    ->name('inventario.productos');
+        Route::post('/inventario/productos',       [InventarioController::class, 'productoStore'])->name('inventario.productos.store');
+        Route::put('/inventario/productos/{id}',   [InventarioController::class, 'productoUpdate'])->name('inventario.productos.update');
+
+        // Precios y costos + facturación: solo Admin y SuperAd.
+        Route::middleware('profile:SuperAd,Admin')->group(function () {
+            Route::get('/inventario/precios',          [InventarioController::class, 'precios'])     ->name('inventario.precios');
+            Route::put('/inventario/precios/{id}',     [InventarioController::class, 'precioUpdate'])->name('inventario.precios.update');
+
+            Route::get('/inventario/facturar',         [InventarioController::class, 'facturarIndex'])->name('inventario.facturar');
+            Route::post('/inventario/facturar',        [InventarioController::class, 'facturar'])     ->name('inventario.facturar.guardar');
+        });
+
+        // Devoluciones y cambios (secretarías, Admin y SuperAd).
+        Route::get('/inventario/cambios',          [InventarioController::class, 'cambiosIndex'])  ->name('inventario.cambios');
+        Route::post('/inventario/cambios',         [InventarioController::class, 'cambioStore'])   ->name('inventario.cambios.guardar');
+        Route::get('/inventario/api/venta',        [InventarioController::class, 'ventaPorNumero']) ->name('inventario.api.venta');
+
+        Route::get('/inventario/proveedores',      [InventarioController::class, 'proveedores'])      ->name('inventario.proveedores');
+        Route::post('/inventario/proveedores',     [InventarioController::class, 'proveedorStore'])   ->name('inventario.proveedores.store');
+
+        Route::get('/inventario/compras',          [InventarioController::class, 'compras'])      ->name('inventario.compras');
+        Route::get('/inventario/compras/nueva',    [InventarioController::class, 'compraCreate'])  ->name('inventario.compras.create');
+        Route::post('/inventario/compras',         [InventarioController::class, 'compraStore'])   ->name('inventario.compras.store');
+
+        Route::get('/inventario/ventas',           [InventarioController::class, 'ventas'])       ->name('inventario.ventas');
+        Route::get('/inventario/ventas/nueva',     [InventarioController::class, 'ventaCreate'])   ->name('inventario.ventas.create');
+        Route::post('/inventario/ventas',          [InventarioController::class, 'ventaStore'])    ->name('inventario.ventas.store');
+        Route::post('/inventario/ventas/{id}/anular', [InventarioController::class, 'ventaAnular'])->name('inventario.ventas.anular');
+
+        // Búsquedas para el escáner / POS (JSON)
+        Route::get('/inventario/api/producto',     [InventarioController::class, 'buscarProducto'])  ->name('inventario.api.producto');
+        Route::get('/inventario/api/estudiante',   [InventarioController::class, 'buscarEstudiante'])->name('inventario.api.estudiante');
+
+        // ── Inventario de ASEO ──
+        Route::get('/aseo',                  [InventarioAseoController::class, 'dashboard'])     ->name('aseo.dashboard');
+        Route::get('/aseo/elementos',        [InventarioAseoController::class, 'elementos'])     ->name('aseo.elementos');
+        Route::post('/aseo/elementos',       [InventarioAseoController::class, 'elementoStore']) ->name('aseo.elementos.store');
+        Route::put('/aseo/elementos/{id}',   [InventarioAseoController::class, 'elementoUpdate'])->name('aseo.elementos.update');
+        Route::get('/aseo/dependencias',     [InventarioAseoController::class, 'dependencias'])  ->name('aseo.dependencias');
+        Route::post('/aseo/dependencias',    [InventarioAseoController::class, 'dependenciaStore'])->name('aseo.dependencias.store');
+        Route::get('/aseo/compras',          [InventarioAseoController::class, 'compras'])       ->name('aseo.compras');
+        Route::get('/aseo/compras/nueva',    [InventarioAseoController::class, 'compraCreate'])  ->name('aseo.compras.create');
+        Route::post('/aseo/compras',         [InventarioAseoController::class, 'compraStore'])   ->name('aseo.compras.store');
+        Route::get('/aseo/salidas',          [InventarioAseoController::class, 'salidas'])       ->name('aseo.salidas');
+        Route::get('/aseo/salidas/nueva',    [InventarioAseoController::class, 'salidaCreate'])  ->name('aseo.salidas.create');
+        Route::post('/aseo/salidas',         [InventarioAseoController::class, 'salidaStore'])   ->name('aseo.salidas.store');
+    });
 });
 
 Route::post('/padres/salir', function () {

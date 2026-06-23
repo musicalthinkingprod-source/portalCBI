@@ -411,10 +411,19 @@
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             @foreach($mods as $mod)
                 @if($mod['activo'])
+                    @php $prev = $mod['preview'] ?? null; $tienePend = $prev && $prev['sin_leer'] > 0; @endphp
                     <a href="{{ route($mod['route']) }}"
-                       class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex flex-col items-center gap-2 hover:border-blue-300 hover:shadow-md transition group text-center">
+                       class="relative bg-white rounded-2xl shadow-sm border p-4 flex flex-col items-center gap-2 hover:shadow-md transition group text-center {{ $tienePend && $prev['altas'] > 0 ? 'border-red-200 hover:border-red-300' : 'border-gray-100 hover:border-blue-300' }}">
+                        @if($tienePend)
+                        <span class="absolute -top-1.5 -right-1.5 {{ $prev['altas'] > 0 ? 'bg-red-500' : 'bg-blue-500' }} text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow">{{ $prev['sin_leer'] }}</span>
+                        @endif
                         <span class="text-3xl">{{ $mod['icon'] }}</span>
                         <span class="text-xs font-semibold text-gray-700 group-hover:text-blue-700 leading-tight">{{ $mod['label'] }}</span>
+                        @if($tienePend)
+                        <span class="text-[10px] leading-tight font-medium {{ $prev['altas'] > 0 ? 'text-red-600' : 'text-blue-600' }}">
+                            {{ $prev['sin_leer'] }} sin leer{{ $prev['altas'] > 0 ? ' · '.$prev['altas'].' de alta prioridad' : '' }}
+                        </span>
+                        @endif
                     </a>
                 @else
                     <div class="bg-gray-50 rounded-2xl border border-gray-100 p-4 flex flex-col items-center gap-2 cursor-not-allowed opacity-60 text-center">

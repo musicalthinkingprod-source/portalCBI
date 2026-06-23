@@ -187,24 +187,32 @@
         </div>
         @endif
 
-        {{-- ── Bitácora del Estudiante: SuperAd, Coordinadores y Docentes ── --}}
-        @if($isSuperAd || $isCoordAcad || $isCoordConv || $isDoc)
+        {{-- ── Agenda Estudiantil Virtual: SuperAd, Coordinadores, Docentes y Secretarías ── --}}
+        @if($isSuperAd || $isCoordAcad || $isCoordConv || $isDoc || $isSec)
         @php $catId = 'bitacora'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
                onclick="toggleCategory(this)">
-                <span>Bitácora del Estudiante</span>
+                <span>Agenda Estudiantil Virtual</span>
                 <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
                 </svg>
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                @if($isSuperAd || $isCoordAcad || $isCoordConv || $isDoc)
                 {!! sidebarLink(route('bitacora.index'), '📖 Registrar observaciones') !!}
+                @endif
+                @if($isDoc || $isSuperAd || $isSec)
+                {!! sidebarLink(route('bitacora.consulta'), '🔎 Consultar agenda') !!}
+                @endif
+                @if($isDoc)
+                {!! sidebarLink(route('bitacora.tareas'), '📝 Asignar tarea') !!}
+                @endif
                 @if($isSuperAd || $isCoordAcad || $isCoordConv)
                 {!! sidebarLink(route('bitacora.masiva'), '📋 Carga masiva por curso') !!}
                 @endif
                 @if($isSuperAd)
-                {!! sidebarLink(route('bitacora.config'), '⚙️ Configurar bitácora') !!}
+                {!! sidebarLink(route('bitacora.config'), '⚙️ Configurar agenda') !!}
                 @endif
             </ul>
         </div>
@@ -661,6 +669,58 @@
         </div>
         @endif
 
+        {{-- ── Inventario de uniformes: SuperAd, Admin, Secretarías ── --}}
+        @if($isSuperAd || $isAdmin || $isSec)
+        @php
+            $catId = 'inventario';
+            $pendFact = ($isSuperAd || $isAdmin) ? \App\Http\Controllers\InventarioController::pendientesFacturar() : 0;
+        @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Inventario</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('inventario.dashboard'), '📊 Informe uniformes') !!}
+                {!! sidebarLink(route('inventario.ventas.create'), '🧾 Nueva venta') !!}
+                {!! sidebarLink(route('inventario.ventas'), '📃 Ventas') !!}
+                {!! sidebarLink(route('inventario.cambios'), '🔁 Devoluciones y cambios') !!}
+                {!! sidebarLink(route('inventario.compras'), '📥 Compras') !!}
+                {!! sidebarLink(route('inventario.productos'), '👕 Productos') !!}
+                @if($isSuperAd || $isAdmin)
+                {!! sidebarLink(route('inventario.facturar'), '🧾 Uniformes a facturar' . ($pendFact > 0 ? " <span class=\"ml-1 bg-red-500 text-white text-xs px-1.5 rounded-full\">{$pendFact}</span>" : '')) !!}
+                {!! sidebarLink(route('inventario.precios'), '💲 Precios y costos') !!}
+                @endif
+                {!! sidebarLink(route('inventario.proveedores'), '🏭 Proveedores') !!}
+            </ul>
+        </div>
+        @endif
+
+        {{-- ── Aseo e insumos: SuperAd, Admin, Secretarías ── --}}
+        @if($isSuperAd || $isAdmin || $isSec)
+        @php $catId = 'aseo'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Aseo e insumos</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('aseo.dashboard'), '📊 Informe aseo') !!}
+                {!! sidebarLink(route('aseo.salidas.create'), '📤 Entregar a dependencia') !!}
+                {!! sidebarLink(route('aseo.salidas'), '📃 Entregas') !!}
+                {!! sidebarLink(route('aseo.compras'), '📥 Compras') !!}
+                {!! sidebarLink(route('aseo.elementos'), '🧴 Elementos') !!}
+                {!! sidebarLink(route('aseo.dependencias'), '🏢 Dependencias') !!}
+            </ul>
+        </div>
+        @endif
+
         @endauth
 
     </nav>
@@ -1047,6 +1107,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (n.tipo.endsWith('_aprob'))       { dotColor = 'bg-green-500';  prefijo = '✅ '; }
                 else if (n.tipo.endsWith('_observ')) { dotColor = 'bg-orange-500'; prefijo = '💬 '; }
                 else if (n.tipo.endsWith('_entreg')) { dotColor = 'bg-indigo-500'; prefijo = '📥 '; }
+            } else if (n.tipo === 'agenda_hilo') {
+                dotColor = 'bg-emerald-500'; prefijo = '📖 ';
             }
 
             const urlAttr = destino ? ` data-notif-url="${escHtml(destino)}"` : '';

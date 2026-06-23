@@ -1,6 +1,6 @@
 @extends('layouts.app-sidebar')
 
-@section('header', 'Bitácora del Estudiante · Carga masiva por curso')
+@section('header', 'Agenda Estudiantil Virtual · Carga masiva por curso')
 
 @section('slot')
 

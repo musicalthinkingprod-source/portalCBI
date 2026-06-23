@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\AgendaService;
 
 class BitacoraController extends Controller
 {
+    public function __construct(private AgendaService $agenda) {}
+
     /** ¿Es un perfil de docente? */
     private function esDocente(string $profile): bool
     {
@@ -66,6 +69,23 @@ class BitacoraController extends Controller
     private function nombreDocente(string $profile): ?string
     {
         return DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $profile)->value('NOMBRE_DOC');
+    }
+
+    /**
+     * Asignaciones reales del docente (su carga en ASIGNACION_PCM), sin "Atención a
+     * Padres" (200). El CURSO puede ser un curso normal ("7A"), un grupo de proyecto
+     * ("GP1") o un subgrupo de Artes/Música ("7A-1"); se deja tal cual para resolver
+     * los estudiantes con estudiantesPara().
+     */
+    private function asignacionesDocente(string $profile)
+    {
+        return DB::table('ASIGNACION_PCM as a')
+            ->join('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'a.CODIGO_MAT')
+            ->where('a.CODIGO_EMP', $profile)
+            ->where('a.CODIGO_MAT', '!=', 200)
+            ->distinct()
+            ->orderBy('m.NOMBRE_MAT')->orderBy('a.CURSO')
+            ->get(['a.CODIGO_MAT as codigo_mat', 'a.CURSO as curso', 'm.NOMBRE_MAT as nombre_mat']);
     }
 
     /** Cursos reales (los de los estudiantes matriculados), sin grupos de listados especiales. */
@@ -179,6 +199,10 @@ class BitacoraController extends Controller
 
         $entradas = $query->limit(300)->get();
 
+        // Hilos de comentarios de las anotaciones listadas
+        $comentarios = $this->agenda->comentariosPorEntrada($entradas->pluck('id')->all());
+        $miUser      = auth()->user()->USER;
+
         // Catálogo de categorías para el filtro: docentes solo las suyas; el resto todas
         $todasCategorias = $esDocente
             ? $this->categoriasPermitidasQuery($profile)->orderBy('nombre')->get()
@@ -187,7 +211,7 @@ class BitacoraController extends Controller
         return view('bitacora.index', compact(
             'cursos', 'categorias', 'plantillas', 'estudiantes', 'cursoForm',
             'entradas', 'todasCategorias', 'fCurso', 'fCodigo', 'fCategoria',
-            'historialPorEstudiante', 'esDocente', 'materias'
+            'historialPorEstudiante', 'esDocente', 'materias', 'comentarios', 'miUser'
         ));
     }
 
@@ -200,6 +224,7 @@ class BitacoraController extends Controller
             'categoria_id'  => 'required|integer',
             'fecha'         => 'required|date',
             'observacion'   => 'required|string|max:8000',
+            'prioridad'     => 'nullable|in:normal,alta',
         ]);
 
         $categoria = DB::table('bitacora_categorias')->where('id', $data['categoria_id'])->first();
@@ -214,12 +239,9 @@ class BitacoraController extends Controller
         }
 
         $codigo = (int) $data['codigo_alumno'];
-        $fecha  = $data['fecha'];
-        $catId  = (int) $data['categoria_id'];
-        $texto  = mb_substr(trim($data['observacion']), 0, 8000);
-        $anio   = (int) date('Y', strtotime($fecha));
 
-        // Registro de aula (docente): debe escoger una materia entre las que dicta
+        // Registro de aula (docente): debe escoger una materia entre las que dicta y,
+        // por contexto relacional, la fecha debe caer dentro de un período académico.
         $codigoMat = null;
         $registradoNombre = null;
         if ($this->esDocente($profile)) {
@@ -228,39 +250,35 @@ class BitacoraController extends Controller
             if (!in_array($codigoMat, $materiasIds, true)) {
                 return back()->with('error', 'Debes seleccionar una materia válida entre las que dictas.')->withInput();
             }
+            if ($this->agenda->periodoParaFecha($data['fecha']) === null) {
+                return back()->with('error', 'La fecha no corresponde a ningún período académico. Verifica el calendario.')->withInput();
+            }
             $registradoNombre = $this->nombreDocente($profile);
         }
 
-        // Categorías "únicas" (ej. Consejo Académico): no se duplican; reemplazan por (estudiante, fecha, categoría)
-        if ($categoria->unica) {
-            $existente = DB::table('bitacora_entradas')
-                ->where(['codigo_alumno' => $codigo, 'fecha' => $fecha, 'categoria_id' => $catId])
-                ->first();
-            if ($existente) {
-                DB::table('bitacora_entradas')->where('id', $existente->id)->update([
-                    'observacion'    => $texto,
-                    'anio'           => $anio,
-                    'registrado_por' => auth()->user()->USER,
-                ]);
-                return redirect()->route('bitacora.index', ['f_codigo' => $codigo])
-                    ->with('ok', 'Observación actualizada (registro único: reemplaza el anterior de esa fecha).');
-            }
-        }
+        // Prioridad: precarga la de la categoría; el autor pudo cambiarla en el formulario.
+        // Los docentes NO pueden enviar alta prioridad: solo SuperAd y coordinadores.
+        $prioridad = $this->esDocente($profile)
+            ? AgendaService::PRIORIDAD_NORMAL
+            : ($data['prioridad'] ?? $this->agenda->prioridadDeCategoria($categoria));
 
-        DB::table('bitacora_entradas')->insert([
+        $resultado = $this->agenda->registrar([
             'codigo_alumno'     => $codigo,
-            'categoria_id'      => $catId,
+            'categoria_id'      => (int) $data['categoria_id'],
             'codigo_mat'        => $codigoMat,
-            'fecha'             => $fecha,
-            'anio'              => $anio,
-            'observacion'       => $texto,
+            'fecha'             => $data['fecha'],
+            'observacion'       => $data['observacion'],
+            'prioridad'         => $prioridad,
             'registrado_por'    => auth()->user()->USER,
             'registrado_nombre' => $registradoNombre,
-            'created_at'        => now(),
+            'es_unica'          => (bool) $categoria->unica,
         ]);
 
-        return redirect()->route('bitacora.index', ['f_codigo' => $codigo])
-            ->with('ok', 'Observación registrada correctamente.');
+        $msg = $resultado['accion'] === 'reemplazada'
+            ? 'Observación actualizada (registro único: reemplaza el anterior de esa fecha).'
+            : 'Observación registrada correctamente.';
+
+        return redirect()->route('bitacora.index', ['f_codigo' => $codigo])->with('ok', $msg);
     }
 
     // ── Carga masiva por curso ──────────────────────────────────────────────
@@ -340,7 +358,6 @@ class BitacoraController extends Controller
 
         $fecha = $data['fecha'];
         $catId = (int) $data['categoria_id'];
-        $anio  = (int) date('Y', strtotime($fecha));
 
         $codigosValidos = DB::table('ESTUDIANTES')
             ->where('CURSO', $data['curso'])
@@ -349,45 +366,126 @@ class BitacoraController extends Controller
             ->map(fn($c) => (int) $c)
             ->all();
 
-        $creadas = 0; $actualizadas = 0; $eliminadas = 0;
+        // Un solo payload común → N registros individuales (uno por estudiante),
+        // cada uno con su propio acuse de recibo. La prioridad la fija la categoría.
+        $resumen = $this->agenda->asignacionGrupal(
+            payload: [
+                'categoria_id'   => $catId,
+                'codigo_mat'     => null, // la carga masiva de coordinación no es de aula
+                'fecha'          => $fecha,
+                'prioridad'      => $this->agenda->prioridadDeCategoria($categoria),
+                'registrado_por' => auth()->user()->USER,
+            ],
+            observaciones: $request->input('obs', []),
+            codigosValidos: $codigosValidos,
+        );
 
-        foreach ($request->input('obs', []) as $codigo => $texto) {
-            $codigo = (int) $codigo;
-            if (!in_array($codigo, $codigosValidos, true)) continue;
-
-            $texto = trim((string) $texto);
-            $clave = ['codigo_alumno' => $codigo, 'fecha' => $fecha, 'categoria_id' => $catId];
-
-            $existente = DB::table('bitacora_entradas')->where($clave)->first();
-
-            if ($texto === '') {
-                // Vacío = quitar la observación de esa fecha/categoría si existía
-                if ($existente) { DB::table('bitacora_entradas')->where('id', $existente->id)->delete(); $eliminadas++; }
-                continue;
-            }
-
-            if ($existente) {
-                DB::table('bitacora_entradas')->where('id', $existente->id)->update([
-                    'observacion'    => mb_substr($texto, 0, 8000),
-                    'anio'           => $anio,
-                    'registrado_por' => auth()->user()->USER,
-                ]);
-                $actualizadas++;
-            } else {
-                DB::table('bitacora_entradas')->insert($clave + [
-                    'observacion'    => mb_substr($texto, 0, 8000),
-                    'anio'           => $anio,
-                    'registrado_por' => auth()->user()->USER,
-                    'created_at'     => now(),
-                ]);
-                $creadas++;
-            }
+        $msg = "Carga masiva guardada: {$resumen['creadas']} nuevas, {$resumen['actualizadas']} actualizadas, {$resumen['eliminadas']} eliminadas.";
+        if ($resumen['bloqueadas'] > 0) {
+            $msg .= " {$resumen['bloqueadas']} no se modificaron porque la familia ya las leyó.";
         }
 
         return redirect()->route('bitacora.masiva', [
                 'curso' => $data['curso'], 'fecha' => $fecha, 'categoria_id' => $catId,
             ])
-            ->with('ok', "Carga masiva guardada: {$creadas} nuevas, {$actualizadas} actualizadas, {$eliminadas} eliminadas.");
+            ->with('ok', $msg);
+    }
+
+    // ── Tareas a un curso/grupo (docentes) ──────────────────────────────────
+
+    public function tareasForm(Request $request)
+    {
+        $profile = auth()->user()->PROFILE;
+
+        // Asignaciones reales del docente (curso normal, GP*, 7A-1, etc.)
+        $asignaciones = $this->asignacionesDocente($profile);
+
+        // Categorías de tarea que el perfil puede usar
+        $categorias = $this->categoriasPermitidasQuery($profile)
+            ->where('tarea', 1)->orderBy('nombre')->get();
+
+        // Plantillas activas (el JS las filtra por categoría elegida)
+        $plantillas = DB::table('bitacora_plantillas')
+            ->where('activo', 1)->orderBy('texto')->get();
+
+        $asignacionSel = (string) $request->input('asignacion', '');
+        [$codigoMat, $curso] = $this->parseAsignacion($asignacionSel);
+        $fecha = $request->input('fecha', now()->toDateString());
+
+        // La asignación elegida debe pertenecer al docente
+        $asignacionValida = $asignaciones->first(
+            fn($a) => (int) $a->codigo_mat === $codigoMat && $a->curso === $curso
+        );
+
+        // Estudiantes reales del curso/grupo (vía LISTADOS_ESPECIALES cuando aplica)
+        $estudiantes = $asignacionValida
+            ? $this->estudiantesPara($codigoMat, $curso)
+            : collect();
+
+        return view('bitacora.tareas', compact(
+            'asignaciones', 'categorias', 'plantillas',
+            'asignacionSel', 'codigoMat', 'curso', 'fecha', 'estudiantes', 'asignacionValida'
+        ));
+    }
+
+    public function tareasGuardar(Request $request)
+    {
+        $profile = auth()->user()->PROFILE;
+
+        $data = $request->validate([
+            'asignacion'   => 'required|string',
+            'categoria_id' => 'required|integer',
+            'fecha'        => 'required|date',
+            'observacion'  => 'required|string|max:8000',
+        ]);
+
+        [$codigoMat, $curso] = $this->parseAsignacion($data['asignacion']);
+
+        // La asignación debe ser del docente
+        $asig = $this->asignacionesDocente($profile)
+            ->first(fn($a) => (int) $a->codigo_mat === $codigoMat && $a->curso === $curso);
+        if (!$asig) {
+            return back()->with('error', 'Selecciona una asignación válida (materia y curso/grupo que dictas).')->withInput();
+        }
+
+        // La categoría debe ser de tarea y usable por el perfil
+        $categoria = DB::table('bitacora_categorias')->where('id', $data['categoria_id'])->first();
+        if (!$categoria || !$categoria->tarea || !$this->puedeUsarCategoria($profile, $categoria)) {
+            return back()->with('error', 'Selecciona una categoría de tarea válida.')->withInput();
+        }
+
+        // Contexto relacional: la fecha debe caer en un período académico
+        if ($this->agenda->periodoParaFecha($data['fecha']) === null) {
+            return back()->with('error', 'La fecha no corresponde a ningún período académico. Verifica el calendario.')->withInput();
+        }
+
+        $codigos = $this->estudiantesPara($codigoMat, $curso)->pluck('CODIGO')->all();
+        if (empty($codigos)) {
+            return back()->with('error', 'El grupo seleccionado no tiene estudiantes matriculados.')->withInput();
+        }
+
+        $n = $this->agenda->asignarTarea([
+            'categoria_id'      => (int) $data['categoria_id'],
+            'codigo_mat'        => $codigoMat,
+            'fecha'             => $data['fecha'],
+            'observacion'       => $data['observacion'],
+            // Los docentes no pueden enviar alta prioridad; el resto respeta la de la categoría.
+            'prioridad'         => $this->esDocente($profile)
+                ? AgendaService::PRIORIDAD_NORMAL
+                : $this->agenda->prioridadDeCategoria($categoria),
+            'registrado_por'    => auth()->user()->USER,
+            'registrado_nombre' => $this->nombreDocente($profile),
+        ], $codigos);
+
+        return redirect()->route('bitacora.tareas', ['asignacion' => $data['asignacion'], 'fecha' => $data['fecha']])
+            ->with('ok', "Tarea registrada para {$n} estudiante(s) del grupo.");
+    }
+
+    /** Parte el valor "codigo_mat|curso" del selector de asignación. */
+    private function parseAsignacion(string $valor): array
+    {
+        $partes = array_pad(explode('|', $valor, 2), 2, '');
+        return [(int) $partes[0], (string) $partes[1]];
     }
 
     public function update(Request $request, int $id)
@@ -398,11 +496,17 @@ class BitacoraController extends Controller
             'categoria_id' => 'required|integer',
             'fecha'        => 'required|date',
             'observacion'  => 'required|string|max:8000',
+            'prioridad'    => 'nullable|in:normal,alta',
         ]);
 
         $entrada = DB::table('bitacora_entradas')->where('id', $id)->first();
         if (!$entrada) {
             return back()->with('error', 'La observación no existe.');
+        }
+
+        // Inmutabilidad: si la familia ya acusó recibo, el registro no se puede modificar.
+        if ($this->agenda->fueLeida($entrada)) {
+            return back()->with('error', 'Esta observación ya fue leída por la familia y no se puede modificar.');
         }
 
         // Debe poder editar la entrada actual (docentes solo las suyas)
@@ -420,15 +524,23 @@ class BitacoraController extends Controller
             'categoria_id' => $data['categoria_id'],
             'fecha'        => $data['fecha'],
             'anio'         => (int) date('Y', strtotime($data['fecha'])),
+            'periodo'      => $this->agenda->periodoParaFecha($data['fecha']),
             'observacion'  => mb_substr(trim($data['observacion']), 0, 8000),
+            'prioridad'    => $this->agenda->normalizarPrioridad($data['prioridad'] ?? $entrada->prioridad),
         ];
 
-        // Registro de aula (docente): puede cambiar la materia entre las que dicta
+        // Registro de aula (docente): puede cambiar la materia entre las que dicta,
+        // pero NO puede subir la prioridad a alta (solo SuperAd y coordinadores).
         if ($this->esDocente($profile)) {
+            $cambios['prioridad'] = AgendaService::PRIORIDAD_NORMAL;
+
             $codigoMat   = (int) $request->input('codigo_mat');
             $materiasIds = $this->materiasDocente($profile)->pluck('codigo_mat')->map(fn($x) => (int) $x)->all();
             if (!in_array($codigoMat, $materiasIds, true)) {
                 return back()->with('error', 'Debes seleccionar una materia válida entre las que dictas.');
+            }
+            if ($cambios['periodo'] === null) {
+                return back()->with('error', 'La fecha no corresponde a ningún período académico. Verifica el calendario.');
             }
             $cambios['codigo_mat'] = $codigoMat;
         }
@@ -448,6 +560,11 @@ class BitacoraController extends Controller
             return back()->with('error', 'La observación no existe.');
         }
 
+        // Inmutabilidad: una observación leída por la familia es un registro y no se borra.
+        if ($this->agenda->fueLeida($entrada)) {
+            return back()->with('error', 'Esta observación ya fue leída por la familia y no se puede eliminar.');
+        }
+
         if (!$this->puedeEditarEntrada($profile, $entrada)) {
             return back()->with('error', 'No puedes eliminar esta observación.');
         }
@@ -455,6 +572,108 @@ class BitacoraController extends Controller
         DB::table('bitacora_entradas')->where('id', $id)->delete();
 
         return back()->with('ok', 'Observación eliminada.');
+    }
+
+    // ── Consulta de agenda (docentes, solo lectura) ─────────────────────────
+
+    /** Curso del que el docente es director de grupo (CODIGOS_DOC.DIR_GRUPO), o null. */
+    private function cursoDireccion(string $profile): ?string
+    {
+        $doc = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $profile)->first();
+        return ($doc && !empty($doc->DIR_GRUPO)) ? $doc->DIR_GRUPO : null;
+    }
+
+    public function consulta(Request $request)
+    {
+        $profile    = auth()->user()->PROFILE;
+        $miUser     = auth()->user()->USER;
+        // SuperAd/Admin y secretarías ven la agenda completa de cualquier estudiante.
+        $esSuperior = in_array($profile, ['SuperAd', 'Admin'], true) || str_starts_with($profile, 'Sec');
+        $cursoDir   = $this->cursoDireccion($profile);
+
+        $cursos = $this->cursosReales();
+
+        // Selección del estudiante: por curso → estudiante, o por código directo
+        $cursoForm = $request->input('curso_form');
+        $codigo    = (int) $request->input('codigo');
+
+        $estudiantes = collect();
+        if ($cursoForm) {
+            $estudiantes = DB::table('ESTUDIANTES')
+                ->where('CURSO', $cursoForm)
+                ->whereRaw("TRIM(UPPER(ESTADO)) = 'MATRICULADO'")
+                ->orderBy('APELLIDO1')->orderBy('APELLIDO2')->orderBy('NOMBRE1')
+                ->get(['CODIGO', 'NOMBRE1', 'NOMBRE2', 'APELLIDO1', 'APELLIDO2']);
+        }
+
+        $estudiante   = null;
+        $entradas     = collect();
+        $puedeVerTodo = false;
+        if ($codigo) {
+            $estudiante = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->first();
+            if ($estudiante) {
+                // SuperAd/Admin ven toda la agenda; el docente director de grupo, la de
+                // sus estudiantes; el resto, solo sus propias anotaciones.
+                $puedeVerTodo = $esSuperior || ($cursoDir && $estudiante->CURSO === $cursoDir);
+
+                $q = DB::table('bitacora_entradas as b')
+                    ->join('bitacora_categorias as c', 'c.id', '=', 'b.categoria_id')
+                    ->leftJoin('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'b.codigo_mat')
+                    ->where('b.codigo_alumno', $codigo)
+                    ->select('b.*', 'c.nombre as categoria', 'c.color as categoria_color', 'm.NOMBRE_MAT as materia')
+                    ->orderByDesc('b.fecha')->orderByDesc('b.id');
+
+                if (!$puedeVerTodo) $q->where('b.registrado_por', $miUser);
+
+                $entradas = $q->get();
+            }
+        }
+
+        $comentarios = $this->agenda->comentariosPorEntrada($entradas->pluck('id')->all());
+
+        return view('bitacora.consulta', compact(
+            'cursos', 'cursoForm', 'estudiantes', 'estudiante', 'entradas',
+            'comentarios', 'miUser', 'cursoDir', 'puedeVerTodo', 'esSuperior'
+        ));
+    }
+
+    // ── Hilos de comentarios (staff) ────────────────────────────────────────
+
+    public function comentar(Request $request, int $id)
+    {
+        $data = $request->validate(['mensaje' => 'required|string|max:4000']);
+
+        $entrada = DB::table('bitacora_entradas')->where('id', $id)->first();
+        if (!$entrada) return back()->with('error', 'La anotación no existe.');
+
+        $this->agenda->comentar(
+            $id,
+            AgendaService::ROL_STAFF,
+            auth()->user()->USER,
+            $this->nombreStaff(auth()->user()->PROFILE),
+            $data['mensaje']
+        );
+
+        return back()->with('ok', 'Respuesta agregada al hilo.');
+    }
+
+    public function borrarComentario(int $id)
+    {
+        $ok = $this->agenda->borrarComentario($id, AgendaService::ROL_STAFF, auth()->user()->USER);
+        return back()->with($ok ? 'ok' : 'error', $ok ? 'Comentario eliminado.' : 'No puedes eliminar ese comentario.');
+    }
+
+    /** Nombre legible del autor del staff para los hilos. */
+    private function nombreStaff(string $profile): string
+    {
+        if ($nombre = $this->nombreDocente($profile)) return $nombre;
+
+        return match ($profile) {
+            'SuperAd', 'Admin' => 'Administración',
+            'COR001'           => 'Coordinación Académica',
+            'COR002'           => 'Coordinación de Convivencia',
+            default            => $profile,
+        };
     }
 
     // ── Configuración de catálogos (solo SuperAd) ───────────────────────────
@@ -474,13 +693,16 @@ class BitacoraController extends Controller
     public function storeCategoria(Request $request)
     {
         $data = $request->validate([
-            'nombre' => 'required|string|max:100',
-            'ambito' => 'required|in:academico,convivencia,general',
-            'color'  => 'nullable|string|max:20',
+            'nombre'    => 'required|string|max:100',
+            'ambito'    => 'required|in:academico,convivencia,general',
+            'color'     => 'nullable|string|max:20',
+            'prioridad' => 'nullable|in:normal,alta',
         ]);
-        $data['activo']   = 1;
-        $data['docentes'] = $request->boolean('docentes');
-        $data['unica']    = $request->boolean('unica');
+        $data['prioridad'] = $data['prioridad'] ?? 'normal';
+        $data['activo']    = 1;
+        $data['docentes']  = $request->boolean('docentes');
+        $data['unica']     = $request->boolean('unica');
+        $data['tarea']     = $request->boolean('tarea');
         DB::table('bitacora_categorias')->insert($data);
 
         return back()->with('ok', 'Categoría creada.');
@@ -489,14 +711,17 @@ class BitacoraController extends Controller
     public function updateCategoria(Request $request, int $id)
     {
         $data = $request->validate([
-            'nombre' => 'required|string|max:100',
-            'ambito' => 'required|in:academico,convivencia,general',
-            'color'  => 'nullable|string|max:20',
-            'activo' => 'nullable|boolean',
+            'nombre'    => 'required|string|max:100',
+            'ambito'    => 'required|in:academico,convivencia,general',
+            'color'     => 'nullable|string|max:20',
+            'prioridad' => 'nullable|in:normal,alta',
+            'activo'    => 'nullable|boolean',
         ]);
-        $data['activo']   = $request->boolean('activo');
-        $data['docentes'] = $request->boolean('docentes');
-        $data['unica']    = $request->boolean('unica');
+        $data['prioridad'] = $data['prioridad'] ?? 'normal';
+        $data['activo']    = $request->boolean('activo');
+        $data['docentes']  = $request->boolean('docentes');
+        $data['unica']     = $request->boolean('unica');
+        $data['tarea']     = $request->boolean('tarea');
         DB::table('bitacora_categorias')->where('id', $id)->update($data);
 
         return back()->with('ok', 'Categoría actualizada.');

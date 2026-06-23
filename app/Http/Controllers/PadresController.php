@@ -162,6 +162,17 @@ class PadresController extends Controller
             ->where('INICIO', '<=', $now)
             ->exists();
 
+        // Agenda Estudiantil Virtual: anotaciones sin acuse de recibo (y cuántas son de alta prioridad)
+        $agendaPend = DB::table('bitacora_entradas')
+            ->where('codigo_alumno', $codigo)
+            ->whereNull('acknowledged_at')
+            ->selectRaw("COUNT(*) as total, SUM(prioridad = 'alta') as altas")
+            ->first();
+        $agendaPreview = [
+            'sin_leer' => (int) ($agendaPend->total ?? 0),
+            'altas'    => (int) ($agendaPend->altas ?? 0),
+        ];
+
         $modulos = [
             // ── Académico ──────────────────────────────────────────────────
             ['seccion' => 'Académico', 'label' => 'Consultar promedios',  'icon' => '📋', 'route' => 'padres.notas',            'activo' => !$bloqueado && $algunBoletinIniciado, 'requiere_pago' => true],
@@ -173,7 +184,7 @@ class PadresController extends Controller
             ['seccion' => 'Académico', 'label' => 'Calendario académico', 'icon' => '📆', 'route' => 'padres.calendario',        'activo' => true,                                 'requiere_pago' => false],
             // ── Comunicaciones ─────────────────────────────────────────────
             ['seccion' => 'Comunicaciones', 'label' => 'Circulares',    'icon' => '📢', 'route' => 'padres.circulares',    'activo' => true, 'requiere_pago' => false],
-            ['seccion' => 'Comunicaciones', 'label' => 'Bitácora del estudiante', 'icon' => '📖', 'route' => 'padres.bitacora', 'activo' => true, 'requiere_pago' => false],
+            ['seccion' => 'Comunicaciones', 'label' => 'Agenda Estudiantil Virtual', 'icon' => '📖', 'route' => 'padres.bitacora', 'activo' => true, 'requiere_pago' => false, 'preview' => $agendaPreview],
             ['seccion' => 'Comunicaciones', 'label' => 'Documentación', 'icon' => '📁', 'route' => 'padres.documentacion', 'activo' => true, 'requiere_pago' => false],
             // ── Financiero ─────────────────────────────────────────────────
             ['seccion' => 'Financiero', 'label' => 'Estado de cuenta', 'icon' => '📊', 'route' => 'padres.estado_cuenta', 'activo' => true, 'requiere_pago' => false],
@@ -433,7 +444,8 @@ class PadresController extends Controller
             ->leftJoin('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'b.codigo_mat')
             ->where('b.codigo_alumno', $estudiante->CODIGO)
             ->select(
-                'b.fecha', 'b.observacion', 'b.registrado_nombre',
+                'b.id', 'b.fecha', 'b.observacion', 'b.registrado_nombre',
+                'b.prioridad', 'b.acknowledged_at',
                 'c.nombre as categoria', 'c.color as categoria_color', 'c.docentes as es_aula',
                 'm.NOMBRE_MAT as materia'
             )
@@ -441,7 +453,67 @@ class PadresController extends Controller
             ->orderByDesc('b.id')
             ->get();
 
-        return view('padres.bitacora', compact('estudiante', 'entradas'));
+        $comentarios = app(\App\Services\AgendaService::class)
+            ->comentariosPorEntrada($entradas->pluck('id')->all());
+
+        return view('padres.bitacora', compact('estudiante', 'entradas', 'comentarios'));
+    }
+
+    /** Acuse de recibo del acudiente sobre una anotación de la bitácora. */
+    public function bitacoraConfirmar(Request $request, int $id)
+    {
+        $estudiante = session('padre_estudiante');
+        if (!$estudiante) return redirect()->route('padres.portal');
+
+        $confirmada = app(\App\Services\AgendaService::class)
+            ->confirmarLectura($id, (int) $estudiante->CODIGO);
+
+        return redirect()->route('padres.bitacora')->with(
+            'ok',
+            $confirmada ? 'Confirmaste la lectura de la observación.' : 'La observación ya estaba confirmada.'
+        );
+    }
+
+    /** El acudiente responde en el hilo de una anotación de su hijo(a). */
+    public function bitacoraComentar(Request $request, int $id)
+    {
+        $estudiante = session('padre_estudiante');
+        if (!$estudiante) return redirect()->route('padres.portal');
+
+        $data = $request->validate(['mensaje' => 'required|string|max:4000']);
+
+        // La anotación debe ser del estudiante de la sesión
+        $esSuyo = DB::table('bitacora_entradas')
+            ->where('id', $id)->where('codigo_alumno', $estudiante->CODIGO)->exists();
+        if (!$esSuyo) {
+            return redirect()->route('padres.bitacora')->with('error', 'No puedes responder esa anotación.');
+        }
+
+        $nombre = preg_replace('/\s+/', ' ', trim(($estudiante->NOMBRE1 ?? '') . ' ' . ($estudiante->APELLIDO1 ?? '')));
+        app(\App\Services\AgendaService::class)->comentar(
+            $id,
+            \App\Services\AgendaService::ROL_ACUDIENTE,
+            (string) $estudiante->CODIGO,
+            'Acudiente de ' . ($nombre ?: ('estudiante ' . $estudiante->CODIGO)),
+            $data['mensaje']
+        );
+
+        return redirect()->route('padres.bitacora')->with('ok', 'Tu respuesta se agregó al hilo.');
+    }
+
+    /** El acudiente borra su propio comentario. */
+    public function bitacoraComentarBorrar(int $id)
+    {
+        $estudiante = session('padre_estudiante');
+        if (!$estudiante) return redirect()->route('padres.portal');
+
+        $ok = app(\App\Services\AgendaService::class)
+            ->borrarComentario($id, \App\Services\AgendaService::ROL_ACUDIENTE, (string) $estudiante->CODIGO);
+
+        return redirect()->route('padres.bitacora')->with(
+            $ok ? 'ok' : 'error',
+            $ok ? 'Comentario eliminado.' : 'No puedes eliminar ese comentario.'
+        );
     }
 
     public function circulares()

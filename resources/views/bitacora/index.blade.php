@@ -1,6 +1,6 @@
 @extends('layouts.app-sidebar')
 
-@section('header', 'Bitácora del Estudiante · Registro')
+@section('header', 'Agenda Estudiantil Virtual · Registro')
 
 @section('slot')
 
@@ -62,15 +62,18 @@
     @if($estudiantes->isEmpty())
         <p class="text-sm text-gray-400">Selecciona un curso para listar sus estudiantes y registrar una observación.</p>
     @elseif($categorias->isEmpty())
-        <p class="text-sm text-amber-600">No tienes categorías disponibles para tu perfil. Pide al administrador que configure la bitácora.</p>
+        <p class="text-sm text-amber-600">No tienes categorías disponibles para tu perfil. Pide al administrador que configure la agenda.</p>
     @else
         <form method="POST" action="{{ route('bitacora.store') }}"
               x-data="{
                   categoria: '',
                   texto: '',
                   alumno: '',
+                  prioridad: 'normal',
+                  prioridades: @js($categorias->pluck('prioridad', 'id')),
                   plantillas: @js($plantillas),
                   historial: @js($historialPorEstudiante ?? []),
+                  alCambiarCategoria() { this.prioridad = this.prioridades[this.categoria] || 'normal'; },
                   filtradas() { return this.plantillas.filter(p => !p.categoria_id || String(p.categoria_id) === String(this.categoria)); },
                   histSel() { return this.historial[this.alumno] || []; },
                   colorClass(c) { return ({blue:'bg-blue-100 text-blue-800',indigo:'bg-indigo-100 text-indigo-800',red:'bg-red-100 text-red-800',green:'bg-green-100 text-green-800',amber:'bg-amber-100 text-amber-800'})[c] || 'bg-gray-100 text-gray-700'; },
@@ -100,7 +103,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Motivo / Categoría</label>
-                    <select name="categoria_id" x-model="categoria" required
+                    <select name="categoria_id" x-model="categoria" @change="alCambiarCategoria()" required
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         <option value="">-- Selecciona --</option>
                         @foreach($categorias as $cat)
@@ -108,6 +111,18 @@
                         @endforeach
                     </select>
                 </div>
+                @unless($esDocente)
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Prioridad</label>
+                    <select name="prioridad" x-model="prioridad"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        :class="prioridad === 'alta' ? 'border-red-300 text-red-700 font-semibold' : ''">
+                        <option value="normal">Normal</option>
+                        <option value="alta">Alta</option>
+                    </select>
+                    <p class="text-[11px] text-gray-400 mt-1">Se precarga según la categoría; puedes cambiarla.</p>
+                </div>
+                @endunless
                 @if($esDocente)
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Materia (de aula)</label>
@@ -220,13 +235,24 @@
         </thead>
         <tbody class="divide-y divide-gray-100">
             @forelse($entradas as $e)
-            <tr class="hover:bg-gray-50 align-top" x-data="{ edit: false }">
+            <tr class="hover:bg-gray-50 align-top" x-data="{ edit: false, hilo: false }">
                 <td class="px-4 py-3 font-mono text-gray-500 text-xs pt-4">{{ $e->codigo_alumno }}</td>
                 <td class="px-4 py-3 pt-4 font-medium text-gray-800">{{ $e->nombre_alumno ?: '—' }}</td>
                 <td class="px-4 py-3 pt-4 text-gray-600">{{ $e->CURSO ?: '—' }}</td>
                 <td class="px-4 py-3 pt-4 text-gray-600 whitespace-nowrap">{{ \Carbon\Carbon::parse($e->fecha)->locale('es')->isoFormat('D MMM YYYY') }}</td>
                 <td class="px-4 py-3 pt-4">
                     <span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold {{ $badge($e->categoria_color) }}">{{ $e->categoria }}</span>
+                    @if(($e->prioridad ?? 'normal') === 'alta')
+                    <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-bold bg-red-600 text-white">⚠ Alta</span>
+                    @endif
+                    <div class="mt-1.5">
+                        @if(!empty($e->acknowledged_at))
+                        <span class="block text-[11px] font-semibold text-green-700">🔒 Leída por la familia</span>
+                        <span class="block text-[11px] text-gray-400">{{ \Carbon\Carbon::parse($e->acknowledged_at)->locale('es')->isoFormat('D MMM YYYY, h:mm a') }}</span>
+                        @else
+                        <span class="block text-[11px] text-gray-400">Pendiente de lectura</span>
+                        @endif
+                    </div>
                 </td>
                 <td class="px-4 py-3 text-gray-700">
                     @if(!empty($e->materia))
@@ -247,6 +273,12 @@
                             </select>
                             <input type="date" name="fecha" value="{{ \Carbon\Carbon::parse($e->fecha)->toDateString() }}" required
                                 class="border border-gray-300 rounded-lg px-2 py-1 text-xs">
+                            @unless($esDocente)
+                            <select name="prioridad" class="border border-gray-300 rounded-lg px-2 py-1 text-xs">
+                                <option value="normal" @selected(($e->prioridad ?? 'normal') === 'normal')>Prioridad normal</option>
+                                <option value="alta" @selected(($e->prioridad ?? 'normal') === 'alta')>Prioridad alta</option>
+                            </select>
+                            @endunless
                             @if($esDocente)
                             <select name="codigo_mat" required class="border border-gray-300 rounded-lg px-2 py-1 text-xs">
                                 @foreach($materias as $mat)
@@ -262,14 +294,29 @@
                             <button type="button" @click="edit=false" class="text-gray-500 text-xs">Cancelar</button>
                         </div>
                     </form>
+
+                    {{-- Hilo de comentarios --}}
+                    @php $hiloE = $comentarios[$e->id] ?? collect(); @endphp
+                    <div class="mt-2">
+                        <button type="button" @click="hilo=!hilo" class="text-[11px] font-semibold text-blue-600 hover:text-blue-800">
+                            💬 Hilo<span class="text-gray-400">{{ $hiloE->count() ? ' ('.$hiloE->count().')' : '' }}</span>
+                        </button>
+                        <div x-show="hilo" x-cloak>
+                            @include('bitacora._hilo', ['entradaId' => $e->id, 'hilo' => $hiloE, 'miUser' => $miUser])
+                        </div>
+                    </div>
                 </td>
                 <td class="px-4 py-3 pt-4 whitespace-nowrap">
+                    @if(!empty($e->acknowledged_at))
+                    <span class="text-[11px] text-gray-400" title="La familia ya acusó recibo: el registro es inmutable.">🔒 No editable</span>
+                    @else
                     <button type="button" @click="edit=!edit" class="text-blue-600 hover:text-blue-800 text-xs font-semibold">Editar</button>
                     <form method="POST" action="{{ route('bitacora.destroy', $e->id) }}" class="inline"
                           onsubmit="return confirm('¿Eliminar esta observación?');">
                         @csrf @method('DELETE')
                         <button type="submit" class="text-red-500 hover:text-red-700 text-xs font-semibold ml-2">Eliminar</button>
                     </form>
+                    @endif
                 </td>
             </tr>
             @empty

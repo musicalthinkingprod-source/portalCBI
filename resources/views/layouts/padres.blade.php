@@ -138,7 +138,7 @@
                 </p>
                 <ul class="space-y-0.5 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
                     <li><a href="{{ route('padres.circulares') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">📢 Circulares</a></li>
-                    <li><a href="{{ route('padres.bitacora') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">📖 Bitácora del estudiante</a></li>
+                    <li><a href="{{ route('padres.bitacora') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">📖 Agenda Estudiantil Virtual</a></li>
                     <li><a href="{{ route('padres.documentacion') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">📁 Documentación</a></li>
                 </ul>
             </div>

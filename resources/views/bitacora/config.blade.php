@@ -1,6 +1,6 @@
 @extends('layouts.app-sidebar')
 
-@section('header', 'Bitácora del Estudiante · Configuración')
+@section('header', 'Agenda Estudiantil Virtual · Configuración')
 
 @section('slot')
 
@@ -61,11 +61,21 @@
                 @endforeach
             </select>
         </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-500 mb-1">Prioridad</label>
+            <select name="prioridad" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                <option value="normal">Normal</option>
+                <option value="alta">Alta</option>
+            </select>
+        </div>
         <label class="text-xs text-gray-600 flex items-center gap-1 pb-2">
             <input type="checkbox" name="docentes" value="1"> Disponible para docentes
         </label>
         <label class="text-xs text-gray-600 flex items-center gap-1 pb-2">
             <input type="checkbox" name="unica" value="1"> Registro único (no se repite)
+        </label>
+        <label class="text-xs text-gray-600 flex items-center gap-1 pb-2">
+            <input type="checkbox" name="tarea" value="1"> Categoría de tarea
         </label>
         <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2 rounded-lg text-sm font-semibold transition">＋ Agregar</button>
     </form>
@@ -77,6 +87,8 @@
                 <th class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Ámbito</th>
                 <th class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Docentes</th>
                 <th class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Única</th>
+                <th class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Tarea</th>
+                <th class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Prioridad</th>
                 <th class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Estado</th>
                 <th class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase w-32"></th>
             </tr>
@@ -99,11 +111,18 @@
                             <option value="{{ $col }}" @selected($cat->color === $col)>{{ ucfirst($col) }}</option>
                             @endforeach
                         </select>
+                        <select name="prioridad" class="border border-gray-300 rounded-lg px-2 py-1 text-xs">
+                            <option value="normal" @selected(($cat->prioridad ?? 'normal') === 'normal')>Prioridad normal</option>
+                            <option value="alta" @selected(($cat->prioridad ?? 'normal') === 'alta')>Prioridad alta</option>
+                        </select>
                         <label class="text-xs text-gray-600 flex items-center gap-1">
                             <input type="checkbox" name="docentes" value="1" @checked($cat->docentes)> Docentes
                         </label>
                         <label class="text-xs text-gray-600 flex items-center gap-1">
                             <input type="checkbox" name="unica" value="1" @checked($cat->unica)> Única
+                        </label>
+                        <label class="text-xs text-gray-600 flex items-center gap-1">
+                            <input type="checkbox" name="tarea" value="1" @checked($cat->tarea ?? false)> Tarea
                         </label>
                         <label class="text-xs text-gray-600 flex items-center gap-1">
                             <input type="checkbox" name="activo" value="1" @checked($cat->activo)> Activa
@@ -113,6 +132,14 @@
                 <td class="px-3 py-2 text-gray-600">{{ $ambitoLabel[$cat->ambito] ?? $cat->ambito }}</td>
                 <td class="px-3 py-2">{!! $cat->docentes ? '<span class="text-green-600 text-xs font-semibold">Sí</span>' : '<span class="text-gray-300 text-xs">—</span>' !!}</td>
                 <td class="px-3 py-2">{!! $cat->unica ? '<span class="text-amber-600 text-xs font-semibold">Sí</span>' : '<span class="text-gray-300 text-xs">—</span>' !!}</td>
+                <td class="px-3 py-2">{!! ($cat->tarea ?? false) ? '<span class="text-indigo-600 text-xs font-semibold">Sí</span>' : '<span class="text-gray-300 text-xs">—</span>' !!}</td>
+                <td class="px-3 py-2">
+                    @if(($cat->prioridad ?? 'normal') === 'alta')
+                        <span class="text-red-600 text-xs font-bold">Alta</span>
+                    @else
+                        <span class="text-gray-400 text-xs">Normal</span>
+                    @endif
+                </td>
                 <td class="px-3 py-2">
                     @if($cat->activo)
                         <span class="text-green-600 text-xs font-semibold">Activa</span>
@@ -132,7 +159,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="6" class="px-3 py-6 text-center text-gray-400 text-sm">No hay categorías.</td></tr>
+            <tr><td colspan="8" class="px-3 py-6 text-center text-gray-400 text-sm">No hay categorías.</td></tr>
             @endforelse
         </tbody>
     </table>
