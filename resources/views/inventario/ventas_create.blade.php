@@ -4,6 +4,13 @@
 
 @section('slot')
 
+{{-- Aviso flotante de confirmación de escaneo --}}
+<div id="toast" class="hidden fixed top-6 left-1/2 -translate-x-1/2 z-[3000] px-6 py-4 rounded-xl shadow-2xl text-white text-lg font-bold pointer-events-none"></div>
+<style>
+    @keyframes flashok { 0% { background-color: #bbf7d0; } 100% { background-color: transparent; } }
+    .flash-ok { animation: flashok 1.2s ease-out; }
+</style>
+
 @if($errors->any())
 <div class="mb-5 bg-red-50 border border-red-300 text-red-800 px-4 py-3 rounded-lg text-sm">{{ $errors->first() }}</div>
 @endif
@@ -206,19 +213,55 @@
         await agregarPorCodigo(cod);
     });
 
+    // ── Feedback de escaneo: sonido + aviso visual ──
+    let audioCtx = null;
+    function beep(ok) {
+        try {
+            audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.connect(g); g.connect(audioCtx.destination);
+            o.type = 'square';
+            o.frequency.value = ok ? 880 : 200;
+            g.gain.value = 0.12;
+            o.start();
+            o.stop(audioCtx.currentTime + (ok ? 0.12 : 0.35));
+        } catch (e) {}
+    }
+    let toastT = null;
+    function toast(texto, ok) {
+        const t = document.getElementById('toast');
+        t.textContent = texto;
+        t.className = 'fixed top-6 left-1/2 -translate-x-1/2 z-[3000] px-6 py-4 rounded-xl shadow-2xl text-white text-lg font-bold pointer-events-none ' + (ok ? 'bg-green-600' : 'bg-red-600');
+        clearTimeout(toastT);
+        toastT = setTimeout(() => t.classList.add('hidden'), 1600);
+    }
+    function resaltarFila(id) {
+        const fila = document.querySelector(`#items tr[data-pid="${id}"]`);
+        if (fila) { fila.classList.add('flash-ok'); setTimeout(() => fila.classList.remove('flash-ok'), 1200); }
+    }
+
     async function agregarPorCodigo(cod) {
         const msg = document.getElementById('scan-msg');
         const r = await fetch(`${API_PROD}?codigo=${encodeURIComponent(cod)}`);
-        if (!r.ok) { msg.textContent = `⚠ Código ${cod} no encontrado`; msg.className = 'mt-2 text-sm text-red-600'; return; }
+        if (!r.ok) {
+            msg.textContent = `⚠ Código ${cod} no encontrado`; msg.className = 'mt-2 text-sm text-red-600';
+            beep(false); toast(`✗ Código ${cod} no encontrado`, false);
+            return;
+        }
         const p = await r.json();
         if (carrito[p.id]) {
             carrito[p.id].cantidad++;
         } else {
             carrito[p.id] = { id: p.id, codigo: p.codigo, nombre: p.nombre, precio: Number(p.precio_venta), stock: p.stock, cantidad: 1 };
         }
-        msg.textContent = `✓ ${p.nombre} agregado (stock ${p.stock})`;
-        msg.className = 'mt-2 text-sm text-green-700';
+        const cant = carrito[p.id].cantidad;
+        msg.textContent = `✓ ${p.nombre} — cantidad: ${cant} (stock ${p.stock})`;
+        msg.className = 'mt-2 text-sm text-green-700 font-semibold';
+        beep(true);
+        toast(`✓ ${p.nombre}  ×${cant}`, true);
         render();
+        resaltarFila(p.id);
     }
 
     // ── Render del carrito ──
@@ -234,7 +277,7 @@
         ids.forEach(id => {
             const it = carrito[id];
             const precio = venta ? it.precio : 0;
-            html += `<tr class="border-b border-gray-100">
+            html += `<tr class="border-b border-gray-100" data-pid="${it.id}">
                 <td class="px-3 py-2 font-mono text-gray-600">${it.codigo}
                     <input type="hidden" name="items[${i}][producto_id]" value="${it.id}"></td>
                 <td class="px-3 py-2 text-gray-800">${it.nombre}</td>
