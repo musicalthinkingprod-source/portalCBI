@@ -291,13 +291,12 @@
 
                 <div class="mt-3 space-y-2">
                     @if($estadoActual === 'revision' || $estadoActual === 'con_observaciones')
-                        <form method="POST" action="{{ route('piar.aprobar.plan_casero', [$estudiante->CODIGO, $codigoMat, $periodoActivo]) }}">
-                            @csrf
-                            <button type="submit"
-                                class="w-full bg-green-700 hover:bg-green-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition">
-                                ✓ Aprobar Plan Casero (P{{ $periodoActivo }})
-                            </button>
-                        </form>
+                        {{-- El form de aprobar se declara fuera de #form-plan-casero (ver abajo)
+                             para evitar formularios anidados; el botón lo referencia con form=. --}}
+                        <button type="submit" form="form-aprobar-casero"
+                            class="w-full bg-green-700 hover:bg-green-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition">
+                            ✓ Aprobar Plan Casero (P{{ $periodoActivo }})
+                        </button>
                     @elseif($estadoActual === 'aprobado')
                         <p class="text-xs text-green-700 font-semibold text-center">
                             ✓ Aprobado por {{ $planActual->APROBADO_POR ?? 'orientación' }}
@@ -334,6 +333,15 @@
 
 </div>
 </form>
+
+{{-- Form de aprobación del Plan Casero (fuera de #form-plan-casero para no anidar
+     formularios). El botón "Aprobar Plan Casero" del panel lo dispara con form=. --}}
+@if($puedeObservar && ($estadoActual === 'revision' || $estadoActual === 'con_observaciones'))
+    <form id="form-aprobar-casero" method="POST"
+          action="{{ route('piar.aprobar.plan_casero', [$estudiante->CODIGO, $codigoMat, $periodoActivo]) }}">
+        @csrf
+    </form>
+@endif
 
 @if($puedeObservar)
 <script>
