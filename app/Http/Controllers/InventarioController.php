@@ -513,16 +513,23 @@ class InventarioController extends Controller
 
     public function facturarIndex()
     {
-        $ventas = DB::table('inv_ventas')
+        $base = DB::table('inv_ventas')
             ->leftJoin('ESTUDIANTES', 'ESTUDIANTES.CODIGO', '=', 'inv_ventas.estudiante_codigo')
             ->where('inv_ventas.tipo', 'venta')
             ->where('inv_ventas.estado', 'activa')
+            ->select('inv_ventas.*', DB::raw("TRIM(CONCAT(COALESCE(ESTUDIANTES.NOMBRE1,''),' ',COALESCE(ESTUDIANTES.APELLIDO1,''),' ',COALESCE(ESTUDIANTES.APELLIDO2,''))) AS estudiante"));
+
+        $ventas = (clone $base)
             ->where('inv_ventas.facturada', false)
-            ->select('inv_ventas.*', DB::raw("TRIM(CONCAT(COALESCE(ESTUDIANTES.NOMBRE1,''),' ',COALESCE(ESTUDIANTES.APELLIDO1,''),' ',COALESCE(ESTUDIANTES.APELLIDO2,''))) AS estudiante"))
             ->orderBy('inv_ventas.fecha')->orderBy('inv_ventas.numero')
             ->get();
 
-        return view('inventario.facturar', compact('ventas'));
+        $facturadas = (clone $base)
+            ->where('inv_ventas.facturada', true)
+            ->orderByDesc('inv_ventas.facturada_at')->orderByDesc('inv_ventas.numero')
+            ->get();
+
+        return view('inventario.facturar', compact('ventas', 'facturadas'));
     }
 
     public function facturar(Request $r)
