@@ -9,6 +9,16 @@ class EnglishAcqController extends Controller
 {
     private string $tabla = 'NOTAS_ENGLISH_ACQ';
 
+    /** Materia "sombra" para digitar el proyecto (40%) desde el menú de Notas. */
+    public const MAT_PROYECTO = 36;
+
+    /** Materia final de English Acquisition en NOTAS_<año>. */
+    public const MAT_FINAL = 11;
+
+    /** Pesos de la ponderación. */
+    public const PESO_REDUCCION = 0.6;
+    public const PESO_PROYECTO  = 0.4;
+
     // Devuelve el período activo (1-4) según calendario_academico, o null si no hay.
     private static function periodoActivoHoy(int $anio): ?int
     {
@@ -204,18 +214,31 @@ class EnglishAcqController extends Controller
             ->groupBy('CODIGO_ALUM')
             ->pluck('total', 'CODIGO_ALUM');
 
+        // Notas del proyecto (40%) por alumno para este período/año
+        $proyectos = DB::table('english_acq_proyecto')
+            ->where('PERIODO', $periodo)
+            ->where('ANIO', $anio)
+            ->pluck('NOTA', 'CODIGO_ALUM');
+
         $procesados = 0;
 
-        DB::transaction(function () use ($estudiantes, $descuentos, $periodo, $anio, $profile, &$procesados) {
+        DB::transaction(function () use ($estudiantes, $descuentos, $proyectos, $periodo, $anio, $profile, &$procesados) {
             foreach ($estudiantes as $codigo) {
                 $bajadas   = $descuentos[$codigo] ?? 0;
-                $nota      = round(max(0, 10 - ($bajadas * 0.25)), 2);
+                $reduccion = round(max(0, 10 - ($bajadas * 0.25)), 2);
+
+                // Ponderación 60% reducción + 40% proyecto.
+                // Sin proyecto digitado → nota final = 100% reducción.
+                $proyecto = $proyectos[$codigo] ?? null;
+                $nota = $proyecto !== null
+                    ? round($reduccion * self::PESO_REDUCCION + $proyecto * self::PESO_PROYECTO, 2)
+                    : $reduccion;
 
                 DB::table('NOTAS_2026')->updateOrInsert(
                     [
                         'CODIGO_ALUM' => $codigo,
                         'PERIODO'     => $periodo,
-                        'CODIGO_MAT'  => 11,
+                        'CODIGO_MAT'  => self::MAT_FINAL,
                         'TIPODENOTA'  => 'N',
                     ],
                     [
@@ -352,5 +375,76 @@ class EnglishAcqController extends Controller
         return view('english-acq.informe', compact(
             'resumen', 'detalle', 'anio', 'periodo', 'cursoFiltro', 'busqueda', 'codigo', 'cursos'
         ));
+    }
+
+    /**
+     * Pantalla admin: asignar el docente que digita el proyecto (40%) por curso.
+     * La materia sombra (MAT_PROYECTO) aparece en el menú de Notas del docente.
+     * Para "docente distinto por período" basta reasignar aquí al iniciar el período.
+     */
+    public function proyectoAsignaciones()
+    {
+        $profile = auth()->user()->PROFILE;
+        if (!in_array($profile, ['SuperAd', 'Admin'])) {
+            abort(403);
+        }
+
+        $cursos = DB::table('ESTUDIANTES')
+            ->where('ESTADO', 'MATRICULADO')
+            ->whereNotNull('CURSO')
+            ->where('CURSO', '<>', '')
+            ->distinct()
+            ->orderByRaw('CAST(CURSO AS UNSIGNED)')
+            ->orderBy('CURSO')
+            ->pluck('CURSO');
+
+        // Docente actualmente asignado al proyecto por curso
+        $asignados = DB::table('ASIGNACION_PCM as a')
+            ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_EMP', '=', 'd.CODIGO_EMP')
+            ->where('a.CODIGO_MAT', self::MAT_PROYECTO)
+            ->select('a.CURSO', 'a.CODIGO_EMP', 'd.NOMBRE_DOC')
+            ->get()
+            ->keyBy('CURSO');
+
+        $docentes = DB::table('CODIGOS_DOC')
+            ->where('ESTADO', 'ACTIVO')
+            ->orderBy('NOMBRE_DOC')
+            ->get(['CODIGO_EMP', 'NOMBRE_DOC']);
+
+        return view('english-acq.proyecto-asignaciones', compact('cursos', 'asignados', 'docentes'));
+    }
+
+    public function asignarProyectoDocente(Request $request)
+    {
+        $profile = auth()->user()->PROFILE;
+        if (!in_array($profile, ['SuperAd', 'Admin'])) {
+            abort(403);
+        }
+
+        $curso     = trim($request->input('curso'));
+        $codigoDoc = trim($request->input('codigo_emp', '')) ?: null;
+
+        if ($curso === '') {
+            return back()->withErrors(['proyecto' => 'Debes indicar un curso.']);
+        }
+
+        // Reemplazar la asignación del proyecto para ese curso
+        DB::table('ASIGNACION_PCM')
+            ->where('CODIGO_MAT', self::MAT_PROYECTO)
+            ->where('CURSO', $curso)
+            ->delete();
+
+        if ($codigoDoc) {
+            DB::table('ASIGNACION_PCM')->insert([
+                'CODIGO_EMP'  => $codigoDoc,
+                'CODIGO_MAT'  => self::MAT_PROYECTO,
+                'CURSO'       => $curso,
+                'IHS'         => null,
+                'calificable' => 1,
+            ]);
+            return back()->with('success_acq', "Docente del proyecto asignado al curso {$curso}.");
+        }
+
+        return back()->with('success_acq', "Docente del proyecto removido del curso {$curso}.");
     }
 }

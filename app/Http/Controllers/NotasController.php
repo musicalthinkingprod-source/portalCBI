@@ -22,6 +22,9 @@ class NotasController extends Controller
             ->join('CODIGOSMAT as m', 'a.CODIGO_MAT', '=', 'm.CODIGO_MAT')
             ->leftJoin('CODIGOS_DOC as d', 'a.CODIGO_EMP', '=', 'd.CODIGO_EMP')
             ->where('a.calificable', 1)
+            // El proyecto de English Acquisition se digita aparte (no en NOTAS_<año>),
+            // así que se excluye de este informe de digitación para no mostrar 0 ingresadas.
+            ->where('a.CODIGO_MAT', '!=', EnglishAcqController::MAT_PROYECTO)
             ->select('a.CODIGO_EMP', 'a.CODIGO_MAT', 'a.CURSO', 'm.NOMBRE_MAT',
                      'd.NOMBRE_DOC', 'd.ESTADO as ESTADO_DOC')
             ->orderByRaw("CASE WHEN d.ESTADO = 'ACTIVO' OR d.ESTADO IS NULL THEN 0 ELSE 1 END")
@@ -252,10 +255,18 @@ class NotasController extends Controller
 
             if (!empty($codigosAlum)) {
                 try {
-                    $notasRaw = DB::table($this->tablaNotas())
-                        ->whereIn('CODIGO_ALUM', $codigosAlum)
-                        ->where('CODIGO_MAT', $matSelec)
-                        ->get();
+                    if ((int) $matSelec === EnglishAcqController::MAT_PROYECTO) {
+                        // El proyecto de English Acquisition se guarda aparte de NOTAS_<año>
+                        $notasRaw = DB::table('english_acq_proyecto')
+                            ->whereIn('CODIGO_ALUM', $codigosAlum)
+                            ->where('ANIO', (int) date('Y'))
+                            ->get();
+                    } else {
+                        $notasRaw = DB::table($this->tablaNotas())
+                            ->whereIn('CODIGO_ALUM', $codigosAlum)
+                            ->where('CODIGO_MAT', $matSelec)
+                            ->get();
+                    }
 
                     foreach ($notasRaw as $n) {
                         $notasMap[$n->CODIGO_ALUM][$n->PERIODO] = $n->NOTA;
@@ -309,6 +320,23 @@ class NotasController extends Controller
                 }
 
                 $nota = str_replace(',', '.', $nota);
+
+                // El proyecto de English Acquisition se guarda en su tabla dedicada,
+                // no en NOTAS_<año> (así no aparece como asignatura en el boletín).
+                if ((int) $materia === EnglishAcqController::MAT_PROYECTO) {
+                    DB::table('english_acq_proyecto')->updateOrInsert(
+                        [
+                            'CODIGO_ALUM' => $codAlum,
+                            'PERIODO'     => $periodo,
+                            'ANIO'        => (int) date('Y'),
+                        ],
+                        [
+                            'NOTA'       => $nota,
+                            'CODIGO_EMP' => $docente,
+                        ]
+                    );
+                    continue;
+                }
 
                 $existe = DB::table($tabla)
                     ->where('CODIGO_ALUM', $codAlum)

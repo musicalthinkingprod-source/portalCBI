@@ -81,7 +81,10 @@
                     Subir notas a NOTAS_2026
                 </button>
             </div>
-            <p class="text-xs text-gray-400 mt-2">Calcula <code>max(0, 10 − descuentos × 0.25)</code> para todos los estudiantes matriculados y los registra en NOTAS_2026 (CODIGO_MAT 11).</p>
+            <p class="text-xs text-gray-400 mt-2">
+                Nota de reducción = <code>max(0, 10 − descuentos × 0.25)</code>. La nota final que se registra en NOTAS_2026 (CODIGO_MAT 11) pondera
+                <strong>60% reducción + 40% proyecto</strong>. Si el estudiante no tiene nota de proyecto digitada en ese período, se usa solo la reducción (100%).
+            </p>
         </form>
     </div>
     @endif
