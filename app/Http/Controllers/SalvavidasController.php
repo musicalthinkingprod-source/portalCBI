@@ -148,6 +148,11 @@ class SalvavidasController extends Controller
             return redirect()->route('padres.portal')->with('aviso', 'La institución aún no ha habilitado la consulta de salvavidas.');
         }
 
+        // Retención de boletines (Coordinaciones / SuperAd) — también bloquea salvavidas
+        if ($msg = \App\Http\Controllers\RetencionBoletinController::mensajeAviso((int) $estudiante->CODIGO)) {
+            return redirect()->route('padres.portal')->with('aviso', $msg);
+        }
+
         $anio    = (int) date('Y');
         $codigo  = $estudiante->CODIGO;
 

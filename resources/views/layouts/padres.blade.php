@@ -53,6 +53,11 @@
                 $abiertoSalvavidas = \Illuminate\Support\Facades\DB::table('FECHAS')->where('CODIGO_FECHA', 'like', 'S%')->where('INICIO', '<=', $now)->where('FIN', '>=', $now)->exists();
                 $abiertoBoletin    = \Illuminate\Support\Facades\DB::table('FECHAS')->where('CODIGO_FECHA', 'like', 'B%')->where('INICIO', '<=', $now)->where('FIN', '>=', $now)->exists();
                 $abiertoNotas      = \Illuminate\Support\Facades\DB::table('FECHAS')->where('CODIGO_FECHA', 'like', 'B%')->where('INICIO', '<=', $now)->exists();
+
+                // Retención de boletines (Coordinaciones / SuperAd): bloquea promedios, boletines, salvavidas y recuperaciones
+                $retencionesP   = $codigoP ? \App\Http\Controllers\RetencionBoletinController::retencionesActivas($codigoP) : collect();
+                $retenidoP      = $retencionesP->isNotEmpty();
+                $retencionAreas = $retencionesP->pluck('label')->implode(', ');
             @endphp
 
             {{-- Inicio --}}
@@ -68,6 +73,14 @@
                 </div>
             @endif
 
+            @if($retenidoP)
+                <div class="mb-3 mx-1 p-2 bg-amber-900 bg-opacity-40 rounded-lg text-xs text-amber-200 text-center">
+                    🔒 Boletín retenido por<br>
+                    <strong>{{ $retencionAreas }}</strong><br>
+                    Ver detalles en Inicio.
+                </div>
+            @endif
+
             {{-- ── Académico ──────────────────────────────────────────── --}}
             <div class="sidebar-cat mb-1" data-cat="academico">
                 <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -79,7 +92,12 @@
                 </p>
                 <ul class="space-y-0.5 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
 
-                    @if($bloqueado)
+                    @if($retenidoP)
+                        <li class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
+                            <div class="flex items-center gap-2 text-amber-300 text-sm opacity-70">🔒 Consultar promedios</div>
+                            <p class="text-xs text-amber-500 mt-0.5 leading-tight">Retenido por {{ $retencionAreas }}.</p>
+                        </li>
+                    @elseif($bloqueado)
                         <li class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
                             <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Consultar promedios</div>
                         </li>
@@ -92,7 +110,12 @@
                         <li><a href="{{ route('padres.notas') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">📋 Consultar promedios</a></li>
                     @endif
 
-                    @if($bloqueado)
+                    @if($retenidoP)
+                        <li class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
+                            <div class="flex items-center gap-2 text-amber-300 text-sm opacity-70">🔒 Boletines</div>
+                            <p class="text-xs text-amber-500 mt-0.5 leading-tight">Retenido por {{ $retencionAreas }}.</p>
+                        </li>
+                    @elseif($bloqueado)
                         <li class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
                             <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Boletines</div>
                         </li>
@@ -105,7 +128,12 @@
                         <li><a href="{{ route('padres.boletines') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">📝 Boletines</a></li>
                     @endif
 
-                    @if(!$abiertoSalvavidas)
+                    @if($retenidoP)
+                        <li class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
+                            <div class="flex items-center gap-2 text-amber-300 text-sm opacity-70">🔒 Salvavidas</div>
+                            <p class="text-xs text-amber-500 mt-0.5 leading-tight">Retenido por {{ $retencionAreas }}.</p>
+                        </li>
+                    @elseif(!$abiertoSalvavidas)
                         <li class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
                             <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Salvavidas</div>
                         </li>
@@ -113,7 +141,12 @@
                         <li><a href="{{ route('padres.salvavidas') }}" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm">🏊 Salvavidas</a></li>
                     @endif
 
-                    @if(!$abiertoDerrotero)
+                    @if($retenidoP)
+                        <li class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
+                            <div class="flex items-center gap-2 text-amber-300 text-sm opacity-70">🔒 Recuperaciones</div>
+                            <p class="text-xs text-amber-500 mt-0.5 leading-tight">Retenido por {{ $retencionAreas }}.</p>
+                        </li>
+                    @elseif(!$abiertoDerrotero)
                         <li class="px-3 py-2 rounded-lg bg-blue-950 cursor-not-allowed">
                             <div class="flex items-center gap-2 text-blue-400 text-sm opacity-60">🔒 Recuperaciones</div>
                         </li>

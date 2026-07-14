@@ -1002,6 +1002,11 @@ class DeroterosController extends Controller
             return redirect()->route('padres.portal')->with('aviso', 'La institución aún no ha habilitado la consulta de derroteros.');
         }
 
+        // Retención de boletines (Coordinaciones / SuperAd) — también bloquea recuperaciones
+        if ($msg = \App\Http\Controllers\RetencionBoletinController::mensajeAviso((int) $estudiante->CODIGO)) {
+            return redirect()->route('padres.portal')->with('aviso', $msg);
+        }
+
         $codigo = $estudiante->CODIGO;
 
         // Verificar deuda (solo bloquea la nota, no el acceso)

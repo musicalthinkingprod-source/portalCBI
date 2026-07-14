@@ -390,6 +390,30 @@
 </div>
 @endif
 
+{{-- Alerta de retención de boletines/promedios --}}
+@if($retenciones->isNotEmpty())
+<div class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3">
+    <span class="text-2xl">🔒</span>
+    <div class="text-sm">
+        <p class="font-semibold text-amber-800">Boletín, promedios, recuperaciones y salvavidas retenidos</p>
+        <p class="text-amber-700 mb-2">Para habilitarlos debes comunicarte con el área que aplicó la retención:</p>
+        <ul class="space-y-1">
+            @foreach($retenciones as $r)
+            <li class="text-amber-800">
+                <strong>{{ $r['label'] }}</strong>
+                @if($r['correo'])
+                    · <a href="mailto:{{ $r['correo'] }}" class="underline hover:text-amber-900">{{ $r['correo'] }}</a>
+                @endif
+                @if($r['motivo'])
+                    <span class="text-amber-600">— {{ $r['motivo'] }}</span>
+                @endif
+            </li>
+            @endforeach
+        </ul>
+    </div>
+</div>
+@endif
+
 {{-- Fila 4: Módulos por sección --}}
 @php
     $secciones = collect($modulos)->groupBy('seccion');
@@ -430,7 +454,9 @@
                         <span class="text-3xl grayscale">{{ $mod['icon'] }}</span>
                         <span class="text-xs font-semibold text-gray-400 leading-tight">{{ $mod['label'] }}</span>
                         <span class="text-xs text-gray-400">
-                            @if($mod['requiere_pago'] && $bloqueado) Saldo pendiente @else No disponible @endif
+                            @if(!empty($mod['retenido'])) 🔒 Retenido
+                            @elseif($mod['requiere_pago'] && $bloqueado) Saldo pendiente
+                            @else No disponible @endif
                         </span>
                     </div>
                 @endif

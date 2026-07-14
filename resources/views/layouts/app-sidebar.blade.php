@@ -643,11 +643,30 @@
 {!! sidebarLink(route('admin.usuarios'), '👤 Gestión de usuarios') !!}
                 {!! sidebarLink(route('admin.directores'), '🏫 Directores de grupo') !!}
                 {!! sidebarLink(route('admin.asignaciones'), '🔄 Asignaciones') !!}
+                {!! sidebarLink(route('english-acq.proyecto.asignaciones'), '🇬🇧 Docentes proyecto English ACQ') !!}
                 {!! sidebarLink(route('admin.fechas'), '📅 Fechas') !!}
                 {!! sidebarLink(route('calendario.index'), '📆 Calendario académico') !!}
                 {!! sidebarLink(route('listados.index'), '🗂️ Listados especiales') !!}
                 {!! sidebarLink(route('rutas.index'), '🚌 Listado de rutas') !!}
+                {!! sidebarLink(route('admin.retencion-boletines.index'), '🔒 Retención de boletines') !!}
                 {!! sidebarLink(route('backup.index'), '💾 Copia de seguridad') !!}
+            </ul>
+        </div>
+        @endif
+
+        {{-- ── Panel de Control (Coordinaciones): solo Retención de boletines ── --}}
+        @if($isCor)
+        @php $catId = 'panel-control-cor'; @endphp
+        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
+            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
+               onclick="toggleCategory(this)">
+                <span>Panel de Control</span>
+                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </p>
+            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
+                {!! sidebarLink(route('admin.retencion-boletines.index'), '🔒 Retención de boletines') !!}
             </ul>
         </div>
         @endif

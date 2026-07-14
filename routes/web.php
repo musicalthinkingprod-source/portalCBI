@@ -120,6 +120,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/informes/notas', [InformeNotasController::class, 'index'])->name('informes.notas');
         Route::get('/english-acq/informe', [EnglishAcqController::class, 'informe'])->name('english-acq.informe');
         Route::post('/english-acq/entregar', [EnglishAcqController::class, 'entregar'])->name('english-acq.entregar');
+        Route::get('/english-acq/proyecto/asignaciones', [EnglishAcqController::class, 'proyectoAsignaciones'])->name('english-acq.proyecto.asignaciones');
+        Route::post('/english-acq/proyecto/asignar', [EnglishAcqController::class, 'asignarProyectoDocente'])->name('english-acq.proyecto.asignar');
         Route::get('/control/planilla', [ControlPlanillaController::class, 'index'])->name('control.planilla');
         Route::get('/nomina', [NominaController::class, 'index'])->name('nomina.index');
         Route::post('/nomina', [NominaController::class, 'store'])->name('nomina.store');
@@ -260,6 +262,13 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/parametros/listado-transporte/{id}', [ParametrosController::class, 'destroyListadoTransporte'])->name('parametros.listado_transporte.destroy');
         Route::post('/parametros/observaciones', [ParametrosController::class, 'storeObservacion'])->name('parametros.observaciones.store');
         Route::delete('/parametros/observaciones/{id}', [ParametrosController::class, 'destroyObservacion'])->name('parametros.observaciones.destroy');
+    });
+
+    // ── Retención de boletines: SuperAd + Coordinaciones ─────────────────────
+    Route::middleware('profile:SuperAd,COR001,COR002')->group(function () {
+        Route::get('/admin/retencion-boletines', [\App\Http\Controllers\RetencionBoletinController::class, 'index'])->name('admin.retencion-boletines.index');
+        Route::post('/admin/retencion-boletines', [\App\Http\Controllers\RetencionBoletinController::class, 'store'])->name('admin.retencion-boletines.store');
+        Route::delete('/admin/retencion-boletines/{id}', [\App\Http\Controllers\RetencionBoletinController::class, 'destroy'])->name('admin.retencion-boletines.destroy');
     });
 
     // ── World Office: escritura habilitada también para Contab ───────────────

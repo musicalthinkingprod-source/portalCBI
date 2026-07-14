@@ -49,6 +49,7 @@ class PadresController extends Controller
                 'horarioHoy' => collect(), 'horarioManana' => collect(),
                 'gridCompleto' => [], 'diasConDatos' => [], 'proximaFecha' => [],
                 'saldo' => 0, 'bloqueado' => false, 'modulos' => [],
+                'retenciones' => collect(),
             ]);
         }
 
@@ -162,6 +163,10 @@ class PadresController extends Controller
             ->where('INICIO', '<=', $now)
             ->exists();
 
+        // Retención de boletines/promedios (Coordinaciones / SuperAd)
+        $retenciones = RetencionBoletinController::retencionesActivas($codigo);
+        $retenido    = $retenciones->isNotEmpty();
+
         // Agenda Estudiantil Virtual: anotaciones sin acuse de recibo (y cuántas son de alta prioridad)
         $agendaPend = DB::table('bitacora_entradas')
             ->where('codigo_alumno', $codigo)
@@ -175,10 +180,10 @@ class PadresController extends Controller
 
         $modulos = [
             // ── Académico ──────────────────────────────────────────────────
-            ['seccion' => 'Académico', 'label' => 'Consultar promedios',  'icon' => '📋', 'route' => 'padres.notas',            'activo' => !$bloqueado && $algunBoletinIniciado, 'requiere_pago' => true],
-            ['seccion' => 'Académico', 'label' => 'Boletines',            'icon' => '📝', 'route' => 'padres.boletines',         'activo' => !$bloqueado && $abierto('B'),          'requiere_pago' => true],
-            ['seccion' => 'Académico', 'label' => 'Salvavidas',           'icon' => '🏊', 'route' => 'padres.salvavidas',        'activo' => $abierto('S'),                        'requiere_pago' => false],
-            ['seccion' => 'Académico', 'label' => 'Recuperaciones',       'icon' => '📌', 'route' => 'padres.derroteros',        'activo' => $abierto('D'),                        'requiere_pago' => false],
+            ['seccion' => 'Académico', 'label' => 'Consultar promedios',  'icon' => '📋', 'route' => 'padres.notas',            'activo' => !$bloqueado && !$retenido && $algunBoletinIniciado, 'requiere_pago' => true, 'retenido' => $retenido],
+            ['seccion' => 'Académico', 'label' => 'Boletines',            'icon' => '📝', 'route' => 'padres.boletines',         'activo' => !$bloqueado && !$retenido && $abierto('B'),          'requiere_pago' => true, 'retenido' => $retenido],
+            ['seccion' => 'Académico', 'label' => 'Salvavidas',           'icon' => '🏊', 'route' => 'padres.salvavidas',        'activo' => !$retenido && $abierto('S'),          'requiere_pago' => false, 'retenido' => $retenido],
+            ['seccion' => 'Académico', 'label' => 'Recuperaciones',       'icon' => '📌', 'route' => 'padres.derroteros',        'activo' => !$retenido && $abierto('D'),          'requiere_pago' => false, 'retenido' => $retenido],
             ['seccion' => 'Académico', 'label' => 'Asistencia',           'icon' => '📅', 'route' => 'padres.asistencia',        'activo' => true,                                 'requiere_pago' => false],
             ['seccion' => 'Académico', 'label' => 'English Acquisition',  'icon' => '🇬🇧', 'route' => 'padres.english_acq',     'activo' => true,                                 'requiere_pago' => false],
             ['seccion' => 'Académico', 'label' => 'Calendario académico', 'icon' => '📆', 'route' => 'padres.calendario',        'activo' => true,                                 'requiere_pago' => false],
@@ -198,7 +203,7 @@ class PadresController extends Controller
             'periodo', 'ciclo',
             'horarioHoy', 'horarioManana',
             'gridCompleto', 'diasConDatos', 'proximaFecha',
-            'saldo', 'bloqueado', 'modulos'
+            'saldo', 'bloqueado', 'modulos', 'retenciones'
         ));
     }
 
@@ -221,6 +226,15 @@ class PadresController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Construye el aviso de retención de boletines/promedios para el acudiente.
+     * Devuelve null si el estudiante no tiene retenciones activas.
+     */
+    private function avisoRetencion(int $codigo): ?string
+    {
+        return RetencionBoletinController::mensajeAviso($codigo);
     }
 
     public function notas()
@@ -250,6 +264,11 @@ class PadresController extends Controller
             }
         }
 
+        // Retención de boletines/promedios (Coordinaciones / SuperAd)
+        if ($msg = $this->avisoRetencion($codigo)) {
+            return redirect()->route('padres.portal')->with('aviso', $msg);
+        }
+
         $estudiante = session('padre_estudiante');
         $anio       = (int) date('Y');
         $codigo     = $estudiante->CODIGO;
@@ -274,6 +293,11 @@ class PadresController extends Controller
         if ($bloqueo === 'sin_sesion') return redirect()->route('padres.portal');
         if ($bloqueo === 'deuda')      return redirect()->route('padres.portal')->with('aviso', 'No puedes consultar los boletines mientras tengas un saldo pendiente.');
         if ($bloqueo === 'fechas')     return redirect()->route('padres.portal')->with('aviso', 'La institución aún no ha publicado los boletines.');
+
+        // Retención de boletines/promedios (Coordinaciones / SuperAd)
+        if ($msg = $this->avisoRetencion((int) session('padre_estudiante')->CODIGO)) {
+            return redirect()->route('padres.portal')->with('aviso', $msg);
+        }
 
         $now = now();
 
