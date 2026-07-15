@@ -105,12 +105,11 @@ class ControlPlanillaController extends Controller
                 ->where('pc.anio', $anio)
                 ->where('pc.periodo', $periodo)
                 ->whereNotIn('pc.codigo_mat', $matExcluidas)
-                // Toda la ventana del período (no solo días académicos): así se
-                // capturan registros hechos en sábados/festivos para mostrarlos aparte.
-                ->whereBetween(DB::raw('DATE(pn.updated_at)'), [
-                    $primeroPeriodo,
-                    $rangoFin,
-                ])
+                // Desde el inicio del período en adelante (sin tope superior): así se
+                // capturan también los registros hechos fuera de los días académicos,
+                // ya sea un sábado dentro del período o una digitación tardía posterior
+                // al cierre de la ventana. Se muestran aparte como columnas "extra".
+                ->where(DB::raw('DATE(pn.updated_at)'), '>=', $primeroPeriodo)
                 ->whereNotNull('pn.nota');
 
             if ($curso)   $q->where('pc.curso', $curso);

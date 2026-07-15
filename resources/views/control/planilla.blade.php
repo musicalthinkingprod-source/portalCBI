@@ -122,7 +122,8 @@
                 $numAcademicos = $diasGrid->count() - $numExtra;
             @endphp
             <p class="text-gray-400 text-xs mt-0.5">
-                {{ $porDocente->count() }} docentes · {{ $asignaciones->count() }} asignaciones · {{ $ciclosAgrupados->count() }} ciclos · {{ $numAcademicos }} días académicos@if($numExtra) · <span class="text-amber-300">{{ $numExtra }} fuera de calendario</span>@endif
+                {{ $porDocente->count() }} docentes · {{ $asignaciones->count() }} asignaciones · {{ $ciclosAgrupados->count() }} ciclos · {{ $numAcademicos }} días académicos
+                @if($numExtra) · <span class="text-amber-300">{{ $numExtra }} fuera de calendario</span>@endif
             </p>
         </div>
     </div>
