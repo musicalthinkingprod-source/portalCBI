@@ -587,8 +587,10 @@ class BitacoraController extends Controller
     {
         $profile    = auth()->user()->PROFILE;
         $miUser     = auth()->user()->USER;
-        // SuperAd/Admin y secretarías ven la agenda completa de cualquier estudiante.
-        $esSuperior = in_array($profile, ['SuperAd', 'Admin'], true) || str_starts_with($profile, 'Sec');
+        // SuperAd/Admin, secretarías y orientadores ven la agenda completa de cualquier estudiante.
+        $esSuperior = in_array($profile, ['SuperAd', 'Admin'], true)
+            || str_starts_with($profile, 'Sec')
+            || str_starts_with($profile, 'Ori');
         $cursoDir   = $this->cursoDireccion($profile);
 
         $cursos = $this->cursosReales();

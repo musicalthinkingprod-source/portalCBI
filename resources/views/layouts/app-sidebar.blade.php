@@ -142,6 +142,7 @@
             // Ningun coordinador (COR001/COR002) actua como docente: no califican notas ni observaciones.
             $isDoc        = str_starts_with($profile, 'DOC');
             $isSec      = str_starts_with($profile, 'Sec');
+            $isOri      = str_starts_with($profile, 'Ori');
             $isContab   = $profile === 'Contab';
             $isSuperAd  = $profile === 'SuperAd';
             $isAdmin    = $profile === 'Admin';
@@ -187,8 +188,8 @@
         </div>
         @endif
 
-        {{-- ── Agenda Estudiantil Virtual: SuperAd, Coordinadores, Docentes y Secretarías ── --}}
-        @if($isSuperAd || $isCoordAcad || $isCoordConv || $isDoc || $isSec)
+        {{-- ── Agenda Estudiantil Virtual: SuperAd, Coordinadores, Docentes, Secretarías y Orientadores ── --}}
+        @if($isSuperAd || $isCoordAcad || $isCoordConv || $isDoc || $isSec || $isOri)
         @php $catId = 'bitacora'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -202,7 +203,7 @@
                 @if($isSuperAd || $isCoordAcad || $isCoordConv || $isDoc)
                 {!! sidebarLink(route('bitacora.index'), '📖 Registrar observaciones') !!}
                 @endif
-                @if($isDoc || $isSuperAd || $isSec)
+                @if($isDoc || $isSuperAd || $isSec || $isOri)
                 {!! sidebarLink(route('bitacora.consulta'), '🔎 Consultar agenda') !!}
                 @endif
                 @if($isDoc)

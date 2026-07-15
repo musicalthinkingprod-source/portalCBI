@@ -493,10 +493,10 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/bitacora/comentarios/{id}',  [BitacoraController::class, 'borrarComentario'])->name('bitacora.comentarios.destroy');
     });
 
-    // ── Bitácora: consulta de agenda por estudiante (Docentes + SuperAd + Secretarías) ─
-    // SuperAd/Admin/Secretarías ven toda la agenda; el docente director de grupo, la de
+    // ── Bitácora: consulta de agenda por estudiante (Docentes + SuperAd + Secretarías + Orientadores) ─
+    // SuperAd/Admin/Secretarías/Orientadores ven toda la agenda; el docente director de grupo, la de
     // sus estudiantes; el resto, solo sus propias anotaciones. Solo lectura, con hilos.
-    Route::middleware('profile:SuperAd,DOC*,Sec*')->group(function () {
+    Route::middleware('profile:SuperAd,DOC*,Sec*,Ori*')->group(function () {
         Route::get('/bitacora/consulta', [BitacoraController::class, 'consulta'])->name('bitacora.consulta');
     });
 
