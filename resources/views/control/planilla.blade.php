@@ -90,6 +90,10 @@
     <span class="inline-flex items-center gap-1.5">
         <span class="w-3 h-3 rounded-sm bg-gray-300 border border-gray-400 inline-block"></span> Día futuro
     </span>
+    <span class="inline-flex items-center gap-1.5">
+        <span class="inline-flex items-center justify-center w-4 h-4 rounded-sm bg-amber-100 border border-amber-400 text-amber-700 text-[9px] font-bold">✚</span>
+        Registro fuera de calendario (p. ej. sábado)
+    </span>
 </div>
 
 @php
@@ -113,8 +117,12 @@
                 @if($curso) · Curso <span class="text-blue-200">{{ $curso }}</span>@endif
                 @if($materia) · <span class="text-blue-200">{{ $materiasDisponibles->firstWhere('codigo_mat', $materia)?->NOMBRE_MAT }}</span>@endif
             </h3>
+            @php
+                $numExtra      = $diasGrid->filter(fn($d) => $d->es_extra ?? false)->count();
+                $numAcademicos = $diasGrid->count() - $numExtra;
+            @endphp
             <p class="text-gray-400 text-xs mt-0.5">
-                {{ $porDocente->count() }} docentes · {{ $asignaciones->count() }} asignaciones · {{ $ciclosAgrupados->count() }} ciclos · {{ $diasGrid->count() }} días académicos
+                {{ $porDocente->count() }} docentes · {{ $asignaciones->count() }} asignaciones · {{ $ciclosAgrupados->count() }} ciclos · {{ $numAcademicos }} días académicos@if($numExtra) · <span class="text-amber-300">{{ $numExtra }} fuera de calendario</span>@endif
             </p>
         </div>
     </div>
@@ -141,13 +149,14 @@
                     </th>
                 </tr>
 
-                {{-- Fila 2: Día académico (1-6) --}}
+                {{-- Fila 2: Día académico (1-6) o registro fuera de calendario --}}
                 <tr class="bg-gray-50 border-b border-gray-200">
                     @foreach($diasGrid as $d)
-                        @php $esFuturo = $d->fecha > $hoyStr; $esHoy = $d->fecha === $hoyStr; @endphp
+                        @php $esFuturo = $d->fecha > $hoyStr; $esHoy = $d->fecha === $hoyStr; $esExtra = $d->es_extra ?? false; @endphp
                         <th class="px-1 py-1 text-center text-[10px] font-semibold border-r border-gray-200 min-w-[44px]
-                            {{ $esHoy ? 'bg-blue-100 text-blue-800' : ($esFuturo ? 'text-gray-400' : 'text-gray-600') }}">
-                            D{{ $d->dia_ciclo }}
+                            {{ $esExtra ? 'bg-amber-100 text-amber-700' : ($esHoy ? 'bg-blue-100 text-blue-800' : ($esFuturo ? 'text-gray-400' : 'text-gray-600')) }}"
+                            @if($esExtra) title="Registro fuera de calendario" @endif>
+                            {{ $esExtra ? '✚' : 'D' . $d->dia_ciclo }}
                         </th>
                     @endforeach
                 </tr>
@@ -158,14 +167,17 @@
                         @php
                             $esFuturo = $d->fecha > $hoyStr;
                             $esHoy    = $d->fecha === $hoyStr;
+                            $esExtra  = $d->es_extra ?? false;
                             $f        = \Carbon\Carbon::parse($d->fecha);
                         @endphp
                         <th class="px-1 pb-1 text-center text-[10px] font-normal border-r border-gray-200 min-w-[44px] leading-tight
-                            {{ $esHoy ? 'bg-blue-100 text-blue-800 font-semibold' : ($esFuturo ? 'text-gray-400' : 'text-gray-500') }}"
+                            {{ $esExtra ? 'bg-amber-100 text-amber-700' : ($esHoy ? 'bg-blue-100 text-blue-800 font-semibold' : ($esFuturo ? 'text-gray-400' : 'text-gray-500')) }}"
                             title="{{ $d->fecha }}{{ $d->evento ? ' · ' . $d->evento : '' }}">
                             <span class="block">{{ $f->format('d') }}</span>
                             <span class="block opacity-70">{{ $f->format('m') }}</span>
-                            @if($esHoy)
+                            @if($esExtra)
+                                <span class="block text-amber-600 text-[9px] uppercase">{{ $f->locale('es')->isoFormat('dd') }}</span>
+                            @elseif($esHoy)
                                 <span class="block text-blue-500 text-[9px]">●</span>
                             @endif
                         </th>
@@ -191,7 +203,9 @@
                             $totalDoc += $cnt;
                             if ($cnt > 0) $hayReg = true;
                         }
-                        if ($d->fecha <= $hoyStr) {
+                        // Los días fuera de calendario suman en el total pero no cuentan
+                        // como días académicos programados en el % de cumplimiento.
+                        if (!($d->es_extra ?? false) && $d->fecha <= $hoyStr) {
                             $diasPasados++;
                             if ($hayReg) $diasConRegDoc++;
                         }
@@ -259,7 +273,7 @@
                     foreach ($diasGrid as $d) {
                         $cnt = array_sum($conteosCat[$d->fecha][$key] ?? []);
                         $totalNotas += $cnt;
-                        if ($d->fecha <= $hoyStr) {
+                        if (!($d->es_extra ?? false) && $d->fecha <= $hoyStr) {
                             $diasPasadosA++;
                             if ($cnt > 0) $diasConReg++;
                         }

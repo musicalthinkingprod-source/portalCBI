@@ -47,7 +47,9 @@ class ControlPlanillaController extends Controller
         $iniciosCiclo  = $todosInicios->slice($offsetPeriodo, 7)->values();
 
         // ── Días académicos del período (1-6 por ciclo) ──
-        $diasGrid = collect();
+        $diasGrid       = collect();
+        $primeroPeriodo = null;
+        $rangoFin       = null;
         if ($iniciosCiclo->isNotEmpty()) {
             $primeroPeriodo  = $iniciosCiclo->first();
             $siguienteInicio = $todosInicios->slice($offsetPeriodo + 7, 1)->first();
@@ -103,9 +105,11 @@ class ControlPlanillaController extends Controller
                 ->where('pc.anio', $anio)
                 ->where('pc.periodo', $periodo)
                 ->whereNotIn('pc.codigo_mat', $matExcluidas)
+                // Toda la ventana del período (no solo días académicos): así se
+                // capturan registros hechos en sábados/festivos para mostrarlos aparte.
                 ->whereBetween(DB::raw('DATE(pn.updated_at)'), [
-                    $diasGrid->first()->fecha,
-                    $diasGrid->last()->fecha,
+                    $primeroPeriodo,
+                    $rangoFin,
                 ])
                 ->whereNotNull('pn.nota');
 
@@ -135,6 +139,33 @@ class ControlPlanillaController extends Controller
                     'cantidad'  => (int) $f->total,
                 ];
             }
+
+            // ── Días "fuera de calendario" ──
+            // Fechas con registros que NO son día académico del período (sábados,
+            // festivos, etc.). Solo se agregan las que efectivamente tienen notas:
+            // no se pinta el calendario completo, solo la columna de esa fecha.
+            $fechasGrid = $diasGrid->pluck('fecha')->all();
+            $iniciosArr = $iniciosCiclo->all();
+            foreach (array_diff(array_keys($conteosCat), $fechasGrid) as $fx) {
+                // Ciclo al que pertenece la fecha (misma lógica que los días académicos)
+                $num = 0;
+                foreach ($iniciosArr as $i => $ini) {
+                    if ($fx >= $ini) $num = $i + 1;
+                    else break;
+                }
+                if (!$num) continue; // fecha fuera del período: se ignora
+
+                $diasGrid->push((object) [
+                    'fecha'     => $fx,
+                    'dia_ciclo' => null,
+                    'evento'    => 'Fuera de calendario',
+                    'ciclo_num' => $num,
+                    'es_extra'  => true,
+                ]);
+            }
+
+            // Reordenar por fecha para intercalar cada día extra dentro de su ciclo
+            $diasGrid = $diasGrid->sortBy('fecha')->values();
         }
 
         $ciclosAgrupados = $diasGrid->groupBy('ciclo_num');
