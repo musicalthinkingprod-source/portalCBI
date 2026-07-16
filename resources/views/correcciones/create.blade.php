@@ -53,7 +53,7 @@
                     @endif
                     <div>
                         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Período</label>
-                        <select name="periodo"
+                        <select name="periodo" id="sel-periodo"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                             @foreach([1,2,3,4] as $p)
                                 <option value="{{ $p }}" {{ $periodo == $p ? 'selected' : '' }}>Período {{ $p }}</option>
@@ -138,6 +138,7 @@
     const mapaMaterias = @json($mapaMateriasCursos);
     const selMateria   = document.getElementById('sel-materia');
     const selCurso     = document.getElementById('sel-curso');
+    const selPeriodo   = document.getElementById('sel-periodo');
     const formSelector = document.getElementById('form-selector');
     const selAlumno    = document.getElementById('sel-alumno');
 
@@ -169,13 +170,25 @@
         });
     }
 
+    // Cambiar el período recarga la página (con el nuevo período) preservando el alumno
+    if (selPeriodo) {
+        selPeriodo.addEventListener('change', function () {
+            const url = new URL(window.location.href);
+            url.searchParams.set('periodo', this.value);
+            if (selAlumno && selAlumno.value) {
+                url.searchParams.set('codigo_alum', selAlumno.value);
+            }
+            window.location.href = url.toString();
+        });
+    }
+
     if (selAlumno) {
         selAlumno.addEventListener('change', function () {
             if (!this.value) return;
             const url = new URL(window.location.href);
             url.searchParams.set('materia',     '{{ $matSelec }}');
             url.searchParams.set('curso',       '{{ $cursoSelec }}');
-            url.searchParams.set('periodo',     '{{ $periodo }}');
+            url.searchParams.set('periodo',     selPeriodo ? selPeriodo.value : '{{ $periodo }}');
             url.searchParams.set('codigo_alum',  this.value);
             window.location.href = url.toString();
         });
