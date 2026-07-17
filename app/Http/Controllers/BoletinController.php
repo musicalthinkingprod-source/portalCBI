@@ -64,11 +64,13 @@ class BoletinController extends Controller
                 $areas[$ak] = ['nombre' => $n->NOMBRE_AREA, 'materias' => []];
             }
             if (!isset($areas[$ak]['materias'][$mk])) {
-                $areas[$ak]['materias'][$mk] = ['nombre' => $n->NOMBRE_MAT, 'docente' => null, 'periodos' => []];
+                $areas[$ak]['materias'][$mk] = ['nombre' => $n->NOMBRE_MAT, 'docente' => null, 'docentePeriodo' => 0, 'periodos' => []];
             }
-            // Conservar el primer docente disponible a nivel de materia
-            if ($n->NOMBRE_DOC && !$areas[$ak]['materias'][$mk]['docente']) {
-                $areas[$ak]['materias'][$mk]['docente'] = $n->NOMBRE_DOC;
+            // Conservar el docente del período más reciente que puso nota (el último docente que calificó).
+            // Antes se tomaba el primero disponible, lo que mostraba al profesor anterior cuando cambiaba durante el año.
+            if ($n->NOMBRE_DOC && (int) $n->PERIODO >= $areas[$ak]['materias'][$mk]['docentePeriodo']) {
+                $areas[$ak]['materias'][$mk]['docente']        = $n->NOMBRE_DOC;
+                $areas[$ak]['materias'][$mk]['docentePeriodo'] = (int) $n->PERIODO;
             }
             $areas[$ak]['materias'][$mk]['periodos'][$n->PERIODO] = [
                 'nota'  => $n->NOTA,
