@@ -42,7 +42,7 @@ class PiarCaractController extends Controller
 
     // ── ÍNDICE GENERAL – agrupado por estudiante ────────────────────────────
     // Materias excluidas del PIAR (no aplican caracterización ni ajustes)
-    private const MATS_EXCLUIDAS_PIAR = [24, 31, 35, 124, 135, 153]; // Urbanidad y Cívica, Proyectos, Cátedra de Paz, Urbanidad y Cívica PE, Cátedra de Paz PE, Pensamiento Lógico
+    private const MATS_EXCLUIDAS_PIAR = [24, 31, 35, 36, 124, 135, 153]; // Urbanidad y Cívica, Proyectos, Cátedra de Paz, English Acquisition Proyecto (materia sombra), Urbanidad y Cívica PE, Cátedra de Paz PE, Pensamiento Lógico
 
     public function index()
     {
@@ -296,8 +296,11 @@ class PiarCaractController extends Controller
 
     public function aprobarMat(string $codigo, int $codigoMat)
     {
-        if (ControlFechasController::estadoEtapa('caract') !== 'revision') {
-            return back()->withErrors(['etapa' => 'Solo se puede aprobar cuando la etapa de caracterización está en estado "En revisión".']);
+        $estado = DB::table('PIAR_CARACT_MAT')
+            ->where('CODIGO_ALUM', $codigo)->where('CODIGO_MAT', $codigoMat)
+            ->value('ESTADO');
+        if (!in_array($estado, ['revision', 'con_observaciones'])) {
+            return back()->withErrors(['etapa' => 'Solo se puede aprobar una caracterización que el docente ya haya entregado para revisión.']);
         }
 
         DB::table('PIAR_CARACT_MAT')
@@ -448,8 +451,11 @@ class PiarCaractController extends Controller
 
     public function aprobarDir(string $codigo)
     {
-        if (ControlFechasController::estadoEtapa('caract') !== 'revision') {
-            return back()->withErrors(['etapa' => 'Solo se puede aprobar cuando la etapa de caracterización está en estado "En revisión".']);
+        $estado = DB::table('PIAR_CARACT_DIR')
+            ->where('CODIGO_ALUM', $codigo)
+            ->value('ESTADO');
+        if (!in_array($estado, ['revision', 'con_observaciones'])) {
+            return back()->withErrors(['etapa' => 'Solo se puede aprobar una caracterización que el director de grupo ya haya entregado para revisión.']);
         }
 
         $estudiante = DB::table('ESTUDIANTES')->where('CODIGO', $codigo)->first();
