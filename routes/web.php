@@ -608,6 +608,9 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/aseo/elementos/{id}',   [InventarioAseoController::class, 'elementoUpdate'])->name('aseo.elementos.update');
         Route::get('/aseo/dependencias',     [InventarioAseoController::class, 'dependencias'])  ->name('aseo.dependencias');
         Route::post('/aseo/dependencias',    [InventarioAseoController::class, 'dependenciaStore'])->name('aseo.dependencias.store');
+        Route::delete('/aseo/dependencias/{id}', [InventarioAseoController::class, 'dependenciaDestroy'])->name('aseo.dependencias.destroy');
+        Route::get('/aseo/proveedores',      [InventarioAseoController::class, 'proveedores'])   ->name('aseo.proveedores');
+        Route::post('/aseo/proveedores',     [InventarioAseoController::class, 'proveedorStore']) ->name('aseo.proveedores.store');
         Route::get('/aseo/compras',          [InventarioAseoController::class, 'compras'])       ->name('aseo.compras');
         Route::get('/aseo/compras/nueva',    [InventarioAseoController::class, 'compraCreate'])  ->name('aseo.compras.create');
         Route::post('/aseo/compras',         [InventarioAseoController::class, 'compraStore'])   ->name('aseo.compras.store');

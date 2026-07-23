@@ -24,12 +24,26 @@
         <div class="px-5 py-3 border-b border-gray-100"><h3 class="font-semibold text-gray-700">Dependencias ({{ $dependencias->count() }})</h3></div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
-                <thead class="bg-gray-50 text-gray-500 uppercase text-xs"><tr><th class="px-4 py-2 text-left">Nombre</th><th class="px-4 py-2 text-center">Activa</th></tr></thead>
+                <thead class="bg-gray-50 text-gray-500 uppercase text-xs"><tr><th class="px-4 py-2 text-left">Nombre</th><th class="px-4 py-2 text-center">Activa</th><th class="px-4 py-2 text-center w-24">Acción</th></tr></thead>
                 <tbody class="divide-y divide-gray-100">
                     @forelse($dependencias as $d)
-                    <tr><td class="px-4 py-2 text-gray-800">{{ $d->nombre }}</td><td class="px-4 py-2 text-center">{{ $d->activo ? '✓' : '—' }}</td></tr>
+                    <tr>
+                        <td class="px-4 py-2 text-gray-800">{{ $d->nombre }}</td>
+                        <td class="px-4 py-2 text-center">{{ $d->activo ? '✓' : '—' }}</td>
+                        <td class="px-4 py-2 text-center">
+                            @if($d->movimientos > 0)
+                            <span class="text-xs text-gray-400" title="Ya tiene entregas registradas">🔒 en uso</span>
+                            @else
+                            <form method="POST" action="{{ route('aseo.dependencias.destroy', $d->id) }}" onsubmit="return confirm('¿Borrar la dependencia «{{ $d->nombre }}»?')">
+                                @csrf
+                                @method('DELETE')
+                                <button class="text-red-500 hover:text-red-700 text-sm font-semibold">Borrar</button>
+                            </form>
+                            @endif
+                        </td>
+                    </tr>
                     @empty
-                    <tr><td colspan="2" class="px-4 py-6 text-center text-gray-400">Sin dependencias todavía.</td></tr>
+                    <tr><td colspan="3" class="px-4 py-6 text-center text-gray-400">Sin dependencias todavía.</td></tr>
                     @endforelse
                 </tbody>
             </table>

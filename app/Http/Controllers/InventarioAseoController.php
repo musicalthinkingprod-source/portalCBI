@@ -96,7 +96,13 @@ class InventarioAseoController extends Controller
 
     public function dependencias()
     {
-        $dependencias = DB::table('inv_dependencias')->orderBy('nombre')->get();
+        // Cuántas entregas tiene cada dependencia (para no borrar las que ya se usaron).
+        $conMovs = DB::table('inv_aseo_salidas')
+            ->select('dependencia_id', DB::raw('COUNT(*) AS n'))
+            ->groupBy('dependencia_id')->pluck('n', 'dependencia_id');
+        $dependencias = DB::table('inv_dependencias')->orderBy('nombre')->get()
+            ->map(function ($d) use ($conMovs) { $d->movimientos = (int) ($conMovs[$d->id] ?? 0); return $d; });
+
         return view('aseo.dependencias', compact('dependencias'));
     }
 
@@ -108,6 +114,41 @@ class InventarioAseoController extends Controller
         DB::table('inv_dependencias')->insert($data);
 
         return back()->with('ok', 'Dependencia creada.');
+    }
+
+    public function dependenciaDestroy(int $id)
+    {
+        // No se puede borrar una dependencia que ya recibió entregas (integridad).
+        if (DB::table('inv_aseo_salidas')->where('dependencia_id', $id)->exists()) {
+            return back()->withErrors(['dependencia' => 'No se puede borrar: la dependencia ya tiene entregas registradas.']);
+        }
+        DB::table('inv_dependencias')->where('id', $id)->delete();
+
+        return back()->with('ok', 'Dependencia eliminada.');
+    }
+
+    // ───────────────────────── Proveedores ───────────────────────────
+    // Los proveedores son compartidos con el módulo de uniformes (inv_proveedores).
+
+    public function proveedores()
+    {
+        $proveedores = DB::table('inv_proveedores')->orderBy('nombre')->get();
+        return view('aseo.proveedores', compact('proveedores'));
+    }
+
+    public function proveedorStore(Request $r)
+    {
+        $data = $r->validate([
+            'nombre'    => 'required|string|max:120',
+            'nit'       => 'nullable|string|max:30',
+            'direccion' => 'nullable|string|max:120',
+            'telefono'  => 'nullable|string|max:30',
+        ]);
+        $data['activo'] = 1;
+        $data['created_at'] = $data['updated_at'] = now();
+        DB::table('inv_proveedores')->insert($data);
+
+        return back()->with('ok', 'Proveedor creado.');
     }
 
     // ─────────────────────────── Compras ─────────────────────────────

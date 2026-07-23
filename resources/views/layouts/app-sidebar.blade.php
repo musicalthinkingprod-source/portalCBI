@@ -737,6 +737,7 @@
                 {!! sidebarLink(route('aseo.compras'), '📥 Compras') !!}
                 {!! sidebarLink(route('aseo.elementos'), '🧴 Elementos') !!}
                 {!! sidebarLink(route('aseo.dependencias'), '🏢 Dependencias') !!}
+                {!! sidebarLink(route('aseo.proveedores'), '🚚 Proveedores') !!}
             </ul>
         </div>
         @endif
