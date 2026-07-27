@@ -10,8 +10,8 @@
     <div>
         <h1 class="text-2xl font-bold text-gray-800">🤝 Programación de reuniones</h1>
         <p class="text-sm text-gray-500 mt-1">
-            Selecciona los docentes que necesitas y descubre las horas y bloques con menos
-            conflictos (o del todo libres) en el ciclo académico.
+            Selecciona los docentes que necesitas y descubre en el mapa las horas con menos
+            conflictos (o del todo libres). Desde cada celda puedes asignar un reemplazo directamente.
         </p>
     </div>
 
@@ -71,60 +71,6 @@
 
     {{-- ── Resultados ── --}}
     <div x-show="seleccionados.length > 0" class="space-y-6" x-cloak>
-
-        {{-- Mejores opciones --}}
-        <div class="grid md:grid-cols-2 gap-4">
-
-            {{-- Mejores horas individuales --}}
-            <div class="bg-white rounded-xl shadow p-5">
-                <h2 class="font-bold text-gray-800 mb-3 flex items-center gap-2">⏰ Mejores horas</h2>
-                <div class="space-y-2">
-                    <template x-for="s in mejoresSlots" :key="'ms-'+s.dia+'-'+s.hora">
-                        <div class="flex items-center justify-between gap-3 rounded-lg px-3 py-2"
-                             :class="s.conflictos === 0 ? 'bg-green-50 border border-green-200' : 'bg-gray-50'">
-                            <div class="min-w-0">
-                                <p class="text-sm font-semibold text-gray-800">
-                                    <span x-text="s.diaLabel"></span> ·
-                                    <span x-text="s.horaLabel"></span>
-                                </p>
-                                <p class="text-xs text-gray-400" x-text="s.rango"></p>
-                            </div>
-                            <span class="shrink-0 text-xs font-bold px-2.5 py-1 rounded-full"
-                                  :class="s.conflictos === 0
-                                      ? 'bg-green-600 text-white'
-                                      : 'bg-amber-100 text-amber-700'"
-                                  x-text="s.conflictos === 0 ? '✓ Todos libres' : (s.conflictos + ' con clase')">
-                            </span>
-                        </div>
-                    </template>
-                </div>
-            </div>
-
-            {{-- Mejores bloques (2 horas) --}}
-            <div class="bg-white rounded-xl shadow p-5">
-                <h2 class="font-bold text-gray-800 mb-3 flex items-center gap-2">🧱 Mejores bloques (2 horas)</h2>
-                <div class="space-y-2">
-                    <template x-for="b in mejoresBloques" :key="'mb-'+b.dia+'-'+b.h1">
-                        <div class="flex items-center justify-between gap-3 rounded-lg px-3 py-2"
-                             :class="b.conflictos === 0 ? 'bg-green-50 border border-green-200' : 'bg-gray-50'">
-                            <div class="min-w-0">
-                                <p class="text-sm font-semibold text-gray-800">
-                                    <span x-text="b.diaLabel"></span> ·
-                                    <span x-text="b.h1 + 'ª – ' + b.h2 + 'ª hora'"></span>
-                                </p>
-                                <p class="text-xs text-gray-400" x-text="b.rango"></p>
-                            </div>
-                            <span class="shrink-0 text-xs font-bold px-2.5 py-1 rounded-full"
-                                  :class="b.conflictos === 0
-                                      ? 'bg-green-600 text-white'
-                                      : 'bg-amber-100 text-amber-700'"
-                                  x-text="b.conflictos === 0 ? '✓ Todos libres' : (b.conflictos + ' con clase')">
-                            </span>
-                        </div>
-                    </template>
-                </div>
-            </div>
-        </div>
 
         {{-- Matriz completa día × hora --}}
         <div class="bg-white rounded-xl shadow overflow-hidden">
@@ -186,7 +132,7 @@
     <div x-show="detalle" x-cloak
          class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
          @keydown.escape.window="detalle = null">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden"
              @click.outside="detalle = null">
             <template x-if="detalle">
                 <div>
@@ -215,11 +161,75 @@
                             <p class="text-xs font-semibold text-red-600 mb-1.5">
                                 📚 Con clase (<span x-text="detalle.ocupados.length"></span>)
                             </p>
-                            <div class="space-y-1.5" x-show="detalle.ocupados.length > 0">
+                            <div class="space-y-2" x-show="detalle.ocupados.length > 0">
                                 <template x-for="c in detalle.ocupados" :key="'ocu-'+c">
-                                    <div class="flex items-start justify-between gap-3 bg-red-50 rounded-lg px-2.5 py-1.5">
-                                        <span class="text-xs font-semibold text-red-700 shrink-0" x-text="nombre(c)"></span>
-                                        <span class="text-xs text-red-500 text-right" x-text="claseDe(detalle.dia, detalle.hora, c) || 'Ocupado'"></span>
+                                    <div class="bg-red-50 rounded-lg px-3 py-2">
+                                        <p class="text-xs font-semibold text-red-700 mb-1" x-text="nombre(c)"></p>
+
+                                        {{-- Cada clase del docente en este slot --}}
+                                        <div class="space-y-1.5">
+                                            <template x-for="cl in clasesDe(detalle.dia, detalle.hora, c)" :key="'cl-'+c+'-'+cl.curso+'-'+cl.materia">
+                                                <div>
+                                                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                                                        <span class="text-xs text-red-500"
+                                                              x-text="cl.materia + (cl.curso ? ' · ' + cl.curso : '')"></span>
+
+                                                        {{-- Reemplazo ya asignado --}}
+                                                        <template x-if="reemplazoAsignado(detalle.dia, detalle.hora, c, cl.curso)">
+                                                            <span class="text-[11px] font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                                                                ✓ Reemplaza:
+                                                                <span x-text="reemplazoAsignado(detalle.dia, detalle.hora, c, cl.curso).nombre"></span>
+                                                            </span>
+                                                        </template>
+
+                                                        {{-- Botón asignar --}}
+                                                        <template x-if="!reemplazoAsignado(detalle.dia, detalle.hora, c, cl.curso)">
+                                                            <button type="button"
+                                                                @click="abrirReemplazo(c, cl.curso)"
+                                                                class="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 border border-indigo-200 rounded-full px-2 py-0.5 transition">
+                                                                🔄 Asignar reemplazo
+                                                            </button>
+                                                        </template>
+                                                    </div>
+
+                                                    {{-- Mini-formulario de reemplazo --}}
+                                                    <div x-show="reemplazoKey === (c + '|' + cl.curso)" x-cloak
+                                                         class="mt-2 bg-white rounded-lg border border-indigo-100 p-2 space-y-2">
+                                                        <template x-if="!fechaISODe(detalle.dia)">
+                                                            <p class="text-[11px] text-amber-600">
+                                                                Este día no tiene fecha próxima en el calendario; no se puede asignar.
+                                                            </p>
+                                                        </template>
+                                                        <template x-if="fechaISODe(detalle.dia)">
+                                                            <div class="space-y-2">
+                                                                <select x-model="reemplazoSel"
+                                                                    class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                                                    <option value="">— Docente que reemplaza —</option>
+                                                                    <template x-for="d in candidatosReemplazo(detalle.dia, detalle.hora, c)" :key="'cand-'+c+'-'+d.codigo">
+                                                                        <option :value="d.codigo" x-text="d.nombre"></option>
+                                                                    </template>
+                                                                </select>
+                                                                <div class="flex items-center gap-2">
+                                                                    <input type="date" x-model="reemplazoFecha"
+                                                                        class="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                                                    <button type="button"
+                                                                        @click="confirmarReemplazo(detalle.dia, detalle.hora, c, cl.curso)"
+                                                                        :disabled="!reemplazoSel || guardando"
+                                                                        class="text-xs font-semibold bg-indigo-600 text-white rounded-lg px-3 py-1.5 hover:bg-indigo-700 transition disabled:opacity-50">
+                                                                        <span x-show="!guardando">Guardar</span>
+                                                                        <span x-show="guardando">…</span>
+                                                                    </button>
+                                                                </div>
+                                                                <p x-show="candidatosReemplazo(detalle.dia, detalle.hora, c).length === 0"
+                                                                   class="text-[11px] text-amber-600">
+                                                                    No hay docentes libres (fuera de la reunión) en este slot.
+                                                                </p>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
                                     </div>
                                 </template>
                             </div>
@@ -238,6 +248,8 @@ const _ocupacion    = @json($ocupacion);
 const _ocupacionDet = @json($ocupacionDet);
 const _dias         = @json($dias);
 const _horas        = @json($horas);
+const _csrf         = '{{ csrf_token() }}';
+const _urlAsignar   = '{{ route('asistencia-personal.reemplazos.asignar') }}';
 
 function reunionesAnalyzer() {
     return {
@@ -246,10 +258,18 @@ function reunionesAnalyzer() {
         ocupacionDet:  _ocupacionDet,
         dias:          _dias,
         horas:         _horas,
-        bloques:       [[1, 2], [3, 4], [5, 6], [7, 8]],
+        csrf:          _csrf,
+        urlAsignar:    _urlAsignar,
         seleccionados: [],
         busqueda:      '',
         detalle:       null,
+
+        // Reemplazos asignados en esta sesión. Clave: `${dia}|${hora}|${ausente}|${curso}`
+        reemplazados:  {},
+        reemplazoKey:  null,   // `${codigo}|${curso}` del formulario abierto
+        reemplazoSel:  '',
+        reemplazoFecha:'',
+        guardando:     false,
 
         // ── Selección ──
         get docentesFiltrados() {
@@ -273,26 +293,87 @@ function reunionesAnalyzer() {
         nombre(c) { const d = this.docentes.find(x => x.codigo === c); return d ? d.nombre : c; },
 
         // ── Ocupación ──
-        ocupadosEn(dia, hora) {
+        // Seleccionados que físicamente tienen clase en el slot
+        ocupadosRaw(dia, hora) {
             const arr = (this.ocupacion[dia] || {})[hora] || [];
             return this.seleccionados.filter(c => arr.includes(c));
         },
+        // Conflictos reales para la reunión: los ocupados que NO tienen reemplazo asignado
+        ocupadosEn(dia, hora) {
+            return this.ocupadosRaw(dia, hora).filter(c => !this.estaCubierto(dia, hora, c));
+        },
         libresEn(dia, hora) {
-            const oc = this.ocupadosEn(dia, hora);
-            return this.seleccionados.filter(c => !oc.includes(c));
+            const arr = (this.ocupacion[dia] || {})[hora] || [];
+            return this.seleccionados.filter(c => !arr.includes(c));
         },
         nConf(dia, hora) { return this.ocupadosEn(dia, hora).length; },
 
-        // Qué clase(s) tiene un docente en un slot
-        claseDe(dia, hora, c) {
-            const arr = ((this.ocupacionDet[dia] || {})[hora] || {})[c] || [];
-            return arr.join(' / ');
+        // Clases (materia + curso) de un docente en un slot
+        clasesDe(dia, hora, c) {
+            return ((this.ocupacionDet[dia] || {})[hora] || {})[c] || [];
         },
 
-        // Conflictos únicos en un bloque de dos horas
-        confBloque(dia, h1, h2) {
-            const set = new Set([...this.ocupadosEn(dia, h1), ...this.ocupadosEn(dia, h2)]);
-            return set.size;
+        // ── Reemplazos ──
+        keyReemplazo(dia, hora, c, curso) { return dia + '|' + hora + '|' + c + '|' + curso; },
+        reemplazoAsignado(dia, hora, c, curso) {
+            return this.reemplazados[this.keyReemplazo(dia, hora, c, curso)] || null;
+        },
+        // Un docente está cubierto si todas sus clases del slot tienen reemplazo
+        estaCubierto(dia, hora, c) {
+            const clases = this.clasesDe(dia, hora, c);
+            if (clases.length === 0) return false;
+            return clases.every(cl => !!this.reemplazoAsignado(dia, hora, c, cl.curso));
+        },
+        fechaISODe(dia) { const d = this.dias.find(x => x.num === dia); return d ? d.fechaISO : null; },
+        abrirReemplazo(c, curso) {
+            const key = c + '|' + curso;
+            this.reemplazoKey   = (this.reemplazoKey === key) ? null : key;
+            this.reemplazoSel   = '';
+            this.reemplazoFecha = this.detalle ? (this.fechaISODe(this.detalle.dia) || '') : '';
+        },
+        // Docentes libres en el slot que pueden reemplazar (fuera de la reunión y no usados ya)
+        candidatosReemplazo(dia, hora, ausente) {
+            const arr = (this.ocupacion[dia] || {})[hora] || [];
+            const usados = Object.keys(this.reemplazados)
+                .filter(k => k.startsWith(dia + '|' + hora + '|'))
+                .map(k => this.reemplazados[k].codigo);
+            return this.docentes.filter(d =>
+                d.codigo !== ausente &&
+                !arr.includes(d.codigo) &&
+                !this.seleccionados.includes(d.codigo) &&
+                !usados.includes(d.codigo));
+        },
+        async confirmarReemplazo(dia, hora, ausente, curso) {
+            if (!this.reemplazoSel || this.guardando) return;
+            const fecha = this.reemplazoFecha || this.fechaISODe(dia);
+            if (!fecha) { alert('No hay fecha para este día.'); return; }
+            const fd = new FormData();
+            fd.append('_token', this.csrf);
+            fd.append('fecha', fecha);
+            fd.append('codigo_emp_ausente', ausente);
+            fd.append('codigo_emp_reemplazo', this.reemplazoSel);
+            fd.append('hora', hora);
+            fd.append('curso', curso);
+            this.guardando = true;
+            try {
+                const r = await fetch(this.urlAsignar, {
+                    method: 'POST',
+                    body: fd,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                const cod = this.reemplazoSel;
+                this.reemplazados = {
+                    ...this.reemplazados,
+                    [this.keyReemplazo(dia, hora, ausente, curso)]: { codigo: cod, nombre: this.nombre(cod) },
+                };
+                this.reemplazoKey = null;
+                this.reemplazoSel = '';
+            } catch (e) {
+                alert('No se pudo asignar el reemplazo. Intenta de nuevo.');
+            } finally {
+                this.guardando = false;
+            }
         },
 
         // ── Celda de la matriz ──
@@ -316,45 +397,16 @@ function reunionesAnalyzer() {
         horaLabel(hora){ const h = this.horas.find(x => x.num === hora); return h ? h.label : (hora + 'ª hora'); },
         horaRango(hora){ const h = this.horas.find(x => x.num === hora); return h ? h.rango : ''; },
 
-        // ── Rankings ──
-        get mejoresSlots() {
-            if (this.seleccionados.length === 0) return [];
-            const out = [];
-            for (const d of this.dias) {
-                for (const h of this.horas) {
-                    out.push({
-                        dia: d.num, hora: h.num,
-                        diaLabel: d.label, horaLabel: h.label, rango: h.rango,
-                        conflictos: this.nConf(d.num, h.num),
-                    });
-                }
-            }
-            return out.sort((a, b) => a.conflictos - b.conflictos).slice(0, 8);
-        },
-        get mejoresBloques() {
-            if (this.seleccionados.length === 0) return [];
-            const out = [];
-            for (const d of this.dias) {
-                for (const [h1, h2] of this.bloques) {
-                    out.push({
-                        dia: d.num, h1, h2, diaLabel: d.label,
-                        rango: this.horaRango(h1).split('–')[0].trim() + ' – ' + this.horaRango(h2).split('–').pop().trim(),
-                        conflictos: this.confBloque(d.num, h1, h2),
-                    });
-                }
-            }
-            return out.sort((a, b) => a.conflictos - b.conflictos).slice(0, 6);
-        },
-
         // ── Detalle ──
         detalleSlot(dia, hora) {
             if (this.seleccionados.length === 0) return;
+            this.reemplazoKey = null;
             this.detalle = {
                 dia, hora,
                 diaLabel:  this.diaLabel(dia),
                 horaLabel: this.horaLabel(hora),
                 rango:     this.horaRango(hora),
-                ocupados:  this.ocupadosEn(dia, hora),
+                ocupados:  this.ocupadosRaw(dia, hora),
                 libres:    this.libresEn(dia, hora),
             };
         },

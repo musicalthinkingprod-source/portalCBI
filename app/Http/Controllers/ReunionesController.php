@@ -37,9 +37,10 @@ class ReunionesController extends Controller
         foreach (Horario::$dias as $num => $label) {
             $prox = collect($fechasCiclo[$num] ?? [])->first(fn ($f) => $f->gte($hoy));
             $dias[] = [
-                'num'   => $num,
-                'label' => $label,
-                'fecha' => $prox?->locale('es')->isoFormat('ddd D MMM'),
+                'num'      => $num,
+                'label'    => $label,
+                'fecha'    => $prox?->locale('es')->isoFormat('ddd D MMM'),
+                'fechaISO' => $prox?->toDateString(),
             ];
         }
 

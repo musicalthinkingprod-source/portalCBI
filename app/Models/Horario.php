@@ -281,19 +281,23 @@ class Horario extends Model
 
     /**
      * Detalle de qué clase tiene cada docente ocupado en cada slot.
-     * Resultado: array[dia_ciclo][hora][CODIGO_EMP] = ['Materia · Curso', ...].
-     * Complementa ocupacionPorSlot() para poder mostrar el motivo del conflicto.
+     * Resultado: array[dia_ciclo][hora][CODIGO_EMP] = [['materia'=>..., 'curso'=>...], ...].
+     * Complementa ocupacionPorSlot() para mostrar el motivo del conflicto y poder
+     * asignar reemplazo directamente (necesita el curso real).
      */
     public static function detalleOcupacionPorSlot(): array
     {
         $det = [];
-        $push = function ($dia, $hora, $cod, $label) use (&$det) {
-            $label = trim($label);
-            if ($label === '') return;
+        $push = function ($dia, $hora, $cod, $materia, $curso) use (&$det) {
+            $materia = trim((string) $materia);
+            $curso   = trim((string) $curso);
+            if ($materia === '' && $curso === '') return;
+            $entry  = ['materia' => $materia !== '' ? $materia : 'Clase', 'curso' => $curso];
             $actual = $det[$dia][$hora][$cod] ?? [];
-            if (!in_array($label, $actual, true)) {
-                $actual[] = $label;
+            foreach ($actual as $e) {
+                if ($e['materia'] === $entry['materia'] && $e['curso'] === $entry['curso']) return;
             }
+            $actual[] = $entry;
             $det[$dia][$hora][$cod] = $actual;
         };
 
@@ -315,10 +319,10 @@ class Horario extends Model
             ->distinct()
             ->get()
             ->each(function ($r) use ($push) {
-                $push($r->DIA, $r->HORA, $r->CODIGO_EMP, ($r->NOMBRE_MAT ?? 'Clase') . ' · ' . $r->CURSO);
+                $push($r->DIA, $r->HORA, $r->CODIGO_EMP, $r->NOMBRE_MAT ?? 'Clase', $r->CURSO);
             });
 
-        // 2. Slots DOC-prefixed (Atención a Padres, etc.)
+        // 2. Slots DOC-prefixed (Atención a Padres, etc.). Curso 'Padres' igual que en la grilla.
         DB::table('HORARIOS as h')
             ->leftJoin('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'h.CODIGO_MAT')
             ->whereRaw("h.CURSO LIKE 'DOC%'")
@@ -326,7 +330,7 @@ class Horario extends Model
             ->select('h.DIA', 'h.HORA', DB::raw('h.CURSO as CODIGO_EMP'), 'm.NOMBRE_MAT')
             ->get()
             ->each(function ($r) use ($push) {
-                $push($r->DIA, $r->HORA, $r->CODIGO_EMP, $r->NOMBRE_MAT ?? 'Atención a Padres');
+                $push($r->DIA, $r->HORA, $r->CODIGO_EMP, $r->NOMBRE_MAT ?? 'Atención a Padres', 'Padres');
             });
 
         // 3. Proyecto (GP*)
@@ -340,7 +344,7 @@ class Horario extends Model
             ->distinct()
             ->get()
             ->each(function ($r) use ($push) {
-                $push($r->DIA, $r->HORA, $r->CODIGO_EMP, ($r->NOMBRE_MAT ?? 'Proyecto') . ' · ' . $r->CURSO);
+                $push($r->DIA, $r->HORA, $r->CODIGO_EMP, $r->NOMBRE_MAT ?? 'Proyecto', $r->CURSO);
             });
 
         return $det;
