@@ -827,6 +827,29 @@
 
 <script>
 // ── Acordeón del sidebar ──────────────────────────────────────────────────
+// Abre animando y, al terminar, quita el límite (max-height:none) para que el
+// contenido nunca se recorte aunque cambie de alto (fuentes/emojis/wrapping).
+function openBody(ul, chevron) {
+    if (chevron) chevron.style.transform = 'rotate(180deg)';
+    ul.style.maxHeight = ul.scrollHeight + 'px';
+    var onEnd = function (e) {
+        if (e.propertyName === 'max-height') {
+            ul.style.maxHeight = 'none';
+            ul.removeEventListener('transitionend', onEnd);
+        }
+    };
+    ul.addEventListener('transitionend', onEnd);
+}
+function closeBody(ul, chevron) {
+    if (chevron) chevron.style.transform = 'rotate(0deg)';
+    // Si está sin límite, fijarlo a px para poder animar el cierre
+    if (ul.style.maxHeight === 'none' || ul.style.maxHeight === '') {
+        ul.style.maxHeight = ul.scrollHeight + 'px';
+        void ul.offsetHeight; // fuerza reflow
+    }
+    requestAnimationFrame(function () { ul.style.maxHeight = '0px'; });
+}
+
 function toggleCategory(titleEl) {
     var ul      = titleEl.nextElementSibling;
     var chevron = titleEl.querySelector('.cat-chevron');
@@ -837,20 +860,15 @@ function toggleCategory(titleEl) {
     var saved = JSON.parse(localStorage.getItem('sidebarCategories') || '{}');
     document.querySelectorAll('.sidebar-cat').forEach(function (cat) {
         if (cat.dataset.cat === catId) return;
-        var otherUl      = cat.querySelector('.cat-body');
-        var otherChevron = cat.querySelector('.cat-chevron');
-        otherUl.style.maxHeight = '0px';
-        otherChevron.style.transform = 'rotate(0deg)';
+        closeBody(cat.querySelector('.cat-body'), cat.querySelector('.cat-chevron'));
         saved[cat.dataset.cat] = false;
     });
 
     if (isOpen) {
-        ul.style.maxHeight = '0px';
-        chevron.style.transform = 'rotate(0deg)';
+        closeBody(ul, chevron);
         saved[catId] = false;
     } else {
-        ul.style.maxHeight = ul.scrollHeight + 'px';
-        chevron.style.transform = 'rotate(180deg)';
+        openBody(ul, chevron);
         saved[catId] = true;
     }
 
@@ -866,17 +884,15 @@ document.addEventListener('DOMContentLoaded', function () {
         var catId   = cat.dataset.cat;
         var ul      = cat.querySelector('.cat-body');
         var chevron = cat.querySelector('.cat-chevron');
-        var titleEl = cat.querySelector('p');
 
         // ¿Contiene el enlace activo?
         var hasActive = Array.from(ul.querySelectorAll('a')).some(function (a) {
             return currentUrl.startsWith(a.href) && a.href !== window.location.origin + '/';
         });
 
-        var shouldOpen = hasActive || saved[catId] === true;
-
-        if (shouldOpen) {
-            ul.style.maxHeight = ul.scrollHeight + 'px';
+        if (hasActive || saved[catId] === true) {
+            // Abrir sin animación y sin límite (evita recortes del último ítem)
+            ul.style.maxHeight = 'none';
             chevron.style.transform = 'rotate(180deg)';
         }
     });
