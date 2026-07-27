@@ -59,7 +59,8 @@
                         @if($tieneContenido)
                         <tr class="{{ $loop->even ? 'bg-gray-50' : 'bg-white' }} border-b border-gray-100 hover:bg-blue-50 transition">
                             <td class="px-4 font-medium text-gray-500 whitespace-nowrap" style="height:80px;vertical-align:middle;">
-                                {{ $horaLabel }}
+                                <span class="block">{{ $horaLabel }}</span>
+                                <span class="block text-xs font-normal text-gray-400">{{ \App\Models\Horario::$horasRangos[$horaNum] ?? '' }}</span>
                             </td>
                             @foreach($diasConDatos as $diaNum)
                                 @php $celda = $grid[$horaNum][$diaNum] ?? null; @endphp

@@ -6,24 +6,12 @@
 @php
     Carbon\Carbon::setLocale('es');
 
-    // Horario real: inicio de cada hora
-    $horaInicio = [
-        1 => '7:00',  2 => '7:45',
-        3 => '8:50',  4 => '9:35',
-        5 => '10:20', 6 => '11:05',
-        7 => '12:10', 8 => '12:55',
-    ];
-    // Fin de cada hora (45 min después)
-    $horaFin = [
-        1 => '7:45',  2 => '8:30',
-        3 => '9:35',  4 => '10:20',
-        5 => '11:05', 6 => '11:50',
-        7 => '12:55', 8 => '13:40',
-    ];
+    // Rangos horarios reales desde la fuente única del modelo
+    $horasRangos = \App\Models\Horario::$horasRangos;
 
     // Bloques de dos horas y descansos que van después de un par
     $bloques   = [[1,2],[3,4],[5,6],[7,8]];
-    $descansos = [2 => '8:30 – 8:50', 6 => '11:50 – 12:10'];
+    $descansos = \App\Models\Horario::$descansos;
 
     // Pre-calcular por bloque y día si las dos horas son idénticas (→ merge)
     $mergeMatrix = [];
@@ -202,7 +190,7 @@
                     <tr>
                         <td class="col-hora">
                             <span style="font-size:10px;font-weight:800;color:#4338ca;">{{ $h1 }}ª hora</span><br>
-                            <span style="font-size:9px;font-weight:400;color:#94a3b8;">{{ $horaInicio[$h1] }} – {{ $horaFin[$h1] }}</span>
+                            <span style="font-size:9px;font-weight:400;color:#94a3b8;">{{ $horasRangos[$h1] ?? '' }}</span>
                         </td>
                         @foreach($diasConDatos as $diaNum)
                         @php
@@ -231,7 +219,7 @@
                     <tr>
                         <td class="col-hora">
                             <span style="font-size:10px;font-weight:800;color:#4338ca;">{{ $h2 }}ª hora</span><br>
-                            <span style="font-size:9px;font-weight:400;color:#94a3b8;">{{ $horaInicio[$h2] }} – {{ $horaFin[$h2] }}</span>
+                            <span style="font-size:9px;font-weight:400;color:#94a3b8;">{{ $horasRangos[$h2] ?? '' }}</span>
                         </td>
                         @foreach($diasConDatos as $diaNum)
                         @if(!($mergeMatrix[$h1][$diaNum] ?? false))

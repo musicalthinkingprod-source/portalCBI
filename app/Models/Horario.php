@@ -47,6 +47,13 @@ class Horario extends Model
         8 => '1:00 – 1:45',
     ];
 
+    // Descansos reales, indexados por la hora DESPUÉS de la cual ocurren.
+    // Fuente única para todas las vistas de horario.
+    public static array $descansos = [
+        2 => '8:30 – 8:50',
+        6 => '11:50 – 12:15',
+    ];
+
     /**
      * Grilla de horario para un curso.
      * Retorna array[hora][dia] = ['materia' => ..., 'docente' => ...]

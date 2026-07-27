@@ -161,7 +161,7 @@
                                 <p class="text-xs text-gray-400 truncate">{{ $clase->NOMBRE_DOC }}</p>
                             @endif
                         </div>
-                        <span class="text-xs text-gray-300">Hora {{ $clase->HORA }}</span>
+                        <span class="text-xs text-gray-300">{{ \App\Models\Horario::$horasRangos[$clase->HORA] ?? ('Hora '.$clase->HORA) }}</span>
                     </div>
                 @endforeach
             </div>
@@ -178,10 +178,9 @@
 {{-- Horario completo (colapsable) --}}
 @if(!empty($gridCompleto))
 @php
-    $horaInicio = [1=>'7:00',2=>'7:45',3=>'8:50',4=>'9:35',5=>'10:20',6=>'11:05',7=>'12:10',8=>'12:55'];
-    $horaFin    = [1=>'7:45',2=>'8:30',3=>'9:35',4=>'10:20',5=>'11:05',6=>'11:50',7=>'12:55',8=>'13:40'];
-    $descansos  = [2=>'8:30–8:50', 6=>'11:50–12:10'];
-    $bloques    = [[1,2],[3,4],[5,6],[7,8]];
+    $horasRangos = \App\Models\Horario::$horasRangos;
+    $descansos   = \App\Models\Horario::$descansos;
+    $bloques     = [[1,2],[3,4],[5,6],[7,8]];
 
     // Merge: dos horas consecutivas con la misma materia → rowspan
     $merge = [];
@@ -239,7 +238,7 @@
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
                         <td class="px-3 py-3 bg-gray-50 font-semibold text-blue-700 whitespace-nowrap text-xs">
                             {{ $h1 }}ª<br>
-                            <span class="text-gray-400 font-normal">{{ $horaInicio[$h1] }}–{{ $horaFin[$h1] }}</span>
+                            <span class="text-gray-400 font-normal">{{ $horasRangos[$h1] ?? '' }}</span>
                         </td>
                         @foreach($diasConDatos as $d)
                         @php
@@ -268,7 +267,7 @@
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
                         <td class="px-3 py-3 bg-gray-50 font-semibold text-blue-700 whitespace-nowrap text-xs">
                             {{ $h2 }}ª<br>
-                            <span class="text-gray-400 font-normal">{{ $horaInicio[$h2] }}–{{ $horaFin[$h2] }}</span>
+                            <span class="text-gray-400 font-normal">{{ $horasRangos[$h2] ?? '' }}</span>
                         </td>
                         @foreach($diasConDatos as $d)
                         @if(!($merge[$h1][$d] ?? false))

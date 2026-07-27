@@ -40,8 +40,7 @@
         @php
             $prox    = $proximaFecha[$slot['dia']] ?? null;
             $esHoy   = $diaCicloHoy === $slot['dia'];
-            $inicio  = $horaInicio[$slot['hora']] ?? '—';
-            $fin     = $horaFin[$slot['hora']]    ?? '—';
+            $rango   = \App\Models\Horario::$horasRangos[$slot['hora']] ?? '—';
         @endphp
         <div class="flex items-center gap-3 rounded-xl px-3 py-2 {{ $esHoy ? 'bg-indigo-50 border border-indigo-200' : 'bg-gray-50' }}">
             <div class="text-center shrink-0 w-10">
@@ -53,7 +52,7 @@
             <div class="w-px h-6 bg-gray-200 shrink-0"></div>
             <div class="flex-1 min-w-0">
                 <p class="text-xs font-semibold {{ $esHoy ? 'text-indigo-800' : 'text-gray-700' }}">
-                    {{ $inicio }} – {{ $fin }}
+                    {{ $rango }}
                 </p>
                 @if($prox)
                     <p class="text-[10px] text-gray-400 leading-tight">

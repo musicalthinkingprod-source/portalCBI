@@ -5,15 +5,7 @@
 @section('slot')
 @php
     $esSuperAd = auth()->user()->PROFILE === 'SuperAd';
-
-    $horaInicio = [
-        1=>'7:00', 2=>'7:45', 3=>'8:50', 4=>'9:35',
-        5=>'10:20', 6=>'11:05', 7=>'12:10', 8=>'12:55',
-    ];
-    $horaFin = [
-        1=>'7:45', 2=>'8:30', 3=>'9:35', 4=>'10:20',
-        5=>'11:05', 6=>'11:50', 7=>'12:55', 8=>'13:40',
-    ];
+    $horasRangos = \App\Models\Horario::$horasRangos;
 @endphp
 
 <div class="max-w-6xl mx-auto py-6 px-4" x-data="reemplazoModal()">
@@ -86,7 +78,7 @@
                     {{-- Columna hora --}}
                     <td class="px-4 whitespace-nowrap" style="height:80px;vertical-align:middle;">
                         <span class="font-semibold text-indigo-700 text-xs">{{ $horaNum }}ª hora</span><br>
-                        <span class="text-gray-400 text-xs">{{ $horaInicio[$horaNum] ?? '' }} – {{ $horaFin[$horaNum] ?? '' }}</span>
+                        <span class="text-gray-400 text-xs">{{ $horasRangos[$horaNum] ?? '' }}</span>
                     </td>
 
                     @foreach($diasConDatos as $diaNum)
@@ -136,7 +128,7 @@
                                         diaCiclo:  {{ $diaNum }},
                                         curso:     '{{ $celda['curso'] }}',
                                         fecha:     '{{ $proxFecha->format('Y-m-d') }}',
-                                        horaLabel: '{{ $horaNum }}ª hora ({{ $horaInicio[$horaNum] ?? '' }})',
+                                        horaLabel: '{{ $horaNum }}ª hora ({{ $horasRangos[$horaNum] ?? '' }})',
                                         cursoLabel:'{{ $celda['curso'] }} – {{ addslashes($celda['materia']) }}'
                                     })"
                                     class="mt-1 w-full text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded px-2 py-0.5 transition">

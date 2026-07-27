@@ -4,18 +4,7 @@
 
 @section('slot')
 @php
-    $horaInicio = [
-        1=>'7:00',  2=>'7:45',
-        3=>'8:50',  4=>'9:35',
-        5=>'10:20', 6=>'11:05',
-        7=>'12:10', 8=>'12:55',
-    ];
-    $horaFin = [
-        1=>'7:45',  2=>'8:30',
-        3=>'9:35',  4=>'10:20',
-        5=>'11:05', 6=>'11:50',
-        7=>'12:55', 8=>'13:40',
-    ];
+    $horasRangos   = \App\Models\Horario::$horasRangos;
     $totalDocentes = $todosDocentes->count();
 @endphp
 
@@ -64,7 +53,7 @@
             <div class="flex items-center justify-between px-5 py-3 bg-indigo-700 text-white">
                 <div class="flex items-center gap-3">
                     <span class="font-bold">{{ $horaLabel }}</span>
-                    <span class="text-indigo-200 text-sm">{{ $horaInicio[$horaNum] ?? '' }} – {{ $horaFin[$horaNum] ?? '' }}</span>
+                    <span class="text-indigo-200 text-sm">{{ $horasRangos[$horaNum] ?? '' }}</span>
                 </div>
                 <div class="flex items-center gap-3 text-sm">
                     <span class="bg-white/20 rounded-full px-3 py-0.5 font-semibold">
