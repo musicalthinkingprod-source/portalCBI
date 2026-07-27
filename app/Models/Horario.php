@@ -215,6 +215,138 @@ class Horario extends Model
     }
 
     /**
+     * Docentes ocupados en cada slot del ciclo.
+     * Resultado: array[dia_ciclo][hora] = [CODIGO_EMP, ...] (arrays secuenciales).
+     *
+     * Contempla clases regulares, Artes/Música (25/26 que en HORARIOS figuran como 70),
+     * subgrupos (7A-1), bloques DOC* (Atención a Padres) y Proyecto (GP*).
+     * Fuente única usada por el modal de reemplazo y la programación de reuniones.
+     */
+    public static function ocupacionPorSlot(): array
+    {
+        $ocupados = [];
+
+        // 1. Clases regulares + Artes/Música (25/26→70) + subgrupos + VOC*
+        DB::table('HORARIOS as h')
+            ->join('ASIGNACION_PCM as a', function ($join) {
+                $join->where(function ($q) {
+                         $q->whereColumn('a.CODIGO_MAT', 'h.CODIGO_MAT')
+                           ->orWhereRaw('(a.CODIGO_MAT IN (25,26) AND h.CODIGO_MAT = 70)');
+                     })
+                     ->where(function ($q) {
+                         $q->whereColumn('a.CURSO', 'h.CURSO')
+                           ->orWhereRaw("a.CURSO LIKE CONCAT(h.CURSO, '-%')");
+                     });
+            })
+            ->whereRaw("h.CURSO NOT LIKE 'DOC%'")
+            ->select('h.DIA', 'h.HORA', 'a.CODIGO_EMP')
+            ->distinct()
+            ->get()
+            ->each(function ($row) use (&$ocupados) {
+                $ocupados[$row->DIA][$row->HORA][] = $row->CODIGO_EMP;
+            });
+
+        // 2. Slots DOC-prefixed (Atención a Padres, etc.)
+        DB::table('HORARIOS')
+            ->whereRaw("CURSO LIKE 'DOC%'")
+            ->where('CODIGO_MAT', '!=', 0)
+            ->select('DIA', 'HORA', DB::raw('CURSO as CODIGO_EMP'))
+            ->get()
+            ->each(function ($row) use (&$ocupados) {
+                $ocupados[$row->DIA][$row->HORA][] = $row->CODIGO_EMP;
+            });
+
+        // 3. Proyecto (GP*): ocupado en cualquier slot de CODIGO_MAT=31
+        DB::table('HORARIOS as h')
+            ->join('ASIGNACION_PCM as a', 'a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
+            ->whereRaw("a.CURSO LIKE 'GP%'")
+            ->whereRaw("h.CURSO NOT LIKE 'DOC%'")
+            ->whereRaw("h.CURSO NOT LIKE 'GP%'")
+            ->select('h.DIA', 'h.HORA', 'a.CODIGO_EMP')
+            ->distinct()
+            ->get()
+            ->each(function ($row) use (&$ocupados) {
+                $ocupados[$row->DIA][$row->HORA][] = $row->CODIGO_EMP;
+            });
+
+        // Deduplicar. array_values() reindexa para que @json serialice arrays JS reales.
+        foreach ($ocupados as $dia => $horas) {
+            foreach ($horas as $hora => $docs) {
+                $ocupados[$dia][$hora] = array_values(array_unique($docs));
+            }
+        }
+
+        return $ocupados;
+    }
+
+    /**
+     * Detalle de qué clase tiene cada docente ocupado en cada slot.
+     * Resultado: array[dia_ciclo][hora][CODIGO_EMP] = ['Materia · Curso', ...].
+     * Complementa ocupacionPorSlot() para poder mostrar el motivo del conflicto.
+     */
+    public static function detalleOcupacionPorSlot(): array
+    {
+        $det = [];
+        $push = function ($dia, $hora, $cod, $label) use (&$det) {
+            $label = trim($label);
+            if ($label === '') return;
+            $actual = $det[$dia][$hora][$cod] ?? [];
+            if (!in_array($label, $actual, true)) {
+                $actual[] = $label;
+            }
+            $det[$dia][$hora][$cod] = $actual;
+        };
+
+        // 1. Clases regulares + Artes/Música (25/26→70) + subgrupos + VOC*
+        DB::table('HORARIOS as h')
+            ->join('ASIGNACION_PCM as a', function ($join) {
+                $join->where(function ($q) {
+                         $q->whereColumn('a.CODIGO_MAT', 'h.CODIGO_MAT')
+                           ->orWhereRaw('(a.CODIGO_MAT IN (25,26) AND h.CODIGO_MAT = 70)');
+                     })
+                     ->where(function ($q) {
+                         $q->whereColumn('a.CURSO', 'h.CURSO')
+                           ->orWhereRaw("a.CURSO LIKE CONCAT(h.CURSO, '-%')");
+                     });
+            })
+            ->leftJoin('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'a.CODIGO_MAT')
+            ->whereRaw("h.CURSO NOT LIKE 'DOC%'")
+            ->select('h.DIA', 'h.HORA', 'a.CODIGO_EMP', 'a.CURSO', 'm.NOMBRE_MAT')
+            ->distinct()
+            ->get()
+            ->each(function ($r) use ($push) {
+                $push($r->DIA, $r->HORA, $r->CODIGO_EMP, ($r->NOMBRE_MAT ?? 'Clase') . ' · ' . $r->CURSO);
+            });
+
+        // 2. Slots DOC-prefixed (Atención a Padres, etc.)
+        DB::table('HORARIOS as h')
+            ->leftJoin('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'h.CODIGO_MAT')
+            ->whereRaw("h.CURSO LIKE 'DOC%'")
+            ->where('h.CODIGO_MAT', '!=', 0)
+            ->select('h.DIA', 'h.HORA', DB::raw('h.CURSO as CODIGO_EMP'), 'm.NOMBRE_MAT')
+            ->get()
+            ->each(function ($r) use ($push) {
+                $push($r->DIA, $r->HORA, $r->CODIGO_EMP, $r->NOMBRE_MAT ?? 'Atención a Padres');
+            });
+
+        // 3. Proyecto (GP*)
+        DB::table('HORARIOS as h')
+            ->join('ASIGNACION_PCM as a', 'a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
+            ->leftJoin('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'a.CODIGO_MAT')
+            ->whereRaw("a.CURSO LIKE 'GP%'")
+            ->whereRaw("h.CURSO NOT LIKE 'DOC%'")
+            ->whereRaw("h.CURSO NOT LIKE 'GP%'")
+            ->select('h.DIA', 'h.HORA', 'a.CODIGO_EMP', 'a.CURSO', 'm.NOMBRE_MAT')
+            ->distinct()
+            ->get()
+            ->each(function ($r) use ($push) {
+                $push($r->DIA, $r->HORA, $r->CODIGO_EMP, ($r->NOMBRE_MAT ?? 'Proyecto') . ' · ' . $r->CURSO);
+            });
+
+        return $det;
+    }
+
+    /**
      * Retorna las fechas del calendario para cada día del ciclo en un año dado.
      * Resultado: array[dia_ciclo] = [fecha1, fecha2, ...]  (Carbon instances)
      */

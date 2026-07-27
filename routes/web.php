@@ -551,6 +551,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/horarios/disponibilidad', [HorariosController::class, 'disponibilidad'])->name('horarios.disponibilidad');
     Route::middleware('profile:SuperAd')->group(function () {
         Route::get('/horarios/conflictos', [HorariosController::class, 'conflictos'])->name('horarios.conflictos');
+        Route::get('/reuniones', [\App\Http\Controllers\ReunionesController::class, 'index'])->name('reuniones.index');
     });
 
     // ── Mi Horario: vista personal del docente y coordinador ──────────────

@@ -415,59 +415,7 @@ class HorariosController extends Controller
         // ── Datos para el modal de reemplazo ──────────────────────────────────
 
         // Qué docente ocupa cada slot [dia_ciclo][hora] = [CODIGO_EMP, ...]
-        $ocupadosPorSlot = [];
-
-        // 1. Clases regulares + Artes/Música (25/26→70) + subgrupos + VOC*
-        DB::table('HORARIOS as h')
-            ->join('ASIGNACION_PCM as a', function ($join) {
-                $join->where(function ($q) {
-                         $q->whereColumn('a.CODIGO_MAT', 'h.CODIGO_MAT')
-                           ->orWhereRaw('(a.CODIGO_MAT IN (25,26) AND h.CODIGO_MAT = 70)');
-                     })
-                     ->where(function ($q) {
-                         $q->whereColumn('a.CURSO', 'h.CURSO')
-                           ->orWhereRaw("a.CURSO LIKE CONCAT(h.CURSO, '-%')");
-                     });
-            })
-            ->whereRaw("h.CURSO NOT LIKE 'DOC%'")
-            ->select('h.DIA', 'h.HORA', 'a.CODIGO_EMP')
-            ->distinct()
-            ->get()
-            ->each(function ($row) use (&$ocupadosPorSlot) {
-                $ocupadosPorSlot[$row->DIA][$row->HORA][] = $row->CODIGO_EMP;
-            });
-
-        // 2. Slots DOC-prefixed (Atención a Padres, etc.)
-        DB::table('HORARIOS')
-            ->whereRaw("CURSO LIKE 'DOC%'")
-            ->where('CODIGO_MAT', '!=', 0)
-            ->select('DIA', 'HORA', DB::raw('CURSO as CODIGO_EMP'))
-            ->get()
-            ->each(function ($row) use (&$ocupadosPorSlot) {
-                $ocupadosPorSlot[$row->DIA][$row->HORA][] = $row->CODIGO_EMP;
-            });
-
-        // 3. Proyecto (GP*): ocupado en cualquier slot de CODIGO_MAT=31
-        DB::table('HORARIOS as h')
-            ->join('ASIGNACION_PCM as a', 'a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
-            ->whereRaw("a.CURSO LIKE 'GP%'")
-            ->whereRaw("h.CURSO NOT LIKE 'DOC%'")
-            ->whereRaw("h.CURSO NOT LIKE 'GP%'")
-            ->select('h.DIA', 'h.HORA', 'a.CODIGO_EMP')
-            ->distinct()
-            ->get()
-            ->each(function ($row) use (&$ocupadosPorSlot) {
-                $ocupadosPorSlot[$row->DIA][$row->HORA][] = $row->CODIGO_EMP;
-            });
-
-        // Deduplicar. array_values() reindexa para que @json serialice un array JS
-        // real (no un objeto con claves huecas), de lo contrario ocupados.includes()
-        // falla en el modal de reemplazo.
-        foreach ($ocupadosPorSlot as $dia => $horas) {
-            foreach ($horas as $hora => $docs) {
-                $ocupadosPorSlot[$dia][$hora] = array_values(array_unique($docs));
-            }
-        }
+        $ocupadosPorSlot = Horario::ocupacionPorSlot();
 
         // Inicio del ciclo actual para contar reemplazos
         $inicioCiclo = DB::table('calendario_academico')

@@ -328,6 +328,7 @@
                 @if($isSuperAd)
                 {!! sidebarLink(route('horarios.index'), '🗓️ Horarios') !!}
                 {!! sidebarLink(route('horarios.disponibilidad'), '🟢 Disponibilidad docentes') !!}
+                {!! sidebarLink(route('reuniones.index'), '🤝 Programación de reuniones') !!}
                 {!! sidebarLink(route('asistencia-personal.reemplazos'), '🔄 Reemplazos') !!}
                 {!! sidebarLink(route('derroteros.tablero'), '📅 Tablero recuperaciones') !!}
                 @endif
