@@ -54,12 +54,39 @@ class ReunionesController extends Controller
             ];
         }
 
+        // ── Datos para asignar reemplazo (mismos criterios que HorariosController@porDocente) ──
+
+        // Inicio del ciclo actual para contar reemplazos
+        $inicioCiclo = DB::table('calendario_academico')
+            ->where('fecha', '<=', $hoy->toDateString())
+            ->where('dia_ciclo', 1)
+            ->orderByDesc('fecha')
+            ->value('fecha') ?? $hoy->toDateString();
+
+        // Cuántos reemplazos lleva cada docente en el ciclo actual
+        $reemplazosCiclo = DB::table('reemplazos_asignados')
+            ->where('fecha', '>=', $inicioCiclo)
+            ->select('codigo_emp_reemplazo', DB::raw('COUNT(*) as total'))
+            ->groupBy('codigo_emp_reemplazo')
+            ->pluck('total', 'codigo_emp_reemplazo')
+            ->toArray();
+
+        // Docentes que dictan en cada curso (para la ⭐)
+        $docentesPorCurso = DB::table('ASIGNACION_PCM')
+            ->select('CODIGO_EMP', 'CURSO')
+            ->get()
+            ->groupBy('CURSO')
+            ->map(fn ($rows) => $rows->pluck('CODIGO_EMP')->unique()->values()->toArray())
+            ->toArray();
+
         return view('reuniones.index', [
-            'docentes'     => $docentes,
-            'ocupacion'    => $ocupacion,
-            'ocupacionDet' => $ocupacionDet,
-            'dias'         => $dias,
-            'horas'        => $horas,
+            'docentes'         => $docentes,
+            'ocupacion'        => $ocupacion,
+            'ocupacionDet'     => $ocupacionDet,
+            'dias'             => $dias,
+            'horas'            => $horas,
+            'reemplazosCiclo'  => $reemplazosCiclo,
+            'docentesPorCurso' => $docentesPorCurso,
         ]);
     }
 }

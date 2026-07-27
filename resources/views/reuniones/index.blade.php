@@ -178,7 +178,7 @@
                                                         <template x-if="reemplazoAsignado(detalle.dia, detalle.hora, c, cl.curso)">
                                                             <span class="text-[11px] font-semibold bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
                                                                 ✓ Reemplaza:
-                                                                <span x-text="reemplazoAsignado(detalle.dia, detalle.hora, c, cl.curso).nombre"></span>
+                                                                <span x-text="reemplazoAsignado(detalle.dia, detalle.hora, c, cl.curso).nombre + ' (' + reemplazoAsignado(detalle.dia, detalle.hora, c, cl.curso).reemplazos + ' reem.)'"></span>
                                                             </span>
                                                         </template>
 
@@ -205,10 +205,11 @@
                                                                 <select x-model="reemplazoSel"
                                                                     class="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400">
                                                                     <option value="">— Docente que reemplaza —</option>
-                                                                    <template x-for="d in candidatosReemplazo(detalle.dia, detalle.hora, c)" :key="'cand-'+c+'-'+d.codigo">
-                                                                        <option :value="d.codigo" x-text="d.nombre"></option>
+                                                                    <template x-for="d in candidatosReemplazo(detalle.dia, detalle.hora, c, cl.curso)" :key="'cand-'+c+'-'+d.codigo">
+                                                                        <option :value="d.codigo" x-text="(d.delCurso ? '★ ' : '') + d.nombre + ' (' + d.reemplazos + ' reem.)'"></option>
                                                                     </template>
                                                                 </select>
+                                                                <p class="text-[10px] text-gray-400">★ = ya dicta este curso · ordenados por menos reemplazos en el ciclo</p>
                                                                 <div class="flex items-center gap-2">
                                                                     <input type="date" x-model="reemplazoFecha"
                                                                         class="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400">
@@ -220,7 +221,7 @@
                                                                         <span x-show="guardando">…</span>
                                                                     </button>
                                                                 </div>
-                                                                <p x-show="candidatosReemplazo(detalle.dia, detalle.hora, c).length === 0"
+                                                                <p x-show="candidatosReemplazo(detalle.dia, detalle.hora, c, cl.curso).length === 0"
                                                                    class="text-[11px] text-amber-600">
                                                                     No hay docentes libres (fuera de la reunión) en este slot.
                                                                 </p>
@@ -248,8 +249,10 @@ const _ocupacion    = @json($ocupacion);
 const _ocupacionDet = @json($ocupacionDet);
 const _dias         = @json($dias);
 const _horas        = @json($horas);
-const _csrf         = '{{ csrf_token() }}';
-const _urlAsignar   = '{{ route('asistencia-personal.reemplazos.asignar') }}';
+const _csrf            = '{{ csrf_token() }}';
+const _urlAsignar      = '{{ route('asistencia-personal.reemplazos.asignar') }}';
+const _reemplazosCiclo = @json($reemplazosCiclo);
+const _docentesPorCurso= @json($docentesPorCurso);
 
 function reunionesAnalyzer() {
     return {
@@ -258,8 +261,10 @@ function reunionesAnalyzer() {
         ocupacionDet:  _ocupacionDet,
         dias:          _dias,
         horas:         _horas,
-        csrf:          _csrf,
-        urlAsignar:    _urlAsignar,
+        csrf:            _csrf,
+        urlAsignar:      _urlAsignar,
+        reemplazosCiclo: _reemplazosCiclo,
+        docentesPorCurso:_docentesPorCurso,
         seleccionados: [],
         busqueda:      '',
         detalle:       null,
@@ -331,17 +336,32 @@ function reunionesAnalyzer() {
             this.reemplazoSel   = '';
             this.reemplazoFecha = this.detalle ? (this.fechaISODe(this.detalle.dia) || '') : '';
         },
-        // Docentes libres en el slot que pueden reemplazar (fuera de la reunión y no usados ya)
-        candidatosReemplazo(dia, hora, ausente) {
+        // Docentes libres en el slot que pueden reemplazar (fuera de la reunión y no usados ya).
+        // Mismo criterio que HorariosController@porDocente: primero los del curso (⭐),
+        // luego los que menos reemplazos llevan en el ciclo, y por nombre.
+        candidatosReemplazo(dia, hora, ausente, curso) {
             const arr = (this.ocupacion[dia] || {})[hora] || [];
             const usados = Object.keys(this.reemplazados)
                 .filter(k => k.startsWith(dia + '|' + hora + '|'))
                 .map(k => this.reemplazados[k].codigo);
-            return this.docentes.filter(d =>
-                d.codigo !== ausente &&
-                !arr.includes(d.codigo) &&
-                !this.seleccionados.includes(d.codigo) &&
-                !usados.includes(d.codigo));
+            const delCurso = this.docentesPorCurso[curso] || [];
+            return this.docentes
+                .filter(d =>
+                    d.codigo !== ausente &&
+                    !arr.includes(d.codigo) &&
+                    !this.seleccionados.includes(d.codigo) &&
+                    !usados.includes(d.codigo))
+                .map(d => ({
+                    codigo:     d.codigo,
+                    nombre:     d.nombre,
+                    delCurso:   delCurso.includes(d.codigo),
+                    reemplazos: this.reemplazosCiclo[d.codigo] || 0,
+                }))
+                .sort((a, b) => {
+                    if (b.delCurso !== a.delCurso) return (b.delCurso ? 1 : 0) - (a.delCurso ? 1 : 0);
+                    if (a.reemplazos !== b.reemplazos) return a.reemplazos - b.reemplazos;
+                    return a.nombre.localeCompare(b.nombre);
+                });
         },
         async confirmarReemplazo(dia, hora, ausente, curso) {
             if (!this.reemplazoSel || this.guardando) return;
@@ -363,9 +383,14 @@ function reunionesAnalyzer() {
                 });
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 const cod = this.reemplazoSel;
+                // Actualiza el conteo del ciclo en vivo (para la ⭐/badge de los demás)
+                this.reemplazosCiclo = {
+                    ...this.reemplazosCiclo,
+                    [cod]: (this.reemplazosCiclo[cod] || 0) + 1,
+                };
                 this.reemplazados = {
                     ...this.reemplazados,
-                    [this.keyReemplazo(dia, hora, ausente, curso)]: { codigo: cod, nombre: this.nombre(cod) },
+                    [this.keyReemplazo(dia, hora, ausente, curso)]: { codigo: cod, nombre: this.nombre(cod), reemplazos: this.reemplazosCiclo[cod] },
                 };
                 this.reemplazoKey = null;
                 this.reemplazoSel = '';
