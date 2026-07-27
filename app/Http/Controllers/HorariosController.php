@@ -460,10 +460,12 @@ class HorariosController extends Controller
                 $ocupadosPorSlot[$row->DIA][$row->HORA][] = $row->CODIGO_EMP;
             });
 
-        // Deduplicar
+        // Deduplicar. array_values() reindexa para que @json serialice un array JS
+        // real (no un objeto con claves huecas), de lo contrario ocupados.includes()
+        // falla en el modal de reemplazo.
         foreach ($ocupadosPorSlot as $dia => $horas) {
             foreach ($horas as $hora => $docs) {
-                $ocupadosPorSlot[$dia][$hora] = array_unique($docs);
+                $ocupadosPorSlot[$dia][$hora] = array_values(array_unique($docs));
             }
         }
 
