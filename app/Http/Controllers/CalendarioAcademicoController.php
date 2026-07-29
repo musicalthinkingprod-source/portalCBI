@@ -21,7 +21,12 @@ class CalendarioAcademicoController extends Controller
             return ['todos', 'interno', 'docentes'];
         }
 
-        // ConvCor*, Ori, Sec*, Admin, Contab y cualquier otro interno
+        // Orientación: acceso total de lectura a todas las visibilidades
+        if (str_starts_with($profile, 'Ori')) {
+            return ['todos', 'interno', 'docentes', 'directivas', 'padres'];
+        }
+
+        // ConvCor*, Sec*, Admin, Contab y cualquier otro interno
         return ['todos', 'interno', 'directivas'];
     }
 

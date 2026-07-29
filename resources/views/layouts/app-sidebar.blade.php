@@ -598,6 +598,9 @@
                 {!! sidebarLink(route('documentacion.index'), '📁 Documentación') !!}
                 {!! sidebarLink(route('informes.boletin'), '📋 Boletines') !!}
                 @endif
+                @if(str_starts_with($profile, 'Ori'))
+                {!! sidebarLink(route('calendario.index'), '📆 Calendario académico') !!}
+                @endif
             </ul>
         </div>
         @endif

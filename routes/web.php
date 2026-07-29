@@ -302,8 +302,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/salvavidas/reporte', [SalvavidasController::class, 'reporte'])->name('salvavidas.reporte');
     });
 
-    // ── Calendario académico: Admin y Secretaría (con edición) ───────────────
-    Route::middleware('profile:SuperAd,Admin,SEC001,SecC100')->group(function () {
+    // ── Calendario académico: Admin, Secretaría y Orientación (solo lectura para Ori) ──
+    Route::middleware('profile:SuperAd,Admin,SEC001,SecC100,Ori*')->group(function () {
         Route::get('/calendario', [CalendarioAcademicoController::class, 'index'])->name('calendario.index');
     });
 
