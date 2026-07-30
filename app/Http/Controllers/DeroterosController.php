@@ -214,9 +214,10 @@ class DeroterosController extends Controller
         $periodo     = (int) $request->input('periodo', 1);
         $cursoFiltro = $request->input('curso');
         $busqueda    = $request->input('busqueda');
+        $matFiltro   = $request->input('materia') ? (int) $request->input('materia') : null;
         $ordenSelec  = $request->input('orden', 'apellido');
 
-        $derroteros = $this->calcularDerroteros($periodo, $anio, $cursoFiltro, $busqueda, null, true);
+        $derroteros = $this->calcularDerroteros($periodo, $anio, $cursoFiltro, $busqueda, $matFiltro, true);
 
         $derroteros = match ($ordenSelec) {
             'codigo'   => $derroteros->sortKeys(),
@@ -232,8 +233,14 @@ class DeroterosController extends Controller
             ->where('ESTADO', 'MATRICULADO')
             ->distinct()->orderBy('CURSO')->pluck('CURSO');
 
+        $materias = DB::table('CODIGOSMAT')
+            ->whereNotIn('CODIGO_MAT', self::SIN_RECUPERACION)
+            ->orderBy('NOMBRE_MAT')
+            ->get(['CODIGO_MAT', 'NOMBRE_MAT']);
+
         return view('derroteros.index', compact(
-            'derroteros', 'anio', 'periodo', 'cursoFiltro', 'busqueda', 'cursos', 'ordenSelec'
+            'derroteros', 'anio', 'periodo', 'cursoFiltro', 'busqueda', 'cursos', 'ordenSelec',
+            'materias', 'matFiltro'
         ));
     }
 

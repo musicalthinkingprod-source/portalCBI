@@ -5,7 +5,7 @@
     {{-- Filtros --}}
     <div class="bg-white rounded-xl shadow p-5 mb-6">
         <form method="GET" action="{{ route('derroteros.index') }}">
-            <div class="grid grid-cols-1 sm:grid-cols-6 gap-4 items-end">
+            <div class="grid grid-cols-1 sm:grid-cols-7 gap-4 items-end">
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Año</label>
                     <input type="number" name="anio" value="{{ $anio }}" min="2024" max="2030"
@@ -25,6 +25,15 @@
                         <option value="">Todos</option>
                         @foreach($cursos as $c)
                             <option value="{{ $c }}" {{ $cursoFiltro == $c ? 'selected' : '' }}>{{ $c }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Materia</label>
+                    <select name="materia" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Todas</option>
+                        @foreach($materias as $mat)
+                            <option value="{{ $mat->CODIGO_MAT }}" {{ (string) $matFiltro === (string) $mat->CODIGO_MAT ? 'selected' : '' }}>{{ $mat->NOMBRE_MAT }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -52,7 +61,7 @@
 
     @if($derroteros->isEmpty())
         <div class="bg-white rounded-xl shadow p-8 text-center text-gray-400 text-sm">
-            Sin derroteros para el período {{ $periodo }} de {{ $anio }}{{ $cursoFiltro ? ' en el curso ' . $cursoFiltro : '' }}.
+            Sin derroteros para el período {{ $periodo }} de {{ $anio }}{{ $cursoFiltro ? ' en el curso ' . $cursoFiltro : '' }}{{ $matFiltro ? ' en la materia seleccionada' : '' }}.
         </div>
     @else
         <p class="text-xs text-gray-400 mb-3">{{ $derroteros->count() }} estudiantes con derroteros en el período {{ $periodo }}</p>
