@@ -219,52 +219,6 @@
         </div>
         @endif
 
-        {{-- ── PQRS: responsables (bandeja) + coordinación/admin (gestión) ── --}}
-        @if($isSuperAd || $isAdmin || $isCor || $isDoc || $isSec || $isOri || $isContab || $profile === 'ConvCor28')
-        @php
-            $catId = 'pqrs';
-            $pqrsGlobal = $isSuperAd || $isAdmin || $isCor;
-            if ($pqrsGlobal) {
-                $pqrsPend = \App\Models\Pqrs::where('estado', '!=', 'Resuelta')->count();
-            } else {
-                $misRespIds = \App\Models\PqrsResponsable::paraUsuario(auth()->user())->pluck('id')->all();
-                $pqrsPend = $misRespIds
-                    ? \App\Models\Pqrs::whereIn('responsable_id', $misRespIds)->where('estado', '!=', 'Resuelta')->count()
-                    : 0;
-            }
-        @endphp
-        <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
-            <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
-               onclick="toggleCategory(this)">
-                <span>PQRS</span>
-                <svg class="cat-chevron w-3.5 h-3.5 text-blue-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
-                </svg>
-            </p>
-            <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
-                @php
-                    $activeBandeja = request()->is('pqrs') || request()->is('pqrs/*');
-                    $clsBandeja = $activeBandeja
-                        ? 'flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-blue-700 text-white text-sm font-semibold'
-                        : 'flex items-center justify-between gap-2 px-3 py-2 rounded-lg hover:bg-blue-700 transition text-sm';
-                @endphp
-                <li>
-                    <a href="{{ route('pqrs.index') }}" class="{{ $clsBandeja }}">
-                        <span>📥 Bandeja PQRS</span>
-                        @if($pqrsPend > 0)
-                            <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-[10px] font-bold text-white bg-red-600 rounded-full">{{ $pqrsPend }}</span>
-                        @endif
-                    </a>
-                </li>
-                @if($pqrsGlobal)
-                    {!! sidebarLink(route('pqrs.metricas'), '📊 Métricas') !!}
-                    {!! sidebarLink(route('pqrs.responsables'), '👥 Responsables') !!}
-                    {!! sidebarLink(route('pqrs.areas'), '🗂️ Áreas') !!}
-                @endif
-            </ul>
-        </div>
-        @endif
-
         {{-- ── Orientación: Ori* ── --}}
         @if(str_starts_with($profile, 'Ori'))
         @php $catId = 'orientacion'; @endphp
@@ -376,7 +330,9 @@
                 {!! sidebarLink(route('horarios.disponibilidad'), '🟢 Disponibilidad docentes') !!}
                 {!! sidebarLink(route('reuniones.index'), '🤝 Programación de reuniones') !!}
                 {!! sidebarLink(route('asistencia-personal.reemplazos'), '🔄 Reemplazos') !!}
+                @if(Route::has('asistencia-personal.suplencias_dia'))
                 {!! sidebarLink(route('asistencia-personal.suplencias_dia'), '📋 Suplencias del día') !!}
+                @endif
                 {!! sidebarLink(route('derroteros.tablero'), '📅 Tablero recuperaciones') !!}
                 @endif
             </ul>
@@ -395,9 +351,6 @@
                 </svg>
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
-                @if($isAdmin || $isCor || $isOri)
-                {!! sidebarLink(route('asistencia.informe'), '📊 Informe de asistencia') !!}
-                @endif
                 @if($isSec || $isSuperAd)
                 {!! sidebarLink(route('asistencia.registro'), '✏️ Registrar asistencia') !!}
                 @endif
@@ -407,7 +360,7 @@
                 @if($profile === 'SecA')
                 {!! sidebarLink(route('asistencia-personal.registro'), '✏️ Registrar personal') !!}
                 @endif
-                @if(!$isSuperAd && !$isCor)
+                @if(!$isSuperAd)
                 {!! sidebarLink(route('asistencia.reporte'), '📋 Reporte de asistencia') !!}
                 @endif
                 @if($isAdminLike || $isSec)
@@ -417,12 +370,6 @@
                 @elseif($isCoordConv)
                 {!! sidebarLink(route('llamadas.reporte'), '📊 Reporte de llamadas') !!}
                 @endif
-                @endif
-                @if($isAdminLike || $isCor)
-                {!! sidebarLink(route('inasistencias.index'), '📝 Registro de inasistencia') !!}
-                @endif
-                @if($isDoc)
-                {!! sidebarLink(route('inasistencias.docente'), '📝 Inasistencias de mis cursos') !!}
                 @endif
             </ul>
         </div>
@@ -575,7 +522,9 @@
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
                 {!! sidebarLink(route('asistencia-personal.reemplazos'), '🔄 Nombrar suplencias') !!}
+                @if(Route::has('asistencia-personal.suplencias_dia'))
                 {!! sidebarLink(route('asistencia-personal.suplencias_dia'), '📋 Suplencias del día') !!}
+                @endif
             </ul>
         </div>
         @endif
@@ -699,7 +648,7 @@
                 {!! sidebarLink(route('derroteros.index'), '📊 Informe derroteros') !!}
                 {!! sidebarLink(route('derroteros.estadisticas'), '📈 Stats recuperaciones') !!}
                 {!! sidebarLink(route('salvavidas.reporte'), '📊 Reporte salvavidas') !!}
-                {!! sidebarLink(route('asistencia.informe'), '📊 Informe de asistencia') !!}
+                {!! sidebarLink(route('asistencia.reporte'), '📋 Reporte de asistencia') !!}
                 {!! sidebarLink(route('llamadas.reporte'), '📊 Reporte de llamadas') !!}
                 {!! sidebarLink(route('control.planilla'), '📋 Informe de planilla') !!}
                 {!! sidebarLink(route('certificados.buscar'), '📜 Certificados de notas') !!}

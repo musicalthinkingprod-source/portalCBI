@@ -46,9 +46,6 @@ use App\Http\Controllers\ObservacionesController;
 use App\Http\Controllers\BitacoraController;
 use App\Http\Controllers\DocumentacionController;
 use App\Http\Controllers\AsignacionesResumenController;
-use App\Http\Controllers\InasistenciaController;
-use App\Http\Controllers\PqrsController;
-use App\Http\Controllers\PqrsGestionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -88,20 +85,6 @@ Route::middleware('padre.verificado')->group(function () {
     Route::get('/padres/circulares', [PadresController::class, 'circulares'])->name('padres.circulares');
     Route::get('/padres/circulares/{circular}', [PadresController::class, 'circularShow'])->name('padres.circulares.show');
     Route::get('/padres/documentacion', [DocumentacionController::class, 'padres'])->name('padres.documentacion');
-
-    // ── Registro de Inasistencia (acudiente) ─────────────────────────────────
-    Route::get('/padres/inasistencias',        [InasistenciaController::class, 'historialPadres'])->name('padres.inasistencias.index');
-    Route::get('/padres/inasistencias/crear',  [InasistenciaController::class, 'crearPadres'])->name('padres.inasistencias.crear');
-    Route::post('/padres/inasistencias',       [InasistenciaController::class, 'storePadres'])->name('padres.inasistencias.store');
-    Route::get('/padres/inasistencias/{id}/adjunto/{adjId}', [InasistenciaController::class, 'adjuntoPadres'])->name('padres.inasistencias.adjunto');
-
-    // ── Sistema de PQRS (acudiente) ──────────────────────────────────────────
-    Route::get('/padres/pqrs',            [PqrsController::class, 'index'])->name('padres.pqrs.index');
-    Route::get('/padres/pqrs/crear',      [PqrsController::class, 'create'])->name('padres.pqrs.create');
-    Route::post('/padres/pqrs',           [PqrsController::class, 'store'])->name('padres.pqrs.store');
-    Route::get('/padres/pqrs/{id}',       [PqrsController::class, 'show'])->whereNumber('id')->name('padres.pqrs.show');
-    Route::get('/padres/pqrs/{id}/adjunto/{adjId}', [PqrsController::class, 'descargarAdjunto'])->name('padres.pqrs.adjunto');
-
     Route::get('/padres/bitacora', [PadresController::class, 'bitacora'])->name('padres.bitacora');
     Route::post('/padres/bitacora/{id}/confirmar', [PadresController::class, 'bitacoraConfirmar'])->name('padres.bitacora.confirmar');
     Route::post('/padres/bitacora/{id}/comentar', [PadresController::class, 'bitacoraComentar'])->name('padres.bitacora.comentar');
@@ -355,25 +338,6 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Asistencia reporte: todos los autenticados ────────────────────────────
     Route::get('/asistencia/reporte', [AsistenciaController::class, 'reporte'])->name('asistencia.reporte');
-
-    // ── Informe unificado de Asistencia: SuperAd, Admin, Coordinación, Orientación ──
-    Route::middleware('profile:SuperAd,Admin,COR*,Ori*')->group(function () {
-        Route::get('/asistencia/informe', [AsistenciaController::class, 'informe'])->name('asistencia.informe');
-    });
-
-    // ── Registro de Inasistencia · vista docente (solo lectura de sus cursos) ─
-    Route::middleware('profile:SuperAd,Admin,DOC*')->group(function () {
-        Route::get('/inasistencias/docente', [InasistenciaController::class, 'docente'])->name('inasistencias.docente');
-    });
-
-    // ── Registro de Inasistencia · bandeja Coordinación / Administración ──────
-    Route::middleware('profile:SuperAd,Admin,COR001,COR002')->group(function () {
-        Route::get('/inasistencias',                 [InasistenciaController::class, 'index'])->name('inasistencias.index');
-        Route::get('/inasistencias/{id}',            [InasistenciaController::class, 'show'])->whereNumber('id')->name('inasistencias.show');
-        Route::post('/inasistencias/{id}/revisar',   [InasistenciaController::class, 'revisar'])->whereNumber('id')->name('inasistencias.revisar');
-        Route::post('/inasistencias/{id}/ajustar',   [InasistenciaController::class, 'ajustar'])->whereNumber('id')->name('inasistencias.ajustar');
-        Route::get('/inasistencias/{id}/adjunto/{adjId}', [InasistenciaController::class, 'adjunto'])->whereNumber('id')->whereNumber('adjId')->name('inasistencias.adjunto');
-    });
 
     // ── PIAR Anexo 2 + Caracterizaciones ────────────────────────────────────
     Route::middleware('profile:SuperAd,Ori,Admin,DOC*,COR*,Piar')->group(function () {
@@ -659,31 +623,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/aseo/salidas',          [InventarioAseoController::class, 'salidas'])       ->name('aseo.salidas');
         Route::get('/aseo/salidas/nueva',    [InventarioAseoController::class, 'salidaCreate'])  ->name('aseo.salidas.create');
         Route::post('/aseo/salidas',         [InventarioAseoController::class, 'salidaStore'])   ->name('aseo.salidas.store');
-    });
-
-    // ── Sistema de PQRS (interno) ─────────────────────────────────────────────
-    // Bandeja: responsables (docentes/funcionarios) y coordinación/administración.
-    Route::middleware('profile:SuperAd,Admin,COR*,DOC*,Ori*,Sec*,Contab,ConvCor28')->group(function () {
-        Route::get('/pqrs',                    [PqrsGestionController::class, 'index'])->name('pqrs.index');
-        Route::get('/pqrs/{id}',               [PqrsGestionController::class, 'show'])->whereNumber('id')->name('pqrs.show');
-        Route::get('/pqrs/{id}/adjunto/{adjId}',[PqrsGestionController::class, 'descargarAdjunto'])->name('pqrs.adjunto');
-        Route::post('/pqrs/{id}/estado',       [PqrsGestionController::class, 'cambiarEstado'])->name('pqrs.estado');
-        Route::post('/pqrs/{id}/responder',    [PqrsGestionController::class, 'responder'])->name('pqrs.responder');
-    });
-
-    // Gestión global: reasignar, métricas y catálogos (coordinación / administración).
-    Route::middleware('profile:SuperAd,Admin,COR001,COR002')->group(function () {
-        Route::post('/pqrs/{id}/reasignar',    [PqrsGestionController::class, 'reasignar'])->name('pqrs.reasignar');
-        Route::get('/pqrs-metricas',           [PqrsGestionController::class, 'metricas'])->name('pqrs.metricas');
-
-        Route::get('/pqrs-areas',              [PqrsGestionController::class, 'areas'])->name('pqrs.areas');
-        Route::post('/pqrs-areas',             [PqrsGestionController::class, 'areasStore'])->name('pqrs.areas.store');
-        Route::put('/pqrs-areas/{id}',         [PqrsGestionController::class, 'areasUpdate'])->name('pqrs.areas.update');
-
-        Route::get('/pqrs-responsables',       [PqrsGestionController::class, 'responsables'])->name('pqrs.responsables');
-        Route::post('/pqrs-responsables',      [PqrsGestionController::class, 'responsablesStore'])->name('pqrs.responsables.store');
-        Route::put('/pqrs-responsables/{id}',  [PqrsGestionController::class, 'responsablesUpdate'])->name('pqrs.responsables.update');
-        Route::post('/pqrs-responsables/{id}/toggle', [PqrsGestionController::class, 'responsablesToggle'])->name('pqrs.responsables.toggle');
     });
 });
 
