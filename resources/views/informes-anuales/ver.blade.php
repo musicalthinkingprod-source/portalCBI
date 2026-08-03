@@ -71,7 +71,7 @@
             .no-print { display: none !important; }
             body { background: white !important; margin: 0; }
             .pagina { box-shadow: none !important; margin: 0 !important; padding: 1cm !important; background: white !important; }
-            .firmas { page-break-before: always; margin-top: 10px; }
+            .firmas { page-break-inside: avoid; margin-top: 45px; }
             .banda, .marca-agua { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
         @page { size: letter; margin: 1.2cm 1.5cm; }
