@@ -190,17 +190,13 @@ class AsistenciaPersonalController extends Controller
             ->where('fecha', $fecha)
             ->value('dia_ciclo');
 
-        // Inicio del ciclo actual: fecha del último "día 1" hasta $fecha
-        $inicioCiclo = DB::table('calendario_academico')
-            ->where('fecha', '<=', $fecha)
-            ->where('dia_ciclo', 1)
-            ->orderByDesc('fecha')
-            ->value('fecha') ?? $fecha;
+        // Mes calendario de la fecha seleccionada (para el conteo de suplencias)
+        $inicioMes = \Carbon\Carbon::parse($fecha)->startOfMonth()->toDateString();
+        $finMes    = \Carbon\Carbon::parse($fecha)->endOfMonth()->toDateString();
 
-        // Conteo de reemplazos por docente en este ciclo
+        // Conteo de suplencias por docente en el mes
         $reemplazosPorDocente = DB::table('reemplazos_asignados')
-            ->where('fecha', '>=', $inicioCiclo)
-            ->where('fecha', '<=', $fecha)
+            ->whereBetween('fecha', [$inicioMes, $finMes])
             ->select('codigo_emp_reemplazo', DB::raw('COUNT(*) as total'))
             ->groupBy('codigo_emp_reemplazo')
             ->pluck('total', 'codigo_emp_reemplazo')
@@ -313,7 +309,58 @@ class AsistenciaPersonalController extends Controller
         return view('asistencia-personal.reemplazos', compact(
             'fecha', 'diaAcademico', 'ausentes', 'horarioAusentes',
             'disponiblesPorHoraCurso', 'yaAsignados', 'horas',
-            'reemplazosPorDocente', 'inicioCiclo'
+            'reemplazosPorDocente', 'inicioMes'
+        ));
+    }
+
+    // ── Listado de solo lectura de las suplencias programadas del día ─────────
+    public function suplenciasDia(Request $request)
+    {
+        $fecha = $request->input('fecha', today()->toDateString());
+
+        $diaAcademico = DB::table('calendario_academico')
+            ->where('fecha', $fecha)
+            ->value('dia_ciclo');
+
+        // Conteo de suplencias por docente en el mes calendario
+        $inicioMes = \Carbon\Carbon::parse($fecha)->startOfMonth()->toDateString();
+        $finMes    = \Carbon\Carbon::parse($fecha)->endOfMonth()->toDateString();
+        $reemplazosPorDocente = DB::table('reemplazos_asignados')
+            ->whereBetween('fecha', [$inicioMes, $finMes])
+            ->select('codigo_emp_reemplazo', DB::raw('COUNT(*) as total'))
+            ->groupBy('codigo_emp_reemplazo')
+            ->pluck('total', 'codigo_emp_reemplazo')
+            ->toArray();
+
+        // Suplencias asignadas ese día, con nombres y (si es posible) materia
+        $suplencias = DB::table('reemplazos_asignados as r')
+            ->leftJoin('CODIGOS_DOC as da', 'da.CODIGO_EMP', '=', 'r.codigo_emp_ausente')
+            ->leftJoin('CODIGOS_DOC as dr', 'dr.CODIGO_EMP', '=', 'r.codigo_emp_reemplazo')
+            ->leftJoin('HORARIOS as h', function ($j) use ($diaAcademico) {
+                $j->on('h.CURSO', '=', 'r.curso')
+                  ->on('h.HORA', '=', 'r.hora')
+                  ->where('h.DIA', $diaAcademico);
+            })
+            ->leftJoin('ASIGNACION_PCM as a', function ($j) {
+                $j->on('a.CURSO', '=', 'r.curso')
+                  ->on('a.CODIGO_MAT', '=', 'h.CODIGO_MAT')
+                  ->on('a.CODIGO_EMP', '=', 'r.codigo_emp_ausente');
+            })
+            ->leftJoin('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'a.CODIGO_MAT')
+            ->where('r.fecha', $fecha)
+            ->select(
+                'r.id', 'r.hora', 'r.curso', 'r.codigo_emp_ausente', 'r.codigo_emp_reemplazo',
+                'da.NOMBRE_DOC as nombre_ausente', 'dr.NOMBRE_DOC as nombre_reemplazo',
+                'm.NOMBRE_MAT'
+            )
+            ->orderBy('r.hora')
+            ->orderBy('r.curso')
+            ->get();
+
+        $horas = \App\Models\Horario::$horas;
+
+        return view('asistencia-personal.suplencias-dia', compact(
+            'fecha', 'diaAcademico', 'suplencias', 'reemplazosPorDocente', 'horas'
         ));
     }
 

@@ -25,7 +25,7 @@
             @endif
         </span>
         <span class="text-xs text-gray-400">
-            Ciclo desde {{ \Carbon\Carbon::parse($inicioCiclo)->isoFormat('D MMM') }}
+            Suplencias contadas en {{ \Carbon\Carbon::parse($inicioMes)->locale('es')->isoFormat('MMMM YYYY') }}
         </span>
     </div>
 
@@ -99,7 +99,7 @@
                             @endphp
                             <span class="inline-flex items-center gap-2 bg-green-100 text-green-800 font-semibold text-sm px-3 py-1.5 rounded-lg">
                                 ✓ {{ $nombreReemplazo }}
-                                <span class="bg-green-700 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full" title="Reemplazos este ciclo">
+                                <span class="bg-green-700 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full" title="Suplencias este mes">
                                     {{ $numReemplazos }}
                                 </span>
                             </span>
@@ -128,7 +128,7 @@
                                 <input type="hidden" name="hora"                value="{{ $clase->HORA }}">
                                 <input type="hidden" name="curso"               value="{{ $clase->CURSO }}">
                                 <button type="submit"
-                                    title="{{ $disp['reemplazos'] }} reemplazo(s) este ciclo"
+                                    title="{{ $disp['reemplazos'] }} suplencia(s) este mes"
                                     class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg border transition
                                         {{ $disp['del_curso']
                                             ? 'bg-blue-50 border-blue-300 text-blue-800 hover:bg-blue-100'
@@ -147,7 +147,7 @@
                         </div>
                         <p class="text-[10px] text-gray-400 mt-1.5">
                             <span class="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 mr-1"></span>Da clases al curso ·
-                            <span class="font-semibold">N</span> = reemplazos asignados este ciclo
+                            <span class="font-semibold">N</span> = suplencias asignadas este mes
                         </p>
                         @endif
 
