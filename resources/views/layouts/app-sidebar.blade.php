@@ -329,7 +329,6 @@
                 {!! sidebarLink(route('horarios.index'), '🗓️ Horarios') !!}
                 {!! sidebarLink(route('horarios.disponibilidad'), '🟢 Disponibilidad docentes') !!}
                 {!! sidebarLink(route('reuniones.index'), '🤝 Programación de reuniones') !!}
-                {!! sidebarLink(route('asistencia-personal.reemplazos'), '🔄 Reemplazos') !!}
                 @if(Route::has('asistencia-personal.suplencias_dia'))
                 {!! sidebarLink(route('asistencia-personal.suplencias_dia'), '📋 Suplencias del día') !!}
                 @endif
@@ -521,7 +520,6 @@
                 </svg>
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
-                {!! sidebarLink(route('asistencia-personal.reemplazos'), '🔄 Nombrar suplencias') !!}
                 @if(Route::has('asistencia-personal.suplencias_dia'))
                 {!! sidebarLink(route('asistencia-personal.suplencias_dia'), '📋 Suplencias del día') !!}
                 @endif

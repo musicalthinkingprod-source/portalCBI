@@ -5,6 +5,8 @@
 @section('slot')
 @php
     $esSuperAd = auth()->user()->PROFILE === 'SuperAd';
+    // Pueden asignar/quitar suplencias desde el horario: SuperAd y Coordinación de Convivencia (COR002)
+    $puedeAsignar = in_array(auth()->user()->PROFILE, ['SuperAd', 'COR002']);
     $horasRangos = \App\Models\Horario::$horasRangos;
 @endphp
 
@@ -109,7 +111,7 @@
                                     <div class="text-amber-600 leading-tight truncate max-w-[120px]" title="{{ $rem->nombre_reemplazo }}">
                                         {{ $rem->nombre_reemplazo }}
                                     </div>
-                                    @if($esSuperAd)
+                                    @if($puedeAsignar)
                                     <form method="POST" action="{{ route('asistencia-personal.reemplazos.quitar', $rem->id) }}"
                                           onsubmit="return confirm('¿Quitar este reemplazo?')" class="mt-0.5">
                                         @csrf @method('DELETE')
@@ -119,8 +121,8 @@
                                 </div>
                                 @endforeach
 
-                                {{-- Botón asignar reemplazo (solo SuperAd) --}}
-                                @if($esSuperAd && $proxFecha)
+                                {{-- Botón asignar reemplazo (SuperAd y Coordinación de Convivencia) --}}
+                                @if($puedeAsignar && $proxFecha)
                                 <button type="button"
                                     @click="abrir({
                                         ausente:   '{{ $docenteActual }}',
@@ -150,8 +152,8 @@
 
     @endif
 
-    {{-- ══ Modal de reemplazo (solo SuperAd) ══ --}}
-    @if($esSuperAd && $docenteActual)
+    {{-- ══ Modal de reemplazo (SuperAd y Coordinación de Convivencia) ══ --}}
+    @if($puedeAsignar && $docenteActual)
     <div x-show="abierto" x-cloak
          class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
          @keydown.escape.window="cerrar()">
