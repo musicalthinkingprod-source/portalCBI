@@ -303,7 +303,22 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/admision/nueva',      [AdmisionController::class, 'create'])->name('admision.create');
         Route::get('/admision/hoja',       [AdmisionController::class, 'hoja'])->name('admision.hoja');
         Route::post('/admision',           [AdmisionController::class, 'store'])->name('admision.store');
-        Route::get('/admision/{evaluacion}', [AdmisionController::class, 'show'])->name('admision.show');
+        Route::get('/admision/{evaluacion}', [AdmisionController::class, 'show'])->whereNumber('evaluacion')->name('admision.show');
+        Route::get('/admision/{evaluacion}/imprimir', [AdmisionController::class, 'imprimir'])->whereNumber('evaluacion')->name('admision.imprimir');
+    });
+
+    // ── Exámenes de Admisión · gestión avanzada: solo SuperAd ────────────────
+    Route::middleware('profile:SuperAd')->group(function () {
+        // Editar / eliminar evaluaciones (corregir respuestas mal subidas)
+        Route::get('/admision/{evaluacion}/editar', [AdmisionController::class, 'edit'])->whereNumber('evaluacion')->name('admision.edit');
+        Route::put('/admision/{evaluacion}',        [AdmisionController::class, 'update'])->whereNumber('evaluacion')->name('admision.update');
+        Route::post('/admision/{evaluacion}/recalificar', [AdmisionController::class, 'recalificar'])->whereNumber('evaluacion')->name('admision.recalificar');
+        Route::delete('/admision/{evaluacion}',     [AdmisionController::class, 'destroy'])->whereNumber('evaluacion')->name('admision.destroy');
+
+        // Editor de la clave de respuestas correctas por grado
+        Route::get('/admision-claves',            [AdmisionController::class, 'claves'])->name('admision.claves');
+        Route::get('/admision-claves/{grado}',    [AdmisionController::class, 'claveEdit'])->name('admision.claves.edit');
+        Route::put('/admision-claves/{grado}',    [AdmisionController::class, 'claveUpdate'])->name('admision.claves.update');
     });
 
     // ── Seguimiento Académico: SuperAd, Admin, Sec* ──────────────────────────

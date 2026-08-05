@@ -72,8 +72,7 @@
 
 <div class="no-print">
     <button onclick="window.print()">🖨️ Imprimir</button>
-    <a href="{{ route('admision.index') }}">← Volver al listado</a>
-    <a href="{{ route('admision.create', ['grado' => $evaluacion->grado_key]) }}">+ Nueva evaluación</a>
+    <a href="{{ route('admision.show', $evaluacion) }}">← Volver al reporte</a>
 </div>
 
 <div class="page">

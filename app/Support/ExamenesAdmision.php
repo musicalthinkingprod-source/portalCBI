@@ -10,6 +10,7 @@ namespace App\Support;
 class ExamenesAdmision
 {
     protected static ?array $data = null;
+    protected static ?array $overrides = null;
 
     /** Orden de presentación de los grados (de menor a mayor). */
     const ORDEN = [
@@ -53,13 +54,79 @@ class ExamenesAdmision
     /** Devuelve el examen completo de un grado o null. */
     public static function grado(string $key): ?array
     {
-        return self::todos()[$key] ?? null;
+        $grado = self::todos()[$key] ?? null;
+        if ($grado === null || ($grado['tipo'] ?? '') !== 'opcion_multiple') {
+            return $grado;
+        }
+
+        // Aplica el override de clave (si SuperAd lo modificó en BD).
+        $ov = self::overrides()[$key] ?? null;
+        if ($ov) {
+            foreach ($grado['materias'] as &$mat) {
+                foreach ($mat['preguntas'] as &$q) {
+                    if (isset($ov[$q['n']])) {
+                        $q['correcta'] = $ov[$q['n']];
+                    }
+                }
+            }
+            unset($mat, $q);
+        }
+        return $grado;
     }
 
     /** ¿Es un grado válido? */
     public static function existe(string $key): bool
     {
         return isset(self::todos()[$key]);
+    }
+
+    /** Overrides de clave por grado desde BD: [ key => [ n => letra ] ]. */
+    public static function overrides(): array
+    {
+        if (self::$overrides === null) {
+            self::$overrides = [];
+            try {
+                $filas = \Illuminate\Support\Facades\DB::table('admision_claves')->get(['grado_key', 'respuestas']);
+                foreach ($filas as $f) {
+                    $map = json_decode($f->respuestas, true) ?: [];
+                    self::$overrides[$f->grado_key] = array_map('strtoupper', $map);
+                }
+            } catch (\Throwable $e) {
+                // La tabla puede no existir todavía (durante migraciones): sin overrides.
+                self::$overrides = [];
+            }
+        }
+        return self::$overrides;
+    }
+
+    /** Clave vigente del grado: [ n => letra ] (con overrides ya aplicados). */
+    public static function claveActual(string $key): array
+    {
+        $grado = self::grado($key);
+        $clave = [];
+        if ($grado && ($grado['tipo'] ?? '') === 'opcion_multiple') {
+            foreach ($grado['materias'] as $mat) {
+                foreach ($mat['preguntas'] as $q) {
+                    $clave[$q['n']] = $q['correcta'] ?? null;
+                }
+            }
+        }
+        return $clave;
+    }
+
+    /** Guarda (upsert) el override de clave de un grado y limpia el caché. */
+    public static function guardarClave(string $key, array $mapa, ?string $usuario = null): void
+    {
+        \Illuminate\Support\Facades\DB::table('admision_claves')->updateOrInsert(
+            ['grado_key' => $key],
+            [
+                'respuestas'      => json_encode($mapa),
+                'actualizado_por' => $usuario,
+                'updated_at'      => now(),
+                'created_at'      => now(),
+            ]
+        );
+        self::$overrides = null; // fuerza recarga
     }
 
     /**

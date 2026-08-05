@@ -4,6 +4,8 @@
 
 @section('slot')
 
+@php $isSuperAd = optional(auth()->user())->PROFILE === 'SuperAd'; @endphp
+
 @if(session('success'))
 <div class="mb-5 bg-green-50 border border-green-300 text-green-800 px-4 py-3 rounded-lg text-sm font-medium">
     ✅ {{ session('success') }}
@@ -12,6 +14,15 @@
 @if(session('error'))
 <div class="mb-5 bg-red-50 border border-red-300 text-red-800 px-4 py-3 rounded-lg text-sm font-medium">
     ⚠️ {{ session('error') }}
+</div>
+@endif
+
+@if($isSuperAd)
+<div class="mb-4 flex justify-end">
+    <a href="{{ route('admision.claves') }}"
+       class="inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+        🗝️ Editar claves de respuestas
+    </a>
 </div>
 @endif
 
@@ -105,9 +116,20 @@
                                 'bg-gray-100 text-gray-500' => !in_array($nivel,['Superior','Alto','Básico','Bajo']),
                             ])">{{ $nivel }}</span>
                     </td>
-                    <td class="py-2 pr-3 text-right">
+                    <td class="py-2 pr-3 text-right whitespace-nowrap">
                         <a href="{{ route('admision.show', $ev) }}"
-                           class="text-blue-700 hover:underline text-xs font-semibold">Ver reporte →</a>
+                           class="text-blue-700 hover:underline text-xs font-semibold">Ver reporte</a>
+                        @if($isSuperAd)
+                        <span class="text-gray-300 mx-1">·</span>
+                        <a href="{{ route('admision.edit', $ev) }}"
+                           class="text-gray-600 hover:underline text-xs font-semibold">Editar</a>
+                        <span class="text-gray-300 mx-1">·</span>
+                        <form method="POST" action="{{ route('admision.destroy', $ev) }}" class="inline"
+                              onsubmit="return confirm('¿Eliminar la evaluación de {{ addslashes($ev->aspirante_nombre) }}? Esta acción no se puede deshacer.');">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="text-red-600 hover:underline text-xs font-semibold">Borrar</button>
+                        </form>
+                        @endif
                     </td>
                 </tr>
                 @empty

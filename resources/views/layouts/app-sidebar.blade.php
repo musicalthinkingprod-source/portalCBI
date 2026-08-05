@@ -351,6 +351,9 @@
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
                 {!! sidebarLink(route('admision.index'), '📝 Exámenes de admisión') !!}
+                @if($isSuperAd)
+                {!! sidebarLink(route('admision.claves'), '🗝️ Claves de respuestas') !!}
+                @endif
             </ul>
         </div>
         @endif

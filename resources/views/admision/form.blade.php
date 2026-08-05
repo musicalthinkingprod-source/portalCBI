@@ -1,6 +1,11 @@
 @extends('layouts.app-sidebar')
 
-@section('header', 'Evaluación de Admisión · '.$grado['nombre'])
+@php
+    $edit = isset($evaluacion);
+    $ev   = $edit ? $evaluacion : null;
+@endphp
+
+@section('header', ($edit ? 'Editar evaluación · ' : 'Evaluación de Admisión · ').$grado['nombre'])
 
 @section('slot')
 
@@ -19,8 +24,9 @@
     </span>
 </div>
 
-<form method="POST" action="{{ route('admision.store') }}" id="admision-form">
+<form method="POST" action="{{ $edit ? route('admision.update', $ev) : route('admision.store') }}" id="admision-form">
     @csrf
+    @if($edit) @method('PUT') @endif
     <input type="hidden" name="grado" value="{{ $key }}">
 
     {{-- ── Datos del aspirante ─────────────────────────────────────────── --}}
@@ -29,27 +35,27 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div class="lg:col-span-2">
                 <label class="block text-xs font-medium text-gray-500 mb-1">Nombre completo *</label>
-                <input type="text" name="aspirante_nombre" value="{{ old('aspirante_nombre') }}" required
+                <input type="text" name="aspirante_nombre" value="{{ old('aspirante_nombre', $ev->aspirante_nombre ?? '') }}" required
                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Documento</label>
-                <input type="text" name="aspirante_documento" value="{{ old('aspirante_documento') }}"
+                <input type="text" name="aspirante_documento" value="{{ old('aspirante_documento', $ev->aspirante_documento ?? '') }}"
                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Fecha del examen</label>
-                <input type="date" name="fecha_examen" value="{{ old('fecha_examen', date('Y-m-d')) }}"
+                <input type="date" name="fecha_examen" value="{{ old('fecha_examen', $edit ? optional($ev->fecha_examen)->format('Y-m-d') : date('Y-m-d')) }}"
                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Acudiente</label>
-                <input type="text" name="acudiente" value="{{ old('acudiente') }}"
+                <input type="text" name="acudiente" value="{{ old('acudiente', $ev->acudiente ?? '') }}"
                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
             </div>
             <div>
                 <label class="block text-xs font-medium text-gray-500 mb-1">Teléfono</label>
-                <input type="text" name="telefono" value="{{ old('telefono') }}"
+                <input type="text" name="telefono" value="{{ old('telefono', $ev->telefono ?? '') }}"
                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
             </div>
         </div>
@@ -82,13 +88,14 @@
                         </thead>
                         <tbody>
                             @foreach($mat['preguntas'] as $q)
+                            @php $marca = old('respuestas.'.$q['n'], data_get($ev, 'respuestas.'.$q['n'])); @endphp
                             <tr class="border-t border-gray-50" title="{{ $q['enunciado'] }}">
                                 <td class="py-1 text-gray-500 font-medium">{{ $q['n'] }}</td>
                                 @foreach(['A','B','C','D'] as $op)
                                 <td class="text-center py-1">
                                     <input type="radio" name="respuestas[{{ $q['n'] }}]" value="{{ $op }}"
                                            class="resp-radio h-4 w-4 accent-blue-700 cursor-pointer"
-                                           @checked(old('respuestas.'.$q['n'])===$op)>
+                                           @checked($marca===$op)>
                                 </td>
                                 @endforeach
                             </tr>
@@ -116,6 +123,7 @@
                             ];
                         @endphp
                         @foreach($mat['preguntas'] as $q)
+                        @php $marca = old('respuestas.'.$q['n'], data_get($ev, 'respuestas.'.$q['n'])); @endphp
                         <div class="flex items-start gap-3 py-2">
                             <span class="text-xs font-semibold text-gray-400 w-6 pt-0.5">{{ $q['n'] }}</span>
                             <p class="flex-1 text-sm text-gray-700">{{ $q['enunciado'] }}</p>
@@ -123,7 +131,7 @@
                                 @foreach(['L','P','N'] as $op)
                                 <label class="cursor-pointer">
                                     <input type="radio" name="respuestas[{{ $q['n'] }}]" value="{{ $op }}"
-                                           class="resp-radio peer sr-only" @checked(old('respuestas.'.$q['n'])===$op)>
+                                           class="resp-radio peer sr-only" @checked($marca===$op)>
                                     <span class="inline-flex items-center justify-center w-7 h-7 rounded-full border text-xs font-bold text-gray-500 border-gray-300 peer-checked:text-white {{ $estilosNivel[$op] }}">{{ $op }}</span>
                                 </label>
                                 @endforeach
@@ -141,13 +149,13 @@
     <div class="bg-white rounded-xl shadow p-5 mb-6">
         <label class="block text-xs font-medium text-gray-500 mb-1">Observaciones (opcional)</label>
         <textarea name="observaciones" rows="2"
-                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">{{ old('observaciones') }}</textarea>
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">{{ old('observaciones', $ev->observaciones ?? '') }}</textarea>
     </div>
 
     <div class="flex justify-end gap-3">
-        <a href="{{ route('admision.index') }}" class="px-5 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100">Cancelar</a>
+        <a href="{{ $edit ? route('admision.show', $ev) : route('admision.index') }}" class="px-5 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100">Cancelar</a>
         <button type="submit" class="bg-blue-800 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-semibold transition">
-            Calificar y guardar
+            {{ $edit ? 'Guardar cambios' : 'Calificar y guardar' }}
         </button>
     </div>
 </form>
