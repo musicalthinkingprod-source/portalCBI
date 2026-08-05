@@ -4,24 +4,64 @@
 
 @section('slot')
 
+    @php
+        $colorNota = fn($n) => $n < 7 ? 'text-red-600' : ($n < 8 ? 'text-yellow-500' : 'text-green-600');
+    @endphp
+
     {{-- Notas por período --}}
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         @foreach([1,2,3,4] as $p)
         @php
-            $nota = $notas[$p] ?? 10;
-            $notaRedondeada = round($nota, 1, PHP_ROUND_HALF_UP);
-            $iniciado = in_array($p, $periodosIniciados);
+            $iniciado      = in_array($p, $periodosIniciados);
+            $reduccion     = round($notas[$p] ?? 10, 1, PHP_ROUND_HALF_UP);
+            $notaProyecto  = $proyecto[$p] ?? null;
+            $notaPromedio  = $promedio[$p] ?? null;
+            $usaProyecto   = $aplicaProyecto[$p] ?? false;
         @endphp
-        @if($iniciado)
+        @if($iniciado && !$usaProyecto)
+        {{-- Período sin modalidad de Project (ej. P1): una sola nota, la de descuentos --}}
         <div class="bg-white rounded-xl shadow p-4 text-center">
             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Período {{ $p }}</p>
-            <p class="text-3xl font-bold {{ $notaRedondeada < 7 ? 'text-red-600' : ($notaRedondeada < 8 ? 'text-yellow-500' : 'text-green-600') }}">
-                {{ number_format($notaRedondeada, 1) }}
-            </p>
+            <p class="text-3xl font-bold {{ $colorNota($reduccion) }}">{{ number_format($reduccion, 1) }}</p>
             <p class="text-xs text-gray-400 mt-1">/10</p>
         </div>
+        @elseif($iniciado)
+        <div class="bg-white rounded-xl shadow p-4">
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3 text-center">Período {{ $p }}</p>
+
+            {{-- Los 3 componentes de la nota --}}
+            <div class="space-y-2">
+                {{-- Descuentos (60%) --}}
+                <div class="flex items-center justify-between">
+                    <span class="text-xs text-gray-500">Descuentos <span class="text-gray-300">· 60%</span></span>
+                    <span class="text-sm font-bold {{ $colorNota($reduccion) }}">{{ number_format($reduccion, 1) }}</span>
+                </div>
+
+                {{-- English Acquisition Project (40%) --}}
+                <div class="flex items-center justify-between">
+                    <span class="text-xs text-gray-500">English Acquisition Project <span class="text-gray-300">· 40%</span></span>
+                    @if($notaProyecto !== null)
+                        <span class="text-sm font-bold {{ $colorNota($notaProyecto) }}">{{ number_format($notaProyecto, 1) }}</span>
+                    @else
+                        <span class="text-xs text-gray-300 italic">pendiente</span>
+                    @endif
+                </div>
+
+                <div class="border-t border-gray-100 pt-2 flex items-center justify-between">
+                    <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">Promedio</span>
+                    @if($notaPromedio !== null)
+                        <span class="text-2xl font-black {{ $colorNota($notaPromedio) }}">{{ number_format($notaPromedio, 1) }}<span class="text-xs text-gray-300 font-normal">/10</span></span>
+                    @else
+                        <span class="text-2xl font-black {{ $colorNota($reduccion) }}">{{ number_format($reduccion, 1) }}<span class="text-xs text-gray-300 font-normal">/10</span></span>
+                    @endif
+                </div>
+                @if($notaProyecto === null)
+                    <p class="text-[10px] text-amber-600 leading-tight">Provisional: falta la nota del English Acquisition Project.</p>
+                @endif
+            </div>
+        </div>
         @else
-        <div class="bg-gray-50 rounded-xl border border-gray-200 p-4 text-center opacity-60">
+        <div class="bg-gray-50 rounded-xl border border-gray-200 p-4 text-center opacity-60 flex flex-col justify-center">
             <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Período {{ $p }}</p>
             <p class="text-2xl text-gray-300 mt-1">🔒</p>
             <p class="text-xs text-gray-400 mt-1">No iniciado</p>

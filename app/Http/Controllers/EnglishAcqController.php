@@ -19,6 +19,13 @@ class EnglishAcqController extends Controller
     public const PESO_REDUCCION = 0.6;
     public const PESO_PROYECTO  = 0.4;
 
+    /**
+     * Primer período en que aplica el English Acquisition Project (40%).
+     * La iniciativa arrancó en el P2/2026; antes de eso la nota era 100% descuentos,
+     * así que en períodos anteriores no se muestra el desglose ni el aviso de "pendiente".
+     */
+    public const PERIODO_INICIO_PROYECTO = 2;
+
     // Devuelve el período activo (1-4) según calendario_academico, o null si no hay.
     private static function periodoActivoHoy(int $anio): ?int
     {
@@ -142,10 +149,13 @@ class EnglishAcqController extends Controller
             return redirect()->route('padres.portal');
         }
 
-        $anio    = (int) date('Y');
-        $codigo  = $estudiante->CODIGO;
-        $notas   = [];
-        $detalle = [];
+        $anio     = (int) date('Y');
+        $codigo   = $estudiante->CODIGO;
+        $notas    = [];   // Componente de descuentos (reducción, 60%)
+        $proyecto = [];   // Nota del English Acquisition Project (40%), null si no digitada
+        $promedio = [];   // Promedio ponderado final, null si aún falta el Project
+        $aplicaProyecto = []; // Si el período usa la modalidad del Project (P2 en adelante)
+        $detalle  = [];
 
         // Determinar hasta qué período ha iniciado el calendario
         $inicios = DB::table('calendario_academico')
@@ -166,6 +176,12 @@ class EnglishAcqController extends Controller
             }
         }
 
+        // Notas del English Acquisition Project (40%) ya digitadas, por período
+        $proyectosDigitados = DB::table('english_acq_proyecto')
+            ->where('CODIGO_ALUM', $codigo)
+            ->where('ANIO', $anio)
+            ->pluck('NOTA', 'PERIODO');
+
         for ($p = 1; $p <= 4; $p++) {
             $registros = DB::table($this->tabla)
                 ->where('CODIGO_ALUM', $codigo)
@@ -174,7 +190,20 @@ class EnglishAcqController extends Controller
                 ->orderBy('FECHA')
                 ->get();
 
-            $notas[$p] = max(0, 10 - ($registros->count() * 0.25));
+            $reduccion  = max(0, 10 - ($registros->count() * 0.25));
+            $notas[$p]  = $reduccion;
+
+            // El Project solo aplica del P2 en adelante (antes no existía la iniciativa).
+            $aplica            = $p >= self::PERIODO_INICIO_PROYECTO;
+            $aplicaProyecto[$p] = $aplica;
+
+            // El Project aparece apenas el docente lo digite; con él se calcula
+            // el promedio ponderado usando la misma fórmula que entregar().
+            $notaProyecto  = $aplica ? ($proyectosDigitados[$p] ?? null) : null;
+            $proyecto[$p]  = $notaProyecto !== null ? (float) $notaProyecto : null;
+            $promedio[$p]  = $notaProyecto !== null
+                ? round($reduccion * self::PESO_REDUCCION + (float) $notaProyecto * self::PESO_PROYECTO, 2)
+                : null;
 
             foreach ($registros as $r) {
                 $detalle[] = ['periodo' => $p, 'fecha' => $r->FECHA];
@@ -183,7 +212,7 @@ class EnglishAcqController extends Controller
 
         $periodoActual = self::periodoActivoHoy($anio) ?? (count($periodosIniciados) ? max($periodosIniciados) : 1);
 
-        return view('english-acq.padres', compact('notas', 'detalle', 'anio', 'periodosIniciados', 'periodoActual'));
+        return view('english-acq.padres', compact('notas', 'proyecto', 'promedio', 'aplicaProyecto', 'detalle', 'anio', 'periodosIniciados', 'periodoActual'));
     }
 
     public function entregar(Request $request)
