@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PadreVerificacionController;
 use App\Http\Controllers\ImportacionController;
 use App\Http\Controllers\ControlEstudianteController;
+use App\Http\Controllers\AdmisionController;
 use App\Http\Controllers\PagosController;
 use App\Http\Controllers\FacturacionController;
 use App\Http\Controllers\CarteraController;
@@ -294,6 +295,15 @@ Route::middleware(['auth'])->group(function () {
     // ── Rutas de transporte: SuperAd, Admin y Sec* ────────────────────────────
     Route::middleware('profile:SuperAd,Admin,Sec*')->group(function () {
         Route::get('/rutas', [RutasController::class, 'index'])->name('rutas.index');
+    });
+
+    // ── Exámenes de Admisión: SuperAd, Admin y Secretarías ───────────────────
+    Route::middleware('profile:SuperAd,Admin,Sec*')->group(function () {
+        Route::get('/admision',            [AdmisionController::class, 'index'])->name('admision.index');
+        Route::get('/admision/nueva',      [AdmisionController::class, 'create'])->name('admision.create');
+        Route::get('/admision/hoja',       [AdmisionController::class, 'hoja'])->name('admision.hoja');
+        Route::post('/admision',           [AdmisionController::class, 'store'])->name('admision.store');
+        Route::get('/admision/{evaluacion}', [AdmisionController::class, 'show'])->name('admision.show');
     });
 
     // ── Seguimiento Académico: SuperAd, Admin, Sec* ──────────────────────────

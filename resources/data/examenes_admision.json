@@ -1,0 +1,6638 @@
+{
+ "PREJARDIN": {
+  "codigo": "01",
+  "nombre": "Prejardín",
+  "grado_ingreso": "PREJARDIN",
+  "tipo": "cualitativo",
+  "total": 50,
+  "materias": [
+   {
+    "nombre": "APRESTAMIENTO",
+    "titulo": "1. APRESTAMIENTO (MOTRICIDAD)",
+    "preguntas": [
+     {
+      "enunciado": "Toma la crayola y haz un garabato libre dentro del cuadro.",
+      "n": 1
+     },
+     {
+      "enunciado": "Sigue el camino con tu dedo y luego con la crayola, de la casa al perro, sin salirte.",
+      "n": 2
+     },
+     {
+      "enunciado": "Une los dos puntos con una línea.",
+      "n": 3
+     },
+     {
+      "enunciado": "Colorea el sol. (Se observa el agarre de la crayola).",
+      "n": 4
+     },
+     {
+      "enunciado": "Rasga un pedacito de papel y pégalo dentro del cuadro. (El evaluador entrega el papel).",
+      "n": 5
+     },
+     {
+      "enunciado": "Repasa la línea punteada con la crayola.",
+      "n": 6
+     },
+     {
+      "enunciado": "Arruga el papel que te entrega la profesora y colócalo sobre la estrella.",
+      "n": 7
+     },
+     {
+      "enunciado": "Imita con tus manos: abrir – cerrar – aplaudir. (El evaluador hace el modelo y marca si lo imita).",
+      "n": 8
+     },
+     {
+      "enunciado": "Ensarta la cuenta grande en el cordón. (Material del evaluador; marque si lo logra).",
+      "n": 9
+     },
+     {
+      "enunciado": "Camina sobre la línea que está en el piso (o salta con los dos pies). Marque si lo logra.",
+      "n": 10
+     }
+    ],
+    "desde": 1,
+    "hasta": 10
+   },
+   {
+    "nombre": "MATEMÁTICAS",
+    "titulo": "2. MATEMÁTICAS (NOCIONES)",
+    "preguntas": [
+     {
+      "enunciado": "Señala la pelota GRANDE.",
+      "n": 11
+     },
+     {
+      "enunciado": "Encierra el pájaro que está ARRIBA del árbol.",
+      "n": 12
+     },
+     {
+      "enunciado": "Señala el color ROJO. (El evaluador presenta crayolas roja, azul y amarilla).",
+      "n": 13
+     },
+     {
+      "enunciado": "Cuenta las manzanas en voz alta señalando una por una.",
+      "n": 14
+     },
+     {
+      "enunciado": "Encierra donde hay MUCHOS peces.",
+      "n": 15
+     },
+     {
+      "enunciado": "Señala el círculo.",
+      "n": 16
+     },
+     {
+      "enunciado": "Pon tu dedo DENTRO del cuadrado.",
+      "n": 17
+     },
+     {
+      "enunciado": "Señala el perro pequeño.",
+      "n": 18
+     },
+     {
+      "enunciado": "Dame 2 tapas. (Material concreto del evaluador; marque si entrega la cantidad).",
+      "n": 19
+     },
+     {
+      "enunciado": "Encierra la fruta que está ABAJO.",
+      "n": 20
+     }
+    ],
+    "desde": 11,
+    "hasta": 20
+   },
+   {
+    "nombre": "LENGUAJE Y COMUNICACIÓN",
+    "titulo": "3. LENGUAJE Y COMUNICACIÓN",
+    "preguntas": [
+     {
+      "enunciado": "¿Cómo te llamas? (Marque si responde su nombre o apodo con claridad).",
+      "n": 21
+     },
+     {
+      "enunciado": "Señala al GATO.",
+      "n": 22
+     },
+     {
+      "enunciado": "¿Qué es esto? (Señale cada imagen; marque cuántas nombra).",
+      "n": 23
+     },
+     {
+      "enunciado": "Mira la imagen y responde: ¿qué está haciendo el niño?",
+      "n": 24
+     },
+     {
+      "enunciado": "Escucha y haz lo que digo: \"Toca tu cabeza y luego aplaude\". (Consigna de dos pasos).",
+      "n": 25
+     },
+     {
+      "enunciado": "Señala el animal que hace \"MUUU\".",
+      "n": 26
+     },
+     {
+      "enunciado": "El evaluador narra un mini-cuento (3 frases) con la lámina. Pregunta: ¿quién aparecía en el cuento?",
+      "n": 27
+     },
+     {
+      "enunciado": "Repite después de mí: \"El sol brilla\". (Marque si repite la frase completa).",
+      "n": 28
+     },
+     {
+      "enunciado": "Encierra la imagen que empieza como tu canción favorita o la que más te guste. Cuéntame por qué.",
+      "n": 29
+     },
+     {
+      "enunciado": "Garabatea \"tu nombre\" como tú quieras en el renglón. (Escritura no convencional).",
+      "n": 30
+     }
+    ],
+    "desde": 21,
+    "hasta": 30
+   },
+   {
+    "nombre": "CIENCIAS",
+    "titulo": "4. CIENCIAS (MI CUERPO Y MI ENTORNO)",
+    "preguntas": [
+     {
+      "enunciado": "Señala en TU cuerpo: la cabeza.",
+      "n": 31
+     },
+     {
+      "enunciado": "Señala en TU cuerpo: la barriga (tronco).",
+      "n": 32
+     },
+     {
+      "enunciado": "Señala tus manos y tus pies.",
+      "n": 33
+     },
+     {
+      "enunciado": "Encierra el animal.",
+      "n": 34
+     },
+     {
+      "enunciado": "Señala la fruta.",
+      "n": 35
+     },
+     {
+      "enunciado": "¿Con qué parte del cuerpo ves? Señálala.",
+      "n": 36
+     },
+     {
+      "enunciado": "Encierra la planta (lo que crece en la tierra).",
+      "n": 37
+     },
+     {
+      "enunciado": "Señala el animal que vive en el agua.",
+      "n": 38
+     },
+     {
+      "enunciado": "¿Qué usamos para lavarnos las manos? Señala.",
+      "n": 39
+     },
+     {
+      "enunciado": "Encierra lo que se come.",
+      "n": 40
+     }
+    ],
+    "desde": 31,
+    "hasta": 40
+   },
+   {
+    "nombre": "SOCIALES",
+    "titulo": "5. SOCIALES (YO Y MI FAMILIA)",
+    "preguntas": [
+     {
+      "enunciado": "¿Eres niño o niña? (Marque si se identifica).",
+      "n": 41
+     },
+     {
+      "enunciado": "¿Con quién vives? (Marque si nombra al menos un miembro de su familia).",
+      "n": 42
+     },
+     {
+      "enunciado": "Señala la CASA.",
+      "n": 43
+     },
+     {
+      "enunciado": "Encierra el carro (transporte).",
+      "n": 44
+     },
+     {
+      "enunciado": "¿Dónde duerme la gente? Señala.",
+      "n": 45
+     },
+     {
+      "enunciado": "Cuando alguien te da algo, ¿qué decimos? (Se espera \"gracias\").",
+      "n": 46
+     },
+     {
+      "enunciado": "Señala a la persona que está contenta.",
+      "n": 47
+     },
+     {
+      "enunciado": "Encierra al animal de la granja.",
+      "n": 48
+     },
+     {
+      "enunciado": "Guarda la crayola en la caja cuando termines. (Marque si sigue la norma al pedírselo).",
+      "n": 49
+     },
+     {
+      "enunciado": "Despídete con la mano. (Marque si responde a la interacción social).",
+      "n": 50
+     }
+    ],
+    "desde": 41,
+    "hasta": 50
+   }
+  ]
+ },
+ "JARDIN": {
+  "codigo": "02",
+  "nombre": "Jardín",
+  "grado_ingreso": "JARDIN",
+  "tipo": "cualitativo",
+  "total": 50,
+  "materias": [
+   {
+    "nombre": "APRESTAMIENTO",
+    "titulo": "1. APRESTAMIENTO (MOTRICIDAD)",
+    "preguntas": [
+     {
+      "enunciado": "Une los puntos siguiendo el orden para descubrir la figura. (Unión de puntos).",
+      "n": 1
+     },
+     {
+      "enunciado": "Ayuda al ratón a llegar al queso: traza el camino sin tocar los bordes.",
+      "n": 2
+     },
+     {
+      "enunciado": "Colorea el globo SIN salirte de la línea.",
+      "n": 3
+     },
+     {
+      "enunciado": "Repasa los trazos punteados: primero la línea, luego el círculo.",
+      "n": 4
+     },
+     {
+      "enunciado": "Rasga papel y rellena el círculo grande con los pedacitos. (El evaluador entrega papel de colores).",
+      "n": 5
+     },
+     {
+      "enunciado": "Escucha y señala: ARRIBA, ABAJO, a un LADO. (El evaluador da la instrucción y el niño señala con su mano).",
+      "n": 6
+     },
+     {
+      "enunciado": "Punza (o marca con el lápiz) todos los puntos de la estrella. (5 marcas).",
+      "n": 7
+     },
+     {
+      "enunciado": "Enhebra 3 cuentas en el cordón. (Material del evaluador; marque si lo logra).",
+      "n": 8
+     },
+     {
+      "enunciado": "Haz una bolita de plastilina y aplástala como una arepa. (Modelado; marque si lo logra).",
+      "n": 9
+     },
+     {
+      "enunciado": "Dibuja libremente tu animal favorito dentro del cuadro.",
+      "n": 10
+     }
+    ],
+    "desde": 1,
+    "hasta": 10
+   },
+   {
+    "nombre": "MATEMÁTICAS",
+    "titulo": "2. MATEMÁTICAS",
+    "preguntas": [
+     {
+      "enunciado": "Cuenta los peces en voz alta y di cuántos hay.",
+      "n": 11
+     },
+     {
+      "enunciado": "Encierra el número 3.",
+      "n": 12
+     },
+     {
+      "enunciado": "Une con una línea cada número con su cantidad.",
+      "n": 13
+     },
+     {
+      "enunciado": "Señala el color VERDE. (Colores secundarios).",
+      "n": 14
+     },
+     {
+      "enunciado": "Colorea el TRIÁNGULO.",
+      "n": 15
+     },
+     {
+      "enunciado": "Marca con una X el gato que está DENTRO de la caja.",
+      "n": 16
+     },
+     {
+      "enunciado": "Encierra la imagen del DÍA.",
+      "n": 17
+     },
+     {
+      "enunciado": "Encierra el lápiz LARGO.",
+      "n": 18
+     },
+     {
+      "enunciado": "Escribe (o repasa) el número 6 en el renglón.",
+      "n": 19
+     },
+     {
+      "enunciado": "Marca con una X donde hay POCOS globos.",
+      "n": 20
+     }
+    ],
+    "desde": 11,
+    "hasta": 20
+   },
+   {
+    "nombre": "LENGUAJE",
+    "titulo": "3. LENGUAJE (LENGUA CASTELLANA)",
+    "preguntas": [
+     {
+      "enunciado": "Encierra la vocal A.",
+      "n": 21
+     },
+     {
+      "enunciado": "¿Con cuál vocal empieza OSO? Señálala. (Diga la palabra despacio: O-so).",
+      "n": 22
+     },
+     {
+      "enunciado": "Une cada vocal con el dibujo que empieza con ese sonido.",
+      "n": 23
+     },
+     {
+      "enunciado": "Repasa las vocales punteadas.",
+      "n": 24
+     },
+     {
+      "enunciado": "Mira la lámina y cuéntame qué está pasando. (Lectura de imágenes; marque si describe la escena).",
+      "n": 25
+     },
+     {
+      "enunciado": "Escucha el cuento corto y responde: ¿qué animal aparece y qué hizo? (Narración de 3 frases).",
+      "n": 26
+     },
+     {
+      "enunciado": "Di una canción o poema corto que te sepas. (Marque si recita al menos un fragmento).",
+      "n": 27
+     },
+     {
+      "enunciado": "Señala los objetos que nombro: cuchara – zapato – reloj. (Vocabulario receptivo).",
+      "n": 28
+     },
+     {
+      "enunciado": "Calca (repasa) tu inicial o la letra que te muestre el evaluador.",
+      "n": 29
+     },
+     {
+      "enunciado": "Describe a tu familia con tus palabras. (Marque si construye frases de 3 o más palabras).",
+      "n": 30
+     }
+    ],
+    "desde": 21,
+    "hasta": 30
+   },
+   {
+    "nombre": "CIENCIAS",
+    "titulo": "4. CIENCIAS",
+    "preguntas": [
+     {
+      "enunciado": "Señala en tu cuerpo: cabeza, tronco y extremidades. (Las tres partes).",
+      "n": 31
+     },
+     {
+      "enunciado": "¿Qué tenemos DENTRO del cuerpo que suena \"pum-pum\"? Señala.",
+      "n": 32
+     },
+     {
+      "enunciado": "Señala los huesos. ¿Para qué sirven? (Sostener el cuerpo).",
+      "n": 33
+     },
+     {
+      "enunciado": "Encierra lo que necesita una planta para crecer.",
+      "n": 34
+     },
+     {
+      "enunciado": "Marca con una X las FRUTAS.",
+      "n": 35
+     },
+     {
+      "enunciado": "Señala la VERDURA.",
+      "n": 36
+     },
+     {
+      "enunciado": "El jugo, ¿es líquido o sólido? ¿Y la galleta? (Estados de la materia en la cocina).",
+      "n": 37
+     },
+     {
+      "enunciado": "Encierra los animales que viven en el MAR.",
+      "n": 38
+     },
+     {
+      "enunciado": "¿Qué flota en el agua? Señala. (El evaluador puede hacer la prueba real con un recipiente).",
+      "n": 39
+     },
+     {
+      "enunciado": "¿Cómo cuidamos el agua? Señala la acción correcta.",
+      "n": 40
+     }
+    ],
+    "desde": 31,
+    "hasta": 40
+   },
+   {
+    "nombre": "SOCIALES",
+    "titulo": "5. SOCIALES",
+    "preguntas": [
+     {
+      "enunciado": "Cuéntame: ¿cómo eres tú? (Características físicas: marque si menciona al menos 2, ej. color de pelo, estatura).",
+      "n": 41
+     },
+     {
+      "enunciado": "Encierra lo que encuentras en la CIUDAD.",
+      "n": 42
+     },
+     {
+      "enunciado": "Marca con una X lo que encuentras en la GRANJA.",
+      "n": 43
+     },
+     {
+      "enunciado": "Señala el transporte que va por el aire.",
+      "n": 44
+     },
+     {
+      "enunciado": "Une cada acción con el lugar de la casa donde se hace.",
+      "n": 45
+     },
+     {
+      "enunciado": "¿Qué haces primero en la mañana? Señala el orden: despertar y luego desayunar.",
+      "n": 46
+     },
+     {
+      "enunciado": "Encierra una responsabilidad que puedes hacer tú solo en casa.",
+      "n": 47
+     },
+     {
+      "enunciado": "Señala el MAR. ¿En qué se diferencia de un charco?",
+      "n": 48
+     },
+     {
+      "enunciado": "¿Qué animal vive en el río o en el agua dulce? Señala.",
+      "n": 49
+     },
+     {
+      "enunciado": "Cuando quieres hablar en clase, ¿qué haces? (Se espera: levantar la mano / pedir la palabra).",
+      "n": 50
+     }
+    ],
+    "desde": 41,
+    "hasta": 50
+   }
+  ]
+ },
+ "TRANSICION": {
+  "codigo": "03",
+  "nombre": "Transición",
+  "grado_ingreso": "TRANSICION",
+  "tipo": "cualitativo",
+  "total": 50,
+  "materias": [
+   {
+    "nombre": "APRESTAMIENTO",
+    "titulo": "1. APRESTAMIENTO (MOTRICIDAD Y PREESCRITURA)",
+    "preguntas": [
+     {
+      "enunciado": "Repasa las líneas punteadas sin levantar el lápiz: recta, curva y zigzag.",
+      "n": 1
+     },
+     {
+      "enunciado": "Ayuda a la abeja a llegar a la flor por el camino angosto, sin tocar los bordes.",
+      "n": 2
+     },
+     {
+      "enunciado": "Recorta por la línea curva. (El evaluador entrega la tira de papel con la línea; marque si lo logra).",
+      "n": 3
+     },
+     {
+      "enunciado": "Delinea el contorno de la figura sin salirte.",
+      "n": 4
+     },
+     {
+      "enunciado": "Colorea la estrella de forma ordenada, en una sola dirección y sin dejar espacios en blanco.",
+      "n": 5
+     },
+     {
+      "enunciado": "Dobla la hoja por la mitad como te muestra el evaluador. (Plegado; marque si lo logra).",
+      "n": 6
+     },
+     {
+      "enunciado": "Copia el dibujo en el cuadro de al lado, lo más parecido que puedas.",
+      "n": 7
+     },
+     {
+      "enunciado": "Encuentra las 2 diferencias entre los dos grupos y márcalas.",
+      "n": 8
+     },
+     {
+      "enunciado": "Repasa tu nombre en el renglón (el evaluador lo escribe punteado) y luego intenta escribirlo tú solo.",
+      "n": 9
+     },
+     {
+      "enunciado": "Moldea con plastilina una culebra larga y una bolita. (Marque si lo logra).",
+      "n": 10
+     }
+    ],
+    "desde": 1,
+    "hasta": 10
+   },
+   {
+    "nombre": "MATEMÁTICAS",
+    "titulo": "2. MATEMÁTICAS",
+    "preguntas": [
+     {
+      "enunciado": "Cuenta las estrellas y encierra el número correcto.",
+      "n": 11
+     },
+     {
+      "enunciado": "Une cada número con su cantidad.",
+      "n": 12
+     },
+     {
+      "enunciado": "Escribe los números que faltan: 1, 2, ___, 4, 5, ___, 7.",
+      "n": 13
+     },
+     {
+      "enunciado": "Suma con los dibujos: 🍎🍎 + 🍎 = ¿Cuántas manzanas hay en total? Escribe el número.",
+      "n": 14
+     },
+     {
+      "enunciado": "Resta con los dibujos: tenía 5 globos 🎈🎈🎈🎈🎈 y se volaron 2. ¿Cuántos quedan? Escribe el número.",
+      "n": 15
+     },
+     {
+      "enunciado": "Encierra el RECTÁNGULO y marca con una X la ESTRELLA.",
+      "n": 16
+     },
+     {
+      "enunciado": "¿Qué sigue en la secuencia? Dibújalo: 🔴 🔵 🔴 🔵 🔴 ___",
+      "n": 17
+     },
+     {
+      "enunciado": "Levanta tu mano DERECHA. Ahora toca tu oreja IZQUIERDA. (Marque si lo hace).",
+      "n": 18
+     },
+     {
+      "enunciado": "Encierra el perro que está ENCIMA de la mesa y marca con X el que está DEBAJO.",
+      "n": 19
+     },
+     {
+      "enunciado": "Colorea las dos figuras que son IGUALES.",
+      "n": 20
+     }
+    ],
+    "desde": 11,
+    "hasta": 20
+   },
+   {
+    "nombre": "LENGUAJE",
+    "titulo": "3. LENGUAJE (LENGUA CASTELLANA)",
+    "preguntas": [
+     {
+      "enunciado": "Escribe tu nombre en el renglón.",
+      "n": 21
+     },
+     {
+      "enunciado": "Encierra todas las vocales.",
+      "n": 22
+     },
+     {
+      "enunciado": "¿Con qué letra empieza MAMÁ? Enciérrala.",
+      "n": 23
+     },
+     {
+      "enunciado": "Une cada letra con el dibujo que empieza con su sonido.",
+      "n": 24
+     },
+     {
+      "enunciado": "Repasa las letras punteadas.",
+      "n": 25
+     },
+     {
+      "enunciado": "Transcribe (copia) la palabra en el renglón: sapo",
+      "n": 26
+     },
+     {
+      "enunciado": "Lee la imagen: cuéntame una historia corta de lo que ves. (Marque si narra con inicio y final).",
+      "n": 27
+     },
+     {
+      "enunciado": "Escucha: \"Sara sale al sol\". ¿Qué sonido se repite? (Se espera: la S).",
+      "n": 28
+     },
+     {
+      "enunciado": "Marca con una X el dibujo cuyo nombre empieza con T.",
+      "n": 29
+     },
+     {
+      "enunciado": "Inventa el final: \"Nina la gata subió al árbol y entonces…\" (Marque si crea un final coherente).",
+      "n": 30
+     }
+    ],
+    "desde": 21,
+    "hasta": 30
+   },
+   {
+    "nombre": "CIENCIAS",
+    "titulo": "4. CIENCIAS",
+    "preguntas": [
+     {
+      "enunciado": "Une cada animal con su hábitat.",
+      "n": 31
+     },
+     {
+      "enunciado": "Encierra el animal que vive en el DESIERTO.",
+      "n": 32
+     },
+     {
+      "enunciado": "Los elefantes viven en familia como nosotros. Marca con X la familia de elefantes.",
+      "n": 33
+     },
+     {
+      "enunciado": "Une cada sentido con su órgano.",
+      "n": 34
+     },
+     {
+      "enunciado": "¿Con qué parte del cuerpo sientes si algo está frío o caliente? Señala.",
+      "n": 35
+     },
+     {
+      "enunciado": "¿Con qué sentido sabes si la sopa está salada o dulce? Señala.",
+      "n": 36
+     },
+     {
+      "enunciado": "¿Cómo cuidamos los oídos? Encierra la acción correcta.",
+      "n": 37
+     },
+     {
+      "enunciado": "¿Cuál carro es más difícil de empujar? Señala. (Fricción / resistencia).",
+      "n": 38
+     },
+     {
+      "enunciado": "Marca con X lo que se mueve SOLO (sin que lo empujen).",
+      "n": 39
+     },
+     {
+      "enunciado": "El pingüino, ¿dónde NO podría vivir? Señala.",
+      "n": 40
+     }
+    ],
+    "desde": 31,
+    "hasta": 40
+   },
+   {
+    "nombre": "SOCIALES",
+    "titulo": "5. SOCIALES",
+    "preguntas": [
+     {
+      "enunciado": "¿Quiénes forman tu familia? Dibújalos en el cuadro.",
+      "n": 41
+     },
+     {
+      "enunciado": "Todas las familias son diferentes. Marca con X: ¿pueden ser una familia una abuela y su nieto?",
+      "n": 42
+     },
+     {
+      "enunciado": "Cuando llegas al salón en la mañana, ¿qué dices? (Se espera: \"buenos días\" / saludar).",
+      "n": 43
+     },
+     {
+      "enunciado": "Si quieres que te presten un juguete, ¿qué palabra mágica usas? (Se espera: \"por favor\").",
+      "n": 44
+     },
+     {
+      "enunciado": "Encierra lo que necesita una mascota para estar bien cuidada.",
+      "n": 45
+     },
+     {
+      "enunciado": "Un niño usa silla de ruedas 🦽. ¿Puede jugar contigo? (Se espera: sí; valore la actitud de respeto).",
+      "n": 46
+     },
+     {
+      "enunciado": "Ordena la rutina de higiene: une el 1 con lo primero y el 2 con lo segundo.",
+      "n": 47
+     },
+     {
+      "enunciado": "Clasifica los transportes: encierra los de TIERRA y marca con X el del AGUA.",
+      "n": 48
+     },
+     {
+      "enunciado": "¿Cómo se mueve cada animal? Une.",
+      "n": 49
+     },
+     {
+      "enunciado": "¿Qué ejercicio te ayuda a estar saludable? Encierra.",
+      "n": 50
+     }
+    ],
+    "desde": 41,
+    "hasta": 50
+   }
+  ]
+ },
+ "PRIMERO": {
+  "codigo": "04",
+  "nombre": "Primero",
+  "grado_ingreso": "PRIMERO",
+  "tipo": "cualitativo",
+  "total": 50,
+  "materias": [
+   {
+    "nombre": "MATEMÁTICAS",
+    "titulo": "1. MATEMÁTICAS",
+    "preguntas": [
+     {
+      "enunciado": "Escribe los números que faltan en la serie de 10 en 10:",
+      "n": 1
+     },
+     {
+      "enunciado": "Completa la serie de 2 en 2:",
+      "n": 2
+     },
+     {
+      "enunciado": "Encierra el número MAYOR y marca con una X el MENOR.",
+      "n": 3
+     },
+     {
+      "enunciado": "¿Qué número va ENTRE 15 y 17? Escríbelo:",
+      "n": 4
+     },
+     {
+      "enunciado": "Resuelve la suma en forma vertical:",
+      "n": 5
+     },
+     {
+      "enunciado": "Resuelve la resta: Ana tenía 8 dulces 🍬 y regaló 3. ¿Cuántos le quedan? Escribe la operación y el resultado.",
+      "n": 6
+     },
+     {
+      "enunciado": "Une cada cuerpo geométrico con el objeto que se le parece.",
+      "n": 7
+     },
+     {
+      "enunciado": "Colorea el HEXÁGONO (la figura de 6 lados).",
+      "n": 8
+     },
+     {
+      "enunciado": "Una decena tiene 10 unidades. Encierra el grupo que forma UNA DECENA.",
+      "n": 9
+     },
+     {
+      "enunciado": "Dibuja las manecillas del reloj marcando las 3 en punto.",
+      "n": 10
+     }
+    ],
+    "desde": 1,
+    "hasta": 10
+   },
+   {
+    "nombre": "ESPAÑOL",
+    "titulo": "2. ESPAÑOL (LENGUA CASTELLANA)",
+    "preguntas": [
+     {
+      "enunciado": "Escribe tu nombre completo. Recuerda empezar con letra MAYÚSCULA.",
+      "n": 11
+     },
+     {
+      "enunciado": "Lee la frase y haz un dibujo de lo que dice:",
+      "n": 12
+     },
+     {
+      "enunciado": "Separa la palabra en sílabas con palmadas y escribe cuántas tiene: ma-ri-po-sa",
+      "n": 13
+     },
+     {
+      "enunciado": "Encierra las palabras que están escritas con MAYÚSCULA inicial.",
+      "n": 14
+     },
+     {
+      "enunciado": "Dictado: escribe las palabras que el evaluador te dicte. (Sugeridas: sol – mesa – pato).",
+      "n": 15
+     },
+     {
+      "enunciado": "Ordena la historia: escribe 1, 2 y 3 debajo de cada dibujo según lo que pasa primero, después y al final.",
+      "n": 16
+     },
+     {
+      "enunciado": "Lee y responde marcando con X:",
+      "n": 17
+     },
+     {
+      "enunciado": "Completa la palabra con la sílaba que falta: CA — SA → PE — ___ — TA (pelota).",
+      "n": 18
+     },
+     {
+      "enunciado": "Mira la imagen y escribe una frase corta sobre lo que ves.",
+      "n": 19
+     },
+     {
+      "enunciado": "Cuéntale al evaluador una historia inventada por ti que tenga inicio, mitad y final. (Se valora la narración oral).",
+      "n": 20
+     }
+    ],
+    "desde": 11,
+    "hasta": 20
+   },
+   {
+    "nombre": "INGLÉS",
+    "titulo": "3. INGLÉS",
+    "preguntas": [
+     {
+      "enunciado": "Listen and point: \"Touch your HEAD\". (El evaluador da la instrucción en inglés; marque si la ejecuta).",
+      "n": 21
+     },
+     {
+      "enunciado": "Circle the color RED. (Encierra el color rojo).",
+      "n": 22
+     },
+     {
+      "enunciado": "Count in English: cuenta los patos en inglés en voz alta. (One, two, three…).",
+      "n": 23
+     },
+     {
+      "enunciado": "Match: une la palabra con el animal.",
+      "n": 24
+     },
+     {
+      "enunciado": "\"Hello!\" — ¿Qué respondes cuando alguien te saluda así? (Se espera: \"Hello\" / \"Hi\").",
+      "n": 25
+     },
+     {
+      "enunciado": "Circle the number FIVE.",
+      "n": 26
+     },
+     {
+      "enunciado": "Color the BLUE ball. (Colorea de azul el balón; entregue crayolas).",
+      "n": 27
+     },
+     {
+      "enunciado": "Listen and circle: \"APPLE\". (Diga la palabra en inglés; el niño encierra el dibujo).",
+      "n": 28
+     },
+     {
+      "enunciado": "\"Stand up – Sit down\": sigue las instrucciones del evaluador. (Marque si las ejecuta).",
+      "n": 29
+     },
+     {
+      "enunciado": "Say the colors: señala cada círculo y di su color en inglés.",
+      "n": 30
+     }
+    ],
+    "desde": 21,
+    "hasta": 30
+   },
+   {
+    "nombre": "CIENCIAS",
+    "titulo": "4. CIENCIAS",
+    "preguntas": [
+     {
+      "enunciado": "Une el clima con la ropa adecuada.",
+      "n": 31
+     },
+     {
+      "enunciado": "¿Con qué medimos la temperatura? Encierra.",
+      "n": 32
+     },
+     {
+      "enunciado": "Ordena el ciclo de vida de la mariposa escribiendo 1, 2 y 3.",
+      "n": 33
+     },
+     {
+      "enunciado": "Ordena las etapas de la vida de una persona: escribe 1 al bebé, 2 al niño y 3 al adulto.",
+      "n": 34
+     },
+     {
+      "enunciado": "¿De qué material está hecha una botella transparente que deja ver el jugo? Encierra.",
+      "n": 35
+     },
+     {
+      "enunciado": "Marca con X la acción que CUIDA el medio ambiente.",
+      "n": 36
+     },
+     {
+      "enunciado": "¿Qué máquina sencilla nos ayuda a subir cosas pesadas? Encierra.",
+      "n": 37
+     },
+     {
+      "enunciado": "Los animales también crecen y cambian. Une el animal bebé con su mamá.",
+      "n": 38
+     },
+     {
+      "enunciado": "En un día soleado ☀️, ¿qué actividad puedes hacer al aire libre? Encierra.",
+      "n": 39
+     },
+     {
+      "enunciado": "¿Qué necesita tu cuerpo para crecer sano? Marca con X las dos respuestas correctas.",
+      "n": 40
+     }
+    ],
+    "desde": 31,
+    "hasta": 40
+   },
+   {
+    "nombre": "SOCIALES",
+    "titulo": "5. SOCIALES",
+    "preguntas": [
+     {
+      "enunciado": "Escribe o di los nombres de dos personas de tu familia y qué son tuyos (mamá, papá, abuela…).",
+      "n": 41
+     },
+     {
+      "enunciado": "Encierra la regla correcta del salón de clase.",
+      "n": 42
+     },
+     {
+      "enunciado": "Une cada carita con su sentimiento.",
+      "n": 43
+     },
+     {
+      "enunciado": "Si un amigo está triste 😢, ¿qué puedes hacer tú? (Respuesta oral; se valora la empatía).",
+      "n": 44
+     },
+     {
+      "enunciado": "En Navidad, cada familia tiene costumbres diferentes. ¿Está bien que sean diferentes? Marca.",
+      "n": 45
+     },
+     {
+      "enunciado": "Encierra el lugar del colegio donde puedes leer libros.",
+      "n": 46
+     },
+     {
+      "enunciado": "Marca con X el recurso natural que nos da la naturaleza.",
+      "n": 47
+     },
+     {
+      "enunciado": "Clasifica para reciclar: une cada objeto con su caneca.",
+      "n": 48
+     },
+     {
+      "enunciado": "¿Quién era un bebé y ahora es grande? ¡Tú! Dibuja cómo eras de bebé y cómo eres ahora.",
+      "n": 49
+     },
+     {
+      "enunciado": "Antes de salir del salón, ¿qué debes hacer para dejar el ambiente limpio? (Respuesta oral: recoger, ordenar, botar basura en la caneca).",
+      "n": 50
+     }
+    ],
+    "desde": 41,
+    "hasta": 50
+   }
+  ]
+ },
+ "SEGUNDO": {
+  "codigo": "05",
+  "nombre": "Segundo",
+  "grado_ingreso": "SEGUNDO",
+  "tipo": "cualitativo",
+  "total": 50,
+  "materias": [
+   {
+    "nombre": "MATEMÁTICAS",
+    "titulo": "1. MATEMÁTICAS",
+    "preguntas": [
+     {
+      "enunciado": "Escribe el número \"doscientos treinta y cinco\" en cifras:",
+      "n": 1
+     },
+     {
+      "enunciado": "En el número 47, ¿cuántas DECENAS hay? Marca con X.",
+      "n": 2
+     },
+     {
+      "enunciado": "Resuelve la suma:",
+      "n": 3
+     },
+     {
+      "enunciado": "Resuelve la resta:",
+      "n": 4
+     },
+     {
+      "enunciado": "Problema: Juan tiene 15 canicas y su prima le regala 12 más. ¿Cuántas canicas tiene ahora? Escribe la operación y la respuesta.",
+      "n": 5
+     },
+     {
+      "enunciado": "Encierra los números PARES.",
+      "n": 6
+     },
+     {
+      "enunciado": "La multiplicación es una suma repetida: 3 + 3 + 3 + 3 es lo mismo que… Marca con X.",
+      "n": 7
+     },
+     {
+      "enunciado": "Colorea la MITAD de la pizza. (La pizza tiene 4 pedazos).",
+      "n": 8
+     },
+     {
+      "enunciado": "Une cada figura con su nombre.",
+      "n": 9
+     },
+     {
+      "enunciado": "¿Con qué unidad medimos el largo de un lápiz? Marca con X.",
+      "n": 10
+     }
+    ],
+    "desde": 1,
+    "hasta": 10
+   },
+   {
+    "nombre": "ESPAÑOL",
+    "titulo": "2. ESPAÑOL (LENGUA CASTELLANA)",
+    "preguntas": [
+     {
+      "enunciado": "Ordena las letras como en el abecedario y escríbelas: d — a — c — b",
+      "n": 11
+     },
+     {
+      "enunciado": "Encierra la palabra que debe empezar con MAYÚSCULA.",
+      "n": 12
+     },
+     {
+      "enunciado": "Lee la oración y subraya el SUJETO (quién hace la acción):",
+      "n": 13
+     },
+     {
+      "enunciado": "En la misma oración, encierra el VERBO (la acción).",
+      "n": 14
+     },
+     {
+      "enunciado": "Encierra el ADJETIVO (la palabra que dice cómo es):",
+      "n": 15
+     },
+     {
+      "enunciado": "Une cada palabra con su SINÓNIMO (palabra que significa lo mismo).",
+      "n": 16
+     },
+     {
+      "enunciado": "Escribe el ANTÓNIMO (lo contrario) de: grande →",
+      "n": 17
+     },
+     {
+      "enunciado": "¿Qué signo va al final de una pregunta? Marca con X.",
+      "n": 18
+     },
+     {
+      "enunciado": "Lee la fábula corta y responde:",
+      "n": 19
+     },
+     {
+      "enunciado": "Escribe una oración completa sobre tu animal favorito. Empieza con mayúscula y termina con punto.",
+      "n": 20
+     }
+    ],
+    "desde": 11,
+    "hasta": 20
+   },
+   {
+    "nombre": "INGLÉS",
+    "titulo": "3. INGLÉS",
+    "preguntas": [
+     {
+      "enunciado": "Someone says: \"Hello! What's your name?\" — Escribe tu respuesta en inglés:",
+      "n": 21
+     },
+     {
+      "enunciado": "Circle the SCHOOL OBJECT. (Encierra el objeto escolar).",
+      "n": 22
+     },
+     {
+      "enunciado": "Write the number in English: 7 =",
+      "n": 23
+     },
+     {
+      "enunciado": "Match the family member. (Une el miembro de la familia con su dibujo).",
+      "n": 24
+     },
+     {
+      "enunciado": "Circle the correct word: la imagen 👁️ es…",
+      "n": 25
+     },
+     {
+      "enunciado": "Read and draw: \"The cat is UNDER the table\". (Dibuja el gato debajo de la mesa).",
+      "n": 26
+     },
+     {
+      "enunciado": "Complete: \"I ______ got two eyes\". Marca con X.",
+      "n": 27
+     },
+     {
+      "enunciado": "Circle the WILD animal. (Encierra el animal salvaje).",
+      "n": 28
+     },
+     {
+      "enunciado": "\"A bird CAN fly. A fish _____ fly\". Marca con X.",
+      "n": 29
+     },
+     {
+      "enunciado": "Color: \"Color the star YELLOW and the circle BLUE\". (Sigue la instrucción con tus colores).",
+      "n": 30
+     }
+    ],
+    "desde": 21,
+    "hasta": 30
+   },
+   {
+    "nombre": "CIENCIAS",
+    "titulo": "4. CIENCIAS",
+    "preguntas": [
+     {
+      "enunciado": "Une cada sentido con lo que percibe.",
+      "n": 31
+     },
+     {
+      "enunciado": "Marca con X los SERES VIVOS.",
+      "n": 32
+     },
+     {
+      "enunciado": "Escribe el nombre de las 3 partes de la planta señaladas: raíz, tallo u hoja.",
+      "n": 33
+     },
+     {
+      "enunciado": "Los animales VERTEBRADOS tienen huesos. Encierra el vertebrado.",
+      "n": 34
+     },
+     {
+      "enunciado": "¿Qué pasa con el agua de los charcos cuando hace mucho sol? Marca con X.",
+      "n": 35
+     },
+     {
+      "enunciado": "¿Por qué hay día y noche? Marca con X.",
+      "n": 36
+     },
+     {
+      "enunciado": "¿Qué objetos atrae un IMÁN? Encierra.",
+      "n": 37
+     },
+     {
+      "enunciado": "Con tu dedo sigue tu respiración: ¿por dónde entra el aire a tu cuerpo? Marca con X.",
+      "n": 38
+     },
+     {
+      "enunciado": "Marca con X la MÁQUINA SIMPLE que ayuda a subir cosas.",
+      "n": 39
+     },
+     {
+      "enunciado": "Ordena las etapas de la vida escribiendo 1, 2, 3 y 4: anciano — bebé — adulto — niño.",
+      "n": 40
+     }
+    ],
+    "desde": 31,
+    "hasta": 40
+   },
+   {
+    "nombre": "SOCIALES",
+    "titulo": "5. SOCIALES",
+    "preguntas": [
+     {
+      "enunciado": "¿Cómo se llama la estrella que nos da luz y calor? Marca con X.",
+      "n": 41
+     },
+     {
+      "enunciado": "La Tierra es un… Marca con X.",
+      "n": 42
+     },
+     {
+      "enunciado": "¿En qué continente está Colombia? Marca con X.",
+      "n": 43
+     },
+     {
+      "enunciado": "Antes de que llegaran los españoles, en Colombia vivían… Marca con X.",
+      "n": 44
+     },
+     {
+      "enunciado": "Une cada región natural con su característica.",
+      "n": 45
+     },
+     {
+      "enunciado": "Encierra los recursos naturales de AGUA.",
+      "n": 46
+     },
+     {
+      "enunciado": "Después de un rayo ⚡ se escucha un ruido fuerte. ¿Cómo se llama? Marca con X.",
+      "n": 47
+     },
+     {
+      "enunciado": "En la Independencia, Colombia luchó para… Marca con X.",
+      "n": 48
+     },
+     {
+      "enunciado": "¿Qué actividad económica da alimentos desde el campo? Marca con X.",
+      "n": 49
+     },
+     {
+      "enunciado": "Dibuja un paisaje colombiano que conozcas (montaña, río, mar o ciudad) y escríbele un título.",
+      "n": 50
+     }
+    ],
+    "desde": 41,
+    "hasta": 50
+   }
+  ]
+ },
+ "TERCERO": {
+  "codigo": "06",
+  "nombre": "Tercero",
+  "grado_ingreso": "TERCERO",
+  "tipo": "opcion_multiple",
+  "total": 50,
+  "materias": [
+   {
+    "nombre": "MATEMÁTICAS",
+    "titulo": "MATEMÁTICAS (Preguntas 1 a 10)",
+    "preguntas": [
+     {
+      "enunciado": "En el número 3.472, el dígito 4 ocupa el lugar de las:",
+      "opciones": {
+       "A": "Unidades",
+       "B": "Decenas",
+       "C": "Centenas",
+       "D": "Unidades de mil"
+      },
+      "n": 1,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Laura tenía 358 láminas y su hermano le regaló 267 más. ¿Cuántas láminas tiene ahora?",
+      "opciones": {
+       "A": "515",
+       "B": "615",
+       "C": "625",
+       "D": "635"
+      },
+      "n": 2,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "En una caja hay 4 filas con 6 chocolates cada una. La operación que permite saber cuántos chocolates hay en total es:",
+      "opciones": {
+       "A": "4 + 6",
+       "B": "6 − 4",
+       "C": "4 × 6",
+       "D": "6 ÷ 4"
+      },
+      "n": 3,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "¿Cuál es el resultado de 7 × 8?",
+      "opciones": {
+       "A": "54",
+       "B": "56",
+       "C": "63",
+       "D": "64"
+      },
+      "n": 4,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Se reparten 20 dulces entre 4 niños en partes iguales. ¿Cuántos dulces recibe cada uno?",
+      "opciones": {
+       "A": "4",
+       "B": "5",
+       "C": "6",
+       "D": "16"
+      },
+      "n": 5,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "¿Cuál de estos números es IMPAR y está ENTRE 340 y 350?",
+      "opciones": {
+       "A": "338",
+       "B": "342",
+       "C": "345",
+       "D": "352"
+      },
+      "n": 6,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Un ángulo que mide exactamente 90° (como la esquina de un cuaderno) se llama:",
+      "opciones": {
+       "A": "Agudo",
+       "B": "Recto",
+       "C": "Obtuso",
+       "D": "Llano"
+      },
+      "n": 7,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "La figura que tiene 4 lados iguales y 4 ángulos rectos es el:",
+      "opciones": {
+       "A": "Triángulo",
+       "B": "Rectángulo",
+       "C": "Cuadrado",
+       "D": "Trapecio"
+      },
+      "n": 8,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Una película empieza a las 3:00 p.m. y dura 1 hora y 30 minutos. ¿A qué hora termina?",
+      "opciones": {
+       "A": "4:00 p.m.",
+       "B": "4:30 p.m.",
+       "C": "5:00 p.m.",
+       "D": "5:30 p.m."
+      },
+      "n": 9,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Un metro tiene:",
+      "opciones": {
+       "A": "10 centímetros",
+       "B": "50 centímetros",
+       "C": "100 centímetros",
+       "D": "1.000 centímetros"
+      },
+      "n": 10,
+      "correcta": "C"
+     }
+    ],
+    "desde": 1,
+    "hasta": 10
+   },
+   {
+    "nombre": "ESPAÑOL",
+    "titulo": "ESPAÑOL (Preguntas 11 a 20)",
+    "preguntas": [
+     {
+      "enunciado": "En la palabra \"ventana\", la sílaba TÓNICA (la que suena más fuerte) es:",
+      "opciones": {
+       "A": "ven",
+       "B": "ta",
+       "C": "na",
+       "D": "Ninguna suena más fuerte"
+      },
+      "n": 11,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "¿Cuál de estas palabras tiene DIPTONGO (dos vocales juntas en una sílaba)?",
+      "opciones": {
+       "A": "casa",
+       "B": "tierra",
+       "C": "sol",
+       "D": "mesa"
+      },
+      "n": 12,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "¿Cuál de estas palabras es COMPUESTA (formada por dos palabras)?",
+      "opciones": {
+       "A": "sacapuntas",
+       "B": "jardín",
+       "C": "flores",
+       "D": "escuela"
+      },
+      "n": 13,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En la oración \"El niño corre rápidamente\", la palabra \"rápidamente\" es un:",
+      "opciones": {
+       "A": "Sustantivo",
+       "B": "Adjetivo",
+       "C": "Adverbio de modo",
+       "D": "Verbo"
+      },
+      "n": 14,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Lee: \"Tres tristes tigres tragan trigo en un trigal\". Este es un ejemplo de:",
+      "opciones": {
+       "A": "Retahíla",
+       "B": "Trabalenguas",
+       "C": "Adivinanza",
+       "D": "Poema"
+      },
+      "n": 15,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "¿Cuál grupo de palabras forma un CAMPO SEMÁNTICO (palabras del mismo tema)?",
+      "opciones": {
+       "A": "perro, correr, azul",
+       "B": "manzana, pera, uva",
+       "C": "feliz, mesa, nube",
+       "D": "lápiz, sol, zapato"
+      },
+      "n": 16,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Lee el texto y responde:",
+      "opciones": {
+       "A": "El ratón encuentra el queso",
+       "B": "El ratón ve que su amigo no tiene comida",
+       "C": "Los dos cenan felices",
+       "D": "El pájaro vuela"
+      },
+      "n": 17,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "En las fábulas los animales hablan y actúan como personas. Ese recurso se llama:",
+      "opciones": {
+       "A": "Rima",
+       "B": "Personificación",
+       "C": "Comparación",
+       "D": "Moraleja"
+      },
+      "n": 18,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El signo de puntuación que se usa para separar elementos de una lista (pan, leche, queso) es:",
+      "opciones": {
+       "A": "El punto",
+       "B": "La coma",
+       "C": "El guion",
+       "D": "Los signos de interrogación"
+      },
+      "n": 19,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Una historia que mezcla hechos reales con hechos fantásticos y se transmite de generación en generación es:",
+      "opciones": {
+       "A": "Una noticia",
+       "B": "Una receta",
+       "C": "Una leyenda",
+       "D": "Una carta"
+      },
+      "n": 20,
+      "correcta": "C"
+     }
+    ],
+    "desde": 11,
+    "hasta": 20
+   },
+   {
+    "nombre": "INGLÉS",
+    "titulo": "INGLÉS (Preguntas 21 a 30)",
+    "preguntas": [
+     {
+      "enunciado": "Complete: \"______ a cat under the table.\"",
+      "opciones": {
+       "A": "There is",
+       "B": "There are",
+       "C": "This are",
+       "D": "Those is"
+      },
+      "n": 21,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Choose the correct sentence:",
+      "opciones": {
+       "A": "These is my toys",
+       "B": "This is my toy",
+       "C": "That are my toy",
+       "D": "Those is my toys"
+      },
+      "n": 22,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "The ball is ______ the box. (La pelota está DETRÁS de la caja).",
+      "opciones": {
+       "A": "on",
+       "B": "under",
+       "C": "behind",
+       "D": "in"
+      },
+      "n": 23,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Where do you sleep? — In the ______.",
+      "opciones": {
+       "A": "kitchen",
+       "B": "bedroom",
+       "C": "bathroom",
+       "D": "garden"
+      },
+      "n": 24,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "My father's job: He helps sick people at the hospital. He is a ______.",
+      "opciones": {
+       "A": "teacher",
+       "B": "firefighter",
+       "C": "doctor",
+       "D": "driver"
+      },
+      "n": 25,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "\"Do you like apples?\" — La respuesta correcta es:",
+      "opciones": {
+       "A": "Yes, I do",
+       "B": "Yes, I is",
+       "C": "Yes, he do",
+       "D": "Yes, I am apple"
+      },
+      "n": 26,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Which one is a FARM animal?",
+      "opciones": {
+       "A": "Lion",
+       "B": "Shark",
+       "C": "Cow",
+       "D": "Elephant"
+      },
+      "n": 27,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "A fish can swim, but it ______ walk.",
+      "opciones": {
+       "A": "can",
+       "B": "can't",
+       "C": "is",
+       "D": "don't"
+      },
+      "n": 28,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Look: 🧥🧣❄️ It is cold. What are you wearing?",
+      "opciones": {
+       "A": "I'm wearing a swimsuit",
+       "B": "I'm wearing a coat and a scarf",
+       "C": "I'm wearing shorts",
+       "D": "I'm wearing sandals"
+      },
+      "n": 29,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Complete with the number: \"I have ten fingers and ______ eyes.\" (10 dedos y 2 ojos)",
+      "opciones": {
+       "A": "two",
+       "B": "three",
+       "C": "five",
+       "D": "twenty"
+      },
+      "n": 30,
+      "correcta": "A"
+     }
+    ],
+    "desde": 21,
+    "hasta": 30
+   },
+   {
+    "nombre": "CIENCIAS",
+    "titulo": "CIENCIAS (Preguntas 31 a 40)",
+    "preguntas": [
+     {
+      "enunciado": "El agua de un charco se seca con el sol porque pasa del estado líquido al estado:",
+      "opciones": {
+       "A": "Sólido",
+       "B": "Gaseoso",
+       "C": "Congelado",
+       "D": "Duro"
+      },
+      "n": 31,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El órgano principal del sistema CIRCULATORIO, que bombea la sangre, es:",
+      "opciones": {
+       "A": "El pulmón",
+       "B": "El estómago",
+       "C": "El corazón",
+       "D": "El cerebro"
+      },
+      "n": 32,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Un animal que SOLO come plantas se llama:",
+      "opciones": {
+       "A": "Carnívoro",
+       "B": "Herbívoro",
+       "C": "Omnívoro",
+       "D": "Insectívoro"
+      },
+      "n": 33,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "En un ecosistema, las plantas son PRODUCTORES porque:",
+      "opciones": {
+       "A": "Se comen a otros seres",
+       "B": "Fabrican su propio alimento con la luz del sol",
+       "C": "No necesitan agua",
+       "D": "Se mueven de un lugar a otro"
+      },
+      "n": 34,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El sonido se produce cuando un objeto:",
+      "opciones": {
+       "A": "Brilla",
+       "B": "Vibra",
+       "C": "Se moja",
+       "D": "Se enfría"
+      },
+      "n": 35,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Orden correcto del ciclo de vida de la mariposa:",
+      "opciones": {
+       "A": "Mariposa → oruga → huevo → capullo",
+       "B": "Huevo → oruga → capullo → mariposa",
+       "C": "Capullo → huevo → mariposa → oruga",
+       "D": "Oruga → mariposa → huevo → capullo"
+      },
+      "n": 36,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Para subir una caja pesada a un camión, es más fácil usar una rampa. La rampa es una máquina simple llamada:",
+      "opciones": {
+       "A": "Polea",
+       "B": "Plano inclinado",
+       "C": "Rueda y eje",
+       "D": "Palanca"
+      },
+      "n": 37,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "¿Cuál de estos es un recurso NO renovable (que se puede acabar)?",
+      "opciones": {
+       "A": "La luz del sol",
+       "B": "El viento",
+       "C": "El petróleo",
+       "D": "El agua de lluvia"
+      },
+      "n": 38,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "La Luna no siempre se ve igual en el cielo. Esos cambios se llaman:",
+      "opciones": {
+       "A": "Estaciones",
+       "B": "Fases de la Luna",
+       "C": "Eclipses del sol",
+       "D": "Estrellas fugaces"
+      },
+      "n": 39,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Después de comer, el alimento se transforma en nuestro cuerpo. El sistema encargado de esto es el:",
+      "opciones": {
+       "A": "Sistema digestivo",
+       "B": "Sistema circulatorio",
+       "C": "Sistema respiratorio",
+       "D": "Sistema locomotor"
+      },
+      "n": 40,
+      "correcta": "A"
+     }
+    ],
+    "desde": 31,
+    "hasta": 40
+   },
+   {
+    "nombre": "SOCIALES",
+    "titulo": "SOCIALES (Preguntas 41 a 50)",
+    "preguntas": [
+     {
+      "enunciado": "El movimiento de la Tierra que produce el día y la noche se llama:",
+      "opciones": {
+       "A": "Traslación",
+       "B": "Rotación",
+       "C": "Gravitación",
+       "D": "Estación"
+      },
+      "n": 41,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El satélite natural de la Tierra es:",
+      "opciones": {
+       "A": "El Sol",
+       "B": "Marte",
+       "C": "La Luna",
+       "D": "Una antena"
+      },
+      "n": 42,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Los muiscas y los chibchas fueron:",
+      "opciones": {
+       "A": "Comunidades indígenas que vivieron en Colombia antes de los españoles",
+       "B": "Exploradores europeos",
+       "C": "Presidentes de Colombia",
+       "D": "Equipos deportivos"
+      },
+      "n": 43,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "¿Quién llegó a América en 1492 con tres carabelas?",
+      "opciones": {
+       "A": "Simón Bolívar",
+       "B": "Cristóbal Colón",
+       "C": "Francisco de Paula Santander",
+       "D": "Un astronauta"
+      },
+      "n": 44,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Una montaña muy alta que puede lanzar lava y ceniza es:",
+      "opciones": {
+       "A": "Una colina",
+       "B": "Un valle",
+       "C": "Un volcán",
+       "D": "Una meseta"
+      },
+      "n": 45,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "El río más importante de Colombia, que atraviesa gran parte del país, es el río:",
+      "opciones": {
+       "A": "Amazonas",
+       "B": "Magdalena",
+       "C": "Nilo",
+       "D": "Orinoco"
+      },
+      "n": 46,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "En Colombia, el 20 de julio celebramos:",
+      "opciones": {
+       "A": "La Navidad",
+       "B": "El Día de la Independencia",
+       "C": "El Año Nuevo",
+       "D": "El Día de la Madre"
+      },
+      "n": 47,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Simón Bolívar es recordado porque:",
+      "opciones": {
+       "A": "Descubrió América",
+       "B": "Luchó por la independencia de Colombia",
+       "C": "Inventó el teléfono",
+       "D": "Fundó los muiscas"
+      },
+      "n": 48,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Cuando la tierra se mueve con mucha fuerza y sacude casas y edificios, ocurre un:",
+      "opciones": {
+       "A": "Arcoíris",
+       "B": "Terremoto",
+       "C": "Eclipse",
+       "D": "Viento suave"
+      },
+      "n": 49,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El libro donde están las reglas y los derechos más importantes de Colombia es:",
+      "opciones": {
+       "A": "El diccionario",
+       "B": "La Constitución Política",
+       "C": "El álbum de láminas",
+       "D": "El periódico"
+      },
+      "n": 50,
+      "correcta": "B"
+     }
+    ],
+    "desde": 41,
+    "hasta": 50
+   }
+  ]
+ },
+ "CUARTO": {
+  "codigo": "07",
+  "nombre": "Cuarto",
+  "grado_ingreso": "CUARTO",
+  "tipo": "opcion_multiple",
+  "total": 50,
+  "materias": [
+   {
+    "nombre": "MATEMÁTICAS",
+    "titulo": "MATEMÁTICAS (Preguntas 1 a 10)",
+    "preguntas": [
+     {
+      "enunciado": "El número 456.789 leído correctamente es:",
+      "opciones": {
+       "A": "Cuarenta y cinco mil seiscientos setenta y ocho",
+       "B": "Cuatrocientos cincuenta y seis mil setecientos ochenta y nueve",
+       "C": "Cuatro millones quinientos sesenta y siete",
+       "D": "Cuarenta y cinco millones seiscientos setenta y ocho"
+      },
+      "n": 1,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El número romano XIV equivale a:",
+      "opciones": {
+       "A": "4",
+       "B": "14",
+       "C": "16",
+       "D": "24"
+      },
+      "n": 2,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "En una bodega hay 24 cajas y cada caja tiene 15 botellas. ¿Cuántas botellas hay en total?",
+      "opciones": {
+       "A": "39",
+       "B": "240",
+       "C": "360",
+       "D": "375"
+      },
+      "n": 3,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Al dividir 47 ÷ 5, el cociente es 9 y el residuo es:",
+      "opciones": {
+       "A": "0",
+       "B": "2",
+       "C": "4",
+       "D": "5"
+      },
+      "n": 4,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Un kilómetro equivale a:",
+      "opciones": {
+       "A": "10 metros",
+       "B": "100 metros",
+       "C": "1.000 metros",
+       "D": "10.000 metros"
+      },
+      "n": 5,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "El perímetro de un cuadrado cuyo lado mide 8 cm es:",
+      "opciones": {
+       "A": "16 cm",
+       "B": "24 cm",
+       "C": "32 cm",
+       "D": "64 cm"
+      },
+      "n": 6,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Un triángulo que tiene sus 3 lados iguales se llama:",
+      "opciones": {
+       "A": "Escaleno",
+       "B": "Isósceles",
+       "C": "Equilátero",
+       "D": "Rectángulo"
+      },
+      "n": 7,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "En una pizza dividida en 8 partes iguales, Juan comió 3 pedazos. La fracción que comió es:",
+      "opciones": {
+       "A": "8/3",
+       "B": "3/8",
+       "C": "3/5",
+       "D": "5/8"
+      },
+      "n": 8,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "¿Cuál fracción es EQUIVALENTE a 1/2?",
+      "opciones": {
+       "A": "2/4",
+       "B": "1/4",
+       "C": "2/3",
+       "D": "3/2"
+      },
+      "n": 9,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Un cuerpo geométrico con una base circular y una punta (como un helado de cono) es un:",
+      "opciones": {
+       "A": "Cilindro",
+       "B": "Prisma",
+       "C": "Cono",
+       "D": "Cubo"
+      },
+      "n": 10,
+      "correcta": "C"
+     }
+    ],
+    "desde": 1,
+    "hasta": 10
+   },
+   {
+    "nombre": "ESPAÑOL",
+    "titulo": "ESPAÑOL (Preguntas 11 a 20)",
+    "preguntas": [
+     {
+      "enunciado": "Lee el texto:",
+      "opciones": {
+       "A": "Fábula",
+       "B": "Biografía",
+       "C": "Receta",
+       "D": "Adivinanza"
+      },
+      "n": 11,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "En la oración \"¡Qué golazo tan increíble!\", los signos que la acompañan son de:",
+      "opciones": {
+       "A": "Interrogación",
+       "B": "Admiración",
+       "C": "Puntuación final",
+       "D": "Diálogo"
+      },
+      "n": 12,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "En la oración \"Las niñas juegan en el parque\", la palabra \"Las\" es un:",
+      "opciones": {
+       "A": "Sustantivo",
+       "B": "Verbo",
+       "C": "Artículo",
+       "D": "Adjetivo"
+      },
+      "n": 13,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "¿Cuál oración tiene el verbo en tiempo FUTURO?",
+      "opciones": {
+       "A": "Ayer comí pizza",
+       "B": "Mañana viajaré a la finca",
+       "C": "Ahora estudio matemáticas",
+       "D": "Ya terminé la tarea"
+      },
+      "n": 14,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Un relato tradicional que explica el origen del mundo o de los dioses se llama:",
+      "opciones": {
+       "A": "Mito",
+       "B": "Noticia",
+       "C": "Carta",
+       "D": "Historieta"
+      },
+      "n": 15,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En un poema, la semejanza de sonidos al final de los versos se llama:",
+      "opciones": {
+       "A": "Párrafo",
+       "B": "Rima",
+       "C": "Resumen",
+       "D": "Guion"
+      },
+      "n": 16,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Lee el párrafo:",
+      "opciones": {
+       "A": "Los animales beben agua",
+       "B": "Las plantas crecen con agua",
+       "C": "El agua es esencial para la vida",
+       "D": "Los humanos cocinan con agua"
+      },
+      "n": 17,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "El texto que informa sobre un hecho reciente y real, publicado en un periódico, es:",
+      "opciones": {
+       "A": "Un cuento",
+       "B": "Una noticia",
+       "C": "Un poema",
+       "D": "Una leyenda"
+      },
+      "n": 18,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El texto escrito para ser representado por actores en un escenario es:",
+      "opciones": {
+       "A": "La biografía",
+       "B": "El guion teatral",
+       "C": "El resumen",
+       "D": "El artículo de opinión"
+      },
+      "n": 19,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Para comparar las características de dos animales en columnas ordenadas, el mejor esquema es:",
+      "opciones": {
+       "A": "Un cuadro comparativo",
+       "B": "Una rima",
+       "C": "Una fotografía",
+       "D": "Un punto y coma"
+      },
+      "n": 20,
+      "correcta": "A"
+     }
+    ],
+    "desde": 11,
+    "hasta": 20
+   },
+   {
+    "nombre": "INGLÉS",
+    "titulo": "INGLÉS (Preguntas 21 a 30)",
+    "preguntas": [
+     {
+      "enunciado": "Look at the picture: 👧📖. What is she doing?",
+      "opciones": {
+       "A": "She is reading",
+       "B": "She is swimming",
+       "C": "She is sleeping",
+       "D": "She is eating"
+      },
+      "n": 21,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Complete: \"This is Mary. She is my mother's sister. She is my ______.\"",
+      "opciones": {
+       "A": "brother",
+       "B": "aunt",
+       "C": "grandfather",
+       "D": "son"
+      },
+      "n": 22,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Write the number 34 in English:",
+      "opciones": {
+       "A": "thirteen-four",
+       "B": "forty-three",
+       "C": "thirty-four",
+       "D": "three-four"
+      },
+      "n": 23,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Complete the routine: \"I ______ up at 6 o'clock every day.\"",
+      "opciones": {
+       "A": "wake",
+       "B": "wakes",
+       "C": "waking",
+       "D": "woke"
+      },
+      "n": 24,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Choose the FREQUENCY adverb: \"I ______ brush my teeth after meals.\" (todos los días, siempre)",
+      "opciones": {
+       "A": "never",
+       "B": "always",
+       "C": "yesterday",
+       "D": "tomorrow"
+      },
+      "n": 25,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Where can you buy medicine?",
+      "opciones": {
+       "A": "At the pharmacy",
+       "B": "At the park",
+       "C": "At the zoo",
+       "D": "At the cinema"
+      },
+      "n": 26,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Complete: \"You ______ do your homework. It is an obligation.\"",
+      "opciones": {
+       "A": "can't",
+       "B": "must",
+       "C": "shall",
+       "D": "mustn't"
+      },
+      "n": 27,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "\"What's the matter with him?\" — \"He has a ______.\" (le duele la cabeza)",
+      "opciones": {
+       "A": "headache",
+       "B": "birthday",
+       "C": "bicycle",
+       "D": "holiday"
+      },
+      "n": 28,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Choose the correct COMPARATIVE: \"An elephant is ______ than a mouse.\"",
+      "opciones": {
+       "A": "big",
+       "B": "bigger",
+       "C": "biggest",
+       "D": "more big"
+      },
+      "n": 29,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Complete in PAST: \"Yesterday the weather ______ sunny at the beach.\"",
+      "opciones": {
+       "A": "is",
+       "B": "are",
+       "C": "was",
+       "D": "were"
+      },
+      "n": 30,
+      "correcta": "C"
+     }
+    ],
+    "desde": 21,
+    "hasta": 30
+   },
+   {
+    "nombre": "CIENCIAS",
+    "titulo": "CIENCIAS (Preguntas 31 a 40)",
+    "preguntas": [
+     {
+      "enunciado": "Derretir un cubo de hielo es un cambio FÍSICO porque:",
+      "opciones": {
+       "A": "El agua se convierte en otra sustancia",
+       "B": "Sigue siendo agua, solo cambia de estado",
+       "C": "El hielo desaparece para siempre",
+       "D": "Se produce fuego"
+      },
+      "n": 31,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El órgano del sistema nervioso central que controla todo el cuerpo es:",
+      "opciones": {
+       "A": "El corazón",
+       "B": "El cerebro",
+       "C": "El estómago",
+       "D": "El pulmón"
+      },
+      "n": 32,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "En la cadena alimentaria: pasto → conejo → zorro, el conejo es:",
+      "opciones": {
+       "A": "Productor",
+       "B": "Consumidor",
+       "C": "Descomponedor",
+       "D": "Mineral"
+      },
+      "n": 33,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Las plantas fabrican su alimento usando la luz del sol. Ese proceso se llama:",
+      "opciones": {
+       "A": "Digestión",
+       "B": "Respiración",
+       "C": "Fotosíntesis",
+       "D": "Evaporación"
+      },
+      "n": 34,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "El oso polar tiene un pelaje grueso y blanco para sobrevivir en el frío y camuflarse. Esto es un ejemplo de:",
+      "opciones": {
+       "A": "Adaptación",
+       "B": "Reciclaje",
+       "C": "Contaminación",
+       "D": "Fotosíntesis"
+      },
+      "n": 35,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En Colombia, a mayor altura en la montaña, el clima es más frío. Esas zonas de temperatura se llaman:",
+      "opciones": {
+       "A": "Océanos",
+       "B": "Pisos térmicos",
+       "C": "Desiertos",
+       "D": "Fases lunares"
+      },
+      "n": 36,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Un imán atrae objetos de hierro gracias a su:",
+      "opciones": {
+       "A": "Color",
+       "B": "Campo magnético",
+       "C": "Peso",
+       "D": "Temperatura"
+      },
+      "n": 37,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Cuando la Luna se interpone entre el Sol y la Tierra y oscurece el día, ocurre un:",
+      "opciones": {
+       "A": "Terremoto",
+       "B": "Eclipse de sol",
+       "C": "Arcoíris",
+       "D": "Volcán"
+      },
+      "n": 38,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Las \"tres erres\" del cuidado del ambiente son:",
+      "opciones": {
+       "A": "Reducir, Reutilizar, Reciclar",
+       "B": "Romper, Rayar, Regalar",
+       "C": "Recoger, Reír, Repetir",
+       "D": "Rodar, Regar, Raspar"
+      },
+      "n": 39,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Cuando la luz rebota en un espejo, ese fenómeno se llama:",
+      "opciones": {
+       "A": "Absorción",
+       "B": "Reflexión",
+       "C": "Evaporación",
+       "D": "Vibración"
+      },
+      "n": 40,
+      "correcta": "B"
+     }
+    ],
+    "desde": 31,
+    "hasta": 40
+   },
+   {
+    "nombre": "SOCIALES",
+    "titulo": "SOCIALES (Preguntas 41 a 50)",
+    "preguntas": [
+     {
+      "enunciado": "Los muiscas y los tayronas fueron culturas precolombinas. Los tayronas construyeron ciudades de piedra en:",
+      "opciones": {
+       "A": "La Sierra Nevada de Santa Marta",
+       "B": "El desierto del Sahara",
+       "C": "La Antártida",
+       "D": "Europa"
+      },
+      "n": 41,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El instrumento que usamos para observar los cuerpos celestes lejanos es:",
+      "opciones": {
+       "A": "El microscopio",
+       "B": "El telescopio",
+       "C": "La lupa",
+       "D": "La brújula"
+      },
+      "n": 42,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Colombia está dividida políticamente en:",
+      "opciones": {
+       "A": "Estaciones",
+       "B": "Departamentos",
+       "C": "Continentes",
+       "D": "Planetas"
+      },
+      "n": 43,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Durante la Colonia, la sociedad estaba dividida en clases sociales. En la cima estaban:",
+      "opciones": {
+       "A": "Los esclavos",
+       "B": "Los españoles nacidos en España",
+       "C": "Los niños",
+       "D": "Los animales"
+      },
+      "n": 44,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El Grito de Independencia de Colombia ocurrió el:",
+      "opciones": {
+       "A": "25 de diciembre de 1492",
+       "B": "20 de julio de 1810",
+       "C": "31 de octubre de 2000",
+       "D": "1 de enero de 1900"
+      },
+      "n": 45,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "La Revuelta de los Comuneros fue:",
+      "opciones": {
+       "A": "Una fiesta tradicional",
+       "B": "Una protesta del pueblo contra los impuestos españoles",
+       "C": "Un campeonato deportivo",
+       "D": "Una obra de teatro"
+      },
+      "n": 46,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El fenómeno que calienta el planeta porque algunos gases atrapan el calor se llama:",
+      "opciones": {
+       "A": "Arcoíris",
+       "B": "Efecto invernadero",
+       "C": "Marea baja",
+       "D": "Rotación"
+      },
+      "n": 47,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Después de la Independencia, Bolívar formó un gran país que unía varias naciones, llamado:",
+      "opciones": {
+       "A": "La Gran Colombia",
+       "B": "El Imperio Romano",
+       "C": "La Nueva Zelanda",
+       "D": "Los Estados Unidos"
+      },
+      "n": 48,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En 1903, tras la Guerra de los Mil Días, Colombia perdió el territorio de:",
+      "opciones": {
+       "A": "Bogotá",
+       "B": "Panamá",
+       "C": "Medellín",
+       "D": "La Guajira"
+      },
+      "n": 49,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Cultivar café y flores para vender es un ejemplo de la actividad económica llamada:",
+      "opciones": {
+       "A": "Turismo",
+       "B": "Agricultura",
+       "C": "Minería",
+       "D": "Industria espacial"
+      },
+      "n": 50,
+      "correcta": "B"
+     }
+    ],
+    "desde": 41,
+    "hasta": 50
+   }
+  ]
+ },
+ "QUINTO": {
+  "codigo": "08",
+  "nombre": "Quinto",
+  "grado_ingreso": "QUINTO",
+  "tipo": "opcion_multiple",
+  "total": 50,
+  "materias": [
+   {
+    "nombre": "MATEMÁTICAS",
+    "titulo": "MATEMÁTICAS (Preguntas 1 a 10)",
+    "preguntas": [
+     {
+      "enunciado": "En el número 5.283.741, el dígito 2 ocupa el lugar de las:",
+      "opciones": {
+       "A": "Decenas de mil",
+       "B": "Centenas de mil",
+       "C": "Unidades de millón",
+       "D": "Centenas"
+      },
+      "n": 1,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Aplicando la propiedad distributiva, 4 × (10 + 3) es igual a:",
+      "opciones": {
+       "A": "4 × 10 + 3",
+       "B": "4 × 10 + 4 × 3",
+       "C": "4 + 10 × 3",
+       "D": "40 + 3"
+      },
+      "n": 2,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Un colegio compró 1.250 refrigerios y los repartió en partes iguales entre 5 cursos. ¿Cuántos refrigerios recibió cada curso?",
+      "opciones": {
+       "A": "205",
+       "B": "240",
+       "C": "250",
+       "D": "300"
+      },
+      "n": 3,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "¿Cuál de los siguientes números es PRIMO (solo se divide entre 1 y él mismo)?",
+      "opciones": {
+       "A": "9",
+       "B": "15",
+       "C": "13",
+       "D": "21"
+      },
+      "n": 4,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "El mínimo común múltiplo (m.c.m.) de 4 y 6 es:",
+      "opciones": {
+       "A": "2",
+       "B": "12",
+       "C": "24",
+       "D": "10"
+      },
+      "n": 5,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El resultado de 2/5 + 1/5 es:",
+      "opciones": {
+       "A": "3/10",
+       "B": "3/5",
+       "C": "2/10",
+       "D": "1/5"
+      },
+      "n": 6,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El número decimal 0,75 escrito como fracción es:",
+      "opciones": {
+       "A": "75/10",
+       "B": "75/100",
+       "C": "7/5",
+       "D": "75/1000"
+      },
+      "n": 7,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Un rectángulo mide 9 cm de largo y 4 cm de ancho. Su ÁREA es:",
+      "opciones": {
+       "A": "13 cm²",
+       "B": "26 cm²",
+       "C": "36 cm²",
+       "D": "42 cm²"
+      },
+      "n": 8,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Dos rectas que nunca se cruzan, como los rieles del tren, se llaman:",
+      "opciones": {
+       "A": "Perpendiculares",
+       "B": "Paralelas",
+       "C": "Intersecantes",
+       "D": "Curvas"
+      },
+      "n": 9,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Las mascotas de un curso son: 6 perros, 4 gatos, 6 peces y 2 aves. La MODA (el dato que más se repite) es:",
+      "opciones": {
+       "A": "Perros y peces",
+       "B": "Gatos",
+       "C": "Aves",
+       "D": "No hay moda"
+      },
+      "n": 10,
+      "correcta": "A"
+     }
+    ],
+    "desde": 1,
+    "hasta": 10
+   },
+   {
+    "nombre": "ESPAÑOL",
+    "titulo": "ESPAÑOL (Preguntas 11 a 20)",
+    "preguntas": [
+     {
+      "enunciado": "En la oración \"Ellos ganaron el partido\", la palabra \"Ellos\" es un:",
+      "opciones": {
+       "A": "Sustantivo",
+       "B": "Pronombre personal",
+       "C": "Adjetivo",
+       "D": "Verbo"
+      },
+      "n": 11,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El grado SUPERLATIVO del adjetivo \"grande\" es:",
+      "opciones": {
+       "A": "Más grande que",
+       "B": "Grandísimo",
+       "C": "Tan grande como",
+       "D": "Menos grande"
+      },
+      "n": 12,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Según la ubicación de la sílaba tónica, la palabra \"teléfono\" es:",
+      "opciones": {
+       "A": "Aguda",
+       "B": "Grave",
+       "C": "Esdrújula",
+       "D": "Sin acento"
+      },
+      "n": 13,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "¿Cuál oración usa correctamente la B o la V?",
+      "opciones": {
+       "A": "El caballo saltava la cerca",
+       "B": "Íbamos a la biblioteca",
+       "C": "La baca da leche",
+       "D": "Bamos al parque"
+      },
+      "n": 14,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Las palabras \"banco\" (asiento) y \"banco\" (lugar del dinero) son POLISÉMICAS porque:",
+      "opciones": {
+       "A": "Se escriben diferente",
+       "B": "Una misma palabra tiene varios significados",
+       "C": "Riman entre sí",
+       "D": "Son de otro idioma"
+      },
+      "n": 15,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "En la palabra \"RE-hacer\", el fragmento \"re-\" es un:",
+      "opciones": {
+       "A": "Sufijo",
+       "B": "Prefijo",
+       "C": "Diptongo",
+       "D": "Verbo"
+      },
+      "n": 16,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Lee el texto:",
+      "opciones": {
+       "A": "Da instrucciones para pescar",
+       "B": "Mezcla lugares reales con hechos fantásticos de tradición popular",
+       "C": "Informa una noticia verificada",
+       "D": "Es una carta personal"
+      },
+      "n": 17,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "En un poema, la diferencia entre VERSO y PROSA es que el verso:",
+      "opciones": {
+       "A": "Se escribe en líneas con ritmo y a veces rima",
+       "B": "Es más largo",
+       "C": "No tiene palabras",
+       "D": "Solo se usa en periódicos"
+      },
+      "n": 18,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Las partes del cuento en orden son:",
+      "opciones": {
+       "A": "Nudo, desenlace, planteamiento",
+       "B": "Planteamiento, nudo, desenlace",
+       "C": "Desenlace, planteamiento, nudo",
+       "D": "Título, dibujo, fin"
+      },
+      "n": 19,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "En el teatro, las palabras que dice cada personaje están escritas en:",
+      "opciones": {
+       "A": "El guion teatral",
+       "B": "El periódico",
+       "C": "La enciclopedia",
+       "D": "El diccionario"
+      },
+      "n": 20,
+      "correcta": "A"
+     }
+    ],
+    "desde": 11,
+    "hasta": 20
+   },
+   {
+    "nombre": "INGLÉS",
+    "titulo": "INGLÉS (Preguntas 21 a 30)",
+    "preguntas": [
+     {
+      "enunciado": "Complete: \"My sister ______ a doctor. She works at the hospital.\"",
+      "opciones": {
+       "A": "am",
+       "B": "is",
+       "C": "are",
+       "D": "be"
+      },
+      "n": 21,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Choose the correct sentence with LOVE + ing:",
+      "opciones": {
+       "A": "I love dance",
+       "B": "I love dancing",
+       "C": "I love to danced",
+       "D": "I loving dance"
+      },
+      "n": 22,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Complete the relative clause: \"A teacher is a person ______ helps students learn.\"",
+      "opciones": {
+       "A": "where",
+       "B": "who",
+       "C": "what",
+       "D": "it"
+      },
+      "n": 23,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Choose the ADVERB OF MANNER: \"She sings very ______.\"",
+      "opciones": {
+       "A": "beautiful",
+       "B": "beautifully",
+       "C": "beauty",
+       "D": "more beautiful"
+      },
+      "n": 24,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Complete in SIMPLE PAST: \"Yesterday I ______ soccer with my friends.\"",
+      "opciones": {
+       "A": "play",
+       "B": "plays",
+       "C": "played",
+       "D": "playing"
+      },
+      "n": 25,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "The past of the irregular verb \"go\" is:",
+      "opciones": {
+       "A": "goed",
+       "B": "went",
+       "C": "gone",
+       "D": "going"
+      },
+      "n": 26,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Complete with a reason: \"I stayed at home ______ it was raining.\"",
+      "opciones": {
+       "A": "because",
+       "B": "so",
+       "C": "but",
+       "D": "or"
+      },
+      "n": 27,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Complete: \"When my grandfather was young, he ______ swim very fast.\"",
+      "opciones": {
+       "A": "can",
+       "B": "could",
+       "C": "must",
+       "D": "will"
+      },
+      "n": 28,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Choose the SUPERLATIVE: \"The cheetah is ______ animal in the world.\"",
+      "opciones": {
+       "A": "faster than",
+       "B": "the fastest",
+       "C": "fast",
+       "D": "more fast"
+      },
+      "n": 29,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Choose the expression of quantity: \"I want ______ of water, please.\"",
+      "opciones": {
+       "A": "a glass",
+       "B": "a slice",
+       "C": "a pair",
+       "D": "a page"
+      },
+      "n": 30,
+      "correcta": "A"
+     }
+    ],
+    "desde": 21,
+    "hasta": 30
+   },
+   {
+    "nombre": "CIENCIAS",
+    "titulo": "CIENCIAS (Preguntas 31 a 40)",
+    "preguntas": [
+     {
+      "enunciado": "La unidad más pequeña que forma a todos los seres vivos es:",
+      "opciones": {
+       "A": "El átomo",
+       "B": "La célula",
+       "C": "El hueso",
+       "D": "La piel"
+      },
+      "n": 31,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Los organismos formados por UNA sola célula se llaman:",
+      "opciones": {
+       "A": "Pluricelulares",
+       "B": "Unicelulares",
+       "C": "Vertebrados",
+       "D": "Minerales"
+      },
+      "n": 32,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Quemar un papel es un cambio QUÍMICO porque:",
+      "opciones": {
+       "A": "El papel solo cambia de lugar",
+       "B": "Se forma una sustancia nueva (ceniza) y no se puede revertir",
+       "C": "El papel cambia de estado",
+       "D": "No pasa nada"
+      },
+      "n": 33,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El sistema del cuerpo encargado de transportar la sangre con oxígeno y nutrientes es el:",
+      "opciones": {
+       "A": "Digestivo",
+       "B": "Respiratorio",
+       "C": "Circulatorio",
+       "D": "Óseo"
+      },
+      "n": 34,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Cuando un león caza una cebra, esa relación entre organismos se llama:",
+      "opciones": {
+       "A": "Simbiosis",
+       "B": "Competencia",
+       "C": "Depredación",
+       "D": "Amistad"
+      },
+      "n": 35,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Una pelota detenida en lo alto de una rampa tiene energía:",
+      "opciones": {
+       "A": "Potencial",
+       "B": "Sonora",
+       "C": "Cinética",
+       "D": "Eléctrica"
+      },
+      "n": 36,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El calor de una cuchara metálica dentro de una sopa caliente sube por el mango. Esa forma de transferir calor es:",
+      "opciones": {
+       "A": "Radiación",
+       "B": "Conducción",
+       "C": "Convección",
+       "D": "Evaporación"
+      },
+      "n": 37,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "¿Cuál es un recurso de energía RENOVABLE?",
+      "opciones": {
+       "A": "El petróleo",
+       "B": "El carbón",
+       "C": "La energía solar",
+       "D": "El gas natural"
+      },
+      "n": 38,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "La fuerza que hace que los objetos caigan hacia la Tierra es:",
+      "opciones": {
+       "A": "El magnetismo",
+       "B": "La gravedad",
+       "C": "La fricción",
+       "D": "El viento"
+      },
+      "n": 39,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Para tener una alimentación saludable debemos:",
+      "opciones": {
+       "A": "Comer solo dulces porque aportan todos los nutrientes",
+       "B": "Combinar alimentos de todos los grupos y hacer deporte",
+       "C": "No desayunar nunca",
+       "D": "Comer solo carne para no tener que hacer deporte"
+      },
+      "n": 40,
+      "correcta": "B"
+     }
+    ],
+    "desde": 31,
+    "hasta": 40
+   },
+   {
+    "nombre": "SOCIALES",
+    "titulo": "SOCIALES (Preguntas 41 a 50)",
+    "preguntas": [
+     {
+      "enunciado": "El periodo anterior a la invención de la escritura se llama:",
+      "opciones": {
+       "A": "Edad Media",
+       "B": "Prehistoria",
+       "C": "Edad Moderna",
+       "D": "Era espacial"
+      },
+      "n": 41,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "La civilización antigua que construyó las pirámides junto al río Nilo fue:",
+      "opciones": {
+       "A": "Grecia",
+       "B": "Roma",
+       "C": "Egipto",
+       "D": "China"
+      },
+      "n": 42,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Mesopotamia se desarrolló entre dos ríos y es considerada:",
+      "opciones": {
+       "A": "Una de las primeras civilizaciones de la historia",
+       "B": "Un país de América",
+       "C": "Una ciudad moderna",
+       "D": "Un océano"
+      },
+      "n": 43,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Antes de la llegada de los europeos, en América florecieron grandes civilizaciones como:",
+      "opciones": {
+       "A": "Los vikingos y los romanos",
+       "B": "Los mayas, aztecas e incas",
+       "C": "Los egipcios",
+       "D": "Los griegos"
+      },
+      "n": 44,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El Renacimiento fue una época en la que florecieron:",
+      "opciones": {
+       "A": "El arte, la ciencia y las ideas",
+       "B": "Solo las guerras",
+       "C": "Los dinosaurios",
+       "D": "Los videojuegos"
+      },
+      "n": 45,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La Revolución Industrial cambió el mundo porque:",
+      "opciones": {
+       "A": "Aparecieron las máquinas y las fábricas",
+       "B": "Se acabó la agricultura",
+       "C": "Desaparecieron las ciudades",
+       "D": "Se inventó la escritura"
+      },
+      "n": 46,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En la Edad Moderna, muchos países de América lucharon por:",
+      "opciones": {
+       "A": "Su independencia de los imperios europeos",
+       "B": "Construir pirámides",
+       "C": "Viajar a la Luna",
+       "D": "Inventar el papel"
+      },
+      "n": 47,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Las dos guerras más grandes del siglo XX se llaman:",
+      "opciones": {
+       "A": "Guerras Médicas",
+       "B": "Primera y Segunda Guerra Mundial",
+       "C": "Guerras de Troya",
+       "D": "Guerras Púnicas"
+      },
+      "n": 48,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Después de la Segunda Guerra Mundial, la tensión entre Estados Unidos y la URSS sin combate directo se llamó:",
+      "opciones": {
+       "A": "Guerra Fría",
+       "B": "Guerra Caliente",
+       "C": "Revolución Industrial",
+       "D": "Renacimiento"
+      },
+      "n": 49,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La \"era espacial\" comenzó cuando el ser humano logró:",
+      "opciones": {
+       "A": "Cruzar el océano en barco",
+       "B": "Enviar satélites y personas al espacio",
+       "C": "Inventar la rueda",
+       "D": "Descubrir el fuego"
+      },
+      "n": 50,
+      "correcta": "B"
+     }
+    ],
+    "desde": 41,
+    "hasta": 50
+   }
+  ]
+ },
+ "SEXTO": {
+  "codigo": "09",
+  "nombre": "Sexto",
+  "grado_ingreso": "SEXTO",
+  "tipo": "opcion_multiple",
+  "total": 50,
+  "materias": [
+   {
+    "nombre": "MATEMÁTICAS",
+    "titulo": "MATEMÁTICAS (Preguntas 1 a 10)",
+    "preguntas": [
+     {
+      "enunciado": "El valor de 3⁴ (tres elevado a la cuatro) es:",
+      "opciones": {
+       "A": "12",
+       "B": "27",
+       "C": "81",
+       "D": "64"
+      },
+      "n": 1,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "La raíz cuadrada de 144 es:",
+      "opciones": {
+       "A": "10",
+       "B": "11",
+       "C": "12",
+       "D": "14"
+      },
+      "n": 2,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Según las reglas de divisibilidad, el número 234 es divisible entre 3 porque:",
+      "opciones": {
+       "A": "Termina en 4",
+       "B": "La suma de sus dígitos (2+3+4=9) es múltiplo de 3",
+       "C": "Es un número par",
+       "D": "Empieza por 2"
+      },
+      "n": 3,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El resultado de 1/2 + 1/3 es:",
+      "opciones": {
+       "A": "2/5",
+       "B": "5/6",
+       "C": "1/6",
+       "D": "2/6"
+      },
+      "n": 4,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El resultado de 2,5 × 0,4 es:",
+      "opciones": {
+       "A": "0,1",
+       "B": "1",
+       "C": "10",
+       "D": "100"
+      },
+      "n": 5,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Si 3 cuadernos cuestan $12.000, ¿cuánto cuestan 5 cuadernos? (Regla de tres simple)",
+      "opciones": {
+       "A": "$15.000",
+       "B": "$18.000",
+       "C": "$20.000",
+       "D": "$24.000"
+      },
+      "n": 6,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "El 25% de 200 es:",
+      "opciones": {
+       "A": "25",
+       "B": "40",
+       "C": "50",
+       "D": "75"
+      },
+      "n": 7,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "El área de un círculo se calcula con la fórmula:",
+      "opciones": {
+       "A": "π × r²",
+       "B": "2 × π × r",
+       "C": "lado × lado",
+       "D": "base × altura"
+      },
+      "n": 8,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Un prisma rectangular mide 5 cm de largo, 3 cm de ancho y 2 cm de alto. Su VOLUMEN es:",
+      "opciones": {
+       "A": "10 cm³",
+       "B": "15 cm³",
+       "C": "30 cm³",
+       "D": "60 cm³"
+      },
+      "n": 9,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Las notas de un estudiante fueron: 3, 4, 4, 5. Su PROMEDIO (media) es:",
+      "opciones": {
+       "A": "3,5",
+       "B": "4",
+       "C": "4,5",
+       "D": "5"
+      },
+      "n": 10,
+      "correcta": "B"
+     }
+    ],
+    "desde": 1,
+    "hasta": 10
+   },
+   {
+    "nombre": "ESPAÑOL",
+    "titulo": "ESPAÑOL (Preguntas 11 a 20)",
+    "preguntas": [
+     {
+      "enunciado": "En la oración \"Los estudiantes de quinto presentaron el examen\", el sujeto es:",
+      "opciones": {
+       "A": "presentaron",
+       "B": "el examen",
+       "C": "Los estudiantes de quinto",
+       "D": "quinto"
+      },
+      "n": 11,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "¿Cuál palabra es un sustantivo COLECTIVO?",
+      "opciones": {
+       "A": "Árbol",
+       "B": "Bosque",
+       "C": "Verde",
+       "D": "Correr"
+      },
+      "n": 12,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "¿Cuál oración está escrita correctamente?",
+      "opciones": {
+       "A": "El canpo es hermoso",
+       "B": "Un onbre trabajador",
+       "C": "El campo es hermoso",
+       "D": "La canpana suena"
+      },
+      "n": 13,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "En el verso \"Sus ojos eran dos luceros brillantes\", la figura literaria usada es:",
+      "opciones": {
+       "A": "Metáfora",
+       "B": "Onomatopeya",
+       "C": "Trabalenguas",
+       "D": "Refrán"
+      },
+      "n": 14,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La palabra \"país\" tiene HIATO porque:",
+      "opciones": {
+       "A": "Las vocales a-í se pronuncian en sílabas separadas",
+       "B": "Tiene una sola vocal",
+       "C": "No tiene tilde",
+       "D": "Es una palabra corta"
+      },
+      "n": 15,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La diferencia principal entre el CUENTO y la NOVELA es que la novela:",
+      "opciones": {
+       "A": "Nunca tiene personajes",
+       "B": "Es más extensa y desarrolla más personajes e historias",
+       "C": "Siempre es en verso",
+       "D": "No tiene título"
+      },
+      "n": 16,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Lee el texto:",
+      "opciones": {
+       "A": "Enseñar a cocinar",
+       "B": "Promover el respeto y cuidado por la naturaleza",
+       "C": "Explicar cómo talar árboles",
+       "D": "Describir la moda antigua"
+      },
+      "n": 17,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Los dos puntos (:) se usan principalmente para:",
+      "opciones": {
+       "A": "Terminar un párrafo",
+       "B": "Anunciar una enumeración o una cita",
+       "C": "Hacer preguntas",
+       "D": "Separar sílabas"
+      },
+      "n": 18,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "En una ENTREVISTA, la función del entrevistador es:",
+      "opciones": {
+       "A": "Responder todas las preguntas",
+       "B": "Formular preguntas para conocer las ideas del entrevistado",
+       "C": "Actuar en una obra",
+       "D": "Vender periódicos"
+      },
+      "n": 19,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "En el teatro, las ACOTACIONES son:",
+      "opciones": {
+       "A": "Los aplausos del público",
+       "B": "Las indicaciones del autor sobre movimientos y escenario",
+       "C": "Los boletos de entrada",
+       "D": "Las canciones"
+      },
+      "n": 20,
+      "correcta": "B"
+     }
+    ],
+    "desde": 11,
+    "hasta": 20
+   },
+   {
+    "nombre": "INGLÉS",
+    "titulo": "INGLÉS (Preguntas 21 a 30)",
+    "preguntas": [
+     {
+      "enunciado": "Complete in third person: \"My brother ______ TV every night.\"",
+      "opciones": {
+       "A": "watch",
+       "B": "watches",
+       "C": "watching",
+       "D": "watched"
+      },
+      "n": 21,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "\"What time is it?\" — 7:30 —",
+      "opciones": {
+       "A": "It's seven o'clock",
+       "B": "It's half past seven",
+       "C": "It's quarter past six",
+       "D": "It's eight thirty"
+      },
+      "n": 22,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Complete the plan: \"Next weekend we ______ visit my grandparents.\"",
+      "opciones": {
+       "A": "are going to",
+       "B": "going",
+       "C": "goes to",
+       "D": "was going"
+      },
+      "n": 23,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Choose the correct direction: \"______ straight on and turn left at the park.\"",
+      "opciones": {
+       "A": "Eat",
+       "B": "Go",
+       "C": "Sleep",
+       "D": "Buy"
+      },
+      "n": 24,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Complete: \"I ______ a picnic when suddenly it started to rain.\"",
+      "opciones": {
+       "A": "am having",
+       "B": "was having",
+       "C": "have",
+       "D": "will have"
+      },
+      "n": 25,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "A natural disaster with strong winds that spins in a circle is a:",
+      "opciones": {
+       "A": "hurricane",
+       "B": "picnic",
+       "C": "rainbow",
+       "D": "holiday"
+      },
+      "n": 26,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "\"What is the window made of?\" — \"It's made of ______.\"",
+      "opciones": {
+       "A": "glass",
+       "B": "water",
+       "C": "paper",
+       "D": "grass"
+      },
+      "n": 27,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Complete with a sense: \"This soup ______ delicious! Did you use a new recipe?\"",
+      "opciones": {
+       "A": "sounds",
+       "B": "tastes",
+       "C": "hears",
+       "D": "walks"
+      },
+      "n": 28,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Give advice: \"You look tired. You ______ go to bed early.\"",
+      "opciones": {
+       "A": "should",
+       "B": "shouldn't",
+       "C": "can't",
+       "D": "don't"
+      },
+      "n": 29,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Complete with the correct PAST PARTICIPLE of the irregular verb (go): \"She has ______ to Europe twice.\"",
+      "opciones": {
+       "A": "goed",
+       "B": "gone",
+       "C": "went",
+       "D": "going"
+      },
+      "n": 30,
+      "correcta": "B"
+     }
+    ],
+    "desde": 21,
+    "hasta": 30
+   },
+   {
+    "nombre": "CIENCIAS",
+    "titulo": "CIENCIAS (Preguntas 31 a 40)",
+    "preguntas": [
+     {
+      "enunciado": "En los seres pluricelulares, el proceso de división celular en el que una célula origina dos células idénticas se llama:",
+      "opciones": {
+       "A": "Fotosíntesis",
+       "B": "Mitosis",
+       "C": "Digestión",
+       "D": "Reproducción"
+      },
+      "n": 31,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "La molécula que contiene la información hereditaria de los seres vivos es:",
+      "opciones": {
+       "A": "El agua",
+       "B": "El ADN",
+       "C": "El oxígeno",
+       "D": "La glucosa"
+      },
+      "n": 32,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El sistema del cuerpo formado por huesos que da soporte y protege los órganos es el:",
+      "opciones": {
+       "A": "Sistema muscular",
+       "B": "Sistema esquelético",
+       "C": "Sistema endocrino",
+       "D": "Sistema nervioso"
+      },
+      "n": 33,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "En la fotosíntesis, las plantas toman luz solar, agua y dióxido de carbono para producir:",
+      "opciones": {
+       "A": "Alimento",
+       "B": "Glucosa y oxígeno",
+       "C": "Minerales",
+       "D": "Dióxido de carbono y agua"
+      },
+      "n": 34,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "En una cadena trófica, la energía fluye en este orden:",
+      "opciones": {
+       "A": "Consumidores → productores → sol",
+       "B": "Sol → productores → consumidores",
+       "C": "Descomponedores → sol → plantas",
+       "D": "Consumidores → sol → productores"
+      },
+      "n": 35,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Un BIOMA muy seco, con poca lluvia y grandes cambios de temperatura entre día y noche es:",
+      "opciones": {
+       "A": "La selva tropical",
+       "B": "El desierto",
+       "C": "El océano",
+       "D": "La tundra"
+      },
+      "n": 36,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El movimiento de las placas tectónicas de la Tierra puede producir:",
+      "opciones": {
+       "A": "Calentamiento global",
+       "B": "Terremotos y volcanes",
+       "C": "Huracanes",
+       "D": "Mareas bajas"
+      },
+      "n": 37,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "La partícula más pequeña de la materia que conserva las propiedades de un elemento es:",
+      "opciones": {
+       "A": "La célula",
+       "B": "El átomo",
+       "C": "El grano de arena",
+       "D": "La molécula de agua"
+      },
+      "n": 38,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Los elementos químicos están organizados en:",
+      "opciones": {
+       "A": "La tabla periódica",
+       "B": "El calendario",
+       "C": "Un sistema de átomos",
+       "D": "El mapa mundial"
+      },
+      "n": 39,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La fuerza que se opone al movimiento cuando dos superficies se rozan es:",
+      "opciones": {
+       "A": "La gravedad",
+       "B": "La fricción",
+       "C": "El magnetismo",
+       "D": "La electricidad"
+      },
+      "n": 40,
+      "correcta": "B"
+     }
+    ],
+    "desde": 31,
+    "hasta": 40
+   },
+   {
+    "nombre": "SOCIALES",
+    "titulo": "SOCIALES (Preguntas 41 a 50)",
+    "preguntas": [
+     {
+      "enunciado": "Los científicos dividen la historia de la Tierra en grandes etapas llamadas eras geológicas. La era en la que aparecieron y dominaron los dinosaurios se conoce como la:",
+      "opciones": {
+       "A": "Era Mesozoica",
+       "B": "Edad de Piedra",
+       "C": "Edad Media",
+       "D": "Era Espacial"
+      },
+      "n": 41,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En la Edad Media, el sistema donde los campesinos trabajaban las tierras de un señor a cambio de protección se llamó:",
+      "opciones": {
+       "A": "Democracia",
+       "B": "Feudalismo",
+       "C": "Comunismo",
+       "D": "Imperialismo"
+      },
+      "n": 42,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "La invención de la imprenta por Johannes Gutenberg permitió principalmente:",
+      "opciones": {
+       "A": "Viajar más rápido en avión",
+       "B": "Producir libros de forma masiva y difundir el conocimiento",
+       "C": "Construir grandes pirámides",
+       "D": "Enviar correos electrónicos"
+      },
+      "n": 43,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Antes de la conquista europea, en América existían civilizaciones avanzadas como:",
+      "opciones": {
+       "A": "Los romanos",
+       "B": "Los incas, mayas y aztecas",
+       "C": "Los egipcios",
+       "D": "Los otomanos"
+      },
+      "n": 44,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "La Revolución Francesa defendió los ideales de:",
+      "opciones": {
+       "A": "Libertad, igualdad y fraternidad",
+       "B": "Guerra, poder y riqueza",
+       "C": "Silencio y obediencia",
+       "D": "Comercio y navegación"
+      },
+      "n": 45,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El \"intercambio colombino\" se refiere a:",
+      "opciones": {
+       "A": "El cambio de plantas, animales y culturas entre América y Europa tras 1492",
+       "B": "Un mercado de Bogotá",
+       "C": "Un juego de mesa",
+       "D": "El comercio por internet"
+      },
+      "n": 46,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La Ilustración fue un movimiento que defendía:",
+      "opciones": {
+       "A": "El uso de la razón y el conocimiento",
+       "B": "El abandono de las escuelas",
+       "C": "La prohibición de los libros",
+       "D": "El regreso a las cavernas"
+      },
+      "n": 47,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Gandhi lideró la independencia de la India usando principalmente:",
+      "opciones": {
+       "A": "Grandes ejércitos",
+       "B": "La resistencia pacífica y la no violencia",
+       "C": "La tecnología militar",
+       "D": "Los océanos"
+      },
+      "n": 48,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El colapso de la URSS en 1991 marcó el final de:",
+      "opciones": {
+       "A": "La Edad Media",
+       "B": "La Guerra Fría",
+       "C": "La Prehistoria",
+       "D": "El Imperio Romano"
+      },
+      "n": 49,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "La \"era digital\" se caracteriza por:",
+      "opciones": {
+       "A": "El uso masivo de computadores, internet y comunicación instantánea",
+       "B": "La escritura en piedra",
+       "C": "El transporte en carretas",
+       "D": "La ausencia de comunicación"
+      },
+      "n": 50,
+      "correcta": "A"
+     }
+    ],
+    "desde": 41,
+    "hasta": 50
+   }
+  ]
+ },
+ "SEPTIMO": {
+  "codigo": "10",
+  "nombre": "Séptimo",
+  "grado_ingreso": "SEPTIMO",
+  "tipo": "opcion_multiple",
+  "total": 50,
+  "materias": [
+   {
+    "nombre": "MATEMÁTICAS",
+    "titulo": "MATEMÁTICAS (Preguntas 1 a 10)",
+    "preguntas": [
+     {
+      "enunciado": "Un buzo desciende a −18 m y luego sube 7 m. ¿A qué profundidad queda?",
+      "opciones": {
+       "A": "11 m",
+       "B": "−25 m",
+       "C": "−11 m",
+       "D": "25 m"
+      },
+      "n": 1,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "La temperatura de un congelador baja 3 °C cada hora durante 4 horas. El cambio total de temperatura es:",
+      "opciones": {
+       "A": "−12 °C",
+       "B": "12 °C",
+       "C": "−7 °C",
+       "D": "−1 °C"
+      },
+      "n": 2,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En una recta numérica, el valor absoluto |−15| representa:",
+      "opciones": {
+       "A": "La distancia de −15 hasta 0, que es 15",
+       "B": "Que el número es negativo",
+       "C": "Que su valor es −15",
+       "D": "Cero"
+      },
+      "n": 3,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Se quieren repartir 8 lápices y 12 cuadernos en bolsas iguales, sin que sobre nada y con la mayor cantidad de bolsas posible. ¿Cuántas bolsas se arman?",
+      "opciones": {
+       "A": "2",
+       "B": "4",
+       "C": "24",
+       "D": "96"
+      },
+      "n": 4,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Ana comió 3/8 de una pizza y Luis 2/8. ¿Qué fracción de la pizza se comieron entre los dos?",
+      "opciones": {
+       "A": "5/16",
+       "B": "1/8",
+       "C": "6/8",
+       "D": "5/8"
+      },
+      "n": 5,
+      "correcta": "D"
+     },
+     {
+      "enunciado": "En un salón de 40 estudiantes, 3/5 son niñas. ¿Cuántas niñas hay?",
+      "opciones": {
+       "A": "15",
+       "B": "20",
+       "C": "24",
+       "D": "8"
+      },
+      "n": 6,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Dos ángulos de un triángulo miden 50° y 60°. El tercer ángulo mide:",
+      "opciones": {
+       "A": "70°",
+       "B": "110°",
+       "C": "90°",
+       "D": "250°"
+      },
+      "n": 7,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Un rectángulo mide 8 cm de largo y 5 cm de ancho. Su área es:",
+      "opciones": {
+       "A": "13 cm²",
+       "B": "26 cm²",
+       "C": "45 cm²",
+       "D": "40 cm²"
+      },
+      "n": 8,
+      "correcta": "D"
+     },
+     {
+      "enunciado": "En el conjunto de datos 2, 4, 4, 6, 9, la MODA (el dato que más se repite) es:",
+      "opciones": {
+       "A": "2",
+       "B": "4",
+       "C": "6",
+       "D": "9"
+      },
+      "n": 9,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Un polígono de cinco lados se llama:",
+      "opciones": {
+       "A": "Triángulo",
+       "B": "Cuadrilátero",
+       "C": "Pentágono",
+       "D": "Hexágono"
+      },
+      "n": 10,
+      "correcta": "C"
+     }
+    ],
+    "desde": 1,
+    "hasta": 10
+   },
+   {
+    "nombre": "ESPAÑOL",
+    "titulo": "ESPAÑOL (Preguntas 11 a 20)",
+    "preguntas": [
+     {
+      "enunciado": "Un MITO es un relato que principalmente busca:",
+      "opciones": {
+       "A": "Explicar el origen del mundo o de los dioses",
+       "B": "Vender un producto",
+       "C": "Dar noticias del día",
+       "D": "Enseñar una receta"
+      },
+      "n": 11,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Lee el fragmento:",
+      "opciones": {
+       "A": "Personificación",
+       "B": "Rima",
+       "C": "Acotación",
+       "D": "Diálogo"
+      },
+      "n": 12,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En la palabra \"árbol\", según su acento, la palabra es:",
+      "opciones": {
+       "A": "Aguda",
+       "B": "Grave o llana",
+       "C": "Esdrújula",
+       "D": "Sobresdrújula"
+      },
+      "n": 13,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Un TEXTO INSTRUCTIVO se caracteriza por:",
+      "opciones": {
+       "A": "Dar pasos ordenados para hacer o lograr algo",
+       "B": "Contar una historia de amor",
+       "C": "Expresar sentimientos en verso",
+       "D": "Narrar mitos"
+      },
+      "n": 14,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En el cuento, la persona o voz que narra la historia se llama:",
+      "opciones": {
+       "A": "El narrador",
+       "B": "El editor",
+       "C": "El lector",
+       "D": "El librero"
+      },
+      "n": 15,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Las palabras \"vino\" (bebida) y \"vino\" (del verbo venir) son:",
+      "opciones": {
+       "A": "Sinónimos",
+       "B": "Homónimos",
+       "C": "Antónimos",
+       "D": "Prefijos"
+      },
+      "n": 16,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "El teatro griego tuvo grandes autores. Uno de los más famosos escritores de tragedias fue:",
+      "opciones": {
+       "A": "Sófocles",
+       "B": "Cristóbal Colón",
+       "C": "Isaac Newton",
+       "D": "Simón Bolívar"
+      },
+      "n": 17,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En la oración \"María compró un libro nuevo\", el sustantivo es:",
+      "opciones": {
+       "A": "compró",
+       "B": "nuevo",
+       "C": "libro",
+       "D": "un"
+      },
+      "n": 18,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Un HECHO se diferencia de una OPINIÓN en que el hecho:",
+      "opciones": {
+       "A": "Se puede comprobar y es objetivo",
+       "B": "Depende de los gustos de cada persona",
+       "C": "Siempre es falso",
+       "D": "No se puede escribir"
+      },
+      "n": 19,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Un texto de DIVULGACIÓN CIENTÍFICA sirve para:",
+      "opciones": {
+       "A": "Explicar temas de ciencia en lenguaje sencillo para todos",
+       "B": "Escribir poemas de amor",
+       "C": "Vender ropa",
+       "D": "Narrar leyendas de terror"
+      },
+      "n": 20,
+      "correcta": "A"
+     }
+    ],
+    "desde": 11,
+    "hasta": 20
+   },
+   {
+    "nombre": "INGLÉS",
+    "titulo": "INGLÉS (Preguntas 21 a 30)",
+    "preguntas": [
+     {
+      "enunciado": "Complete with a prediction: \"I think it ______ rain tomorrow.\"",
+      "opciones": {
+       "A": "will",
+       "B": "was",
+       "C": "did",
+       "D": "is going yesterday"
+      },
+      "n": 21,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Choose the relative pronoun: \"That's the man ______ fixed my bike.\"",
+      "opciones": {
+       "A": "which",
+       "B": "who",
+       "C": "where",
+       "D": "when"
+      },
+      "n": 22,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Countable or uncountable? Choose the correct one: \"I need ______ water.\"",
+      "opciones": {
+       "A": "some",
+       "B": "many",
+       "C": "a",
+       "D": "an"
+      },
+      "n": 23,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Complete the present perfect: \"I have lived here ______ 2019.\"",
+      "opciones": {
+       "A": "for",
+       "B": "since",
+       "C": "ago",
+       "D": "in"
+      },
+      "n": 24,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Complete: \"She has ______ finished her homework.\" (recién, hace un momento)",
+      "opciones": {
+       "A": "just",
+       "B": "yet",
+       "C": "never mind",
+       "D": "ago"
+      },
+      "n": 25,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Express possibility: \"It's cloudy. It ______ rain later.\"",
+      "opciones": {
+       "A": "might",
+       "B": "must not",
+       "C": "can't",
+       "D": "didn't"
+      },
+      "n": 26,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Choose the correct nationality: \"He is from Japan. He is ______.\"",
+      "opciones": {
+       "A": "Japan",
+       "B": "Japanese",
+       "C": "Japanish",
+       "D": "Japaner"
+      },
+      "n": 27,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Complete with past continuous: \"I ______ TV when the phone rang.\"",
+      "opciones": {
+       "A": "watch",
+       "B": "was watching",
+       "C": "watches",
+       "D": "will watch"
+      },
+      "n": 28,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Which compass point is opposite to NORTH?",
+      "opciones": {
+       "A": "East",
+       "B": "West",
+       "C": "South",
+       "D": "Up"
+      },
+      "n": 29,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Choose the quantifier: \"There isn't ______ milk in the fridge.\"",
+      "opciones": {
+       "A": "any",
+       "B": "some",
+       "C": "many",
+       "D": "a lot"
+      },
+      "n": 30,
+      "correcta": "A"
+     }
+    ],
+    "desde": 21,
+    "hasta": 30
+   },
+   {
+    "nombre": "CIENCIAS",
+    "titulo": "CIENCIAS (BIOLOGÍA) (Preguntas 31 a 40)",
+    "preguntas": [
+     {
+      "enunciado": "El organelo que produce la mayor parte de la energía (ATP) de la célula es:",
+      "opciones": {
+       "A": "La mitocondria",
+       "B": "El núcleo",
+       "C": "El ribosoma",
+       "D": "La vacuola"
+      },
+      "n": 31,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La estructura celular que guarda el material genético (ADN) es:",
+      "opciones": {
+       "A": "El citoplasma",
+       "B": "El núcleo",
+       "C": "La membrana",
+       "D": "El ribosoma"
+      },
+      "n": 32,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Al cruzar dos plantas Aa × Aa, ¿qué proporción de la descendencia se espera que sea aa (recesiva)?",
+      "opciones": {
+       "A": "1/2 (50%)",
+       "B": "3/4 (75%)",
+       "C": "1/4 (25%)",
+       "D": "0"
+      },
+      "n": 33,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "En los guisantes, el color amarillo (A) domina sobre el verde (a). Una planta con genotipo Aa será de color:",
+      "opciones": {
+       "A": "Verde",
+       "B": "Sin color",
+       "C": "Mitad y mitad",
+       "D": "Amarillo"
+      },
+      "n": 34,
+      "correcta": "D"
+     },
+     {
+      "enunciado": "Una mutación es:",
+      "opciones": {
+       "A": "Un cambio en el material genético (ADN)",
+       "B": "Un tipo de célula",
+       "C": "Un órgano del cuerpo",
+       "D": "Una vitamina"
+      },
+      "n": 35,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La relación en la que dos especies se benefician mutuamente se llama:",
+      "opciones": {
+       "A": "Depredación",
+       "B": "Competencia",
+       "C": "Mutualismo",
+       "D": "Parasitismo"
+      },
+      "n": 36,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "En la cadena trófica pasto → conejo → zorro, si desaparecen los conejos, lo más probable es que:",
+      "opciones": {
+       "A": "El pasto se extinga",
+       "B": "Nada cambie",
+       "C": "Los zorros disminuyan por falta de alimento",
+       "D": "Los zorros aumenten"
+      },
+      "n": 37,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "La biodiversidad de un ecosistema se refiere a:",
+      "opciones": {
+       "A": "La cantidad de agua que tiene",
+       "B": "La variedad de seres vivos que habitan en él",
+       "C": "La temperatura media",
+       "D": "El número de rocas"
+      },
+      "n": 38,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "¿Cuál de estas acciones ayuda a reducir el calentamiento global?",
+      "opciones": {
+       "A": "Usar más el transporte particular",
+       "B": "Quemar basura",
+       "C": "Talar bosques",
+       "D": "Sembrar árboles y usar menos combustibles fósiles"
+      },
+      "n": 39,
+      "correcta": "D"
+     },
+     {
+      "enunciado": "La división celular que permite el crecimiento y la reparación de tejidos, formando dos células idénticas, es la:",
+      "opciones": {
+       "A": "Meiosis",
+       "B": "Mitosis",
+       "C": "Fotosíntesis",
+       "D": "Digestión"
+      },
+      "n": 40,
+      "correcta": "B"
+     }
+    ],
+    "desde": 31,
+    "hasta": 40
+   },
+   {
+    "nombre": "SOCIALES",
+    "titulo": "SOCIALES (Preguntas 41 a 50)",
+    "preguntas": [
+     {
+      "enunciado": "La Prehistoria se divide en edades. La Edad de Piedra recibe ese nombre porque:",
+      "opciones": {
+       "A": "Los humanos hacían herramientas de piedra",
+       "B": "Todo el mundo era de piedra",
+       "C": "No existían los humanos",
+       "D": "Había muchas piedras preciosas"
+      },
+      "n": 41,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La civilización egipcia se desarrolló a orillas del río:",
+      "opciones": {
+       "A": "Amazonas",
+       "B": "Nilo",
+       "C": "Magdalena",
+       "D": "Misisipi"
+      },
+      "n": 42,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Las pirámides de Egipto se construyeron principalmente como:",
+      "opciones": {
+       "A": "Tumbas para los faraones",
+       "B": "Centros comerciales",
+       "C": "Escuelas",
+       "D": "Estadios de fútbol"
+      },
+      "n": 43,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La Gran Muralla es una construcción famosa de la civilización:",
+      "opciones": {
+       "A": "China",
+       "B": "Griega",
+       "C": "Romana",
+       "D": "Egipcia"
+      },
+      "n": 44,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Confucio fue un importante pensador y filósofo de:",
+      "opciones": {
+       "A": "China",
+       "B": "Roma",
+       "C": "Grecia",
+       "D": "Egipto"
+      },
+      "n": 45,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La democracia, donde el pueblo participa en las decisiones, nació en la antigua:",
+      "opciones": {
+       "A": "Atenas (Grecia)",
+       "B": "Esparta",
+       "C": "Babilonia",
+       "D": "India"
+      },
+      "n": 46,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Alejandro Magno es famoso por:",
+      "opciones": {
+       "A": "Conquistar un gran imperio y difundir la cultura griega",
+       "B": "Inventar el internet",
+       "C": "Descubrir América",
+       "D": "Pintar la Mona Lisa"
+      },
+      "n": 47,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Roma pasó de ser una República a convertirse en un:",
+      "opciones": {
+       "A": "Imperio",
+       "B": "Colegio",
+       "C": "Desierto",
+       "D": "Océano"
+      },
+      "n": 48,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Muchas palabras del español provienen del idioma que hablaban los romanos, llamado:",
+      "opciones": {
+       "A": "Latín",
+       "B": "Inglés",
+       "C": "Chino",
+       "D": "Árabe"
+      },
+      "n": 49,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La religión que se expandió durante los últimos siglos del Imperio Romano fue:",
+      "opciones": {
+       "A": "El cristianismo",
+       "B": "El hinduismo",
+       "C": "El budismo",
+       "D": "Ninguna"
+      },
+      "n": 50,
+      "correcta": "A"
+     }
+    ],
+    "desde": 41,
+    "hasta": 50
+   }
+  ]
+ },
+ "OCTAVO": {
+  "codigo": "11",
+  "nombre": "Octavo",
+  "grado_ingreso": "OCTAVO",
+  "tipo": "opcion_multiple",
+  "total": 50,
+  "materias": [
+   {
+    "nombre": "MATEMÁTICAS",
+    "titulo": "MATEMÁTICAS (Preguntas 1 a 10)",
+    "preguntas": [
+     {
+      "enunciado": "Un termómetro marca −8 °C y luego la temperatura sube 5 °C. La nueva temperatura es:",
+      "opciones": {
+       "A": "−13 °C",
+       "B": "3 °C",
+       "C": "13 °C",
+       "D": "−3 °C"
+      },
+      "n": 1,
+      "correcta": "D"
+     },
+     {
+      "enunciado": "El resultado de (−2)³ (menos dos al cubo) es:",
+      "opciones": {
+       "A": "8",
+       "B": "−8",
+       "C": "6",
+       "D": "−6"
+      },
+      "n": 2,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Se tienen 3/4 de litro de jugo y se usan 1/2 litro. ¿Cuánto jugo queda?",
+      "opciones": {
+       "A": "1/4 L",
+       "B": "1/2 L",
+       "C": "2/6 L",
+       "D": "1 L"
+      },
+      "n": 3,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Un carro recorre 240 km en 3 horas a velocidad constante. ¿Cuántos km recorre en 5 horas?",
+      "opciones": {
+       "A": "300 km",
+       "B": "360 km",
+       "C": "400 km",
+       "D": "480 km"
+      },
+      "n": 4,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Una camisa cuesta $40.000 y tiene un 25% de descuento. ¿Cuánto dinero se descuenta?",
+      "opciones": {
+       "A": "$10.000",
+       "B": "$4.000",
+       "C": "$15.000",
+       "D": "$25.000"
+      },
+      "n": 5,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Una receta para 4 personas usa 200 g de harina. ¿Cuánta harina se necesita para 6 personas?",
+      "opciones": {
+       "A": "250 g",
+       "B": "300 g",
+       "C": "350 g",
+       "D": "400 g"
+      },
+      "n": 6,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "La expresión «el doble de un número x aumentado en 5» se escribe:",
+      "opciones": {
+       "A": "2 + x + 5",
+       "B": "2x + 5",
+       "C": "x/2 + 5",
+       "D": "2(x + 5)"
+      },
+      "n": 7,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Si x = 4, el valor de la expresión 3x − 2 es:",
+      "opciones": {
+       "A": "5",
+       "B": "12",
+       "C": "14",
+       "D": "10"
+      },
+      "n": 8,
+      "correcta": "D"
+     },
+     {
+      "enunciado": "Un mapa usa la escala 1 cm : 100 km. Si dos ciudades están a 3 cm en el mapa, la distancia real es:",
+      "opciones": {
+       "A": "100 km",
+       "B": "200 km",
+       "C": "300 km",
+       "D": "30 km"
+      },
+      "n": 9,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "El 20% expresado como fracción es:",
+      "opciones": {
+       "A": "1/2",
+       "B": "1/4",
+       "C": "1/5",
+       "D": "1/10"
+      },
+      "n": 10,
+      "correcta": "C"
+     }
+    ],
+    "desde": 1,
+    "hasta": 10
+   },
+   {
+    "nombre": "ESPAÑOL",
+    "titulo": "ESPAÑOL (Preguntas 11 a 20)",
+    "preguntas": [
+     {
+      "enunciado": "La literatura de CIENCIA FICCIÓN se caracteriza por:",
+      "opciones": {
+       "A": "Imaginar mundos futuros basados en avances científicos y tecnológicos",
+       "B": "Narrar hechos históricos reales",
+       "C": "Dar recetas de cocina",
+       "D": "Explicar reglas de matemáticas"
+      },
+      "n": 11,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En el signo lingüístico, el \"significante\" es:",
+      "opciones": {
+       "A": "La imagen o sonido de la palabra",
+       "B": "Un número",
+       "C": "Un color",
+       "D": "Una operación"
+      },
+      "n": 12,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Cuando una palabra sugiere un significado más allá del literal (por asociación o emoción), su uso es:",
+      "opciones": {
+       "A": "Denotativo",
+       "B": "Connotativo",
+       "C": "Numérico",
+       "D": "Ortográfico"
+      },
+      "n": 13,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "William Shakespeare es reconocido mundialmente como autor de:",
+      "opciones": {
+       "A": "Obras de teatro como Hamlet y Macbeth",
+       "B": "Teorías de física",
+       "C": "Mapas de América",
+       "D": "Canciones de reguetón"
+      },
+      "n": 14,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En la oración \"El equipo que ganó celebró\", la parte \"que ganó\" es una:",
+      "opciones": {
+       "A": "Oración subordinada",
+       "B": "Interjección",
+       "C": "Onomatopeya",
+       "D": "Sílaba tónica"
+      },
+      "n": 15,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La Cit​a con normas APA se usa principalmente para:",
+      "opciones": {
+       "A": "Dar crédito a las fuentes de información que usamos",
+       "B": "Decorar el texto",
+       "C": "Hacer preguntas",
+       "D": "Contar chistes"
+      },
+      "n": 16,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Un texto tiene COHERENCIA cuando:",
+      "opciones": {
+       "A": "Sus ideas están bien conectadas y tienen sentido lógico",
+       "B": "Tiene muchos colores",
+       "C": "Es muy largo",
+       "D": "No tiene puntuación"
+      },
+      "n": 17,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La tilde diacrítica sirve para:",
+      "opciones": {
+       "A": "Diferenciar palabras que se escriben igual pero tienen distinta función (ej. \"tu\" y \"tú\")",
+       "B": "Adornar las vocales",
+       "C": "Separar párrafos",
+       "D": "Terminar oraciones"
+      },
+      "n": 18,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Lee el fragmento de una novela de misterio:",
+      "opciones": {
+       "A": "Deja una situación sin resolver que despierta curiosidad",
+       "B": "Explica una receta",
+       "C": "Da una noticia deportiva",
+       "D": "Describe un paisaje feliz"
+      },
+      "n": 19,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Un MONÓLOGO en el teatro es:",
+      "opciones": {
+       "A": "Un parlamento en el que un personaje habla solo, expresando sus pensamientos",
+       "B": "Una conversación entre cinco personas",
+       "C": "El aplauso final",
+       "D": "La venta de boletos"
+      },
+      "n": 20,
+      "correcta": "A"
+     }
+    ],
+    "desde": 11,
+    "hasta": 20
+   },
+   {
+    "nombre": "INGLÉS",
+    "titulo": "INGLÉS (Preguntas 21 a 30)",
+    "preguntas": [
+     {
+      "enunciado": "Complete the comparative: \"Mount Everest is ______ than Monserrate.\"",
+      "opciones": {
+       "A": "tall",
+       "B": "taller",
+       "C": "tallest",
+       "D": "more tall"
+      },
+      "n": 21,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Complete the superlative: \"The blue whale is ______ animal on Earth.\"",
+      "opciones": {
+       "A": "big",
+       "B": "bigger",
+       "C": "the biggest",
+       "D": "more big"
+      },
+      "n": 22,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Complete in past simple: \"They ______ to the museum last Friday.\"",
+      "opciones": {
+       "A": "go",
+       "B": "goes",
+       "C": "went",
+       "D": "going"
+      },
+      "n": 23,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Choose the present perfect: \"I ______ never ______ sushi.\"",
+      "opciones": {
+       "A": "have / eaten",
+       "B": "am / eat",
+       "C": "was / eating",
+       "D": "did / ate"
+      },
+      "n": 24,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Complete: \"If it rains tomorrow, we ______ stay at home.\" (first conditional)",
+      "opciones": {
+       "A": "will",
+       "B": "would",
+       "C": "were",
+       "D": "are"
+      },
+      "n": 25,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Choose the correct question:",
+      "opciones": {
+       "A": "Where you live?",
+       "B": "Where do you live?",
+       "C": "Where lives you?",
+       "D": "You where live?"
+      },
+      "n": 26,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Complete: \"There aren't ______ apples left.\"",
+      "opciones": {
+       "A": "some",
+       "B": "any",
+       "C": "much",
+       "D": "a"
+      },
+      "n": 27,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "What's the past participle of \"write\"?",
+      "opciones": {
+       "A": "writed",
+       "B": "wrote",
+       "C": "written",
+       "D": "writing"
+      },
+      "n": 28,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Read: \"My father is a firefighter.\" What does he do?",
+      "opciones": {
+       "A": "He teaches students",
+       "B": "He puts out fires",
+       "C": "He cooks food",
+       "D": "He drives a plane"
+      },
+      "n": 29,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Choose the correct sentence with \"going to\":",
+      "opciones": {
+       "A": "I am going to travel next year",
+       "B": "I going travel next year",
+       "C": "I go to travel next year",
+       "D": "I will going travel"
+      },
+      "n": 30,
+      "correcta": "A"
+     }
+    ],
+    "desde": 21,
+    "hasta": 30
+   },
+   {
+    "nombre": "CIENCIAS",
+    "titulo": "CIENCIAS (BIOLOGÍA) (Preguntas 31 a 40)",
+    "preguntas": [
+     {
+      "enunciado": "Los seres vivos formados por células SIN núcleo definido, como las bacterias, se llaman:",
+      "opciones": {
+       "A": "Eucariotas",
+       "B": "Procariotas",
+       "C": "Vegetales",
+       "D": "Nerviosas"
+      },
+      "n": 31,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Los hongos, como los champiñones y el moho, pertenecen al reino:",
+      "opciones": {
+       "A": "Animal",
+       "B": "Vegetal",
+       "C": "Fungi",
+       "D": "Mineral"
+      },
+      "n": 32,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Un virus NO puede reproducirse por sí solo; para hacerlo necesita:",
+      "opciones": {
+       "A": "Agua y luz solar",
+       "B": "Fabricar su propio alimento",
+       "C": "Invadir una célula viva y usar su maquinaria",
+       "D": "Tierra fértil"
+      },
+      "n": 33,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "¿Cuál es el orden correcto del recorrido del alimento en la digestión?",
+      "opciones": {
+       "A": "Boca → esófago → estómago → intestino",
+       "B": "Estómago → boca → intestino",
+       "C": "Intestino → estómago → boca",
+       "D": "Boca → pulmón → estómago"
+      },
+      "n": 34,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El sistema que da soporte al cuerpo y protege órganos como el cerebro y el corazón es el:",
+      "opciones": {
+       "A": "Digestivo",
+       "B": "Respiratorio",
+       "C": "Excretor",
+       "D": "Esquelético"
+      },
+      "n": 35,
+      "correcta": "D"
+     },
+     {
+      "enunciado": "El órgano del sistema excretor que filtra la sangre y forma la orina es:",
+      "opciones": {
+       "A": "El hígado",
+       "B": "El riñón",
+       "C": "El pulmón",
+       "D": "El corazón"
+      },
+      "n": 36,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Al inhalar, el oxígeno pasa a la sangre en los alvéolos y, a cambio, la sangre libera:",
+      "opciones": {
+       "A": "Agua salada",
+       "B": "Glucosa",
+       "C": "Nitrógeno puro",
+       "D": "Dióxido de carbono"
+      },
+      "n": 37,
+      "correcta": "D"
+     },
+     {
+      "enunciado": "Las plantas que producen flores y frutos con semillas protegidas se llaman:",
+      "opciones": {
+       "A": "Gimnospermas",
+       "B": "Angiospermas",
+       "C": "Helechos",
+       "D": "Musgos"
+      },
+      "n": 38,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Cuando hace calor, sudas para bajar la temperatura del cuerpo. Este mantenimiento del equilibrio interno se llama:",
+      "opciones": {
+       "A": "Homeostasis",
+       "B": "Fotosíntesis",
+       "C": "Digestión",
+       "D": "Mutación"
+      },
+      "n": 39,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La ciencia que clasifica y agrupa a los seres vivos según sus características es la:",
+      "opciones": {
+       "A": "Geografía",
+       "B": "Astronomía",
+       "C": "Taxonomía",
+       "D": "Gramática"
+      },
+      "n": 40,
+      "correcta": "C"
+     }
+    ],
+    "desde": 31,
+    "hasta": 40
+   },
+   {
+    "nombre": "SOCIALES",
+    "titulo": "SOCIALES (Preguntas 41 a 50)",
+    "preguntas": [
+     {
+      "enunciado": "La Edad Media en Europa comenzó con:",
+      "opciones": {
+       "A": "La caída del Imperio Romano de Occidente",
+       "B": "El descubrimiento de América",
+       "C": "La llegada del internet",
+       "D": "La Revolución Industrial"
+      },
+      "n": 41,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En el FEUDALISMO, la relación entre el señor feudal y el vasallo se basaba en:",
+      "opciones": {
+       "A": "Protección a cambio de trabajo y lealtad",
+       "B": "Compra de celulares",
+       "C": "Viajes espaciales",
+       "D": "Concursos deportivos"
+      },
+      "n": 42,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Las Cruzadas fueron:",
+      "opciones": {
+       "A": "Expediciones militares religiosas hacia Tierra Santa",
+       "B": "Torneos de ajedrez",
+       "C": "Festivales de música",
+       "D": "Elecciones presidenciales"
+      },
+      "n": 43,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Los incas, mayas y aztecas fueron civilizaciones precolombinas que habitaron:",
+      "opciones": {
+       "A": "América",
+       "B": "Europa",
+       "C": "África",
+       "D": "Australia"
+      },
+      "n": 44,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La religión que se expandió por el Medio Oriente durante la Edad Media, fundada por Mahoma, fue:",
+      "opciones": {
+       "A": "El islam",
+       "B": "El budismo",
+       "C": "El cristianismo ortodoxo únicamente",
+       "D": "El hinduismo"
+      },
+      "n": 45,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La Gran Muralla y el Japón medieval con sus samuráis son parte de la historia del continente:",
+      "opciones": {
+       "A": "Asiático",
+       "B": "Africano",
+       "C": "Americano",
+       "D": "Europeo"
+      },
+      "n": 46,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El EUROCENTRISMO es la tendencia a:",
+      "opciones": {
+       "A": "Ver la historia solo desde el punto de vista europeo, ignorando otras culturas",
+       "B": "Estudiar solo geografía",
+       "C": "Vivir en Europa",
+       "D": "Hablar varios idiomas"
+      },
+      "n": 47,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En la Edad Media existieron grandes imperios en África, como el:",
+      "opciones": {
+       "A": "Imperio Bantú y otros imperios africanos",
+       "B": "Imperio Romano",
+       "C": "Imperio Inca",
+       "D": "Imperio Japonés"
+      },
+      "n": 48,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Durante la Edad Media, una institución muy poderosa que influía en la vida y la política europea era:",
+      "opciones": {
+       "A": "La Iglesia",
+       "B": "La televisión",
+       "C": "La ONU",
+       "D": "El banco mundial"
+      },
+      "n": 49,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Los primeros habitantes de América llegaron, según la teoría más aceptada, cruzando:",
+      "opciones": {
+       "A": "El estrecho de Bering desde Asia",
+       "B": "En avión desde Europa",
+       "C": "En barco desde África directamente a Bogotá",
+       "D": "Ya estaban desde siempre en la Luna"
+      },
+      "n": 50,
+      "correcta": "A"
+     }
+    ],
+    "desde": 41,
+    "hasta": 50
+   }
+  ]
+ },
+ "NOVENO": {
+  "codigo": "12",
+  "nombre": "Noveno",
+  "grado_ingreso": "NOVENO",
+  "tipo": "opcion_multiple",
+  "total": 50,
+  "materias": [
+   {
+    "nombre": "MATEMÁTICAS - ÁLGEBRA",
+    "titulo": "MATEMÁTICAS - ÁLGEBRA (Preguntas 1 a 10)",
+    "preguntas": [
+     {
+      "enunciado": "El resultado de sumar los polinomios (3x + 2) + (5x − 4) es:",
+      "opciones": {
+       "A": "8x − 2",
+       "B": "8x + 6",
+       "C": "15x − 8",
+       "D": "2x − 2"
+      },
+      "n": 1,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El producto notable (x + 3)² es igual a:",
+      "opciones": {
+       "A": "x² + 9",
+       "B": "x² + 6x + 9",
+       "C": "x² + 3x + 9",
+       "D": "2x + 6"
+      },
+      "n": 2,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Al factorizar x² − 9 (diferencia de cuadrados) se obtiene:",
+      "opciones": {
+       "A": "(x − 3)(x − 3)",
+       "B": "(x + 9)(x − 1)",
+       "C": "(x + 3)(x − 3)",
+       "D": "x(x − 9)"
+      },
+      "n": 3,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "La solución de la ecuación 2x + 6 = 14 es:",
+      "opciones": {
+       "A": "x = 2",
+       "B": "x = 6",
+       "C": "x = 8",
+       "D": "x = 4"
+      },
+      "n": 4,
+      "correcta": "D"
+     },
+     {
+      "enunciado": "El doble de un número, aumentado en 3, es igual a 11. ¿Cuál es el número?",
+      "opciones": {
+       "A": "3",
+       "B": "4",
+       "C": "5",
+       "D": "7"
+      },
+      "n": 5,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Si x = 2, el valor de la expresión x² + 3x − 1 es:",
+      "opciones": {
+       "A": "9",
+       "B": "6",
+       "C": "11",
+       "D": "3"
+      },
+      "n": 6,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "√2 es un ejemplo de un número:",
+      "opciones": {
+       "A": "Entero",
+       "B": "Natural",
+       "C": "Irracional",
+       "D": "Racional"
+      },
+      "n": 7,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "En la función f(x) = 2x + 1, el valor de f(3) es:",
+      "opciones": {
+       "A": "5",
+       "B": "6",
+       "C": "7",
+       "D": "9"
+      },
+      "n": 8,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "En un triángulo rectángulo los catetos miden 6 y 8. La hipotenusa mide:",
+      "opciones": {
+       "A": "10",
+       "B": "14",
+       "C": "48",
+       "D": "7"
+      },
+      "n": 9,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La solución de la desigualdad x + 3 > 7 es:",
+      "opciones": {
+       "A": "x < 4",
+       "B": "x > 4",
+       "C": "x > 10",
+       "D": "x = 4"
+      },
+      "n": 10,
+      "correcta": "B"
+     }
+    ],
+    "desde": 1,
+    "hasta": 10
+   },
+   {
+    "nombre": "ESPAÑOL",
+    "titulo": "ESPAÑOL (Preguntas 11 a 20)",
+    "preguntas": [
+     {
+      "enunciado": "La TRADICIÓN ORAL es importante porque:",
+      "opciones": {
+       "A": "Transmite mitos, leyendas y saberes de generación en generación mediante la palabra hablada",
+       "B": "Solo sirve para escribir libros",
+       "C": "Es un tipo de matemática",
+       "D": "Es una red social"
+      },
+      "n": 11,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "\"María\", de Jorge Isaacs, es una novela representativa del movimiento literario llamado:",
+      "opciones": {
+       "A": "Romanticismo",
+       "B": "Ciencia ficción",
+       "C": "Realismo mágico",
+       "D": "Vanguardismo"
+      },
+      "n": 12,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El \"Boom latinoamericano\" fue un momento en que autores como García Márquez destacaron por el:",
+      "opciones": {
+       "A": "Realismo mágico",
+       "B": "Teatro griego",
+       "C": "Periodismo deportivo",
+       "D": "Ensayo científico"
+      },
+      "n": 13,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Una CRÓNICA periodística se caracteriza por:",
+      "opciones": {
+       "A": "Narrar un hecho real combinando información y estilo literario",
+       "B": "Ser un poema de amor",
+       "C": "Ser una operación matemática",
+       "D": "No tener autor"
+      },
+      "n": 14,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En la oración \"El estudiante escribió un ensayo\", el sujeto es:",
+      "opciones": {
+       "A": "escribió",
+       "B": "El estudiante",
+       "C": "un ensayo",
+       "D": "ensayo"
+      },
+      "n": 15,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Un TEXTO ARGUMENTATIVO tiene como propósito principal:",
+      "opciones": {
+       "A": "Convencer al lector con razones y evidencias sobre una opinión",
+       "B": "Contar un cuento infantil",
+       "C": "Dar el clima del día",
+       "D": "Enumerar ingredientes"
+      },
+      "n": 16,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Las palabras \"casa\" y \"caza\" son:",
+      "opciones": {
+       "A": "Homófonas (suenan igual, se escriben distinto)",
+       "B": "Sinónimas",
+       "C": "Antónimas",
+       "D": "Prefijos"
+      },
+      "n": 17,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Lee el fragmento:",
+      "opciones": {
+       "A": "Metáfora",
+       "B": "Noticia",
+       "C": "Acotación",
+       "D": "Sigla"
+      },
+      "n": 18,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El COSTUMBRISMO en la literatura colombiana se enfoca en:",
+      "opciones": {
+       "A": "Retratar las costumbres y la vida cotidiana de una región",
+       "B": "Imaginar viajes espaciales",
+       "C": "Resolver crímenes",
+       "D": "Describir robots"
+      },
+      "n": 19,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La CONCORDANCIA gramatical exige que:",
+      "opciones": {
+       "A": "El sustantivo y el adjetivo coincidan en género y número (ej. \"casas bonitas\")",
+       "B": "Todas las palabras rimen",
+       "C": "El texto sea corto",
+       "D": "No se use puntuación"
+      },
+      "n": 20,
+      "correcta": "A"
+     }
+    ],
+    "desde": 11,
+    "hasta": 20
+   },
+   {
+    "nombre": "INGLÉS",
+    "titulo": "INGLÉS (Preguntas 21 a 30)",
+    "preguntas": [
+     {
+      "enunciado": "Complete: \"This house ______ built in 1950.\" (present/past passive)",
+      "opciones": {
+       "A": "was",
+       "B": "is",
+       "C": "does",
+       "D": "has"
+      },
+      "n": 21,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Choose the first conditional: \"If you study, you ______ pass the exam.\"",
+      "opciones": {
+       "A": "will",
+       "B": "would",
+       "C": "were",
+       "D": "are"
+      },
+      "n": 22,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Complete the reported speech: She said that she ______ tired.",
+      "opciones": {
+       "A": "is",
+       "B": "was",
+       "C": "are",
+       "D": "be"
+      },
+      "n": 23,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Choose the relative pronoun: \"This is the school ______ I studied.\"",
+      "opciones": {
+       "A": "who",
+       "B": "which",
+       "C": "where",
+       "D": "what"
+      },
+      "n": 24,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Complete: \"I have known her ______ five years.\"",
+      "opciones": {
+       "A": "since",
+       "B": "for",
+       "C": "ago",
+       "D": "during"
+      },
+      "n": 25,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Choose the correct modal of obligation: \"Students ______ wear a uniform. It's a rule.\"",
+      "opciones": {
+       "A": "must",
+       "B": "might",
+       "C": "could",
+       "D": "would"
+      },
+      "n": 26,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Complete the second conditional: \"If I ______ rich, I would travel the world.\"",
+      "opciones": {
+       "A": "am",
+       "B": "was/were",
+       "C": "will be",
+       "D": "be"
+      },
+      "n": 27,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Choose the correct adjective: \"I felt very ______ during the movie.\" (aburrido)",
+      "opciones": {
+       "A": "boring",
+       "B": "bored",
+       "C": "bore",
+       "D": "bores"
+      },
+      "n": 28,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Choose the passive sentence:",
+      "opciones": {
+       "A": "The chef cooked the meal",
+       "B": "The meal was cooked by the chef",
+       "C": "The chef is cooking",
+       "D": "The chef cooks"
+      },
+      "n": 29,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Complete with a phrasal verb: \"Please ______ your phone during the exam.\" (apagar)",
+      "opciones": {
+       "A": "turn off",
+       "B": "turn up",
+       "C": "look for",
+       "D": "give up"
+      },
+      "n": 30,
+      "correcta": "A"
+     }
+    ],
+    "desde": 21,
+    "hasta": 30
+   },
+   {
+    "nombre": "CIENCIAS",
+    "titulo": "CIENCIAS (BIOLOGÍA) (Preguntas 31 a 40)",
+    "preguntas": [
+     {
+      "enunciado": "La división celular que produce células sexuales (óvulos y espermatozoides) con la mitad de los cromosomas es:",
+      "opciones": {
+       "A": "Meiosis",
+       "B": "Mitosis",
+       "C": "Fotosíntesis",
+       "D": "Digestión"
+      },
+      "n": 31,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Las células del cuerpo humano tienen 46 cromosomas. Tras la meiosis, cada célula sexual (gameto) tendrá:",
+      "opciones": {
+       "A": "46 cromosomas",
+       "B": "23 cromosomas",
+       "C": "92 cromosomas",
+       "D": "12 cromosomas"
+      },
+      "n": 32,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Al cruzar dos individuos Aa × Aa, la probabilidad de un descendiente con genotipo AA es:",
+      "opciones": {
+       "A": "1/4 (25%)",
+       "B": "1/2 (50%)",
+       "C": "3/4 (75%)",
+       "D": "0"
+      },
+      "n": 33,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En el cruce Aa × Aa, donde A (alto) domina sobre a (bajo), ¿qué proporción de los hijos será de fenotipo alto?",
+      "opciones": {
+       "A": "1/4",
+       "B": "1/2",
+       "C": "3/4",
+       "D": "Ninguno"
+      },
+      "n": 34,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "La célula del sistema nervioso encargada de transmitir los impulsos es:",
+      "opciones": {
+       "A": "El glóbulo rojo",
+       "B": "El osteocito",
+       "C": "El espermatozoide",
+       "D": "La neurona"
+      },
+      "n": 35,
+      "correcta": "D"
+     },
+     {
+      "enunciado": "El sistema que produce hormonas (como la insulina) para regular el funcionamiento del cuerpo es el:",
+      "opciones": {
+       "A": "Óseo",
+       "B": "Endocrino",
+       "C": "Muscular",
+       "D": "Excretor"
+      },
+      "n": 36,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Una vacuna protege al cuerpo porque:",
+      "opciones": {
+       "A": "Alimenta a los virus",
+       "B": "Sube la temperatura corporal",
+       "C": "Estimula al sistema inmunitario a crear defensas (anticuerpos)",
+       "D": "Reemplaza la sangre"
+      },
+      "n": 37,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Los fósiles son una evidencia clave para estudiar:",
+      "opciones": {
+       "A": "La evolución y la historia de la vida en la Tierra",
+       "B": "El clima de mañana",
+       "C": "La economía",
+       "D": "La gramática"
+      },
+      "n": 38,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Un microorganismo capaz de causar enfermedades (como ciertas bacterias o virus) se llama:",
+      "opciones": {
+       "A": "Nutriente",
+       "B": "Patógeno",
+       "C": "Vitamina",
+       "D": "Mineral"
+      },
+      "n": 39,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Según Mendel, la información hereditaria (los genes) se transmite a través de:",
+      "opciones": {
+       "A": "La sangre solamente",
+       "B": "Los músculos",
+       "C": "La alimentación",
+       "D": "Los cromosomas (ADN)"
+      },
+      "n": 40,
+      "correcta": "D"
+     }
+    ],
+    "desde": 31,
+    "hasta": 40
+   },
+   {
+    "nombre": "SOCIALES",
+    "titulo": "SOCIALES (Preguntas 41 a 50)",
+    "preguntas": [
+     {
+      "enunciado": "El Renacimiento fue un movimiento que nació en Italia y se caracterizó por:",
+      "opciones": {
+       "A": "El renacer del arte, la ciencia y el interés por el ser humano",
+       "B": "El regreso a la Edad de Piedra",
+       "C": "La invención del internet",
+       "D": "El fin de la escritura"
+      },
+      "n": 41,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Martín Lutero inició la Reforma Protestante al criticar:",
+      "opciones": {
+       "A": "Algunas prácticas de la Iglesia Católica",
+       "B": "Los avances de la ciencia",
+       "C": "El comercio de especias",
+       "D": "La agricultura"
+      },
+      "n": 42,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El método científico, impulsado por Galileo y Newton, se basa en:",
+      "opciones": {
+       "A": "La observación, la hipótesis y la experimentación",
+       "B": "La adivinación",
+       "C": "La tradición oral",
+       "D": "Los sueños"
+      },
+      "n": 43,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La Ilustración fue un movimiento del siglo XVIII que defendía:",
+      "opciones": {
+       "A": "La razón, la libertad y la igualdad",
+       "B": "El poder absoluto de los reyes",
+       "C": "La esclavitud",
+       "D": "El silencio"
+      },
+      "n": 44,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La Revolución Francesa (1789) proclamó los principios de:",
+      "opciones": {
+       "A": "Libertad, igualdad y fraternidad",
+       "B": "Guerra, hambre y peste",
+       "C": "Oro, plata y bronce",
+       "D": "Tierra, mar y aire"
+      },
+      "n": 45,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Simón Bolívar es conocido como \"El Libertador\" porque:",
+      "opciones": {
+       "A": "Lideró la independencia de varios países de Suramérica",
+       "B": "Inventó la imprenta",
+       "C": "Descubrió América",
+       "D": "Pintó la Capilla Sixtina"
+      },
+      "n": 46,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La Revolución Industrial cambió el mundo con:",
+      "opciones": {
+       "A": "La invención de máquinas y el crecimiento de las fábricas",
+       "B": "El regreso a la agricultura manual",
+       "C": "La desaparición de las ciudades",
+       "D": "La prohibición del comercio"
+      },
+      "n": 47,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El comercio de esclavos en el Atlántico consistió en:",
+      "opciones": {
+       "A": "El traslado forzado de millones de africanos a América",
+       "B": "Un intercambio de libros",
+       "C": "Un festival musical",
+       "D": "Una ruta de especias"
+      },
+      "n": 48,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La Conferencia de Berlín (1884-1885) tuvo como consecuencia:",
+      "opciones": {
+       "A": "El reparto de África entre las potencias europeas",
+       "B": "La independencia de Colombia",
+       "C": "El fin de la esclavitud mundial",
+       "D": "La creación de internet"
+      },
+      "n": 49,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Un logro social del siglo XIX-XX que amplió la democracia fue:",
+      "opciones": {
+       "A": "El derecho al voto de la mujer",
+       "B": "La eliminación de las escuelas",
+       "C": "El regreso de la monarquía absoluta",
+       "D": "La prohibición de leer"
+      },
+      "n": 50,
+      "correcta": "A"
+     }
+    ],
+    "desde": 41,
+    "hasta": 50
+   }
+  ]
+ },
+ "DECIMO": {
+  "codigo": "13",
+  "nombre": "Décimo",
+  "grado_ingreso": "DECIMO",
+  "tipo": "opcion_multiple",
+  "total": 50,
+  "materias": [
+   {
+    "nombre": "MATEMÁTICAS",
+    "titulo": "MATEMÁTICAS (Preguntas 1 a 10)",
+    "preguntas": [
+     {
+      "enunciado": "Las soluciones de la ecuación cuadrática x² − 5x + 6 = 0 son:",
+      "opciones": {
+       "A": "x = 1 y x = 6",
+       "B": "x = 2 y x = 3",
+       "C": "x = −2 y x = −3",
+       "D": "x = 0 y x = 5"
+      },
+      "n": 1,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "La gráfica de una función cuadrática (y = ax² + bx + c) es una:",
+      "opciones": {
+       "A": "Parábola",
+       "B": "Línea recta",
+       "C": "Circunferencia",
+       "D": "Espiral"
+      },
+      "n": 2,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En el sistema de ecuaciones x + y = 10 y x − y = 2, el valor de x es:",
+      "opciones": {
+       "A": "4",
+       "B": "5",
+       "C": "6",
+       "D": "8"
+      },
+      "n": 3,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "En la progresión aritmética 3, 7, 11, 15, … ¿cuál es el término que sigue?",
+      "opciones": {
+       "A": "17",
+       "B": "18",
+       "C": "20",
+       "D": "19"
+      },
+      "n": 4,
+      "correcta": "D"
+     },
+     {
+      "enunciado": "El siguiente término de la progresión geométrica 2, 6, 18, 54, … es:",
+      "opciones": {
+       "A": "108",
+       "B": "152",
+       "C": "162",
+       "D": "216"
+      },
+      "n": 5,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Si f(x) = x² − 4, el valor de f(3) es:",
+      "opciones": {
+       "A": "5",
+       "B": "9",
+       "C": "2",
+       "D": "13"
+      },
+      "n": 6,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El resultado de √9 + √16 es:",
+      "opciones": {
+       "A": "5",
+       "B": "25",
+       "C": "12",
+       "D": "7"
+      },
+      "n": 7,
+      "correcta": "D"
+     },
+     {
+      "enunciado": "Dos triángulos son semejantes. Si un lado de 4 cm corresponde a uno de 8 cm, ¿a cuánto equivale, en el segundo triángulo, un lado que en el primero mide 5 cm?",
+      "opciones": {
+       "A": "9 cm",
+       "B": "10 cm",
+       "C": "6 cm",
+       "D": "20 cm"
+      },
+      "n": 8,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "En la función exponencial f(x) = 2ˣ, el valor de f(3) es:",
+      "opciones": {
+       "A": "6",
+       "B": "9",
+       "C": "8",
+       "D": "23"
+      },
+      "n": 9,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Una circunferencia tiene un radio de 5 cm. Su diámetro mide:",
+      "opciones": {
+       "A": "10 cm",
+       "B": "2,5 cm",
+       "C": "15 cm",
+       "D": "25 cm"
+      },
+      "n": 10,
+      "correcta": "A"
+     }
+    ],
+    "desde": 1,
+    "hasta": 10
+   },
+   {
+    "nombre": "ESPAÑOL",
+    "titulo": "ESPAÑOL (Preguntas 11 a 20)",
+    "preguntas": [
+     {
+      "enunciado": "Las \"Crónicas de Indias\" fueron escritas por:",
+      "opciones": {
+       "A": "Exploradores y conquistadores que describían el \"Nuevo Mundo\"",
+       "B": "Poetas del siglo XXI",
+       "C": "Científicos modernos",
+       "D": "Periodistas deportivos"
+      },
+      "n": 11,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El REALISMO MÁGICO, corriente del Boom latinoamericano, se caracteriza por:",
+      "opciones": {
+       "A": "Presentar hechos fantásticos como si fueran parte natural de la realidad",
+       "B": "Explicar fórmulas de química",
+       "C": "Narrar solo hechos históricos exactos",
+       "D": "Dar recetas de cocina"
+      },
+      "n": 12,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Gabriel García Márquez, Julio Cortázar y Mario Vargas Llosa son autores del:",
+      "opciones": {
+       "A": "Boom latinoamericano",
+       "B": "Renacimiento italiano",
+       "C": "Teatro griego",
+       "D": "Romanticismo alemán"
+      },
+      "n": 13,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Las VANGUARDIAS literarias del siglo XX se caracterizaron por:",
+      "opciones": {
+       "A": "Romper con las formas tradicionales y experimentar con el lenguaje",
+       "B": "Repetir siempre lo mismo",
+       "C": "Prohibir la poesía",
+       "D": "Escribir solo en latín"
+      },
+      "n": 14,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Un ENSAYO es un texto que:",
+      "opciones": {
+       "A": "Expone y argumenta el punto de vista del autor sobre un tema",
+       "B": "Solo cuenta chistes",
+       "C": "Es un poema con rima obligatoria",
+       "D": "No tiene autor ni tema"
+      },
+      "n": 15,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Un texto tiene COHESIÓN cuando:",
+      "opciones": {
+       "A": "Sus partes se conectan bien mediante conectores y referencias",
+       "B": "Tiene muchas páginas",
+       "C": "Está escrito en mayúsculas",
+       "D": "No tiene ideas"
+      },
+      "n": 16,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Palabras como \"fútbol\", \"chef\" o \"software\" son ejemplos de:",
+      "opciones": {
+       "A": "Extranjerismos",
+       "B": "Sinónimos",
+       "C": "Prefijos",
+       "D": "Interjecciones"
+      },
+      "n": 17,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Lee el fragmento:",
+      "opciones": {
+       "A": "Realismo mágico (Cien años de soledad)",
+       "B": "Teatro isabelino",
+       "C": "Neoclasicismo",
+       "D": "Periodismo científico"
+      },
+      "n": 18,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La palabra \"sí\" (afirmación) lleva tilde diacrítica para diferenciarse de:",
+      "opciones": {
+       "A": "\"si\" (condición, ej. \"si llueve\")",
+       "B": "\"sé\"",
+       "C": "\"se\"",
+       "D": "\"así\""
+      },
+      "n": 19,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En la comunicación, el CONTEXTO es:",
+      "opciones": {
+       "A": "La situación o circunstancias en que ocurre el mensaje",
+       "B": "El color del papel",
+       "C": "El número de palabras",
+       "D": "El precio del libro"
+      },
+      "n": 20,
+      "correcta": "A"
+     }
+    ],
+    "desde": 11,
+    "hasta": 20
+   },
+   {
+    "nombre": "INGLÉS",
+    "titulo": "INGLÉS (Preguntas 21 a 30)",
+    "preguntas": [
+     {
+      "enunciado": "Complete the second conditional: \"If I ______ you, I would apologize.\"",
+      "opciones": {
+       "A": "am",
+       "B": "was",
+       "C": "were",
+       "D": "will be"
+      },
+      "n": 21,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Change to reported speech: He said, \"I am busy.\" → He said that he ______ busy.",
+      "opciones": {
+       "A": "is",
+       "B": "was",
+       "C": "are",
+       "D": "be"
+      },
+      "n": 22,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Choose the passive voice: \"The letter ______ yesterday.\"",
+      "opciones": {
+       "A": "was sent",
+       "B": "sent",
+       "C": "is sending",
+       "D": "sends"
+      },
+      "n": 23,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Complete: \"I have studied English ______ five years.\"",
+      "opciones": {
+       "A": "since",
+       "B": "for",
+       "C": "ago",
+       "D": "yet"
+      },
+      "n": 24,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Choose the modal of obligation: \"You ______ wear a helmet when you ride a bike.\"",
+      "opciones": {
+       "A": "might",
+       "B": "must",
+       "C": "could",
+       "D": "would"
+      },
+      "n": 25,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Complete the first conditional: \"If it is sunny, we ______ go to the beach.\"",
+      "opciones": {
+       "A": "will",
+       "B": "would",
+       "C": "were",
+       "D": "had"
+      },
+      "n": 26,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Read: \"She's been to Paris twice.\" This sentence expresses:",
+      "opciones": {
+       "A": "A future plan",
+       "B": "A past experience (present perfect)",
+       "C": "A present routine",
+       "D": "An order"
+      },
+      "n": 27,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Choose the word formation: \"Her _______ was amazing.\" (from the verb \"perform\")",
+      "opciones": {
+       "A": "performance",
+       "B": "performing",
+       "C": "performs",
+       "D": "performer's"
+      },
+      "n": 28,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Choose the correct comparative: \"This book is ______ interesting than that one.\"",
+      "opciones": {
+       "A": "more",
+       "B": "most",
+       "C": "much",
+       "D": "as"
+      },
+      "n": 29,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Complete with reported command: The teacher told us ______ quiet.",
+      "opciones": {
+       "A": "be",
+       "B": "to be",
+       "C": "being",
+       "D": "was"
+      },
+      "n": 30,
+      "correcta": "B"
+     }
+    ],
+    "desde": 21,
+    "hasta": 30
+   },
+   {
+    "nombre": "CIENCIAS",
+    "titulo": "CIENCIAS (BIOLOGÍA) (Preguntas 31 a 40)",
+    "preguntas": [
+     {
+      "enunciado": "La molécula con forma de doble hélice que contiene las instrucciones genéticas es el:",
+      "opciones": {
+       "A": "ARN",
+       "B": "ADN",
+       "C": "ATP",
+       "D": "Glucosa"
+      },
+      "n": 31,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "En la molécula de ADN, la base adenina (A) siempre se empareja con:",
+      "opciones": {
+       "A": "Guanina",
+       "B": "Citosina",
+       "C": "Timina",
+       "D": "Otra adenina"
+      },
+      "n": 32,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "En los seres humanos, si el padre aporta un cromosoma Y, el sexo del bebé será:",
+      "opciones": {
+       "A": "Femenino (XX)",
+       "B": "Depende de la madre",
+       "C": "No se puede saber",
+       "D": "Masculino (XY)"
+      },
+      "n": 33,
+      "correcta": "D"
+     },
+     {
+      "enunciado": "Un organismo transgénico es aquel al que:",
+      "opciones": {
+       "A": "Se le ha insertado un gen de otro organismo",
+       "B": "Se le cambió el color con pintura",
+       "C": "Se le dio más comida",
+       "D": "No tiene ADN"
+      },
+      "n": 34,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La teoría de la evolución por selección natural fue propuesta por:",
+      "opciones": {
+       "A": "Charles Darwin",
+       "B": "Isaac Newton",
+       "C": "Gregor Mendel",
+       "D": "Louis Pasteur"
+      },
+      "n": 35,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En una población de escarabajos verdes y cafés que viven sobre troncos cafés, las aves detectan mejor a los verdes. Con el tiempo, lo más probable es que:",
+      "opciones": {
+       "A": "Se extingan todos",
+       "B": "Predominen los verdes",
+       "C": "Predominen los escarabajos cafés",
+       "D": "No cambie nada"
+      },
+      "n": 36,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "La clonación consiste en producir un organismo:",
+      "opciones": {
+       "A": "Con genes de dos especies distintas",
+       "B": "Sin células",
+       "C": "Más grande de lo normal",
+       "D": "Genéticamente idéntico a otro"
+      },
+      "n": 37,
+      "correcta": "D"
+     },
+     {
+      "enunciado": "La lluvia ácida se produce principalmente por:",
+      "opciones": {
+       "A": "Gases contaminantes de fábricas y vehículos",
+       "B": "El agua del mar",
+       "C": "La luz de la Luna",
+       "D": "Las plantas"
+      },
+      "n": 38,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El camuflaje, que permite a un animal confundirse con su entorno, es un mecanismo de:",
+      "opciones": {
+       "A": "Reproducción",
+       "B": "Defensa y supervivencia",
+       "C": "Fotosíntesis",
+       "D": "Digestión"
+      },
+      "n": 39,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Los cromosomas sexuales de un hombre son:",
+      "opciones": {
+       "A": "XX",
+       "B": "XY",
+       "C": "YY",
+       "D": "XYY"
+      },
+      "n": 40,
+      "correcta": "B"
+     }
+    ],
+    "desde": 31,
+    "hasta": 40
+   },
+   {
+    "nombre": "SOCIALES",
+    "titulo": "SOCIALES (Preguntas 41 a 50)",
+    "preguntas": [
+     {
+      "enunciado": "La Primera Guerra Mundial (1914-1918) se desató principalmente por:",
+      "opciones": {
+       "A": "Las rivalidades entre las potencias europeas y el asesinato del archiduque de Austria",
+       "B": "Una pandemia",
+       "C": "La llegada del internet",
+       "D": "Un partido de fútbol"
+      },
+      "n": 41,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Karl Marx es el autor del \"Manifiesto Comunista\" y sus ideas dieron origen al:",
+      "opciones": {
+       "A": "Comunismo/socialismo",
+       "B": "Renacimiento",
+       "C": "Feudalismo",
+       "D": "Cristianismo"
+      },
+      "n": 42,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La Revolución Rusa de 1917 llevó al poder a:",
+      "opciones": {
+       "A": "Los bolcheviques (comunistas)",
+       "B": "Los faraones",
+       "C": "Los samuráis",
+       "D": "Los mayas"
+      },
+      "n": 43,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En Colombia, la Guerra de los Mil Días (1899-1902) tuvo como consecuencia:",
+      "opciones": {
+       "A": "La separación de Panamá",
+       "B": "El descubrimiento de América",
+       "C": "La fundación de Bogotá",
+       "D": "La llegada del ferrocarril a Europa"
+      },
+      "n": 44,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La \"Masacre de las Bananeras\" (1928) en Colombia fue:",
+      "opciones": {
+       "A": "La represión violenta a trabajadores en huelga de las bananeras",
+       "B": "Un festival de música",
+       "C": "Una cosecha exitosa",
+       "D": "Una elección presidencial"
+      },
+      "n": 45,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Adolf Hitler y el fascismo se relacionan con el inicio de:",
+      "opciones": {
+       "A": "La Segunda Guerra Mundial",
+       "B": "La Revolución Francesa",
+       "C": "El Renacimiento",
+       "D": "La Independencia de Colombia"
+      },
+      "n": 46,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El HOLOCAUSTO fue:",
+      "opciones": {
+       "A": "El exterminio de millones de judíos y otras minorías por el régimen nazi",
+       "B": "Una fiesta tradicional",
+       "C": "Un descubrimiento científico",
+       "D": "Un tipo de música"
+      },
+      "n": 47,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Mahatma Gandhi lideró la independencia de la India mediante:",
+      "opciones": {
+       "A": "La resistencia pacífica y la no violencia",
+       "B": "Grandes ejércitos y bombas",
+       "C": "El comercio de esclavos",
+       "D": "La conquista de Europa"
+      },
+      "n": 48,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El \"Bogotazo\" (1948) estalló en Colombia tras el asesinato de:",
+      "opciones": {
+       "A": "Jorge Eliécer Gaitán",
+       "B": "Simón Bolívar",
+       "C": "Cristóbal Colón",
+       "D": "Napoleón"
+      },
+      "n": 49,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La Guerra Fría fue la tensión, después de 1945, entre:",
+      "opciones": {
+       "A": "Estados Unidos y la Unión Soviética",
+       "B": "Colombia y Panamá",
+       "C": "Grecia y Roma",
+       "D": "Egipto y China"
+      },
+      "n": 50,
+      "correcta": "A"
+     }
+    ],
+    "desde": 41,
+    "hasta": 50
+   }
+  ]
+ },
+ "ONCE": {
+  "codigo": "14",
+  "nombre": "Once",
+  "grado_ingreso": "ONCE",
+  "tipo": "opcion_multiple",
+  "total": 50,
+  "materias": [
+   {
+    "nombre": "MATEMÁTICAS - TRIGONOMETRÍA",
+    "titulo": "MATEMÁTICAS - TRIGONOMETRÍA (Preguntas 1 a 10)",
+    "preguntas": [
+     {
+      "enunciado": "Una escalera de 10 m se apoya en una pared formando 60° con el suelo. Si sen(60°)≈0,87, ¿qué altura alcanza en la pared?",
+      "opciones": {
+       "A": "5 m",
+       "B": "8,7 m",
+       "C": "10 m",
+       "D": "0,87 m"
+      },
+      "n": 1,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "En un triángulo rectángulo, la razón «cateto opuesto ÷ hipotenusa» corresponde a la función:",
+      "opciones": {
+       "A": "Seno",
+       "B": "Coseno",
+       "C": "Tangente",
+       "D": "Secante"
+      },
+      "n": 2,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Una rampa mide 13 m de largo (hipotenusa) y su base horizontal mide 12 m. La altura que sube es:",
+      "opciones": {
+       "A": "1 m",
+       "B": "25 m",
+       "C": "5 m",
+       "D": "6 m"
+      },
+      "n": 3,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Si sen θ = 0,6, usando la identidad sen²θ + cos²θ = 1, el valor de cos²θ es:",
+      "opciones": {
+       "A": "0,36",
+       "B": "0,4",
+       "C": "1,36",
+       "D": "0,64"
+      },
+      "n": 4,
+      "correcta": "D"
+     },
+     {
+      "enunciado": "Si un ángulo se ubica en el segundo cuadrante, el signo de su coseno es:",
+      "opciones": {
+       "A": "Positivo",
+       "B": "Negativo",
+       "C": "Cero",
+       "D": "Indefinido"
+      },
+      "n": 5,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "¿A cuántos grados equivale un ángulo de π/3 radianes?",
+      "opciones": {
+       "A": "60°",
+       "B": "30°",
+       "C": "90°",
+       "D": "120°"
+      },
+      "n": 6,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La ecuación x² + y² = 36 representa una circunferencia centrada en el origen cuyo radio es:",
+      "opciones": {
+       "A": "36",
+       "B": "18",
+       "C": "6",
+       "D": "12"
+      },
+      "n": 7,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "La distancia entre los puntos (1, 2) y (4, 6) en el plano cartesiano es:",
+      "opciones": {
+       "A": "5",
+       "B": "7",
+       "C": "25",
+       "D": "3"
+      },
+      "n": 8,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La sección cónica que modela la trayectoria de un proyectil (forma de «U») es la:",
+      "opciones": {
+       "A": "Circunferencia",
+       "B": "Elipse",
+       "C": "Parábola",
+       "D": "Hipérbola"
+      },
+      "n": 9,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Un avión vuela a 3.000 m de altura y se observa con un ángulo de elevación de 30°. Si sen(30°) = 0,5, la distancia en línea recta del observador al avión es:",
+      "opciones": {
+       "A": "1.500 m",
+       "B": "6.000 m",
+       "C": "3.000 m",
+       "D": "9.000 m"
+      },
+      "n": 10,
+      "correcta": "B"
+     }
+    ],
+    "desde": 1,
+    "hasta": 10
+   },
+   {
+    "nombre": "ESPAÑOL",
+    "titulo": "ESPAÑOL (Preguntas 11 a 20)",
+    "preguntas": [
+     {
+      "enunciado": "\"El ingenioso hidalgo Don Quijote de la Mancha\" fue escrito por:",
+      "opciones": {
+       "A": "Miguel de Cervantes",
+       "B": "Gabriel García Márquez",
+       "C": "William Shakespeare",
+       "D": "Pablo Neruda"
+      },
+      "n": 11,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El \"Siglo de Oro\" español fue una época de esplendor de:",
+      "opciones": {
+       "A": "La literatura y el arte español (Cervantes, Lope de Vega, Calderón)",
+       "B": "La minería del oro",
+       "C": "La tecnología digital",
+       "D": "La exploración espacial"
+      },
+      "n": 12,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La novela PICARESCA española se caracteriza por:",
+      "opciones": {
+       "A": "Narrar las aventuras de un pícaro de origen humilde que sobrevive con astucia",
+       "B": "Contar historias de robots",
+       "C": "Describir recetas de cocina",
+       "D": "Explicar teoremas"
+      },
+      "n": 13,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En la expresión \"tus dientes son perlas\", la figura literaria es una:",
+      "opciones": {
+       "A": "Metáfora",
+       "B": "Hipérbole",
+       "C": "Onomatopeya",
+       "D": "Anáfora"
+      },
+      "n": 14,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Cuando decimos \"te lo he dicho un millón de veces\", usamos una:",
+      "opciones": {
+       "A": "Hipérbole (exageración)",
+       "B": "Metáfora",
+       "C": "Personificación",
+       "D": "Comparación"
+      },
+      "n": 15,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "\"La Ilíada\", que narra la Guerra de Troya, fue escrita por:",
+      "opciones": {
+       "A": "Homero",
+       "B": "Sófocles",
+       "C": "Cervantes",
+       "D": "Goethe"
+      },
+      "n": 16,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Las VANGUARDIAS (como el surrealismo o el futurismo) buscaban:",
+      "opciones": {
+       "A": "Romper con las formas tradicionales y experimentar en el arte",
+       "B": "Volver al arte medieval",
+       "C": "Prohibir la poesía",
+       "D": "Copiar exactamente la realidad"
+      },
+      "n": 17,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En la oración \"El libro fue leído por María\", el verbo está en:",
+      "opciones": {
+       "A": "Voz pasiva",
+       "B": "Voz activa",
+       "C": "Modo imperativo",
+       "D": "Tiempo futuro"
+      },
+      "n": 18,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Un DISCURSO EXPOSITIVO tiene como finalidad:",
+      "opciones": {
+       "A": "Informar y explicar un tema de forma clara y objetiva",
+       "B": "Convencer con emociones exageradas",
+       "C": "Contar chistes",
+       "D": "Vender un producto"
+      },
+      "n": 19,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "\"Romeo y Julieta\", una de las grandes tragedias de amor, fue escrita por:",
+      "opciones": {
+       "A": "William Shakespeare",
+       "B": "Miguel de Cervantes",
+       "C": "Homero",
+       "D": "Gustavo Adolfo Bécquer"
+      },
+      "n": 20,
+      "correcta": "A"
+     }
+    ],
+    "desde": 11,
+    "hasta": 20
+   },
+   {
+    "nombre": "INGLÉS",
+    "titulo": "INGLÉS (Preguntas 21 a 30)",
+    "preguntas": [
+     {
+      "enunciado": "Choose the third conditional: \"If I had studied, I ______ passed the exam.\"",
+      "opciones": {
+       "A": "would have",
+       "B": "will have",
+       "C": "would",
+       "D": "had"
+      },
+      "n": 21,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Complete with present perfect continuous: \"She ______ working here for ten years.\"",
+      "opciones": {
+       "A": "has been",
+       "B": "have been",
+       "C": "is",
+       "D": "was"
+      },
+      "n": 22,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Choose the modal of deduction: \"The lights are off. They ______ be at home.\"",
+      "opciones": {
+       "A": "can't",
+       "B": "must",
+       "C": "should",
+       "D": "will"
+      },
+      "n": 23,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Change to passive: \"They build houses.\" → Houses ______ built.",
+      "opciones": {
+       "A": "are",
+       "B": "is",
+       "C": "was",
+       "D": "be"
+      },
+      "n": 24,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Reported speech: She asked me where I ______ from.",
+      "opciones": {
+       "A": "come",
+       "B": "came",
+       "C": "comes",
+       "D": "coming"
+      },
+      "n": 25,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Choose the correct word (word formation): \"Pollution is a serious ______ problem.\" (from \"environment\")",
+      "opciones": {
+       "A": "environmental",
+       "B": "environmentally",
+       "C": "environmentalist",
+       "D": "environments"
+      },
+      "n": 26,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Complete: \"By the time we arrived, the movie ______ already started.\"",
+      "opciones": {
+       "A": "has",
+       "B": "had",
+       "C": "have",
+       "D": "is"
+      },
+      "n": 27,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Read: \"I wish I had more free time.\" This sentence expresses:",
+      "opciones": {
+       "A": "A wish/regret about the present",
+       "B": "A completed action",
+       "C": "A command",
+       "D": "A future fact"
+      },
+      "n": 28,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Choose the relative clause: \"The book ______ I bought is excellent.\"",
+      "opciones": {
+       "A": "who",
+       "B": "which/that",
+       "C": "where",
+       "D": "when"
+      },
+      "n": 29,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "Choose the linking word for contrast: \"It was raining; ______, we went out.\"",
+      "opciones": {
+       "A": "however",
+       "B": "because",
+       "C": "so",
+       "D": "and"
+      },
+      "n": 30,
+      "correcta": "A"
+     }
+    ],
+    "desde": 21,
+    "hasta": 30
+   },
+   {
+    "nombre": "CIENCIAS: FÍSICA Y QUÍMICA",
+    "titulo": "CIENCIAS: FÍSICA Y QUÍMICA (Preguntas 31 a 40)",
+    "preguntas": [
+     {
+      "enunciado": "Un carro viaja a una velocidad constante de 20 m/s durante 5 s. La distancia que recorre es:",
+      "opciones": {
+       "A": "4 m",
+       "B": "25 m",
+       "C": "400 m",
+       "D": "100 m"
+      },
+      "n": 31,
+      "correcta": "D"
+     },
+     {
+      "enunciado": "Un objeto se deja caer y cae libremente durante 2 s. Si g ≈ 10 m/s², su velocidad al llegar al suelo es:",
+      "opciones": {
+       "A": "20 m/s",
+       "B": "10 m/s",
+       "C": "5 m/s",
+       "D": "40 m/s"
+      },
+      "n": 32,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Sobre un cuerpo de 4 kg actúa una fuerza neta de 20 N. Según la segunda ley de Newton, su aceleración es:",
+      "opciones": {
+       "A": "24 m/s²",
+       "B": "5 m/s²",
+       "C": "80 m/s²",
+       "D": "0,2 m/s²"
+      },
+      "n": 33,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "La energía que posee un cuerpo debido a su posición o altura respecto al suelo se llama energía:",
+      "opciones": {
+       "A": "Cinética",
+       "B": "Térmica",
+       "C": "Potencial",
+       "D": "Nuclear"
+      },
+      "n": 34,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "Una fuerza de 10 N desplaza un objeto 3 m en la misma dirección de la fuerza. El trabajo realizado es:",
+      "opciones": {
+       "A": "13 J",
+       "B": "3,3 J",
+       "C": "10 J",
+       "D": "30 J"
+      },
+      "n": 35,
+      "correcta": "D"
+     },
+     {
+      "enunciado": "En un enlace COVALENTE, los átomos se unen porque:",
+      "opciones": {
+       "A": "Comparten electrones",
+       "B": "Transfieren electrones de uno a otro",
+       "C": "Pierden sus protones",
+       "D": "No interactúan entre sí"
+      },
+      "n": 36,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En la tabla periódica, los elementos están ordenados de acuerdo con su:",
+      "opciones": {
+       "A": "Color",
+       "B": "Masa en gramos",
+       "C": "Número atómico (protones)",
+       "D": "Orden alfabético"
+      },
+      "n": 37,
+      "correcta": "C"
+     },
+     {
+      "enunciado": "El compuesto NaCl (sal) se forma cuando un metal transfiere electrones a un no metal. Por eso su enlace es:",
+      "opciones": {
+       "A": "Covalente",
+       "B": "Iónico",
+       "C": "Metálico",
+       "D": "Sin enlace"
+      },
+      "n": 38,
+      "correcta": "B"
+     },
+     {
+      "enunciado": "La masa molecular del agua H₂O, sabiendo que H = 1 y O = 16, es:",
+      "opciones": {
+       "A": "16",
+       "B": "17",
+       "C": "34",
+       "D": "18"
+      },
+      "n": 39,
+      "correcta": "D"
+     },
+     {
+      "enunciado": "En la reacción 2H₂ + O₂ → 2H₂O, si reaccionan 4 moles de H₂, ¿cuántos moles de agua se producen?",
+      "opciones": {
+       "A": "4 moles",
+       "B": "2 moles",
+       "C": "8 moles",
+       "D": "1 mol"
+      },
+      "n": 40,
+      "correcta": "A"
+     }
+    ],
+    "desde": 31,
+    "hasta": 40
+   },
+   {
+    "nombre": "SOCIALES",
+    "titulo": "SOCIALES (Preguntas 41 a 50)",
+    "preguntas": [
+     {
+      "enunciado": "La Guerra Fría enfrentó ideológicamente a dos bloques liderados por:",
+      "opciones": {
+       "A": "Estados Unidos (capitalismo) y la URSS (comunismo)",
+       "B": "Colombia y Venezuela",
+       "C": "Grecia y Roma",
+       "D": "China y Egipto"
+      },
+      "n": 41,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La Guerra de Vietnam y la de Corea fueron conflictos enmarcados en:",
+      "opciones": {
+       "A": "La Guerra Fría",
+       "B": "La Edad Media",
+       "C": "El Renacimiento",
+       "D": "La Prehistoria"
+      },
+      "n": 42,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La Revolución Cubana (1959) llevó al poder a:",
+      "opciones": {
+       "A": "Fidel Castro",
+       "B": "Simón Bolívar",
+       "C": "Napoleón",
+       "D": "Gandhi"
+      },
+      "n": 43,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "En Colombia, el \"Frente Nacional\" fue un acuerdo político para:",
+      "opciones": {
+       "A": "Alternar el poder entre liberales y conservadores y frenar la violencia",
+       "B": "Declarar la guerra a España",
+       "C": "Construir pirámides",
+       "D": "Salir de la ONU"
+      },
+      "n": 44,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La dictadura en Colombia a mediados del siglo XX estuvo a cargo de:",
+      "opciones": {
+       "A": "Gustavo Rojas Pinilla",
+       "B": "Cristóbal Colón",
+       "C": "Jorge Isaacs",
+       "D": "Karl Marx"
+      },
+      "n": 45,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El \"apartheid\" fue un sistema de segregación racial que existió en:",
+      "opciones": {
+       "A": "Sudáfrica",
+       "B": "Argentina",
+       "C": "Japón",
+       "D": "Colombia"
+      },
+      "n": 46,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El colapso de la Unión Soviética ocurrió en:",
+      "opciones": {
+       "A": "1991",
+       "B": "1492",
+       "C": "1810",
+       "D": "2020"
+      },
+      "n": 47,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "El surgimiento de grupos guerrilleros en Colombia se relaciona con:",
+      "opciones": {
+       "A": "Conflictos sociales, políticos y por la tierra",
+       "B": "Un torneo deportivo",
+       "C": "La exploración espacial",
+       "D": "Una feria de ciencias"
+      },
+      "n": 48,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "La caída del Muro de Berlín (1989) simbolizó:",
+      "opciones": {
+       "A": "El fin de la división entre el bloque comunista y el capitalista en Europa",
+       "B": "El inicio de la Edad Media",
+       "C": "El descubrimiento de América",
+       "D": "La independencia de Colombia"
+      },
+      "n": 49,
+      "correcta": "A"
+     },
+     {
+      "enunciado": "Nelson Mandela es reconocido mundialmente por su lucha contra:",
+      "opciones": {
+       "A": "El apartheid y la discriminación racial en Sudáfrica",
+       "B": "La Revolución Industrial",
+       "C": "El Imperio Romano",
+       "D": "Los dinosaurios"
+      },
+      "n": 50,
+      "correcta": "A"
+     }
+    ],
+    "desde": 41,
+    "hasta": 50
+   }
+  ]
+ }
+}
