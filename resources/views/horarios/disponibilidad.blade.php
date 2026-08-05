@@ -38,6 +38,24 @@
         </div>
     </div>
 
+    {{-- Ausentes de la próxima fecha (no cuentan como disponibles) --}}
+    @if($proximaFecha && $ausentesFecha->isNotEmpty())
+    <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-5">
+        <p class="text-xs font-semibold text-red-700 uppercase tracking-wide mb-2">
+            Ausentes el {{ $proximaFecha->locale('es')->isoFormat('ddd D MMM') }} ({{ $ausentesFecha->count() }})
+        </p>
+        <div class="flex flex-wrap gap-1.5">
+            @foreach($ausentesFecha as $aus)
+            <span class="bg-white border border-red-200 text-red-700 text-xs font-medium rounded-full px-2.5 py-1 whitespace-nowrap">
+                {{ $aus->NOMBRE_DOC }}
+                <span class="text-red-400">· {{ ucfirst($aus->motivo ?? 'ausente') }}</span>
+            </span>
+            @endforeach
+        </div>
+        <p class="text-[11px] text-red-400 mt-2 italic">Se descuentan de la disponibilidad de esta fecha.</p>
+    </div>
+    @endif
+
     {{-- Tabla por hora --}}
     <div class="space-y-4">
         @foreach($horas as $horaNum => $horaLabel)
@@ -102,9 +120,12 @@
                     @else
                         <div class="flex flex-col gap-1">
                             @foreach($ocupados as $doc)
+                            @php $esSupl = !empty($doc['suplencia']); @endphp
                             <div class="flex items-baseline gap-2">
-                                <span class="text-xs font-semibold text-gray-700 whitespace-nowrap">{{ $doc['nombre'] }}</span>
-                                <span class="text-xs text-gray-400 truncate" title="{{ $doc['clases'] }}">{{ $doc['clases'] }}</span>
+                                <span class="text-xs font-semibold whitespace-nowrap {{ $esSupl ? 'text-amber-700' : 'text-gray-700' }}">
+                                    {{ $esSupl ? '🛡 ' : '' }}{{ $doc['nombre'] }}
+                                </span>
+                                <span class="text-xs truncate {{ $esSupl ? 'text-amber-500' : 'text-gray-400' }}" title="{{ $doc['clases'] }}">{{ $doc['clases'] }}</span>
                             </div>
                             @endforeach
                         </div>

@@ -137,14 +137,14 @@ class AgendaService
      *   - Solo se procesan códigos presentes en $codigosValidos.
      *   - Si ya existe (estudiante, fecha, categoría): se actualiza, salvo que ya
      *     haya sido leído (inmutable) → se cuenta como bloqueada y se omite.
-     *   - Texto vacío: se elimina el registro previo de esa fecha/categoría, salvo
-     *     que ya fuera leído → se omite.
+     *   - Texto vacío: el estudiante no recibe observación (no se crea ni se borra
+     *     nada). El alcance de la carga lo controla la selección de estudiantes.
      *
      * @param array $payload  categoria_id, fecha, prioridad, codigo_mat(nullable),
      *                        registrado_por, registrado_nombre(nullable)
      * @param array $observaciones  [codigo_alumno => texto]
      * @param int[] $codigosValidos
-     * @return array{creadas:int, actualizadas:int, eliminadas:int, bloqueadas:int}
+     * @return array{creadas:int, actualizadas:int, bloqueadas:int}
      */
     public function asignacionGrupal(array $payload, array $observaciones, array $codigosValidos): array
     {
@@ -167,28 +167,25 @@ class AgendaService
             $comun['registrado_nombre'] = $payload['registrado_nombre'];
         }
 
-        $resumen = ['creadas' => 0, 'actualizadas' => 0, 'eliminadas' => 0, 'bloqueadas' => 0];
+        $resumen = ['creadas' => 0, 'actualizadas' => 0, 'bloqueadas' => 0];
 
         foreach ($observaciones as $codigo => $texto) {
             $codigo = (int) $codigo;
             if (!in_array($codigo, $codigosValidos, true)) continue;
 
             $texto = trim((string) $texto);
+
+            // Texto vacío: el estudiante no recibe observación en esta carga. No se
+            // crea ni se borra nada previo; el alcance lo define la selección.
+            if ($texto === '') continue;
+
             $clave = ['codigo_alumno' => $codigo, 'fecha' => $fecha, 'categoria_id' => $catId];
 
             $existente = DB::table('bitacora_entradas')->where($clave)->first();
 
-            // Inmutabilidad: si la familia ya acusó recibo, no se toca (ni borra ni edita).
+            // Inmutabilidad: si la familia ya acusó recibo, no se toca (ni edita).
             if ($existente && $this->fueLeida($existente)) {
                 $resumen['bloqueadas']++;
-                continue;
-            }
-
-            if ($texto === '') {
-                if ($existente) {
-                    DB::table('bitacora_entradas')->where('id', $existente->id)->delete();
-                    $resumen['eliminadas']++;
-                }
                 continue;
             }
 

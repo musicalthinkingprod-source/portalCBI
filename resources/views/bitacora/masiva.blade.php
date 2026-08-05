@@ -21,7 +21,7 @@
 {{-- Paso 1: elegir curso, fecha, categoría y plantilla por defecto --}}
 <div class="bg-white rounded-xl shadow p-5 mb-6">
     <h2 class="text-base font-bold text-gray-800 mb-1">📋 Carga masiva por curso</h2>
-    <p class="text-xs text-gray-400 mb-4">Elige el curso, la fecha, la categoría y una plantilla por defecto (ej. "buena"). La lista se precarga con esa plantilla y solo editas las excepciones. Guardar de nuevo sobre la misma fecha/categoría <strong>actualiza, no duplica</strong>. Dejar un campo en blanco <strong>quita</strong> la observación de ese estudiante.</p>
+    <p class="text-xs text-gray-400 mb-4">Elige el curso, la fecha, la categoría y una plantilla por defecto (ej. "buena"). La lista se precarga con esa plantilla y solo editas las excepciones. Guardar de nuevo sobre la misma fecha/categoría <strong>actualiza, no duplica</strong>. Desmarca (o deja en blanco) a los estudiantes que <strong>no</strong> deban recibir observación: no se les registra nada y <strong>no se borra</strong> lo que ya tuvieran.</p>
 
     <form method="GET" action="{{ route('bitacora.masiva') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end"
           x-data="{
@@ -75,20 +75,44 @@
 @elseif($estudiantes->isNotEmpty())
 
 <form method="POST" action="{{ route('bitacora.masiva.guardar') }}"
-      x-data="{ def: @js($textoDefault) }">
+      x-data="{
+          def: @js($textoDefault),
+          incluidos: @js($estudiantes->pluck('CODIGO')->map(fn($c) => (string) $c)->values()),
+          todosCodigos: @js($estudiantes->pluck('CODIGO')->map(fn($c) => (string) $c)->values()),
+          get total() { return this.incluidos.length; },
+          toggleFila(chk) {
+              const ta = chk.closest('tr').querySelector('textarea[data-obs]');
+              if (!ta) return;
+              if (chk.checked) { if (!ta.value.trim()) ta.value = this.def; }
+              else { ta.value = ''; }
+          },
+          marcar(on) {
+              this.incluidos = on ? [...this.todosCodigos] : [];
+              document.querySelectorAll('textarea[data-obs]').forEach(ta => {
+                  if (on) { if (!ta.value.trim()) ta.value = this.def; }
+                  else { ta.value = ''; }
+              });
+          }
+      }">
     @csrf
     <input type="hidden" name="curso" value="{{ $curso }}">
     <input type="hidden" name="fecha" value="{{ $fecha }}">
     <input type="hidden" name="categoria_id" value="{{ $categoriaId }}">
 
     <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
-        <p class="text-sm text-gray-600">Curso <strong>{{ $curso }}</strong> · {{ $estudiantes->count() }} estudiante(s) · {{ \Carbon\Carbon::parse($fecha)->locale('es')->isoFormat('D MMM YYYY') }}</p>
-        @if($textoDefault !== '')
-        <button type="button" @click="document.querySelectorAll('textarea[data-obs]').forEach(t => { if(!t.value.trim()) t.value = def; })"
-            class="text-xs text-blue-700 hover:text-blue-900 font-semibold border border-blue-200 rounded-lg px-3 py-1.5">
-            Rellenar vacíos con la plantilla
-        </button>
-        @endif
+        <p class="text-sm text-gray-600">Curso <strong>{{ $curso }}</strong> · aplica a <strong x-text="total"></strong> de {{ $estudiantes->count() }} estudiante(s) · {{ \Carbon\Carbon::parse($fecha)->locale('es')->isoFormat('D MMM YYYY') }}</p>
+        <div class="flex items-center gap-2">
+            <button type="button" @click="marcar(true)"
+                class="text-xs text-blue-700 hover:text-blue-900 font-semibold border border-blue-200 rounded-lg px-3 py-1.5">Todos</button>
+            <button type="button" @click="marcar(false)"
+                class="text-xs text-gray-600 hover:text-gray-800 font-semibold border border-gray-200 rounded-lg px-3 py-1.5">Ninguno</button>
+            @if($textoDefault !== '')
+            <button type="button" @click="document.querySelectorAll('textarea[data-obs]').forEach(t => { if(!t.value.trim()) t.value = def; })"
+                class="text-xs text-blue-700 hover:text-blue-900 font-semibold border border-blue-200 rounded-lg px-3 py-1.5">
+                Rellenar vacíos con la plantilla
+            </button>
+            @endif
+        </div>
     </div>
 
     <div class="bg-white rounded-xl shadow overflow-hidden mb-5">
@@ -96,6 +120,7 @@
             <thead>
                 <tr class="bg-gray-50 border-b border-gray-200 text-left">
                     <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-24">Código</th>
+                    <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-16 text-center">Incluir</th>
                     <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Estudiante</th>
                     <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Observación</th>
                 </tr>
@@ -107,6 +132,11 @@
                 @endphp
                 <tr class="hover:bg-gray-50">
                     <td class="px-4 py-3 font-mono text-gray-500 text-xs align-top pt-4">{{ $est->CODIGO }}</td>
+                    <td class="px-4 py-3 text-center align-top pt-4">
+                        <input type="checkbox" value="{{ $est->CODIGO }}" x-model="incluidos"
+                            @change="toggleFila($event.target)"
+                            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    </td>
                     <td class="px-4 py-3 align-top pt-4 font-medium text-gray-800">{{ $nom }}</td>
                     <td class="px-4 py-3">
                         <textarea name="obs[{{ $est->CODIGO }}]" data-obs rows="2" maxlength="8000"
@@ -123,7 +153,7 @@
         <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition shadow">
             💾 Guardar carga masiva
         </button>
-        <p class="text-xs text-gray-400">Los campos en blanco quitarán la observación de esa fecha/categoría.</p>
+        <p class="text-xs text-gray-400">Los estudiantes desmarcados o en blanco no reciben observación (no se borra lo ya guardado).</p>
     </div>
 </form>
 

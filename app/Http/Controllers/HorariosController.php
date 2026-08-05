@@ -280,8 +280,72 @@ class HorariosController extends Controller
         $hoy          = today();
         $proximaFecha = collect($fechasCiclo[$diaCiclo] ?? [])->first(fn(Carbon $f) => $f->gte($hoy));
 
+        // ── Ajuste con la realidad de la próxima fecha: ausencias y suplencias ──
+        // La disponibilidad es por día del ciclo (recurrente); se aplica sobre la
+        // próxima ocurrencia de ese día para descontar quién está realmente ausente
+        // o ya cubriendo a otro. Si no hay fecha futura, se muestra el horario base.
+        $ausentesFecha = collect();
+        if ($proximaFecha) {
+            $fechaStr = $proximaFecha->toDateString();
+
+            // Docentes ausentes/con permiso ese día (asistencia + permisos aprobados)
+            $ausentesFecha = DB::table('CODIGOS_DOC as d')
+                ->leftJoin('asistencia_docentes as a', function ($j) use ($fechaStr) {
+                    $j->on('a.codigo_emp', '=', 'd.CODIGO_EMP')
+                      ->where('a.fecha', $fechaStr)
+                      ->whereIn('a.estado', ['ausente', 'permiso', 'incapacidad']);
+                })
+                ->leftJoin('permisos_docentes as p', function ($j) use ($fechaStr) {
+                    $j->on('p.codigo_emp', '=', 'd.CODIGO_EMP')
+                      ->where('p.estado', 'aprobado')
+                      ->where('p.fecha_inicio', '<=', $fechaStr)
+                      ->where('p.fecha_fin', '>=', $fechaStr);
+                })
+                ->where(function ($q) {
+                    $q->whereNotNull('a.estado')->orWhereNotNull('p.id');
+                })
+                ->select('d.CODIGO_EMP', 'd.NOMBRE_DOC',
+                         DB::raw('COALESCE(a.estado, p.tipo) as motivo'))
+                ->orderBy('d.NOMBRE_DOC')
+                ->get();
+
+            $ausentesCodigos = $ausentesFecha->pluck('CODIGO_EMP')->all();
+
+            // Suplencias programadas ese día, por hora
+            $suplenciasFecha = DB::table('reemplazos_asignados')
+                ->where('fecha', $fechaStr)
+                ->get()
+                ->groupBy('hora');
+
+            foreach ($horas as $horaNum => $horaLabel) {
+                $libres   = $porHora[$horaNum]['libres'];
+                $ocupados = $porHora[$horaNum]['ocupados'];
+
+                $supHora        = $suplenciasFecha->get($horaNum, collect());
+                $reemplazantes  = $supHora->pluck('codigo_emp_reemplazo')->all();
+
+                // Un ausente no está disponible; un suplente queda ocupado cubriendo.
+                $fuera = array_merge($ausentesCodigos, $reemplazantes);
+                $libres = $libres->reject(fn($d) => in_array($d->CODIGO_EMP, $fuera))->values();
+
+                // Añadir a "ocupados" a los suplentes con el curso que cubren
+                foreach ($supHora as $sup) {
+                    $nombre = $todosDocentes->firstWhere('CODIGO_EMP', $sup->codigo_emp_reemplazo)?->NOMBRE_DOC
+                              ?? $sup->codigo_emp_reemplazo;
+                    $ocupados->push([
+                        'nombre'  => $nombre,
+                        'clases'  => 'Cubre ' . $sup->curso . ' (supl.)',
+                        'suplencia' => true,
+                    ]);
+                }
+
+                $porHora[$horaNum] = ['libres' => $libres, 'ocupados' => $ocupados->values()];
+            }
+        }
+
         return view('horarios.disponibilidad', compact(
-            'dias', 'horas', 'diaCiclo', 'porHora', 'proximaFecha', 'todosDocentes'
+            'dias', 'horas', 'diaCiclo', 'porHora', 'proximaFecha',
+            'todosDocentes', 'ausentesFecha'
         ));
     }
 
@@ -354,8 +418,9 @@ class HorariosController extends Controller
             $proximaFecha[$diaCiclo] = $proxima;
         }
 
-        $diasConDatos     = [];
-        $reemplazosGrid   = []; // [dia_ciclo][hora][curso] = {id, nombre_reemplazo}
+        $diasConDatos          = [];
+        $reemplazosGrid        = []; // [dia_ciclo][hora][curso] = {id, nombre_reemplazo}
+        $suplenciasACubrirGrid = []; // [dia_ciclo][hora][] = suplencias que este docente cubre
 
         if ($docenteActual) {
             $doc = DB::table('CODIGOS_DOC')->where('CODIGO_EMP', $docenteActual)->first();
@@ -410,6 +475,29 @@ class HorariosController extends Controller
             foreach ($reemplazos as $rem) {
                 $reemplazosGrid[$rem->dia_ciclo][$rem->hora][$rem->curso][] = $rem;
             }
+
+            // Suplencias que ESTE docente debe cubrir (es el reemplazo de otro).
+            // Se muestran en su grilla aunque el slot propio esté libre.
+            $suplenciasACubrir = DB::table('reemplazos_asignados as r')
+                ->join('calendario_academico as ca', 'ca.fecha', '=', 'r.fecha')
+                ->leftJoin('CODIGOS_DOC as cd', 'cd.CODIGO_EMP', '=', 'r.codigo_emp_ausente')
+                ->leftJoin('HORARIOS as h', function ($join) {
+                    $join->on('h.CURSO', '=', 'r.curso')
+                         ->on('h.HORA', '=', 'r.hora')
+                         ->on('h.DIA', '=', 'ca.dia_ciclo');
+                })
+                ->leftJoin('CODIGOSMAT as cm', 'cm.CODIGO_MAT', '=', 'h.CODIGO_MAT')
+                ->where('r.codigo_emp_reemplazo', $docenteActual)
+                ->where('r.fecha', '>=', $hoy->toDateString())
+                ->where('r.fecha', '<=', $hoy->copy()->addDays(60)->toDateString())
+                ->select('r.id', 'r.hora', 'r.curso', 'r.fecha', 'ca.dia_ciclo',
+                         'cd.NOMBRE_DOC as docente_ausente', 'cm.NOMBRE_MAT as materia')
+                ->orderBy('r.fecha')
+                ->get();
+
+            foreach ($suplenciasACubrir as $sup) {
+                $suplenciasACubrirGrid[$sup->dia_ciclo][$sup->hora][] = $sup;
+            }
         }
 
         // ── Datos para el modal de reemplazo ──────────────────────────────────
@@ -444,7 +532,8 @@ class HorariosController extends Controller
             'docentes', 'docenteActual', 'nombreDocente',
             'grid', 'dias', 'horas', 'diasConDatos',
             'docentesActivos', 'proximaFecha', 'reemplazosGrid',
-            'ocupadosPorSlot', 'reemplazosCiclo', 'docentesPorCurso'
+            'ocupadosPorSlot', 'reemplazosCiclo', 'docentesPorCurso',
+            'suplenciasACubrirGrid'
         ));
     }
 }

@@ -380,7 +380,7 @@ class BitacoraController extends Controller
             codigosValidos: $codigosValidos,
         );
 
-        $msg = "Carga masiva guardada: {$resumen['creadas']} nuevas, {$resumen['actualizadas']} actualizadas, {$resumen['eliminadas']} eliminadas.";
+        $msg = "Carga masiva guardada: {$resumen['creadas']} nuevas, {$resumen['actualizadas']} actualizadas.";
         if ($resumen['bloqueadas'] > 0) {
             $msg .= " {$resumen['bloqueadas']} no se modificaron porque la familia ya las leyó.";
         }

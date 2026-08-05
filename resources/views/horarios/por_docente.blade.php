@@ -30,8 +30,13 @@
                 class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <option value="">— Seleccionar —</option>
                 @foreach($docentes as $doc)
+                    @php
+                        $estadoDoc = $doc->ESTADO ?? '';
+                        $sufijo = $estadoDoc === 'ACTIVO' ? ''
+                            : ($estadoDoc === 'EXTERNO' ? ' (externo)' : ' ⚠ sin docente');
+                    @endphp
                     <option value="{{ $doc->CODIGO_EMP }}" {{ $doc->CODIGO_EMP === $docenteActual ? 'selected' : '' }}>
-                        {{ $doc->NOMBRE_DOC }}{{ ($doc->ESTADO ?? '') !== 'ACTIVO' ? ' ⚠ sin docente' : '' }}
+                        {{ $doc->NOMBRE_DOC }}{{ $sufijo }}
                     </option>
                 @endforeach
             </select>
@@ -87,8 +92,27 @@
                     @php
                         $celdas    = $grid[$horaNum][$diaNum] ?? [];
                         $proxFecha = $proximaFecha[$diaNum] ?? null;
+                        $cubre     = $suplenciasACubrirGrid[$diaNum][$horaNum] ?? [];
                     @endphp
                     <td class="px-3 text-center" style="height:80px;vertical-align:middle;">
+                        @if(!empty($celdas) || !empty($cubre))
+                            {{-- Suplencias que este docente cubre en este slot --}}
+                            @foreach($cubre as $sup)
+                            <div class="inline-block min-w-[90px] mb-1 align-top">
+                                <div class="bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1 text-xs text-left">
+                                    <div class="font-semibold text-emerald-700 leading-tight">
+                                        🛡 Cubre {{ $sup->curso }} · {{ \Carbon\Carbon::parse($sup->fecha)->format('d/m') }}
+                                    </div>
+                                    <div class="text-emerald-600 leading-tight truncate max-w-[120px]" title="{{ $sup->materia }}">
+                                        {{ $sup->materia ?? 'Clase' }}
+                                    </div>
+                                    <div class="text-emerald-500 leading-tight truncate max-w-[120px]" title="{{ $sup->docente_ausente }}">
+                                        por {{ $sup->docente_ausente ?? 'docente' }}
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        @endif
                         @if(!empty($celdas))
                             @foreach($celdas as $celda)
                             @php
@@ -139,7 +163,7 @@
                                 @endif
                             </div>
                             @endforeach
-                        @else
+                        @elseif(empty($cubre))
                             <span class="text-gray-200 text-xs">—</span>
                         @endif
                     </td>
