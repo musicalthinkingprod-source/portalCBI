@@ -69,10 +69,7 @@
         <div class="row">
             <div class="campo" style="flex:2"><div class="lbl">Nombre del aspirante</div><div class="line"></div></div>
             <div class="campo"><div class="lbl">Documento</div><div class="line"></div></div>
-        </div>
-        <div class="row">
-            <div class="campo"><div class="lbl">Grado al que aspira</div><div class="line">{{ $grado['nombre'] }}</div></div>
-            <div class="campo"><div class="lbl">Fecha</div><div class="line"></div></div>
+            <div class="campo" style="flex:0.8"><div class="lbl">Fecha</div><div class="line" style="font-size:9pt; text-align:center;">{{ now()->format('d/m/Y') }}</div></div>
         </div>
     </div>
 
