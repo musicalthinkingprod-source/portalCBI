@@ -3,13 +3,6 @@
 @section('header', 'Control de Vigilancias')
 
 @section('slot')
-@php
-    $horaActual = now()->format('H:i');
-    if ($horaActual < '08:50')      $descansoActivo = 1;
-    elseif ($horaActual < '12:15')  $descansoActivo = 2;
-    else                            $descansoActivo = null;
-@endphp
-
 <div class="flex flex-col gap-4" style="height: calc(100vh - 112px);">
 
     {{-- Info día + descanso --}}
@@ -32,6 +25,14 @@
         @else
             <span class="bg-gray-100 text-gray-500 text-sm px-3 py-2 rounded-xl">Vigilancias finalizadas</span>
         @endif
+
+        {{-- Selector: qué descanso se está viendo en el mapa --}}
+        <div class="inline-flex rounded-xl border border-gray-300 overflow-hidden text-sm font-semibold">
+            <button type="button" data-descanso="1"
+                class="btn-descanso px-3 py-2 transition">Descanso 1</button>
+            <button type="button" data-descanso="2"
+                class="btn-descanso px-3 py-2 border-l border-gray-300 transition">Descanso 2</button>
+        </div>
 
         <button id="btn-gps"
             class="ml-auto flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold text-sm px-4 py-2 rounded-xl transition shadow">
@@ -119,8 +120,39 @@
 document.addEventListener('DOMContentLoaded', function () {
 
     const puntos         = @json($puntosMapa);
-    const posicionDoc    = @json($posicionDocente);  // {"5A":{docente,descanso}, ...}
+    const posicionDoc    = @json($posicionDocente);  // {"11A":{"1":"Willy","2":"Guillermo"}, ...}
     const descansoActivo = @json($descansoActivo);   // 1, 2 o null
+
+    // Descanso que se está mostrando; fuera de horario arranca en el 2 (el último del día)
+    let descansoVista = descansoActivo ?? 2;
+
+    // Devuelve {docente, descanso} de la posición para el descanso en pantalla
+    function infoDe(id) {
+        const porDescanso = posicionDoc[id];
+        if (!porDescanso) return null;
+        const docente = porDescanso[descansoVista];
+        return docente ? { docente, descanso: descansoVista } : null;
+    }
+
+    function popupDe(p) {
+        const porDescanso = posicionDoc[p.id] ?? {};
+        let html = `<b>${p.id}</b>`;
+        if (p.desc) html += `<br><small style="color:#555">${p.desc}</small>`;
+
+        const lineas = [1, 2]
+            .filter(d => porDescanso[d])
+            .map(d => {
+                const activo = d === descansoVista;
+                const color  = activo ? (d === 1 ? '#1d4ed8' : '#ea580c') : '#9ca3af';
+                const peso   = activo ? 700 : 400;
+                return `<span style="color:${color};font-weight:${peso}">Descanso ${d}: ${porDescanso[d]}</span>`;
+            });
+
+        html += lineas.length
+            ? `<br>${lineas.join('<br>')}`
+            : `<br><small style="color:#9ca3af">Sin asignar</small>`;
+        return html;
+    }
 
     // ── Mapa ──────────────────────────────────────────────────────────────
     const map = L.map('mapa-control');
@@ -145,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Marcadores de posiciones
     const marcadores = {};
     puntos.forEach(p => {
-        const info  = posicionDoc[p.id] ?? null;
+        const info  = infoDe(p.id);
         const clase = info ? 'mc-asignado' : 'mc-libre';
         const size  = info ? 32 : 24;
 
@@ -155,20 +187,56 @@ document.addEventListener('DOMContentLoaded', function () {
             iconSize:[size,size], iconAnchor:[size/2,size/2],
         });
 
-        let popup = `<b>${p.id}</b>`;
-        if (p.desc) popup += `<br><small style="color:#555">${p.desc}</small>`;
-        if (info)   popup += `<br><b style="color:#1d4ed8">${info.docente}</b><br><small>Descanso ${info.descanso}</small>`;
-        else        popup += `<br><small style="color:#9ca3af">Sin asignar</small>`;
-
-        marcadores[p.id] = { marker: L.marker([p.lat,p.lng],{icon}).bindPopup(popup).addTo(map), punto:p, info };
+        marcadores[p.id] = {
+            marker: L.marker([p.lat,p.lng],{icon}).bindPopup(popupDe(p)).addTo(map),
+            punto: p,
+            info,
+        };
     });
 
     if (puntos.length) map.fitBounds(puntos.map(p=>[p.lat,p.lng]), {padding:[30,30]});
+
+    // ── Selector de descanso ─────────────────────────────────────────────
+    const botonesDescanso = document.querySelectorAll('.btn-descanso');
+
+    function pintarBotones() {
+        botonesDescanso.forEach(b => {
+            const activo = Number(b.dataset.descanso) === descansoVista;
+            b.className = 'btn-descanso px-3 py-2 transition'
+                + (b.dataset.descanso === '2' ? ' border-l border-gray-300' : '')
+                + (activo ? ' bg-blue-600 text-white' : ' bg-white text-gray-600 hover:bg-gray-50');
+        });
+    }
+
+    function repintarMarcadores() {
+        Object.values(marcadores).forEach(m => {
+            m.info = infoDe(m.punto.id);
+            m.marker.setPopupContent(popupDe(m.punto));
+            if (m.punto.id === idCercano) return;   // el cercano conserva su icono verde
+            const clase = m.info ? 'mc-asignado' : 'mc-libre';
+            const size  = m.info ? 32 : 24;
+            m.marker.setIcon(L.divIcon({
+                className:'',
+                html:`<div class="${clase}">${m.punto.numero}</div>`,
+                iconSize:[size,size], iconAnchor:[size/2,size/2],
+            }));
+        });
+    }
+
+    pintarBotones();
+
+    botonesDescanso.forEach(b => b.addEventListener('click', () => {
+        descansoVista = Number(b.dataset.descanso);
+        pintarBotones();
+        repintarMarcadores();
+        if (ultimaPos) actualizarPanel(ultimaPos.lat, ultimaPos.lng);
+    }));
 
     // ── GPS ──────────────────────────────────────────────────────────────
     let markerYo   = null;
     let watchId    = null;
     let idCercano  = null;
+    let ultimaPos  = null;
 
     const btnGps        = document.getElementById('btn-gps');
     const cardCercana   = document.getElementById('card-cercana');
@@ -183,6 +251,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (markerYo) { map.removeLayer(markerYo); markerYo = null; }
             restaurarMarcadorCercano();
             idCercano = null;
+            ultimaPos = null;
             cardCercana.innerHTML  = '<p class="text-sm text-gray-400 italic">GPS no activo</p>';
             listaCercanas.innerHTML = '<p class="text-sm text-gray-400 italic">Activa el GPS para ver las posiciones ordenadas por distancia.</p>';
             btnGps.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg> Activar GPS`;
@@ -212,60 +281,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 btnGps.classList.replace('hover:bg-green-700','hover:bg-red-700');
             }
 
-            // Ordenar todos los puntos por distancia
-            const conDist = puntos.map(p => ({
-                ...p,
-                dist: haversine(lat, lng, p.lat, p.lng),
-                info: posicionDoc[p.id] ?? null,
-            })).sort((a,b) => a.dist - b.dist);
-
-            const nuevo = conDist[0];
-
-            // Actualizar marcador cercano
-            if (idCercano !== nuevo.id) {
-                restaurarMarcadorCercano();
-                idCercano = nuevo.id;
-                const m = marcadores[nuevo.id];
-                m.marker.setIcon(L.divIcon({
-                    className:'',
-                    html:`<div class="mc-cercano">${nuevo.numero}</div>`,
-                    iconSize:[36,36], iconAnchor:[18,18],
-                }));
-            }
-
-            // Card principal
-            const metros = Math.round(nuevo.dist);
-            const docente = nuevo.info ? nuevo.info.docente : 'Sin asignar';
-            const desc    = nuevo.info
-                ? `<p class="text-sm font-semibold text-blue-700 mt-1">${docente}</p>
-                   <p class="text-xs text-gray-400">Descanso ${nuevo.info.descanso}</p>`
-                : `<p class="text-sm text-gray-400 italic mt-1">Sin asignar</p>`;
-            const colorDist = metros<=25?'text-green-600':metros<=80?'text-yellow-600':'text-red-600';
-            const iconoDist = metros<=25?'✅':metros<=80?'⚠️':'📍';
-
-            cardCercana.innerHTML = `
-                <p class="text-4xl font-black text-green-600">${nuevo.id}</p>
-                ${desc}
-                <p class="mt-2 text-lg font-bold ${colorDist}">${iconoDist} ${metros < 1000 ? metros+'m' : (nuevo.dist/1000).toFixed(1)+'km'}</p>
-                ${nuevo.desc ? `<p class="text-xs text-gray-400 mt-1">${nuevo.desc}</p>` : ''}
-            `;
-
-            // Lista de los 8 más cercanos
-            listaCercanas.innerHTML = conDist.slice(0,8).map((p,i) => {
-                const m2     = Math.round(p.dist);
-                const color  = m2<=25?'text-green-600':m2<=80?'text-yellow-600':'text-red-600';
-                const icono  = m2<=25?'✅':m2<=80?'⚠️':'📍';
-                const doc    = p.info ? `<span class="text-blue-600 font-medium">${p.info.docente}</span>` : `<span class="text-gray-400">Sin asignar</span>`;
-                const bg     = i===0 ? 'bg-green-50 border border-green-200' : 'bg-gray-50';
-                return `
-                <div class="flex items-center gap-3 rounded-lg px-3 py-2 mb-1 ${bg}">
-                    <span class="font-black text-base w-10 text-center ${i===0?'text-green-600':'text-gray-700'}">${p.id}</span>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-xs truncate">${doc}</div>
-                    </div>
-                    <span class="text-xs font-semibold ${color} whitespace-nowrap">${icono} ${m2<1000?m2+'m':(p.dist/1000).toFixed(1)+'km'}</span>
-                </div>`;
-            }).join('');
+            ultimaPos = { lat, lng };
+            actualizarPanel(lat, lng);
 
         }, err => {
             btnGps.textContent = 'Activar GPS';
@@ -275,6 +292,63 @@ document.addEventListener('DOMContentLoaded', function () {
             else alert('No se pudo obtener la ubicación. Intenta de nuevo.');
         }, { enableHighAccuracy:true, maximumAge:3000, timeout:15000 });
     });
+
+    function actualizarPanel(lat, lng) {
+        // Ordenar todos los puntos por distancia
+        const conDist = puntos.map(p => ({
+            ...p,
+            dist: haversine(lat, lng, p.lat, p.lng),
+            info: infoDe(p.id),
+        })).sort((a,b) => a.dist - b.dist);
+
+        const nuevo = conDist[0];
+
+        // Actualizar marcador cercano
+        if (idCercano !== nuevo.id) {
+            restaurarMarcadorCercano();
+            idCercano = nuevo.id;
+            const m = marcadores[nuevo.id];
+            m.marker.setIcon(L.divIcon({
+                className:'',
+                html:`<div class="mc-cercano">${nuevo.numero}</div>`,
+                iconSize:[36,36], iconAnchor:[18,18],
+            }));
+        }
+
+        // Card principal
+        const metros = Math.round(nuevo.dist);
+        const docente = nuevo.info ? nuevo.info.docente : 'Sin asignar';
+        const desc    = nuevo.info
+            ? `<p class="text-sm font-semibold text-blue-700 mt-1">${docente}</p>
+               <p class="text-xs text-gray-400">Descanso ${nuevo.info.descanso}</p>`
+            : `<p class="text-sm text-gray-400 italic mt-1">Sin asignar</p>`;
+        const colorDist = metros<=25?'text-green-600':metros<=80?'text-yellow-600':'text-red-600';
+        const iconoDist = metros<=25?'✅':metros<=80?'⚠️':'📍';
+
+        cardCercana.innerHTML = `
+            <p class="text-4xl font-black text-green-600">${nuevo.id}</p>
+            ${desc}
+            <p class="mt-2 text-lg font-bold ${colorDist}">${iconoDist} ${metros < 1000 ? metros+'m' : (nuevo.dist/1000).toFixed(1)+'km'}</p>
+            ${nuevo.desc ? `<p class="text-xs text-gray-400 mt-1">${nuevo.desc}</p>` : ''}
+        `;
+
+        // Lista de los 8 más cercanos
+        listaCercanas.innerHTML = conDist.slice(0,8).map((p,i) => {
+            const m2     = Math.round(p.dist);
+            const color  = m2<=25?'text-green-600':m2<=80?'text-yellow-600':'text-red-600';
+            const icono  = m2<=25?'✅':m2<=80?'⚠️':'📍';
+            const doc    = p.info ? `<span class="text-blue-600 font-medium">${p.info.docente}</span>` : `<span class="text-gray-400">Sin asignar</span>`;
+            const bg     = i===0 ? 'bg-green-50 border border-green-200' : 'bg-gray-50';
+            return `
+            <div class="flex items-center gap-3 rounded-lg px-3 py-2 mb-1 ${bg}">
+                <span class="font-black text-base w-10 text-center ${i===0?'text-green-600':'text-gray-700'}">${p.id}</span>
+                <div class="flex-1 min-w-0">
+                    <div class="text-xs truncate">${doc}</div>
+                </div>
+                <span class="text-xs font-semibold ${color} whitespace-nowrap">${icono} ${m2<1000?m2+'m':(p.dist/1000).toFixed(1)+'km'}</span>
+            </div>`;
+        }).join('');
+    }
 
     function restaurarMarcadorCercano() {
         if (!idCercano) return;

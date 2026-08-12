@@ -193,7 +193,9 @@ class VigilanciaController extends Controller
             ->where('fecha', $hoy)
             ->value('dia_ciclo');
 
-        // Todas las asignaciones de hoy: posicion → {docente, descanso}
+        // Asignaciones de hoy: posicion → { descanso → docente }
+        // Ojo: una misma posición puede tener docentes distintos en cada descanso,
+        // por eso el índice tiene que ser [POSICION][DESCANSO] y no solo [POSICION].
         $nombresDoc = DB::table('CODIGOS_DOC')->pluck('NOMBRE_DOC', 'CODIGO_EMP');
         $posicionDocente = [];
 
@@ -205,18 +207,24 @@ class VigilanciaController extends Controller
 
             foreach ($filas as $f) {
                 if (!$f->POSICION) continue;
-                $posicionDocente[strtoupper($f->POSICION)] = [
-                    'docente'  => $nombresDoc[$f->CODIGO_EMP] ?? $f->CODIGO_EMP,
-                    'descanso' => $f->DESCANSO,
-                ];
+                $posicionDocente[strtoupper($f->POSICION)][(int) $f->DESCANSO] =
+                    $nombresDoc[$f->CODIGO_EMP] ?? $f->CODIGO_EMP;
             }
         }
+
+        // Descanso vigente según la hora del servidor
+        $horaActual = now()->format('H:i');
+        if     ($horaActual < '08:50') $descansoActivo = 1;
+        elseif ($horaActual < '12:15') $descansoActivo = 2;
+        else                           $descansoActivo = null;
 
         $puntosA    = $this->parsearKml('Posiciones Sede A.kml', 'A');
         $puntosB    = $this->parsearKml('Posiciones Sede B.kml', 'B');
         $puntosMapa = array_merge($puntosA, $puntosB);
 
-        return view('vigilancias.control', compact('puntosMapa', 'posicionDocente', 'diaHoy', 'anio'));
+        return view('vigilancias.control', compact(
+            'puntosMapa', 'posicionDocente', 'diaHoy', 'anio', 'descansoActivo'
+        ));
     }
 
     // Vista de reasignaciones (estilo asignaciones de materias)
