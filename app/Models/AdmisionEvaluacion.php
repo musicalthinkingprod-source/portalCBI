@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class AdmisionEvaluacion extends Model
 {
@@ -26,4 +27,10 @@ class AdmisionEvaluacion extends Model
 
     /** Escala cualitativa por ítem. */
     const NIVELES = ['L' => 'Logrado', 'P' => 'En proceso', 'N' => 'No logrado'];
+
+    /** Entrevista de admisión del mismo aspirante (si ya se aplicó). */
+    public function entrevista(): HasOne
+    {
+        return $this->hasOne(AdmisionEntrevista::class, 'evaluacion_id');
+    }
 }

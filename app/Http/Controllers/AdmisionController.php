@@ -133,6 +133,7 @@ class AdmisionController extends Controller
     public function show(AdmisionEvaluacion $evaluacion)
     {
         $grado = ExamenesAdmision::grado($evaluacion->grado_key);
+        $evaluacion->load('entrevista');
 
         return view('admision.ver', compact('evaluacion', 'grado'));
     }

@@ -4,7 +4,12 @@
 
 @section('slot')
 
-@php $isSuperAd = optional(auth()->user())->PROFILE === 'SuperAd'; @endphp
+@php
+    $profile   = optional(auth()->user())->PROFILE;
+    $isSuperAd = $profile === 'SuperAd';
+    // Orientación solo consulta los informes: no aplica ni califica exámenes.
+    $puedeEvaluar = !str_starts_with((string) $profile, 'Ori');
+@endphp
 
 @if(session('success'))
 <div class="mb-5 bg-green-50 border border-green-300 text-green-800 px-4 py-3 rounded-lg text-sm font-medium">
@@ -17,16 +22,21 @@
 </div>
 @endif
 
-@if($isSuperAd)
-<div class="mb-4 flex justify-end">
+<div class="mb-4 flex flex-wrap justify-end gap-2">
+    <a href="{{ route('admision.entrevistas.index') }}"
+       class="inline-flex items-center gap-2 bg-blue-800 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+        🗣️ Entrevistas de admisión
+    </a>
+    @if($isSuperAd)
     <a href="{{ route('admision.claves') }}"
        class="inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
         🗝️ Editar claves de respuestas
     </a>
+    @endif
 </div>
-@endif
 
 {{-- ── Selección de grado ─────────────────────────────────────────────── --}}
+@if($puedeEvaluar)
 <div class="bg-white rounded-xl shadow p-5 mb-6">
     <h2 class="text-base font-semibold text-gray-800 mb-1">Nueva evaluación</h2>
     <p class="text-xs text-gray-500 mb-4">
@@ -62,6 +72,7 @@
         @endforeach
     </div>
 </div>
+@endif
 
 {{-- ── Histórico ──────────────────────────────────────────────────────── --}}
 <div class="bg-white rounded-xl shadow p-5">

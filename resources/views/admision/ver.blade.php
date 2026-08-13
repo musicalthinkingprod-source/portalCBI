@@ -27,6 +27,15 @@
 <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
     <a href="{{ route('admision.index') }}" class="text-sm text-blue-700 hover:underline">← Volver al listado</a>
     <div class="flex flex-wrap gap-2">
+        @if($evaluacion->entrevista)
+        <a href="{{ route('admision.entrevistas.balance', $evaluacion->entrevista) }}" target="_blank"
+           class="bg-green-700 hover:bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">📊 Balance para rectoría</a>
+        <a href="{{ route('admision.entrevistas.show', $evaluacion->entrevista) }}"
+           class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold px-4 py-2 rounded-lg transition">🗣️ Ver entrevista</a>
+        @else
+        <a href="{{ route('admision.entrevistas.create', ['evaluacion' => $evaluacion->id]) }}"
+           class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold px-4 py-2 rounded-lg transition">🗣️ Registrar entrevista</a>
+        @endif
         <a href="{{ route('admision.imprimir', $evaluacion) }}" target="_blank"
            class="bg-blue-800 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">🖨️ Imprimir</a>
         @if($isSuperAd)

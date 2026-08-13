@@ -5,6 +5,7 @@ use App\Http\Controllers\PadreVerificacionController;
 use App\Http\Controllers\ImportacionController;
 use App\Http\Controllers\ControlEstudianteController;
 use App\Http\Controllers\AdmisionController;
+use App\Http\Controllers\AdmisionEntrevistaController;
 use App\Http\Controllers\PagosController;
 use App\Http\Controllers\FacturacionController;
 use App\Http\Controllers\CarteraController;
@@ -297,18 +298,41 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/rutas', [RutasController::class, 'index'])->name('rutas.index');
     });
 
-    // ── Exámenes de Admisión: SuperAd, Admin y Secretarías ───────────────────
-    Route::middleware('profile:SuperAd,Admin,Sec*')->group(function () {
+    // ── Exámenes de Admisión · consulta: + Orientación (lee el informe) ──────
+    Route::middleware('profile:SuperAd,Admin,Sec*,Ori*')->group(function () {
         Route::get('/admision',            [AdmisionController::class, 'index'])->name('admision.index');
-        Route::get('/admision/nueva',      [AdmisionController::class, 'create'])->name('admision.create');
-        Route::get('/admision/hoja',       [AdmisionController::class, 'hoja'])->name('admision.hoja');
-        Route::post('/admision',           [AdmisionController::class, 'store'])->name('admision.store');
         Route::get('/admision/{evaluacion}', [AdmisionController::class, 'show'])->whereNumber('evaluacion')->name('admision.show');
         Route::get('/admision/{evaluacion}/imprimir', [AdmisionController::class, 'imprimir'])->whereNumber('evaluacion')->name('admision.imprimir');
     });
 
+    // ── Exámenes de Admisión · aplicación: SuperAd, Admin y Secretarías ──────
+    Route::middleware('profile:SuperAd,Admin,Sec*')->group(function () {
+        Route::get('/admision/nueva',      [AdmisionController::class, 'create'])->name('admision.create');
+        Route::get('/admision/hoja',       [AdmisionController::class, 'hoja'])->name('admision.hoja');
+        Route::post('/admision',           [AdmisionController::class, 'store'])->name('admision.store');
+    });
+
+    // ── Entrevistas de Admisión: Orientación, SuperAd, Admin y Secretarías ───
+    Route::middleware('profile:SuperAd,Admin,Ori*,Sec*')->group(function () {
+        Route::get('/admision-entrevistas',            [AdmisionEntrevistaController::class, 'index'])->name('admision.entrevistas.index');
+        Route::get('/admision-entrevistas/nueva',      [AdmisionEntrevistaController::class, 'create'])->name('admision.entrevistas.create');
+        Route::post('/admision-entrevistas',           [AdmisionEntrevistaController::class, 'store'])->name('admision.entrevistas.store');
+        Route::get('/admision-entrevistas/{entrevista}', [AdmisionEntrevistaController::class, 'show'])->whereNumber('entrevista')->name('admision.entrevistas.show');
+        Route::get('/admision-entrevistas/{entrevista}/editar', [AdmisionEntrevistaController::class, 'edit'])->whereNumber('entrevista')->name('admision.entrevistas.edit');
+        Route::put('/admision-entrevistas/{entrevista}', [AdmisionEntrevistaController::class, 'update'])->whereNumber('entrevista')->name('admision.entrevistas.update');
+        Route::get('/admision-entrevistas/{entrevista}/imprimir', [AdmisionEntrevistaController::class, 'imprimir'])->whereNumber('entrevista')->name('admision.entrevistas.imprimir');
+        Route::get('/admision-entrevistas/{entrevista}/balance', [AdmisionEntrevistaController::class, 'balance'])->whereNumber('entrevista')->name('admision.entrevistas.balance');
+    });
+
+    // ── Concepto final de rectoría sobre el aspirante: SuperAd y Admin ───────
+    Route::middleware('profile:SuperAd,Admin')->group(function () {
+        Route::post('/admision-entrevistas/{entrevista}/rectoria', [AdmisionEntrevistaController::class, 'rectoria'])->whereNumber('entrevista')->name('admision.entrevistas.rectoria');
+    });
+
     // ── Exámenes de Admisión · gestión avanzada: solo SuperAd ────────────────
     Route::middleware('profile:SuperAd')->group(function () {
+        Route::delete('/admision-entrevistas/{entrevista}', [AdmisionEntrevistaController::class, 'destroy'])->whereNumber('entrevista')->name('admision.entrevistas.destroy');
+
         // Editar / eliminar evaluaciones (corregir respuestas mal subidas)
         Route::get('/admision/{evaluacion}/editar', [AdmisionController::class, 'edit'])->whereNumber('evaluacion')->name('admision.edit');
         Route::put('/admision/{evaluacion}',        [AdmisionController::class, 'update'])->whereNumber('evaluacion')->name('admision.update');

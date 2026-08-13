@@ -338,8 +338,8 @@
         </div>
         @endif
 
-        {{-- ── Admisiones: SuperAd, Admin y Secretarías ── --}}
-        @if($isSuperAd || $isAdmin || $isSec)
+        {{-- ── Admisiones: SuperAd, Admin, Secretarías y Orientación ── --}}
+        @if($isSuperAd || $isAdmin || $isSec || $isOri)
         @php $catId = 'admisiones'; @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -351,6 +351,7 @@
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
                 {!! sidebarLink(route('admision.index'), '📝 Exámenes de admisión') !!}
+                {!! sidebarLink(route('admision.entrevistas.index'), '🗣️ Entrevistas de admisión') !!}
                 @if($isSuperAd)
                 {!! sidebarLink(route('admision.claves'), '🗝️ Claves de respuestas') !!}
                 @endif
