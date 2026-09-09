@@ -7,19 +7,45 @@ use Illuminate\Support\Facades\DB;
 
 class CarteraController extends Controller
 {
-    public function index()
+    /**
+     * Rango de fechas solicitado en la petición. Se aplica sobre el campo fecha
+     * de facturacion y registro_pagos, igual que en cartera/deudores.
+     *
+     * @return array{0: ?string, 1: ?string}
+     */
+    private function rango(Request $request): array
     {
+        return [
+            $request->filled('fecha_desde') ? $request->input('fecha_desde') : null,
+            $request->filled('fecha_hasta') ? $request->input('fecha_hasta') : null,
+        ];
+    }
+
+    public function index(Request $request)
+    {
+        [$fechaDesde, $fechaHasta] = $this->rango($request);
+
         // Totales de facturación y recaudo (brutos)
-        $totalFacturado = DB::table('facturacion')->sum('valor');
-        $totalPagado    = DB::table('registro_pagos')->sum('valor');
+        $totalFacturado = DB::table('facturacion')
+            ->when($fechaDesde, fn($q) => $q->whereDate('fecha', '>=', $fechaDesde))
+            ->when($fechaHasta, fn($q) => $q->whereDate('fecha', '<=', $fechaHasta))
+            ->sum('valor');
+        $totalPagado = DB::table('registro_pagos')
+            ->when($fechaDesde, fn($q) => $q->whereDate('fecha', '>=', $fechaDesde))
+            ->when($fechaHasta, fn($q) => $q->whereDate('fecha', '<=', $fechaHasta))
+            ->sum('valor');
 
         // Saldo por estudiante
         $facturaPorAlumno = DB::table('facturacion')
             ->select('codigo_alumno', DB::raw('SUM(valor) as total_facturado'))
+            ->when($fechaDesde, fn($q) => $q->whereDate('fecha', '>=', $fechaDesde))
+            ->when($fechaHasta, fn($q) => $q->whereDate('fecha', '<=', $fechaHasta))
             ->groupBy('codigo_alumno');
 
         $pagoPorAlumno = DB::table('registro_pagos')
             ->select('codigo_alumno', DB::raw('SUM(valor) as total_pagado'))
+            ->when($fechaDesde, fn($q) => $q->whereDate('fecha', '>=', $fechaDesde))
+            ->when($fechaHasta, fn($q) => $q->whereDate('fecha', '<=', $fechaHasta))
             ->groupBy('codigo_alumno');
 
         $saldos = DB::table(DB::raw("({$facturaPorAlumno->toSql()}) as f"))
@@ -60,6 +86,8 @@ class CarteraController extends Controller
         // Facturación por mes
         $porMes = DB::table('facturacion')
             ->select('mes', DB::raw('SUM(valor) as total'))
+            ->when($fechaDesde, fn($q) => $q->whereDate('fecha', '>=', $fechaDesde))
+            ->when($fechaHasta, fn($q) => $q->whereDate('fecha', '<=', $fechaHasta))
             ->groupBy('mes')
             ->orderBy('mes')
             ->get();
@@ -67,6 +95,8 @@ class CarteraController extends Controller
         // Pagos por mes
         $pagosPorMes = DB::table('registro_pagos')
             ->select('mes', DB::raw('SUM(valor) as total'))
+            ->when($fechaDesde, fn($q) => $q->whereDate('fecha', '>=', $fechaDesde))
+            ->when($fechaHasta, fn($q) => $q->whereDate('fecha', '<=', $fechaHasta))
             ->groupBy('mes')
             ->orderBy('mes')
             ->get()
@@ -74,7 +104,8 @@ class CarteraController extends Controller
 
         return view('cartera.index', compact(
             'totalFacturado', 'totalPagado', 'totalCartera', 'porcentajeRecaudo',
-            'alDia', 'debiendo', 'topDeudores', 'estudiantes', 'porMes', 'pagosPorMes'
+            'alDia', 'debiendo', 'topDeudores', 'estudiantes', 'porMes', 'pagosPorMes',
+            'fechaDesde', 'fechaHasta'
         ));
     }
 
@@ -258,7 +289,11 @@ class CarteraController extends Controller
         return view('cartera.deudores', compact('resultados', 'tab', 'fechaDesde', 'fechaHasta'));
     }
 
-    public function carteraPorCC()
+    /**
+     * Agrupa la cartera por CC de facturación. Devuelve la colección de grupos
+     * junto con los totales generales, para reutilizarla en vista y exportación.
+     */
+    private function datosPorCC(?string $fechaDesde, ?string $fechaHasta)
     {
         // Todos los vínculos CC → estudiante
         $vinculos = DB::table('titular_facturacion')->get();
@@ -278,12 +313,16 @@ class CarteraController extends Controller
 
         $facturasPor = DB::table('facturacion')
             ->whereIn('codigo_alumno', $codigos)
+            ->when($fechaDesde, fn($q) => $q->whereDate('fecha', '>=', $fechaDesde))
+            ->when($fechaHasta, fn($q) => $q->whereDate('fecha', '<=', $fechaHasta))
             ->select('codigo_alumno', DB::raw('SUM(valor) as total'))
             ->groupBy('codigo_alumno')
             ->pluck('total', 'codigo_alumno');
 
         $pagosPor = DB::table('registro_pagos')
             ->whereIn('codigo_alumno', $codigos)
+            ->when($fechaDesde, fn($q) => $q->whereDate('fecha', '>=', $fechaDesde))
+            ->when($fechaHasta, fn($q) => $q->whereDate('fecha', '<=', $fechaHasta))
             ->select('codigo_alumno', DB::raw('SUM(valor) as total'))
             ->groupBy('codigo_alumno')
             ->pluck('total', 'codigo_alumno');
@@ -339,25 +378,107 @@ class CarteraController extends Controller
             ];
         })->sortByDesc(fn($g) => $g->totalSaldo)->values();
 
+        return $porCC;
+    }
+
+    public function carteraPorCC(Request $request)
+    {
+        [$fechaDesde, $fechaHasta] = $this->rango($request);
+
+        $porCC = $this->datosPorCC($fechaDesde, $fechaHasta);
+
         $granTotalFacturado = $porCC->sum('totalFacturado');
         $granTotalPagado    = $porCC->sum('totalPagado');
         $granTotalSaldo     = $porCC->sum('totalSaldo');
 
         return view('cartera.por_cc', compact(
-            'porCC', 'granTotalFacturado', 'granTotalPagado', 'granTotalSaldo'
+            'porCC', 'granTotalFacturado', 'granTotalPagado', 'granTotalSaldo',
+            'fechaDesde', 'fechaHasta'
         ));
+    }
+
+    // ── Exportar cartera por CC de facturación ───────────────────────────────
+
+    public function exportarPorCC(Request $request)
+    {
+        @ini_set('memory_limit', '-1');
+
+        [$fechaDesde, $fechaHasta] = $this->rango($request);
+
+        $porCC = $this->datosPorCC($fechaDesde, $fechaHasta);
+
+        $writer = new \App\Helpers\SimpleXlsx();
+        $writer->addRow(['CARTERA POR CC DE FACTURACION']);
+        $writer->addRow(['RANGO', ControlEstudianteController::textoRango($fechaDesde, $fechaHasta)]);
+        $writer->addRow([]);
+        $writer->addRow([
+            'CODIGO', 'ESTUDIANTE', 'CURSO',
+            'CC FACTURACION', 'TITULAR', 'CELULAR TITULAR',
+            'FACTURADO', 'PAGADO', 'SALDO',
+            'FACTURADO CC', 'PAGADO CC', 'SALDO CC',
+        ]);
+
+        foreach ($porCC as $grupo) {
+            foreach ($grupo->detalle as $fila) {
+                $est    = $fila->estudiante;
+                $nombre = $est
+                    ? trim(preg_replace('/\s+/', ' ', implode(' ', array_filter([
+                        $est->APELLIDO1, $est->APELLIDO2, $est->NOMBRE1, $est->NOMBRE2
+                      ]))))
+                    : '';
+
+                $writer->addRow([
+                    (int) $fila->codigo,
+                    $nombre,
+                    $est->CURSO ?? '',
+                    (int) $grupo->cc,
+                    $grupo->nombreTitular ?? '',
+                    $grupo->celTitular ?? '',
+                    (float) $fila->facturado,
+                    (float) $fila->pagado,
+                    (float) $fila->saldo,
+                    (float) $grupo->totalFacturado,
+                    (float) $grupo->totalPagado,
+                    (float) $grupo->totalSaldo,
+                ]);
+            }
+        }
+
+        $writer->addRow([]);
+        $writer->addRow([
+            '', '', '', '', '', 'TOTALES',
+            (float) $porCC->sum('totalFacturado'),
+            (float) $porCC->sum('totalPagado'),
+            (float) $porCC->sum('totalSaldo'),
+        ]);
+
+        $tmp = storage_path('app') . DIRECTORY_SEPARATOR . 'cc_' . uniqid() . '.xlsx';
+        $writer->save($tmp);
+
+        $archivo = 'cartera_por_cc_' . date('Ymd_His') . '.xlsx';
+        return response()->download($tmp, $archivo, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ])->deleteFileAfterSend(true);
     }
 
     // ── Exportar informe de cartera general ──────────────────────────────────
 
-    public function exportarInforme()
+    public function exportarInforme(Request $request)
     {
+        @ini_set('memory_limit', '-1');
+
+        [$fechaDesde, $fechaHasta] = $this->rango($request);
+
         $facturaPorAlumno = DB::table('facturacion')
             ->select('codigo_alumno', DB::raw('SUM(valor) as total_facturado'))
+            ->when($fechaDesde, fn($q) => $q->whereDate('fecha', '>=', $fechaDesde))
+            ->when($fechaHasta, fn($q) => $q->whereDate('fecha', '<=', $fechaHasta))
             ->groupBy('codigo_alumno');
 
         $pagoPorAlumno = DB::table('registro_pagos')
             ->select('codigo_alumno', DB::raw('SUM(valor) as total_pagado'))
+            ->when($fechaDesde, fn($q) => $q->whereDate('fecha', '>=', $fechaDesde))
+            ->when($fechaHasta, fn($q) => $q->whereDate('fecha', '<=', $fechaHasta))
             ->groupBy('codigo_alumno');
 
         $filas = DB::table(DB::raw("({$facturaPorAlumno->toSql()}) as f"))
@@ -377,6 +498,9 @@ class CarteraController extends Controller
 
         $tmp    = storage_path('app') . DIRECTORY_SEPARATOR . 'car_' . uniqid() . '.xlsx';
         $writer = new \App\Helpers\SimpleXlsx();
+        $writer->addRow(['INFORME GENERAL DE CARTERA']);
+        $writer->addRow(['RANGO', ControlEstudianteController::textoRango($fechaDesde, $fechaHasta)]);
+        $writer->addRow([]);
         $writer->addRow(['CODIGO', 'NOMBRE', 'CURSO', 'FACTURADO', 'PAGADO', 'SALDO']);
 
         foreach ($filas as $f) {
@@ -389,6 +513,14 @@ class CarteraController extends Controller
                 (float) $f->saldo,
             ]);
         }
+
+        $writer->addRow([]);
+        $writer->addRow([
+            '', '', 'TOTALES',
+            (float) $filas->sum('total_facturado'),
+            (float) $filas->sum('total_pagado'),
+            (float) $filas->sum('saldo'),
+        ]);
 
         $writer->save($tmp);
 

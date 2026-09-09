@@ -13,6 +13,9 @@
                     class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Ej: 21008" required>
             </div>
+            {{-- Se conserva el rango de fechas al consultar otro estudiante --}}
+            <input type="hidden" name="fecha_desde" value="{{ $fechaDesde ?? '' }}">
+            <input type="hidden" name="fecha_hasta" value="{{ $fechaHasta ?? '' }}">
             <button type="submit" class="bg-blue-800 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-semibold transition">
                 Buscar
             </button>
@@ -26,6 +29,14 @@
     @endif
 
     @if($estudiante)
+
+        @include('partials.filtro_fechas_excel', [
+            'rutaInforme' => 'control.estudiante',
+            'rutaExport'  => 'control.estudiante.exportar',
+            'fechaDesde'  => $fechaDesde,
+            'fechaHasta'  => $fechaHasta,
+            'extra'       => ['codigo' => $estudiante->CODIGO],
+        ])
 
         {{-- Info estudiante --}}
         <div class="bg-white rounded-xl shadow p-5 mb-6">
@@ -63,8 +74,15 @@
                 <p class="text-2xl font-bold text-green-700">$ {{ number_format($totalPagado, 0, ',', '.') }}</p>
             </div>
             <div class="bg-{{ ($totalFactura - $totalPagado) > 0 ? 'red' : 'gray' }}-50 border border-{{ ($totalFactura - $totalPagado) > 0 ? 'red' : 'gray' }}-200 rounded-xl p-5 text-center">
-                <p class="text-xs text-{{ ($totalFactura - $totalPagado) > 0 ? 'red' : 'gray' }}-400 uppercase tracking-wide mb-1">Saldo a la Fecha</p>
+                <p class="text-xs text-{{ ($totalFactura - $totalPagado) > 0 ? 'red' : 'gray' }}-400 uppercase tracking-wide mb-1">
+                    {{ ($fechaDesde || $fechaHasta) ? 'Saldo del Rango' : 'Saldo a la Fecha' }}
+                </p>
                 <p class="text-2xl font-bold text-{{ ($totalFactura - $totalPagado) > 0 ? 'red' : 'gray' }}-700">$ {{ number_format($totalFactura - $totalPagado, 0, ',', '.') }}</p>
+                @if($saldoGlobal !== null)
+                    <p class="text-xs text-gray-500 mt-2">
+                        Saldo total histórico: <strong>$ {{ number_format($saldoGlobal, 0, ',', '.') }}</strong>
+                    </p>
+                @endif
             </div>
         </div>
 

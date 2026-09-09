@@ -4,6 +4,13 @@
 
 @section('slot')
 
+    @include('partials.filtro_fechas_excel', [
+        'rutaInforme' => 'cartera.por_cc',
+        'rutaExport'  => 'cartera.por_cc.exportar',
+        'fechaDesde'  => $fechaDesde,
+        'fechaHasta'  => $fechaHasta,
+    ])
+
     {{-- Totales generales --}}
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 text-center">

@@ -4,12 +4,12 @@
 
 @section('slot')
 
-    <div class="flex justify-end mb-4">
-        <a href="{{ route('cartera.exportar.informe') }}"
-            class="bg-green-700 hover:bg-green-800 text-white text-sm font-semibold px-4 py-2 rounded-lg transition">
-            ⬇️ Descargar Excel
-        </a>
-    </div>
+    @include('partials.filtro_fechas_excel', [
+        'rutaInforme' => 'cartera.index',
+        'rutaExport'  => 'cartera.exportar.informe',
+        'fechaDesde'  => $fechaDesde,
+        'fechaHasta'  => $fechaHasta,
+    ])
 
     {{-- Resumen principal --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -66,7 +66,7 @@
         <div class="bg-white rounded-xl shadow overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h3 class="font-bold text-blue-800">Top 10 mayores saldos pendientes</h3>
-                <a href="{{ route('cartera.deudores') }}"
+                <a href="{{ route('cartera.deudores', array_filter(['fecha_desde' => $fechaDesde, 'fecha_hasta' => $fechaHasta])) }}"
                     class="text-xs font-semibold text-blue-700 hover:text-blue-900 hover:underline">
                     Ver lista completa →
                 </a>

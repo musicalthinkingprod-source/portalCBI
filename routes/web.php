@@ -194,6 +194,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/cartera', [CarteraController::class, 'index'])->name('cartera.index');
         Route::get('/cartera/seguimiento/informe', [CarteraController::class, 'informeSeguimiento'])->name('cartera.seguimiento.informe');
         Route::get('/cartera/por-cc', [CarteraController::class, 'carteraPorCC'])->name('cartera.por_cc');
+        Route::get('/cartera/por-cc/exportar', [CarteraController::class, 'exportarPorCC'])->name('cartera.por_cc.exportar');
         Route::get('/cartera/estudiante/{codigo}', [CarteraController::class, 'estudiante'])->name('cartera.estudiante');
         Route::post('/cartera/estudiante/{codigo}/seguimiento', [CarteraController::class, 'storeSeguimiento'])->name('cartera.seguimiento.store');
         Route::put('/cartera/seguimiento/{id}', [CarteraController::class, 'updateSeguimiento'])->name('cartera.seguimiento.update');
@@ -203,6 +204,7 @@ Route::middleware(['auth'])->group(function () {
     // ── Control de Pagos: lectura + seguimiento cartera (Admin + Contab + SEC001) ────────────────
     Route::middleware('profile:SuperAd,Admin,Contab,SEC001')->group(function () {
         Route::get('/control/estudiante', [ControlEstudianteController::class, 'index'])->name('control.estudiante');
+        Route::get('/control/estudiante/exportar', [ControlEstudianteController::class, 'exportarExcel'])->name('control.estudiante.exportar');
         Route::post('/control/estudiante/observacion', [ControlEstudianteController::class, 'saveObservacion'])->name('control.estudiante.observacion.save');
         Route::get('/pagos', [PagosController::class, 'index'])->name('pagos.index');
         Route::get('/cartera/deudores', [CarteraController::class, 'deudores'])->name('cartera.deudores');
