@@ -4,6 +4,17 @@
 
 @section('slot')
 
+    @if($errors->any())
+        <div class="mb-5 bg-red-50 border border-red-300 text-red-800 rounded-xl px-5 py-4 text-sm">
+            <p class="font-bold mb-1">No se pudo matricular al estudiante:</p>
+            <ul class="list-disc list-inside space-y-0.5">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <form method="POST" action="{{ route('alumnos.store') }}">
         @csrf
 
@@ -17,6 +28,12 @@
                 <div>
                     <label class="block text-xs text-gray-500 mb-1">Código <span class="text-red-500">*</span></label>
                     <input type="text" name="CODIGO" value="{{ old('CODIGO') }}" required
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs text-gray-500 mb-1">Fecha de matrícula</label>
+                    <input type="date" name="FECH_MATRICULA" value="{{ old('FECH_MATRICULA', date('Y-m-d')) }}"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 

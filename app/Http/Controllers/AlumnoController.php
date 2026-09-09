@@ -122,13 +122,26 @@ class AlumnoController extends Controller
 
     public function store(Request $request)
     {
+        $request->validate([
+            'CODIGO'         => 'required|integer|unique:ESTUDIANTES,CODIGO',
+            'FECH_MATRICULA' => 'nullable|date',
+        ], [
+            'CODIGO.unique' => 'Ya existe un estudiante matriculado con ese código.',
+        ]);
+
         $codigo = $request->CODIGO;
 
         DB::table('ESTUDIANTES')->insert([
             'CODIGO'         => $codigo,
-            'NOMBRE1'        => $request->NOMBRE1,
+            // FECH_MATRICULA y OBSERV_FINAL son NOT NULL sin valor por defecto:
+            // omitirlos hace fallar el INSERT bajo STRICT_TRANS_TABLES
+            'FECH_MATRICULA' => $request->filled('FECH_MATRICULA')
+                                    ? $request->FECH_MATRICULA
+                                    : now()->toDateString(),
+            'OBSERV_FINAL'   => '',
+            'NOMBRE1'        => $request->NOMBRE1 ?? '',
             'NOMBRE2'        => $request->NOMBRE2 ?? '',
-            'APELLIDO1'      => $request->APELLIDO1,
+            'APELLIDO1'      => $request->APELLIDO1 ?? '',
             'APELLIDO2'      => $request->APELLIDO2 ?? '',
             'GRADO'          => $request->filled('GRADO') ? (int) $request->GRADO : null,
             'CURSO'          => $request->CURSO,
