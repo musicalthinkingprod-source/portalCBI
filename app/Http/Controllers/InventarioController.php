@@ -52,29 +52,21 @@ class InventarioController extends Controller
 
     // ─────────────────────────── Dashboard ───────────────────────────
 
-    public function dashboard()
+    /**
+     * Informe de uniformes (pantalla principal del módulo).
+     *
+     * Acepta ?minimo= y ?objetivo= para ajustar qué se considera «por reponer»
+     * y cuántas unidades se quieren tener de cada referencia.
+     */
+    public function dashboard(Request $r)
     {
-        $stock = $this->stockProductos();
+        [$minimo, $objetivo] = $this->umbrales($r);
 
-        $productos = DB::table('inv_productos')->where('activo', 1)
-            ->orderBy('nombre')->get()
-            ->map(function ($p) use ($stock) {
-                $p->stock = $stock[$p->id] ?? 0;
-                return $p;
-            });
+        $datos = $this->datosInforme($minimo, $objetivo);
+        $datos['autoriza']   = $this->autorizaCompras();
+        $datos['pendientes'] = self::contarSolicitudes(['pendiente', 'aprobada']);
 
-        $resumen = [
-            'referencias'  => $productos->count(),
-            'unidades'     => $productos->sum('stock'),
-            'agotados'     => $productos->where('stock', '<=', 0)->count(),
-            'bajos'        => $productos->where('stock', '>', 0)->where('stock', '<=', 2)->count(),
-            'valor_venta'  => $productos->sum(fn ($p) => $p->stock * $p->precio_venta),
-        ];
-
-        // Para revisar qué comprar: lo de menor stock primero.
-        $porComprar = $productos->sortBy('stock')->take(15)->values();
-
-        return view('inventario.dashboard', compact('productos', 'resumen', 'porComprar'));
+        return view('inventario.dashboard', $datos);
     }
 
     // ─────────────────────── Catálogo · Productos ─────────────────────
@@ -188,12 +180,37 @@ class InventarioController extends Controller
         return view('inventario.compras_index', compact('compras'));
     }
 
-    public function compraCreate()
+    /**
+     * Formulario de compra. Con ?solicitud=N (aprobada) las líneas llegan
+     * prellenadas con lo que autorizó la administración.
+     */
+    public function compraCreate(Request $r)
     {
         $proveedores = DB::table('inv_proveedores')->where('activo', 1)->orderBy('nombre')->get();
         $productos   = DB::table('inv_productos')->where('activo', 1)->orderBy('nombre')->get();
 
-        return view('inventario.compras_create', compact('proveedores', 'productos'));
+        $solicitud  = null;
+        $prellenado = [];
+
+        if ($solId = (int) $r->query('solicitud', 0)) {
+            $solicitud = DB::table('inv_solicitudes_compra')
+                ->where('id', $solId)->where('estado', 'aprobada')->first();
+
+            if ($solicitud) {
+                $prellenado = DB::table('inv_solicitud_items AS i')
+                    ->join('inv_productos AS p', 'p.id', '=', 'i.producto_id')
+                    ->where('i.solicitud_id', $solId)
+                    ->whereRaw('COALESCE(i.cantidad_aprobada, i.cantidad) > 0')
+                    ->orderBy('p.nombre')
+                    ->get([
+                        'i.producto_id',
+                        DB::raw('COALESCE(i.cantidad_aprobada, i.cantidad) AS cantidad'),
+                        DB::raw('COALESCE(i.costo_ref, 0) AS precio'),
+                    ]);
+            }
+        }
+
+        return view('inventario.compras_create', compact('proveedores', 'productos', 'solicitud', 'prellenado'));
     }
 
     public function compraStore(Request $r)
@@ -203,6 +220,7 @@ class InventarioController extends Controller
             'factura'             => 'nullable|string|max:50',
             'fecha'               => 'required|date',
             'observacion'         => 'nullable|string|max:255',
+            'solicitud_id'        => 'nullable|exists:inv_solicitudes_compra,id',
             'items'               => 'required|array|min:1',
             'items.*.producto_id' => 'required|exists:inv_productos,id',
             'items.*.cantidad'    => 'required|integer|min:1',
@@ -233,6 +251,19 @@ class InventarioController extends Controller
                     'created_at'    => now(),
                     'updated_at'    => now(),
                 ]);
+            }
+
+            // Si la compra viene de una solicitud aprobada, se cierra el ciclo.
+            if (!empty($data['solicitud_id'])) {
+                DB::table('inv_solicitudes_compra')
+                    ->where('id', $data['solicitud_id'])->where('estado', 'aprobada')
+                    ->update([
+                        'estado'       => 'comprada',
+                        'compra_id'    => $compraId,
+                        'comprado_por' => Auth::user()->USER ?? null,
+                        'comprado_at'  => now(),
+                        'updated_at'   => now(),
+                    ]);
             }
         });
 
@@ -688,5 +719,310 @@ class InventarioController extends Controller
         if ($diferencia > 0)      $msg .= ' Cobrar diferencia: $' . number_format($diferencia, 0);
         elseif ($diferencia < 0)  $msg .= ' Devolver al cliente: $' . number_format(abs($diferencia), 0);
         return redirect()->route('inventario.cambios')->with('ok', $msg);
+    }
+
+    // ══════════════ Informe imprimible y solicitudes de compra ══════════════
+
+    /** ¿El usuario actual autoriza compras? (jefatura: Admin / SuperAd). */
+    private function autorizaCompras(): bool
+    {
+        return in_array(Auth::user()->PROFILE ?? '', ['SuperAd', 'Admin'], true);
+    }
+
+    /**
+     * Datos del informe de uniformes.
+     *
+     * @param int $minimo   stock a partir del cual se considera «por reponer»
+     * @param int $objetivo unidades que se quieren tener de cada referencia
+     */
+    private function datosInforme(int $minimo, int $objetivo): array
+    {
+        $stock = $this->stockProductos();
+        $costo = $this->ultimoCostoProductos();
+
+        $productos = DB::table('inv_productos')->where('activo', 1)
+            ->orderBy('nombre')->get()
+            ->map(function ($p) use ($stock, $costo, $objetivo) {
+                $p->stock        = $stock[$p->id] ?? 0;
+                $p->ultimo_costo = $costo[$p->id] ?? null;
+                $p->sugerido     = max(0, $objetivo - $p->stock);
+                $p->valor_venta  = $p->stock * $p->precio_venta;
+                $p->valor_costo  = $p->stock * (float) ($p->ultimo_costo ?? 0);
+                return $p;
+            });
+
+        $resumen = [
+            'referencias' => $productos->count(),
+            'unidades'    => $productos->sum('stock'),
+            'agotados'    => $productos->where('stock', '<=', 0)->count(),
+            'bajos'       => $productos->where('stock', '>', 0)->where('stock', '<=', $minimo)->count(),
+            'valor_venta' => $productos->sum('valor_venta'),
+            'valor_costo' => $productos->sum('valor_costo'),
+        ];
+
+        // Lo que hay que reponer. Si todo está por encima del mínimo, se
+        // muestran igual las 15 referencias con menos existencias.
+        $porComprar = $productos->where('stock', '<=', $minimo)->sortBy('stock')->values();
+        if ($porComprar->isEmpty()) {
+            $porComprar = $productos->sortBy('stock')->take(15)->values();
+        }
+
+        $resumen['costo_reposicion'] = $porComprar->sum(fn ($p) => $p->sugerido * (float) ($p->ultimo_costo ?? 0));
+
+        return compact('productos', 'resumen', 'porComprar', 'minimo', 'objetivo');
+    }
+
+    /** Lee los umbrales del querystring con valores por defecto sensatos. */
+    private function umbrales(Request $r): array
+    {
+        return [
+            max(0, min(99,  (int) $r->query('minimo', 2))),
+            max(1, min(999, (int) $r->query('objetivo', 10))),
+        ];
+    }
+
+    /** Informe de uniformes en formato imprimible (hoja carta, sin menú). */
+    public function informeImprimir(Request $r)
+    {
+        [$minimo, $objetivo] = $this->umbrales($r);
+        $datos = $this->datosInforme($minimo, $objetivo);
+        $datos['soloReposicion'] = $r->boolean('solo_reposicion');
+
+        return view('inventario.informe_imprimir', $datos);
+    }
+
+    // ─────────────────── Solicitudes de compra · bandeja ───────────────────
+
+    /**
+     * Conteo de solicitudes por estado.
+     *
+     * Tolera que la migración de solicitudes aún no se haya corrido: el menú
+     * lateral llama esto en cada pantalla y no debe tumbar el portal.
+     */
+    private static function contarSolicitudes(array $estados): int
+    {
+        try {
+            return (int) DB::table('inv_solicitudes_compra')->whereIn('estado', $estados)->count();
+        } catch (\Throwable $e) {
+            return 0;
+        }
+    }
+
+    /** Solicitudes pendientes de autorización (badge del menú). */
+    public static function pendientesAutorizar(): int
+    {
+        return self::contarSolicitudes(['pendiente']);
+    }
+
+    public function solicitudes()
+    {
+        $solicitudes = DB::table('inv_solicitudes_compra AS s')
+            ->leftJoin('inv_proveedores AS pv', 'pv.id', '=', 's.proveedor_id')
+            ->leftJoin('inv_compras AS c', 'c.id', '=', 's.compra_id')
+            ->select('s.*', 'pv.nombre AS proveedor', 'c.factura',
+                DB::raw('(SELECT COUNT(*) FROM inv_solicitud_items i WHERE i.solicitud_id = s.id) AS n_items'),
+                DB::raw('(SELECT SUM(COALESCE(i.cantidad_aprobada, i.cantidad)) FROM inv_solicitud_items i WHERE i.solicitud_id = s.id) AS n_unidades'))
+            ->orderByDesc('s.id')->limit(200)->get();
+
+        return view('inventario.solicitudes_index', [
+            'solicitudes' => $solicitudes,
+            'autoriza'    => $this->autorizaCompras(),
+        ]);
+    }
+
+    /** Formulario de solicitud, prellenado con lo que está por debajo del mínimo. */
+    public function solicitudCreate(Request $r)
+    {
+        [$minimo, $objetivo] = $this->umbrales($r);
+        $datos = $this->datosInforme($minimo, $objetivo);
+
+        $datos['proveedores'] = DB::table('inv_proveedores')->where('activo', 1)->orderBy('nombre')->get();
+        $datos['autoriza']    = $this->autorizaCompras();
+
+        return view('inventario.solicitud_create', $datos);
+    }
+
+    public function solicitudStore(Request $r)
+    {
+        $data = $r->validate([
+            'proveedor_id'        => 'nullable|exists:inv_proveedores,id',
+            'justificacion'       => 'nullable|string|max:500',
+            'items'               => 'required|array|min:1',
+            'items.*.producto_id' => 'required|exists:inv_productos,id',
+            'items.*.cantidad'    => 'required|integer|min:1',
+        ]);
+
+        // Una sola línea por referencia: si viene repetida, se suman cantidades.
+        $lineas = [];
+        foreach ($data['items'] as $it) {
+            $pid = (int) $it['producto_id'];
+            $lineas[$pid] = ($lineas[$pid] ?? 0) + (int) $it['cantidad'];
+        }
+
+        $stock    = $this->stockProductos();
+        $costo    = $this->ultimoCostoProductos();
+        $usuario  = Auth::user()->USER ?? null;
+        $autoriza = $this->autorizaCompras();
+
+        $id = DB::transaction(function () use ($data, $lineas, $stock, $costo, $usuario, $autoriza) {
+            $numero = (int) DB::table('inv_solicitudes_compra')->max('numero') + 1;
+
+            $solId = DB::table('inv_solicitudes_compra')->insertGetId([
+                'numero'         => $numero,
+                'fecha'          => now()->toDateString(),
+                // La jefatura no tiene que autorizarse a sí misma.
+                'estado'         => $autoriza ? 'aprobada' : 'pendiente',
+                'justificacion'  => $data['justificacion'] ?? null,
+                'solicitado_por' => $usuario,
+                'proveedor_id'   => $data['proveedor_id'] ?? null,
+                'autorizado_por' => $autoriza ? $usuario : null,
+                'autorizado_at'  => $autoriza ? now() : null,
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ]);
+
+            foreach ($lineas as $pid => $cant) {
+                DB::table('inv_solicitud_items')->insert([
+                    'solicitud_id'      => $solId,
+                    'producto_id'       => $pid,
+                    'stock_actual'      => $stock[$pid] ?? 0,
+                    'cantidad'          => $cant,
+                    'cantidad_aprobada' => $autoriza ? $cant : null,
+                    'costo_ref'         => $costo[$pid] ?? null,
+                    'created_at'        => now(),
+                    'updated_at'        => now(),
+                ]);
+            }
+
+            return $solId;
+        });
+
+        $msg = $autoriza
+            ? 'Solicitud creada y aprobada. Las secretarías ya pueden registrar la compra.'
+            : 'Solicitud enviada a autorización de la administración.';
+
+        return redirect()->route('inventario.solicitudes.ver', $id)->with('ok', $msg);
+    }
+
+    /** Encabezado + detalle de una solicitud. */
+    private function cargarSolicitud(int $id): array
+    {
+        $sol = DB::table('inv_solicitudes_compra AS s')
+            ->leftJoin('inv_proveedores AS pv', 'pv.id', '=', 's.proveedor_id')
+            ->leftJoin('inv_compras AS c', 'c.id', '=', 's.compra_id')
+            ->where('s.id', $id)
+            ->select('s.*', 'pv.nombre AS proveedor', 'c.factura', 'c.fecha AS compra_fecha', 'c.total AS compra_total')
+            ->first();
+
+        abort_if(!$sol, 404);
+
+        $stock = $this->stockProductos();
+        $items = DB::table('inv_solicitud_items AS i')
+            ->join('inv_productos AS p', 'p.id', '=', 'i.producto_id')
+            ->where('i.solicitud_id', $id)
+            ->orderBy('p.nombre')
+            ->select('i.*', 'p.codigo', 'p.nombre', 'p.precio_venta')
+            ->get()
+            ->map(function ($i) use ($stock) {
+                $i->stock_hoy      = $stock[$i->producto_id] ?? 0;
+                $i->cantidad_final = $i->cantidad_aprobada ?? $i->cantidad;
+                $i->subtotal       = $i->cantidad_final * (float) ($i->costo_ref ?? 0);
+                return $i;
+            });
+
+        return [$sol, $items];
+    }
+
+    public function solicitudVer(int $id)
+    {
+        [$sol, $items] = $this->cargarSolicitud($id);
+
+        return view('inventario.solicitud_ver', [
+            'sol'      => $sol,
+            'items'    => $items,
+            'autoriza' => $this->autorizaCompras(),
+        ]);
+    }
+
+    public function solicitudImprimir(int $id)
+    {
+        [$sol, $items] = $this->cargarSolicitud($id);
+        return view('inventario.solicitud_imprimir', compact('sol', 'items'));
+    }
+
+    /** Aprobar (con cantidades ajustables) o rechazar. Solo jefatura. */
+    public function solicitudAutorizar(Request $r, int $id)
+    {
+        abort_unless($this->autorizaCompras(), 403);
+
+        $data = $r->validate([
+            'decision'     => 'required|in:aprobar,rechazar',
+            'nota'         => 'nullable|string|max:500',
+            'cantidades'   => 'nullable|array',
+            'cantidades.*' => 'nullable|integer|min:0',
+        ]);
+
+        $sol = DB::table('inv_solicitudes_compra')->where('id', $id)->first();
+        abort_if(!$sol, 404);
+
+        if (!in_array($sol->estado, ['pendiente', 'aprobada'], true)) {
+            return back()->withErrors(['estado' => 'Esta solicitud ya está cerrada; no se puede modificar.']);
+        }
+
+        if ($data['decision'] === 'rechazar') {
+            DB::table('inv_solicitudes_compra')->where('id', $id)->update([
+                'estado'            => 'rechazada',
+                'autorizado_por'    => Auth::user()->USER ?? null,
+                'autorizado_at'     => now(),
+                'nota_autorizacion' => $data['nota'] ?? null,
+                'updated_at'        => now(),
+            ]);
+            return redirect()->route('inventario.solicitudes.ver', $id)->with('ok', 'Solicitud rechazada.');
+        }
+
+        $cantidades = $data['cantidades'] ?? [];
+
+        DB::transaction(function () use ($id, $cantidades, $data) {
+            foreach (DB::table('inv_solicitud_items')->where('solicitud_id', $id)->get() as $it) {
+                // Lo aprobado en 0 simplemente no se compra.
+                $cant = array_key_exists($it->id, $cantidades) && $cantidades[$it->id] !== null
+                    ? (int) $cantidades[$it->id]
+                    : (int) $it->cantidad;
+                DB::table('inv_solicitud_items')->where('id', $it->id)
+                    ->update(['cantidad_aprobada' => $cant, 'updated_at' => now()]);
+            }
+
+            DB::table('inv_solicitudes_compra')->where('id', $id)->update([
+                'estado'            => 'aprobada',
+                'autorizado_por'    => Auth::user()->USER ?? null,
+                'autorizado_at'     => now(),
+                'nota_autorizacion' => $data['nota'] ?? null,
+                'updated_at'        => now(),
+            ]);
+        });
+
+        return redirect()->route('inventario.solicitudes.ver', $id)
+            ->with('ok', 'Solicitud aprobada. Las secretarías ya pueden registrar la compra.');
+    }
+
+    /** Anular una solicitud que aún no se ha comprado. */
+    public function solicitudAnular(int $id)
+    {
+        $sol = DB::table('inv_solicitudes_compra')->where('id', $id)->first();
+        abort_if(!$sol, 404);
+
+        if ($sol->estado === 'comprada') {
+            return back()->withErrors(['estado' => 'La solicitud ya se compró: no se puede anular.']);
+        }
+        // Quien no autoriza solo puede anular lo que él mismo pidió y sigue pendiente.
+        if (!$this->autorizaCompras() &&
+            ($sol->estado !== 'pendiente' || $sol->solicitado_por !== (Auth::user()->USER ?? null))) {
+            abort(403);
+        }
+
+        DB::table('inv_solicitudes_compra')->where('id', $id)
+            ->update(['estado' => 'anulada', 'updated_at' => now()]);
+
+        return redirect()->route('inventario.solicitudes')->with('ok', 'Solicitud anulada.');
     }
 }

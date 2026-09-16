@@ -741,6 +741,7 @@
         @php
             $catId = 'inventario';
             $pendFact = ($isSuperAd || $isAdmin) ? \App\Http\Controllers\InventarioController::pendientesFacturar() : 0;
+            $pendSol  = \App\Http\Controllers\InventarioController::pendientesAutorizar();
         @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
@@ -756,6 +757,7 @@
                 {!! sidebarLink(route('inventario.ventas'), '📃 Ventas') !!}
                 {!! sidebarLink(route('inventario.cambios'), '🔁 Devoluciones y cambios') !!}
                 {!! sidebarLink(route('inventario.compras'), '📥 Compras') !!}
+                {!! sidebarLink(route('inventario.solicitudes'), '🛒 Solicitudes de compra' . ($pendSol > 0 ? " <span class=\"ml-1 bg-amber-500 text-white text-xs px-1.5 rounded-full\">{$pendSol}</span>" : '')) !!}
                 {!! sidebarLink(route('inventario.productos'), '👕 Productos') !!}
                 @if($isSuperAd || $isAdmin)
                 {!! sidebarLink(route('inventario.facturar'), '🧾 Uniformes a facturar' . ($pendFact > 0 ? " <span class=\"ml-1 bg-red-500 text-white text-xs px-1.5 rounded-full\">{$pendFact}</span>" : '')) !!}

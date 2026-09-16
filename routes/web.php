@@ -649,6 +649,17 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/inventario/compras/nueva',    [InventarioController::class, 'compraCreate'])  ->name('inventario.compras.create');
         Route::post('/inventario/compras',         [InventarioController::class, 'compraStore'])   ->name('inventario.compras.store');
 
+        // Informe imprimible y solicitudes de compra de uniformes.
+        Route::get('/inventario/informe/imprimir', [InventarioController::class, 'informeImprimir'])->name('inventario.informe.imprimir');
+
+        Route::get('/inventario/solicitudes',              [InventarioController::class, 'solicitudes'])     ->name('inventario.solicitudes');
+        Route::get('/inventario/solicitudes/nueva',        [InventarioController::class, 'solicitudCreate']) ->name('inventario.solicitudes.create');
+        Route::post('/inventario/solicitudes',             [InventarioController::class, 'solicitudStore'])  ->name('inventario.solicitudes.store');
+        Route::get('/inventario/solicitudes/{id}',         [InventarioController::class, 'solicitudVer'])    ->whereNumber('id')->name('inventario.solicitudes.ver');
+        Route::get('/inventario/solicitudes/{id}/imprimir',[InventarioController::class, 'solicitudImprimir'])->whereNumber('id')->name('inventario.solicitudes.imprimir');
+        Route::post('/inventario/solicitudes/{id}/autorizar',[InventarioController::class, 'solicitudAutorizar'])->whereNumber('id')->name('inventario.solicitudes.autorizar');
+        Route::post('/inventario/solicitudes/{id}/anular', [InventarioController::class, 'solicitudAnular'])  ->whereNumber('id')->name('inventario.solicitudes.anular');
+
         Route::get('/inventario/ventas',           [InventarioController::class, 'ventas'])       ->name('inventario.ventas');
         Route::get('/inventario/ventas/nueva',     [InventarioController::class, 'ventaCreate'])   ->name('inventario.ventas.create');
         Route::post('/inventario/ventas',          [InventarioController::class, 'ventaStore'])    ->name('inventario.ventas.store');
