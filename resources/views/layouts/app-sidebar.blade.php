@@ -200,7 +200,7 @@
                 </svg>
             </p>
             <ul class="space-y-1 cat-body overflow-hidden transition-all duration-300" style="max-height:0">
-                @if($isSuperAd || $isCoordAcad || $isCoordConv || $isDoc)
+                @if($isSuperAd || $isCoordAcad || $isCoordConv || $isDoc || $isOri)
                 {!! sidebarLink(route('bitacora.index'), '📖 Registrar observaciones') !!}
                 @endif
                 @if($isDoc || $isSuperAd || $isSec || $isOri)

@@ -533,8 +533,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/bitacora/tareas', [BitacoraController::class, 'tareasGuardar']) ->name('bitacora.tareas.guardar');
     });
 
-    // ── Bitácora: registro individual + hilos (SuperAd + Coordinadores + Docentes) ─
-    Route::middleware('profile:SuperAd,COR001,COR002,DOC*')->group(function () {
+    // ── Bitácora: registro individual + hilos (SuperAd + Coordinadores + Docentes + Orientadores) ─
+    // El orientador puede anotar a cualquier estudiante (convivencia y generales),
+    // sin exigir materia; solo edita/elimina sus propias anotaciones.
+    Route::middleware('profile:SuperAd,COR001,COR002,DOC*,Ori*')->group(function () {
         Route::get('/bitacora',         [BitacoraController::class, 'index'])  ->name('bitacora.index');
         Route::post('/bitacora',        [BitacoraController::class, 'store'])  ->name('bitacora.store');
         Route::put('/bitacora/{id}',    [BitacoraController::class, 'update']) ->name('bitacora.update');

@@ -16,6 +16,22 @@ class BitacoraController extends Controller
         return str_starts_with($profile, 'DOC');
     }
 
+    /** ¿Es un perfil de orientación escolar? (Ori, Ori29, …) */
+    private function esOrientador(string $profile): bool
+    {
+        return str_starts_with($profile, 'Ori');
+    }
+
+    /**
+     * ¿Este perfil ve en el listado solo sus propias anotaciones?
+     * Docentes y orientadores sí; para ver la agenda completa de un estudiante
+     * usan «Consultar agenda».
+     */
+    private function soloPropias(string $profile): bool
+    {
+        return $this->esDocente($profile) || $this->esOrientador($profile);
+    }
+
     /** Query base de las categorías que un perfil puede usar para registrar. */
     private function categoriasPermitidasQuery(string $profile)
     {
@@ -26,6 +42,11 @@ class BitacoraController extends Controller
             $profile === 'COR001'         => $q->whereIn('ambito', ['academico', 'general']),
             $profile === 'COR002'         => $q->whereIn('ambito', ['convivencia', 'general']),
             $this->esDocente($profile)    => $q->where('docentes', 1),
+            // Orientación escolar: convivencia y generales, sin tareas ni
+            // registros que solo genera el sistema (faltas del conducto regular).
+            $this->esOrientador($profile) => $q->whereIn('ambito', ['convivencia', 'general'])
+                                               ->where('tarea', 0)
+                                               ->where('solo_sistema', 0),
             default                       => $q->whereRaw('1 = 0'),
         };
     }
@@ -40,16 +61,18 @@ class BitacoraController extends Controller
             $profile === 'COR001'      => in_array($categoria->ambito, ['academico', 'general'], true),
             $profile === 'COR002'      => in_array($categoria->ambito, ['convivencia', 'general'], true),
             $this->esDocente($profile) => (bool) $categoria->docentes,
+            $this->esOrientador($profile) => in_array($categoria->ambito, ['convivencia', 'general'], true)
+                                             && !$categoria->tarea && !$categoria->solo_sistema,
             default                    => false,
         };
     }
 
-    /** ¿Puede este perfil editar/eliminar esta entrada? Los docentes solo las suyas. */
+    /** ¿Puede este perfil editar/eliminar esta entrada? Docentes y orientadores solo las suyas. */
     private function puedeEditarEntrada(string $profile, $entrada): bool
     {
         $categoria = DB::table('bitacora_categorias')->where('id', $entrada->categoria_id)->first();
         if (!$this->puedeUsarCategoria($profile, $categoria)) return false;
-        if ($this->esDocente($profile) && $entrada->registrado_por !== auth()->user()->USER) return false;
+        if ($this->soloPropias($profile) && $entrada->registrado_por !== auth()->user()->USER) return false;
         return true;
     }
 
@@ -116,8 +139,11 @@ class BitacoraController extends Controller
 
     public function index(Request $request)
     {
-        $profile   = auth()->user()->PROFILE;
-        $esDocente = $this->esDocente($profile);
+        $profile     = auth()->user()->PROFILE;
+        $esDocente   = $this->esDocente($profile);
+        $soloPropias = $this->soloPropias($profile);
+        // La carga masiva por curso es de SuperAd y coordinación (ver rutas)
+        $puedeMasiva = in_array($profile, ['SuperAd', 'COR001', 'COR002'], true);
 
         // Cursos para el selector
         $cursos = $this->cursosReales();
@@ -152,8 +178,8 @@ class BitacoraController extends Controller
                     ->whereIn('b.codigo_alumno', $estudiantes->pluck('CODIGO')->all())
                     ->orderByDesc('b.fecha')->orderByDesc('b.id');
 
-                // Los docentes solo ven sus propios registros
-                if ($esDocente) $histQuery->where('b.registrado_por', auth()->user()->USER);
+                // Docentes y orientadores solo ven sus propios registros
+                if ($soloPropias) $histQuery->where('b.registrado_por', auth()->user()->USER);
 
                 $hist = $histQuery
                     ->leftJoin('CODIGOSMAT as m', 'm.CODIGO_MAT', '=', 'b.codigo_mat')
@@ -194,8 +220,8 @@ class BitacoraController extends Controller
         if ($fCodigo)    $query->where('b.codigo_alumno', (int) $fCodigo);
         if ($fCategoria) $query->where('b.categoria_id', (int) $fCategoria);
 
-        // Los docentes solo ven sus propios registros
-        if ($esDocente) $query->where('b.registrado_por', auth()->user()->USER);
+        // Docentes y orientadores solo ven sus propios registros
+        if ($soloPropias) $query->where('b.registrado_por', auth()->user()->USER);
 
         $entradas = $query->limit(300)->get();
 
@@ -203,15 +229,16 @@ class BitacoraController extends Controller
         $comentarios = $this->agenda->comentariosPorEntrada($entradas->pluck('id')->all());
         $miUser      = auth()->user()->USER;
 
-        // Catálogo de categorías para el filtro: docentes solo las suyas; el resto todas
-        $todasCategorias = $esDocente
+        // Catálogo de categorías para el filtro: docentes y orientadores solo las suyas; el resto todas
+        $todasCategorias = $soloPropias
             ? $this->categoriasPermitidasQuery($profile)->orderBy('nombre')->get()
             : DB::table('bitacora_categorias')->orderBy('nombre')->get();
 
         return view('bitacora.index', compact(
             'cursos', 'categorias', 'plantillas', 'estudiantes', 'cursoForm',
             'entradas', 'todasCategorias', 'fCurso', 'fCodigo', 'fCategoria',
-            'historialPorEstudiante', 'esDocente', 'materias', 'comentarios', 'miUser'
+            'historialPorEstudiante', 'esDocente', 'materias', 'comentarios', 'miUser',
+            'puedeMasiva'
         ));
     }
 
@@ -254,6 +281,10 @@ class BitacoraController extends Controller
                 return back()->with('error', 'La fecha no corresponde a ningún período académico. Verifica el calendario.')->withInput();
             }
             $registradoNombre = $this->nombreDocente($profile);
+        } elseif ($this->esOrientador($profile)) {
+            // Deja constancia del área en el listado del staff (no es registro de aula,
+            // así que la familia sigue viendo la anotación como institucional).
+            $registradoNombre = $this->nombreStaff($profile);
         }
 
         // Prioridad: precarga la de la categoría; el autor pudo cambiarla en el formulario.
@@ -674,7 +705,7 @@ class BitacoraController extends Controller
             'SuperAd', 'Admin' => 'Administración',
             'COR001'           => 'Coordinación Académica',
             'COR002'           => 'Coordinación de Convivencia',
-            default            => $profile,
+            default            => $this->esOrientador($profile) ? 'Orientación Escolar' : $profile,
         };
     }
 

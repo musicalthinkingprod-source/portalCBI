@@ -36,9 +36,9 @@
 <div class="bg-white rounded-xl shadow p-5 mb-6">
     <div class="flex items-center justify-between flex-wrap gap-2 mb-4">
         <h2 class="text-base font-bold text-gray-800">📖 Nueva observación</h2>
-        @unless($esDocente)
+        @if($puedeMasiva)
         <a href="{{ route('bitacora.masiva') }}" class="text-sm font-semibold text-blue-700 hover:text-blue-900 border border-blue-200 rounded-lg px-3 py-1.5">📋 Carga masiva por curso</a>
-        @endunless
+        @endif
     </div>
 
     {{-- Paso 1: cargar estudiantes del curso (recarga GET) --}}
