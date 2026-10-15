@@ -770,7 +770,10 @@
 
         {{-- ── Aseo e insumos: SuperAd, Admin, Secretarías ── --}}
         @if($isSuperAd || $isAdmin || $isSec)
-        @php $catId = 'aseo'; @endphp
+        @php
+            $catId = 'aseo';
+            $pendSolAseo = \App\Http\Controllers\InventarioAseoController::pendientesAutorizar();
+        @endphp
         <div class="sidebar-cat mb-1" data-cat="{{ $catId }}">
             <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest px-1 py-2 flex justify-between items-center cursor-pointer select-none hover:text-white transition-colors"
                onclick="toggleCategory(this)">
@@ -784,6 +787,7 @@
                 {!! sidebarLink(route('aseo.salidas.create'), '📤 Entregar a dependencia') !!}
                 {!! sidebarLink(route('aseo.salidas'), '📃 Entregas') !!}
                 {!! sidebarLink(route('aseo.compras'), '📥 Compras') !!}
+                {!! sidebarLink(route('aseo.solicitudes'), '🛒 Solicitudes de compra' . ($pendSolAseo > 0 ? " <span class=\"ml-1 bg-amber-500 text-white text-xs px-1.5 rounded-full\">{$pendSolAseo}</span>" : '')) !!}
                 {!! sidebarLink(route('aseo.elementos'), '🧴 Elementos') !!}
                 {!! sidebarLink(route('aseo.dependencias'), '🏢 Dependencias') !!}
                 {!! sidebarLink(route('aseo.proveedores'), '🚚 Proveedores') !!}

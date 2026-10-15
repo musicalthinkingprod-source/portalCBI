@@ -684,6 +684,17 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/aseo/compras',          [InventarioAseoController::class, 'compras'])       ->name('aseo.compras');
         Route::get('/aseo/compras/nueva',    [InventarioAseoController::class, 'compraCreate'])  ->name('aseo.compras.create');
         Route::post('/aseo/compras',         [InventarioAseoController::class, 'compraStore'])   ->name('aseo.compras.store');
+
+        // Informe imprimible y solicitudes de compra de aseo.
+        Route::get('/aseo/informe/imprimir', [InventarioAseoController::class, 'informeImprimir'])->name('aseo.informe.imprimir');
+
+        Route::get('/aseo/solicitudes',              [InventarioAseoController::class, 'solicitudes'])     ->name('aseo.solicitudes');
+        Route::get('/aseo/solicitudes/nueva',        [InventarioAseoController::class, 'solicitudCreate']) ->name('aseo.solicitudes.create');
+        Route::post('/aseo/solicitudes',             [InventarioAseoController::class, 'solicitudStore'])  ->name('aseo.solicitudes.store');
+        Route::get('/aseo/solicitudes/{id}',         [InventarioAseoController::class, 'solicitudVer'])    ->whereNumber('id')->name('aseo.solicitudes.ver');
+        Route::get('/aseo/solicitudes/{id}/imprimir',[InventarioAseoController::class, 'solicitudImprimir'])->whereNumber('id')->name('aseo.solicitudes.imprimir');
+        Route::post('/aseo/solicitudes/{id}/autorizar',[InventarioAseoController::class, 'solicitudAutorizar'])->whereNumber('id')->name('aseo.solicitudes.autorizar');
+        Route::post('/aseo/solicitudes/{id}/anular', [InventarioAseoController::class, 'solicitudAnular'])  ->whereNumber('id')->name('aseo.solicitudes.anular');
         Route::get('/aseo/salidas',          [InventarioAseoController::class, 'salidas'])       ->name('aseo.salidas');
         Route::get('/aseo/salidas/nueva',    [InventarioAseoController::class, 'salidaCreate'])  ->name('aseo.salidas.create');
         Route::post('/aseo/salidas',         [InventarioAseoController::class, 'salidaStore'])   ->name('aseo.salidas.store');
