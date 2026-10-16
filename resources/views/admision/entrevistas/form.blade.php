@@ -236,7 +236,9 @@
             <div class="flex items-center gap-2">
                 <span class="text-[10px] uppercase text-gray-400">Valoración del área</span>
                 @foreach($sem as $k => $s)
-                <label class="cursor-pointer">
+                {{-- relative: el input sr-only es absolute; sin ancestro posicionado se ubica
+                     respecto al body y le crea una segunda barra de scroll a la página. --}}
+                <label class="cursor-pointer relative">
                     <input type="radio" name="alertas[{{ $slug }}]" value="{{ $k }}" class="peer sr-only" @checked($marca === $k)>
                     <span class="text-[11px] px-2.5 py-1 rounded-full border border-gray-200 text-gray-500 transition
                         peer-checked:font-semibold
